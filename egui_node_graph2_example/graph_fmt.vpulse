@@ -1,0 +1,111 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse13:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->
+{
+	m_Cells = 
+	[
+				{
+			_class = "CPulseCell_Inflow_Method"
+			m_nEditorNodeID = -1
+			m_RegisterMap = 
+			{
+				m_InParams = 
+				{
+				}
+				m_OutParams = 
+				{
+				}
+			}
+			m_MethodName = "method"
+			m_Description = ""
+			m_bIsPublic = true
+			m_ReturnType = "PVAL_INVALID"
+			m_Args = []
+		},
+				{
+			_class = "CPulseCell_Step_EntFire"
+			m_nEditorNodeID = -1
+			m_Input = "method"
+		},
+	]
+	m_DomainIdentifier = "ServerPointEntity"
+	m_ParentMapName = "maps/test.vmap"
+	m_ParentXmlName = ""
+	m_vecGameBlackboards = []
+	m_Chunks = 
+	[
+				{
+			m_Instructions = 
+			[
+								{
+					m_nCode = "GET_DOMAIN_VALUE"
+					m_nVar = -1
+					m_nReg0 = 0
+					m_nReg1 = -1
+					m_nReg2 = -1
+					m_nInvokeBindingIndex = -1
+					m_nChunk = -1
+					m_nDestInstruction = 0
+					m_nCallInfoIndex = -1
+					m_nConstIdx = -1
+					m_nDomainValueIdx = 0
+					m_nBlackboardReferenceIdx = -1
+				},
+								{
+					m_nCode = "CELL_INVOKE"
+					m_nVar = -1
+					m_nReg0 = -1
+					m_nReg1 = -1
+					m_nReg2 = -1
+					m_nInvokeBindingIndex = 0
+					m_nChunk = -1
+					m_nDestInstruction = 0
+					m_nCallInfoIndex = -1
+					m_nConstIdx = -1
+					m_nDomainValueIdx = -1
+					m_nBlackboardReferenceIdx = -1
+				},
+			]
+			m_Registers = 
+			[
+								{
+					m_nReg = 0
+					m_Type = "PVAL_ENTITY_NAME"
+					m_OriginName = "0:null"
+					m_nWrittenByInstruction = 0
+					m_nLastReadByInstruction = -1
+				},
+			]
+			m_nInstructionEditorIDs = []
+		},
+	]
+	m_DomainValues = 
+	[
+				{
+			m_nType = "ENTITY_NAME"
+			m_Value = "method"
+			m_ExpectedRuntimeType = ""
+		},
+	]
+	m_Vars = []
+	m_Constants = []
+	m_PublicOutputs = []
+	m_OutputConnections = []
+	m_InvokeBindings = 
+	[
+				{
+			m_RegisterMap = 
+			{
+				m_InParams = 
+				{
+					TargetName = 0
+				}
+				m_OutParams = 
+				{
+				}
+			}
+			m_FuncName = "FireAtName"
+			m_nCellIndex = 1
+			m_nSrcChunk = 0
+			m_nSrcInstruction = 1
+		},
+	]
+}

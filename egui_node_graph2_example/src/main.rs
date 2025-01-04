@@ -2,16 +2,37 @@
 #![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
 #![warn(clippy::all, rust_2018_idioms)]
 
+use eframe::egui::IconData;
 use egui_node_graph2_example::NodeGraphExample;
 
+fn load_icon(path: &str) -> IconData {
+    let (icon_rgba, icon_width, icon_height) = {
+        let image = image::open(path)
+            .expect("Failed to open icon path")
+            .into_rgba8();
+        let (width, height) = image.dimensions();
+        let rgba = image.into_raw();
+        (rgba, width, height)
+    };
+
+    IconData {
+        rgba: icon_rgba,
+        width: icon_width,
+        height: icon_height,
+    }
+}
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    use eframe::egui::Visuals;
-
+    use eframe::egui::{ViewportBuilder, Visuals};
+    let options = eframe::NativeOptions {
+        viewport: ViewportBuilder::default()
+            .with_icon(load_icon(".\\icon.png")),
+        ..Default::default()
+    };
     eframe::run_native(
-        "Egui node graph example",
-        eframe::NativeOptions::default(),
+        "Pulse Graph Editor",
+        options,
         Box::new(|cc| {
             cc.egui_ctx.set_visuals(Visuals::dark());
             #[cfg(feature = "persistence")]
@@ -23,4 +44,5 @@ fn main() {
         }),
     )
     .expect("Failed to run native example");
+
 }

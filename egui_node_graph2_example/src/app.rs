@@ -1,7 +1,11 @@
-use std::{borrow::Cow, collections::HashMap};
-
+use std::borrow::Borrow;
+use std::{borrow::Cow, cell, collections::HashMap, default};
+use std::fs::{self, File};
+use std::io::prelude::*;
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph2::*;
+use crate::serialization::*;
+use crate::instruction_templates;
 
 // ========= First, define your user data types =============
 
@@ -21,6 +25,8 @@ pub struct MyNodeData {
 pub enum MyDataType {
     Scalar,
     Vec2,
+    String,
+    Action,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -30,11 +36,13 @@ pub enum MyDataType {
 /// this library makes no attempt to check this consistency. For instance, it is
 /// up to the user code in this example to make sure no parameter is created
 /// with a DataType of Scalar and a ValueType of Vec2.
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub enum MyValueType {
     Vec2 { value: egui::Vec2 },
     Scalar { value: f32 },
+    String { value: String },
+    Action,
 }
 
 impl Default for MyValueType {
@@ -63,12 +71,20 @@ impl MyValueType {
             anyhow::bail!("Invalid cast from {:?} to scalar", self)
         }
     }
+
+    pub fn try_to_string(self) -> anyhow::Result<String> {
+        if let MyValueType::String { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to string", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub enum MyNodeTemplate {
     MakeScalar,
@@ -78,6 +94,13 @@ pub enum MyNodeTemplate {
     AddVector,
     SubtractVector,
     VectorTimesScalar,
+    CellPublicMethod,
+    EntFire,
+    Compare,
+    ConcatString,
+    CellWait,
+    GetVar,
+    SetVar,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -107,6 +130,8 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
         match self {
             MyDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
             MyDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
+            MyDataType::String => egui::Color32::from_rgb(52, 171, 235),
+            MyDataType::Action => egui::Color32::from_rgb(252, 3, 165),
         }
     }
 
@@ -114,6 +139,8 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
         match self {
             MyDataType::Scalar => Cow::Borrowed("scalar"),
             MyDataType::Vec2 => Cow::Borrowed("2d vector"),
+            MyDataType::String => Cow::Borrowed("string"),
+            MyDataType::Action => Cow::Borrowed("action"),
         }
     }
 }
@@ -136,6 +163,13 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::AddVector => "Vector add",
             MyNodeTemplate::SubtractVector => "Vector subtract",
             MyNodeTemplate::VectorTimesScalar => "Vector times scalar",
+            MyNodeTemplate::CellPublicMethod => "Public Method",
+            MyNodeTemplate::EntFire => "EntFire",
+            MyNodeTemplate::Compare => "Compare",
+            MyNodeTemplate::ConcatString => "Concatenate strings",
+            MyNodeTemplate::CellWait => "Wait",
+            MyNodeTemplate::GetVar => "Load variable",
+            MyNodeTemplate::SetVar => "Save variable",
         })
     }
 
@@ -149,6 +183,12 @@ impl NodeTemplateTrait for MyNodeTemplate {
             | MyNodeTemplate::AddVector
             | MyNodeTemplate::SubtractVector => vec!["Vector"],
             MyNodeTemplate::VectorTimesScalar => vec!["Vector", "Scalar"],
+            MyNodeTemplate::CellPublicMethod => vec!["Inflow"],
+            MyNodeTemplate::EntFire => vec!["Entities"],
+            MyNodeTemplate::Compare => vec!["Logic"],
+            MyNodeTemplate::ConcatString => vec!["String"],
+            MyNodeTemplate::CellWait => vec!["Utility"],
+            MyNodeTemplate::GetVar | MyNodeTemplate::SetVar => vec!["Variables"],
         }
     }
 
@@ -173,6 +213,18 @@ impl NodeTemplateTrait for MyNodeTemplate {
 
         // We define some closures here to avoid boilerplate. Note that this is
         // entirely optional.
+        let input_string = |graph: &mut MyGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                MyDataType::String,
+                MyValueType::String {
+                    value: "method".to_string(),
+                },
+                InputParamKind::ConnectionOrConstant,
+                true,
+            );
+        };
         let input_scalar = |graph: &mut MyGraph, name: &str| {
             graph.add_input_param(
                 node_id,
@@ -195,6 +247,16 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 true,
             );
         };
+        let input_action = |graph: &mut MyGraph| {
+            graph.add_input_param(
+                node_id,
+                "ActionIn".to_string(),
+                MyDataType::Action,
+                MyValueType::Action,
+                InputParamKind::ConnectionOnly,
+                true,
+            );
+        };
 
         let output_scalar = |graph: &mut MyGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), MyDataType::Scalar);
@@ -202,7 +264,15 @@ impl NodeTemplateTrait for MyNodeTemplate {
         let output_vector = |graph: &mut MyGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), MyDataType::Vec2);
         };
+        let output_string = |graph: &mut MyGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), MyDataType::String);
+        };
+        let output_action = |graph: &mut MyGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), MyDataType::Action);
+        };
 
+        // input_action(graph);
+        // output_action(graph);
         match self {
             MyNodeTemplate::AddScalar => {
                 // The first input param doesn't use the closure so we can comment
@@ -254,6 +324,56 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 input_scalar(graph, "value");
                 output_scalar(graph, "out");
             }
+            MyNodeTemplate::CellPublicMethod => {
+                graph.add_input_param(
+                    node_id,
+                    "name".into(),
+                    MyDataType::String,
+                    MyValueType::String {
+                        value: "method".to_string(),
+                    },
+                    InputParamKind::ConnectionOrConstant,
+                    true,
+                );
+                output_string(graph, "argument1");
+                output_action(graph, "outAction");
+            }
+            MyNodeTemplate::EntFire => {
+                input_action(graph);
+                input_string(graph, "entity");
+                input_string(graph, "input");
+                input_string(graph, "value");
+                output_action(graph, "outAction");
+            }
+            MyNodeTemplate::Compare => {
+                input_action(graph);
+                input_string(graph, "operation");
+                input_string(graph, "Data type (optional)");
+                input_scalar(graph, "A");
+                input_scalar(graph, "B");
+                output_action(graph, "True");
+                output_action(graph, "False");
+            }
+            MyNodeTemplate::ConcatString => {
+                input_string(graph, "A");
+                input_string(graph, "B");
+                output_string(graph, "out");
+            }
+            MyNodeTemplate::CellWait => {
+                input_action(graph);
+                input_scalar(graph, "time");
+                output_action(graph, "outAction");
+            }
+            MyNodeTemplate::GetVar => {
+                input_string(graph, "name");
+                output_scalar(graph, "out");
+            }
+            MyNodeTemplate::SetVar => {
+                input_action(graph);
+                output_string(graph, "name");
+                output_scalar(graph, "value");
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -274,6 +394,11 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             MyNodeTemplate::AddVector,
             MyNodeTemplate::SubtractVector,
             MyNodeTemplate::VectorTimesScalar,
+            MyNodeTemplate::CellPublicMethod,
+            MyNodeTemplate::EntFire,
+            MyNodeTemplate::Compare,
+            MyNodeTemplate::ConcatString,
+            MyNodeTemplate::CellWait,
         ]
     }
 }
@@ -307,6 +432,15 @@ impl WidgetValueTrait for MyValueType {
                     ui.label(param_name);
                     ui.add(DragValue::new(value));
                 });
+            }
+            MyValueType::String { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.text_edit_singleline(value);
+                });
+            }
+            MyValueType::Action => {
+                ui.label("ACT");
             }
         }
         // This allows you to return your responses from the inline widgets.
@@ -413,16 +547,20 @@ impl eframe::App for NodeGraphExample {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_dark_light_mode_switch(ui);
+                if ui.button("Compile").clicked() {
+                    compile_graph(&self.state.graph);
+                }
             });
         });
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
-                self.state.draw_graph_editor(
+                let graph_response = self.state.draw_graph_editor(
                     ui,
                     AllMyNodeTemplates,
                     &mut self.user_state,
                     Vec::default(),
-                )
+                );
+                graph_response
             })
             .inner;
         for node_response in graph_response.node_responses {
@@ -514,11 +652,20 @@ pub fn evaluate_node(
         fn input_scalar(&mut self, name: &str) -> anyhow::Result<f32> {
             self.evaluate_input(name)?.try_to_scalar()
         }
+        fn input_string(&mut self, name: &str) -> anyhow::Result<String> {
+            self.evaluate_input(name)?.try_to_string()
+        }
         fn output_vector(&mut self, name: &str, value: egui::Vec2) -> anyhow::Result<MyValueType> {
             self.populate_output(name, MyValueType::Vec2 { value })
         }
         fn output_scalar(&mut self, name: &str, value: f32) -> anyhow::Result<MyValueType> {
             self.populate_output(name, MyValueType::Scalar { value })
+        }
+        fn output_string(&mut self, name: &str, value: String) -> anyhow::Result<MyValueType> {
+            self.populate_output(name, MyValueType::String { value })
+        }
+        fn output_action(&mut self) -> anyhow::Result<MyValueType> {
+            self.populate_output("", MyValueType::Action)
         }
     }
 
@@ -559,6 +706,56 @@ pub fn evaluate_node(
             let value = evaluator.input_scalar("value")?;
             evaluator.output_scalar("out", value)
         }
+        MyNodeTemplate::CellPublicMethod => {
+            let name = evaluator.input_string("name")?;
+            match name.as_str() {
+                "method" => evaluator.output_string("out", name),
+                _ => anyhow::bail!("Unknown method: {}", name),
+            }
+        }
+        MyNodeTemplate::EntFire => {
+            let entity = evaluator.input_string("entity")?;
+            let input = evaluator.input_string("input")?;
+            let value = evaluator.input_string("value")?;
+            let out = format!("EntFire {} {} {}", entity, input, value);
+            evaluator.output_string("out", out)
+        }
+        MyNodeTemplate::Compare => {
+            let operation = evaluator.input_string("operation")?;
+            let a = evaluator.input_scalar("A")?;
+            let b = evaluator.input_scalar("B")?;
+            let out = match operation.as_str() {
+                "==" => a == b,
+                "!=" => a != b,
+                "<" => a < b,
+                "<=" => a <= b,
+                ">" => a > b,
+                ">=" => a >= b,
+                _ => anyhow::bail!("Unknown operation: {}", operation),
+            };
+            evaluator.output_scalar("out", out as i32 as f32)
+        }
+        MyNodeTemplate::ConcatString => {
+            let a = evaluator.input_string("A")?;
+            let b = evaluator.input_string("B")?;
+            evaluator.output_string("out", format!("{}{}", a, b))
+        }
+        MyNodeTemplate::CellWait => {
+            let time = evaluator.input_scalar("time")?;
+            let out = format!("Wait {}", time);
+            evaluator.output_string("out", out)
+        }
+        MyNodeTemplate::GetVar => {
+            let name = evaluator.input_string("name")?;
+            let out = 0.0;
+            evaluator.output_scalar("out", out)
+        }
+        MyNodeTemplate::SetVar => {
+            let name = evaluator.input_string("name")?;
+            let value = evaluator.input_scalar("value")?;
+            let out = format!("SetVar {} {}", name, value);
+            evaluator.output_string("out", out)
+        }
     }
 }
 
@@ -570,7 +767,7 @@ fn populate_output(
     value: MyValueType,
 ) -> anyhow::Result<MyValueType> {
     let output_id = graph[node_id].get_output(param_name)?;
-    outputs_cache.insert(output_id, value);
+    outputs_cache.insert(output_id, value.clone());
     Ok(value)
 }
 
@@ -588,7 +785,7 @@ fn evaluate_input(
         // The value was already computed due to the evaluation of some other
         // node. We simply return value from the cache.
         if let Some(other_value) = outputs_cache.get(&other_output_id) {
-            Ok(*other_value)
+            Ok(other_value.clone())
         }
         // This is the first time encountering this node, so we need to
         // recursively evaluate it.
@@ -596,14 +793,382 @@ fn evaluate_input(
             // Calling this will populate the cache
             evaluate_node(graph, graph[other_output_id].node, outputs_cache)?;
 
+            let other_value = outputs_cache.get(&other_output_id).expect("cache should be populated");
+            Ok(other_value.clone())
             // Now that we know the value is cached, return it
-            Ok(*outputs_cache
-                .get(&other_output_id)
-                .expect("Cache should be populated"))
+            // Ok(*outputs_cache
+            //     .get(&other_output_id)
+            //     .expect("Cache should be populated"))
         }
     }
     // No existing connection, take the inline value instead.
     else {
-        Ok(graph[input_id].value)
+        Ok(graph[input_id].value.clone())
     }
+}
+
+pub fn get_connected_output_node(graph: &MyGraph, out_action_id: &OutputId) -> Option<NodeId> {
+    // dumb way of finding outgoing connection node.
+    for group in graph.iter_connection_groups() {
+        for connection in group.1 {
+            if connection == *out_action_id {
+                let input_action: &InputParam<MyDataType, MyValueType> = graph.inputs.get(group.0).expect("Can't find input value");
+                return Some(input_action.node);
+            }
+        }
+    }
+    None
+}
+
+pub fn get_next_action_node<'a>(origin_node: &'a Node<MyNodeData>, graph: &'a MyGraph, name: &str) -> Option<&'a Node<MyNodeData>> {
+    let out_action_id = origin_node.get_output(name);
+    if out_action_id.is_ok() {
+        let out_action_id = out_action_id.unwrap();
+        let connected_node_id = get_connected_output_node(graph, &out_action_id);
+        if connected_node_id.is_some() {
+            return graph.nodes.get(connected_node_id.unwrap());
+        }
+    }
+    return None;
+}
+
+pub fn traverse_entry_cell(graph: &MyGraph, node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef)
+{
+    let input_id = node.get_input("name").expect("Can't find input 'name'");
+    let input_param = graph.inputs.get(input_id).expect("Can't find input value");
+    // create new pulse cell node.
+    let mut cell_method = CPulseCell_Inflow_Method::default();
+    let chunk_id = graph_def.create_chunk();
+    cell_method.name = input_param.value.clone().try_to_string().unwrap();
+    cell_method.entry_chunk = chunk_id;
+    cell_method.return_type = String::from("PVAL_INVALID");
+    // get action connection
+    let out_action_id = node.get_output("outAction").expect("Can't find output 'outAction'");
+    //let out_action_param = graph.outputs.get(out_action_id).expect("Can't find output value");
+    let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
+    // create argument1 (TODO only if connection exists)
+    let reg_id_arg1 = chunk.add_register(String::from("PVAL_STRING"), 0);
+    let output_id_arg1 = node.get_output("argument1").expect("Can't find output 'argument1'");
+    cell_method.add_arg(String::from("arg1"), String::default(), String::from("PVAL_STRING"), reg_id_arg1);
+    graph_def.add_register_mapping(output_id_arg1, reg_id_arg1);
+
+    let cell_enum = CellType::InflowMethod(cell_method);
+    graph_def.cells.push(Box::from(cell_enum));
+    //let mut connected_node_id = NodeId::default();
+    // dumb way of finding outgoing connection node.
+    // graph.iter_connection_groups().for_each(|group| {
+    //     group.1.iter().for_each(|connection| {
+    //         if *connection == out_action_id {
+    //             let input_action: &InputParam<MyDataType, MyValueType> = graph.inputs.get(group.0).expect("Can't find input value");
+    //             connected_node_id = input_action.node;
+    //             return;
+    //         }
+    //     });
+    // });
+    let connected_node_id = get_connected_output_node(graph, &out_action_id);
+    if connected_node_id.is_some() {
+        let connected_node = graph.nodes.get(connected_node_id.unwrap());
+        if connected_node.is_some() {
+            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None);
+        }
+    }
+}
+
+pub fn compile_graph(graph: &MyGraph) {
+    let mut graph_def = PulseGraphDef::default();
+    graph_def.map_name = String::from("maps/test.vmap");
+    graph_def.xml_name = String::default();
+    for node in graph.iter_nodes() {
+        let data: &Node<MyNodeData> = graph.nodes.get(node).unwrap();
+        // start at all possible entry points
+        if data.user_data.template == MyNodeTemplate::CellPublicMethod {
+            traverse_entry_cell(graph, &data, &mut graph_def);
+        }
+    }
+    let mut data = String::from("<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse13:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n");
+    data.push_str(graph_def.serialize().as_str());
+    fs::write("graph_out/graph.vpulse", data).expect("Cannot write to file!");
+}
+
+pub fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputId>) -> i32 {
+    match output_id {
+        Some(output_id) => {
+            match graph_def.get_mapped_reigster(*output_id) {
+                Some(reg) => { // we found a mapping! So we know which register to use for this
+                    return *reg;
+                }
+                None => { return -1; }
+            }
+        }
+        None => { return -1; }
+    }
+}
+
+pub fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str) -> i32 {
+    match graph_def.get_variable_index(&name) {
+        Some(var) => {
+            return var as i32;
+        }
+        None => {
+            let var = Variable::new(name.to_string(), String::from("PVAL_INT"), 0);
+            return graph_def.add_variable(var);
+        }
+    }
+}
+
+pub fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: &Option<InputId>) -> i32 {
+    match input_id {
+        Some(input_id) => {
+            match graph_def.get_mapped_reigster_input(*input_id) {
+                Some(reg) => { // we found a mapping! So we know which register to use for this
+                    return *reg;
+                }
+                None => { return -1; }
+            }
+        }
+        None => { return -1; }
+    }
+}
+
+pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
+    match current_node.user_data.template {
+        MyNodeTemplate::CellPublicMethod => {
+            // here we resolve connections to the argument outputs
+            return try_find_output_mapping(graph_def, output_id);
+        }
+        MyNodeTemplate::CellWait => {
+            let time_input_id = current_node.get_input("time").expect("Can't find input 'time'");
+            let connection_to_time = graph.connection(time_input_id);
+            let time_input_register: i32;
+            match connection_to_time {
+                Some(out) => {
+                    // get existing register id to note for the wait time
+                    let out_param = graph.get_output(out);
+                    let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+                    time_input_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
+                }
+                None => {
+                    // create a constant value for the wait time
+                    // have to do this way because of the borrow checker's mutability rules.
+                    let new_constant_id = graph_def.get_current_constant_id() + 1;
+
+                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                    // add a new register to store the wait time
+                    time_input_register = chunk.add_register(String::from("PVAL_FLOAT"), chunk.get_last_instruction_id() + 1);
+                    // get the wait time constant
+                    let instruction = instruction_templates::get_const(new_constant_id, time_input_register);
+                    chunk.add_instruction(instruction);
+                    // add the actual constant definition for the waiting time
+                    let value_param = graph.get_input(time_input_id);
+                    let time = value_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
+                    let constant = PulseConstant::Float(time);
+                    graph_def.add_constant(constant);
+                }
+            }
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            // ! Important (might change). We assume that after waiting we go to the next instruction after the cell invoke.
+            let cell_wait = CPulseCell_Inflow_Wait::new(target_chunk, chunk.get_last_instruction_id() + 3);
+            graph_def.cells.push(Box::from(CellType::InflowWait(cell_wait)));
+
+            let chunk_opt = graph_def.chunks.get(target_chunk as usize);
+            if chunk_opt.is_some() {
+                let chunk = chunk_opt.unwrap();
+                let mut register_map = RegisterMap::default();
+                register_map.add_inparam(String::from("flDurationSec"), time_input_register);
+                let binding = InvokeBinding {
+                    register_map,
+                    func_name: String::from("Wait"),
+                    cell_index: graph_def.cells.len() as i32 - 1,
+                    src_chunk: target_chunk,
+                    src_instruction: chunk.get_last_instruction_id() + 1,
+                };
+                let binding_idx = graph_def.add_binding(binding);
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                chunk.add_instruction(instruction_templates::cell_invoke(binding_idx));
+                // early return.
+                let mut instr_ret_void = Instruction::default();
+                instr_ret_void.code = String::from("RETURN_VOID");
+                chunk.add_instruction(instr_ret_void);
+            }
+            let connected_node = get_next_action_node(current_node, graph, "outAction");
+            if connected_node.is_some() {
+                return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
+            }
+        }
+        MyNodeTemplate::EntFire => {
+            // create EntFire (step) cell
+            let entity_id = current_node.get_input("entity").expect("Can't find input 'entity'");
+            let value_entity = graph.inputs.get(entity_id).expect("Can't find input value").value.clone().try_to_string();
+            if let Ok(value) = value_entity {
+                // create domain value (only if we know value already)
+                let domain_val_idx = graph_def.create_domain_value(String::from("ENTITY_NAME"), value.clone(), String::new());
+                
+                let input_id = current_node.get_input("input").expect("Can't find input 'input'");
+                let input_param = graph.inputs.get(input_id).expect("Can't find input value").value.clone().try_to_string().expect("Failed to unwrap input value");
+                let step_cell = CPulseCell_Step_EntFire::new(input_param.clone());
+                let cell_enum = CellType::StepEntFire(step_cell);
+                
+                let value_id = current_node.get_input("value").expect("Can't find input 'value'");
+                let mut value_input_register: i32 = -1;
+                // try to resolve the value input node
+                let connection_to_value = graph.connection(value_id);
+                match connection_to_value {
+                    Some(out) => {
+                        let out_param = graph.get_output(out);
+                        let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+                        value_input_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
+                    }
+                    None => { // no connection, create constant value
+                        let value_param = graph.get_input(value_id);
+                        let str= value_param.value().clone().try_to_string();
+                        match str {
+                            Ok(str) => {
+                                if !str.is_empty() {
+                                    let constant = PulseConstant::String(str);
+                                    let const_idx = graph_def.add_constant(constant);
+                                    // create register to hold this value
+                                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                                    value_input_register = chunk.add_register(String::from("PVAL_STRING"), chunk.get_last_instruction_id() + 1);
+                                    // create instruction to load this value now.
+                                    let instruction = instruction_templates::get_const(const_idx, value_input_register);
+                                    chunk.add_instruction(instruction);
+                                }
+                            }
+                            Err(err) => {
+                                println!("Error getting string from node value: {}", err);
+                            }
+                        }
+                    }
+                }
+                
+                //let value_param = graph.get_input(value_id)
+                graph_def.cells.push(Box::from(cell_enum));
+                // now build instructions and bindings to get the domain value, and invoke the cell
+                let chunk_opt = graph_def.chunks.get_mut(target_chunk as usize);
+                if chunk_opt.is_some() {
+                    let chunk = chunk_opt.unwrap();
+                    // new register to load in the domain value
+                    let reg_id = chunk.add_register(String::from("PVAL_ENTITY_NAME"), chunk.get_last_instruction_id() + 1);
+                    // load the domain value instruction
+                    chunk.add_instruction(instruction_templates::get_domain_value(reg_id, domain_val_idx));
+                    // add invoke binding for FireAtName cell
+                    let mut register_map = RegisterMap::default();
+                    register_map.add_inparam(String::from("TargetName"), reg_id);
+                    if value_input_register != -1 {
+                        register_map.add_inparam(String::from("pParam"), value_input_register);
+                    }
+                    let binding = InvokeBinding {
+                        register_map: register_map,
+                        func_name: String::from("FireAtName"),
+                        cell_index: graph_def.cells.len() as i32 - 1,
+                        src_chunk: target_chunk,
+                        src_instruction: chunk.get_last_instruction_id() + 1,
+                    };
+                    let binding_idx = graph_def.add_binding(binding);
+                    // add instruction for invoking the binding.
+                    // rust doesn't like reusing the borrowed chunks reference, but we know that it doesn't change.
+                    graph_def.chunks.get_mut(target_chunk as usize).unwrap()
+                    .add_instruction(instruction_templates::cell_invoke(binding_idx));
+                    //graph.connection(input)
+                    let output_connection = OutputConnection::new(
+                        String::from("Step_EntFire:-1"), 
+                        value, input_param, if value_input_register != -1 { String::from("param") } else { String::default() });
+                    graph_def.add_output_connection(output_connection);
+                }
+                let connected_node = get_next_action_node(current_node, graph, "outAction");
+                if connected_node.is_some() {
+                    return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
+                }
+            }
+            
+        }
+        MyNodeTemplate::ConcatString => {
+            let id_a = current_node.get_input("A").expect("Can't find input A in node");
+            let id_b = current_node.get_input("B").expect("Can't find input B in node");
+            let input_ids = [id_a, id_b];
+            let connection_to_a = graph.connection(id_a);
+            let connection_to_b = graph.connection(id_b);
+            let connections_to_resolve: [Option<OutputId>; 2] = [connection_to_a, connection_to_b]; 
+            let mut input_registers: [i32; 2] = [-1, -1];
+
+            for (i, connection) in connections_to_resolve.iter().enumerate() {
+                match connection {
+                    Some(out) => {
+                        let out_param = graph.get_output(*out);
+                        let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+                        // grab the register that the value will come from.
+                        input_registers[i] = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(*out));
+                    }
+                    None => {
+                        // no connection.. First search if we already created it, if not create the constant input value
+                        let register = try_find_input_mapping(graph_def, &Some(input_ids[i]));
+                        if register == -1 {
+                            let input_info: &InputParam<MyDataType, MyValueType> = graph.get_input(input_ids[i]);
+                            let constant = PulseConstant::String(input_info.value.clone().try_to_string().unwrap());
+                            let const_idx = graph_def.add_constant(constant);
+                            // create register to hold this value
+                            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                            input_registers[i] = chunk.add_register(String::from("PVAL_STRING"), chunk.get_last_instruction_id() + 1);
+                            // create instruction to load this value now.
+                            let instruction = instruction_templates::get_const(const_idx, input_registers[i]);
+                            chunk.add_instruction(instruction);
+                            graph_def.add_register_mapping_input(input_ids[i], input_registers[i]);
+                        } else {
+                            input_registers[i] = register;
+                        }
+                    }
+                }
+            }
+            // registers are figured out. now prepare the output register and the instruction
+            let mut register = try_find_output_mapping(graph_def, output_id);
+            if register == -1 {
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                register = chunk.add_register(String::from("PVAL_STRING"), chunk.get_last_instruction_id() + 1);
+                let instruction = instruction_templates::add_string(input_registers[0], input_registers[1], register);
+                chunk.add_instruction(instruction);
+                graph_def.add_register_mapping(output_id.unwrap(), register);
+            }
+            return register;
+        }
+        MyNodeTemplate::GetVar => {
+            let name_id = current_node.get_input("name").expect("Can't find input 'name'");
+            // name is a constant value
+            let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
+            let var_id = create_or_get_variable(graph_def, name.borrow());
+            // add register
+            // add instruction to load the variable value
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let reg = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
+            chunk.add_instruction(instruction_templates::get_var(reg, var_id as i32));
+            return reg;
+        }
+        MyNodeTemplate::SetVar => {
+            let name_id = current_node.get_input("name").expect("Can't find input 'name'");
+            // name is a constant value
+            let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
+            let var_id = create_or_get_variable(graph_def, name.borrow());
+            let value_id = current_node.get_input("value").expect("Can't find input 'value'");
+            let connection_to_value = graph.connection(value_id);
+            match connection_to_value {
+                Some(out) => {
+                    let out_param = graph.get_output(out);
+                    let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+                    let value_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
+                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                    chunk.add_instruction(instruction_templates::set_var(var_id as i32, value_register));
+                }
+                None => {
+                    let value_param = graph.get_input(value_id);
+                    let value = value_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
+                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                    let reg = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
+                    let instruction = instruction_templates::get_const(value as i32, reg);
+                    chunk.add_instruction(instruction);
+                    chunk.add_instruction(instruction_templates::set_var(var_id as i32, reg));
+                }
+            }
+        }
+        _ => {}
+    }
+    return -1;
 }

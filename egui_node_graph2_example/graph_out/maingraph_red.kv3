@@ -1,0 +1,62 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+    m_InputDependencies = 
+    [
+        
+        {
+            m_RelativeFilename = "pulse/maingraph.vpulse"
+            m_SearchPath = "csgo_addons/dima_millionaire"
+            m_nFileCRC = 1936901886
+            m_bOptional = false
+            m_bFileExists = true
+            m_bIsGameFile = false
+        },
+    ]
+    m_AdditionalInputDependencies = 
+    [
+    ]
+    m_ArgumentDependencies = 
+    [
+        
+        {
+            m_ParameterName = "___OverrideInputData___"
+            m_ParameterType = "BinaryBlobArg"
+            m_nFingerprint = 0
+            m_nFingerprintDefault = 0
+        },
+    ]
+    m_SpecialDependencies = 
+    [
+        
+        {
+            m_String = "KV3 Compiler Version"
+            m_CompilerIdentifier = "CompilePulseGraphDef"
+            m_nFingerprint = 2
+            m_nUserData = 0
+        },
+        
+        {
+            m_String = "PulseGraphDef Compiler Version"
+            m_CompilerIdentifier = "CompilePulseGraphDef"
+            m_nFingerprint = 13
+            m_nUserData = 0
+        },
+    ]
+    m_AdditionalRelatedFiles = 
+    [
+    ]
+    m_ChildResourceList = 
+    [
+    ]
+    m_WeakReferenceList = 
+    [
+    ]
+    m_SearchableUserData = 
+    {
+        pulse_domain = "ServerPointEntity"
+        pulse_save_execution_history = false
+        IsChildResource = 0
+    }
+    m_SubassetReferences = null
+    m_SubassetDefinitions = null
+}

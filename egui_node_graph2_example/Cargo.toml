@@ -12,6 +12,9 @@ eframe = "0.29"
 egui_node_graph2 = { path = "../egui_node_graph2" }
 anyhow = "1.0"
 serde = { version = "1.0", optional = true }
+indoc = "2.0.5"
+image = "0.24.3"
+slotmap = "1.0.7"
 
 [features]
 default = []

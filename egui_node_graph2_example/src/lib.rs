@@ -3,6 +3,8 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
+mod serialization;
+mod instruction_templates;
 pub use app::NodeGraphExample;
 
 // ----------------------------------------------------------------------------

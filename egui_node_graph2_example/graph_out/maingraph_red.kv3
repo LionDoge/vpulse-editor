@@ -5,7 +5,7 @@
         
         {
             m_RelativeFilename = "pulse/maingraph.vpulse"
-            m_SearchPath = "csgo_addons/dima_millionaire"
+            m_SearchPath = "csgo_addons/test"
             m_nFileCRC = 1936901886
             m_bOptional = false
             m_bFileExists = true

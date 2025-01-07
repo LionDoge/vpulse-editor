@@ -92,3 +92,11 @@ pub fn set_var(register_id: i32, var_id: i32) -> Instruction {
     instr.reg0 = register_id;
     instr
 }
+
+pub fn convert_value(register_to: i32, register_from: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("CONVERT_VALUE");
+    instr.reg0 = register_to;
+    instr.reg1 = register_from;
+    instr
+}

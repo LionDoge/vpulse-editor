@@ -12,6 +12,7 @@ pub trait KV3Serialize {
 
 pub enum CellType {
     InflowMethod(CPulseCell_Inflow_Method),
+    InflowEvent(CPulseCell_Inflow_EventHandler),
     StepEntFire(CPulseCell_Step_EntFire),
     InflowWait(CPulseCell_Inflow_Wait),
 }
@@ -81,6 +82,40 @@ impl CPulseCell_Inflow_Method {
         };
         self.args.push(arg);
         self.register_map.add_outparam(name, out_register);
+    }
+}
+
+pub struct CPulseCell_Inflow_EventHandler {
+    pub register_map: RegisterMap,
+    pub entry_chunk: i32,
+    pub event_name: String,
+}
+impl KV3Serialize for CPulseCell_Inflow_EventHandler {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Inflow_EventHandler\"
+                m_nEditorNodeID = -1
+                m_EntryChunk = {}
+                m_RegisterMap = {}
+                m_EventName = \"{}\"
+            }}
+            "
+            , self.entry_chunk, self.register_map.serialize(), self.event_name
+        }
+    }
+}
+impl CPulseCell_Inflow_EventHandler {
+    pub fn new(entry_chunk: i32, event_name: String) -> CPulseCell_Inflow_EventHandler {
+        CPulseCell_Inflow_EventHandler {
+            register_map: RegisterMap::default(),
+            entry_chunk,
+            event_name,
+        }
+    }
+    pub fn add_outparam(&mut self, name: String, num: i32) {
+        self.register_map.add_outparam(name, num);
     }
 }
 
@@ -448,13 +483,13 @@ impl KV3Serialize for Variable {
         formatdoc!{
             "
             {{
-                m_Name = \"{}\",
-                m_Description = \"\",
-                m_Type = \"{}\",
+                m_Name = \"{}\"
+                m_Description = \"\"
+                m_Type = \"{}\"
                 m_DefaultValue = {}
                 m_bIsPublic = true
                 m_bIsObservable = false
-                m_nEditorNodeID = - 1
+                m_nEditorNodeID = -1
             }}
             "
             , self.name, self.typ, self.default_value
@@ -592,7 +627,8 @@ impl KV3Serialize for PulseGraphDef {
                 match cell.as_ref() {
                     CellType::InflowMethod(cell) => cell.serialize(),
                     CellType::StepEntFire(cell) => cell.serialize(),
-                    CellType::InflowWait(cell) => cell.serialize()
+                    CellType::InflowWait(cell) => cell.serialize(),
+                    CellType::InflowEvent(cell) => cell.serialize(),
                 }
             }).collect::<Vec<String>>().join(",\n\n")
             , self.map_name, self.xml_name

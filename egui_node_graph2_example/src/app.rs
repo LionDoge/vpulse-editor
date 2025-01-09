@@ -1001,6 +1001,56 @@ pub fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: &Option<Input
     }
 }
 
+fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<MyNodeData>,
+     graph_def: &mut PulseGraphDef, chunk_id: i32, input_name: &str, value_type: PulseValueType) -> i32 {
+
+    let input_id = current_node.get_input(input_name).expect(format!("Can't find input {}", input_name).as_str());
+    let connection_to_input = graph.connection(input_id);
+    let mut target_register: i32;
+    // if we find a connection, then traverse to that node, whatever happens we should get a register id back.
+    match connection_to_input {
+        Some(out) => {
+            // connection found to an outputid of the connected node. Traverse to that node, and get the register
+            let out_param = graph.get_output(out);
+            let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+            target_register = traverse_nodes_and_populate(graph, out_node, graph_def, chunk_id, &Some(out));
+        }
+        None => {
+            // no connection found, create a constant value for the input
+            // but first check if we have already created a constant for this value
+            target_register = try_find_input_mapping(graph_def, &Some(input_id));
+            if target_register == -1 {
+                let new_constant_id = graph_def.get_current_constant_id() + 1;
+                let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
+                target_register = chunk.add_register(value_type.to_string(), chunk.get_last_instruction_id() + 1);
+                let input_param = graph.get_input(input_id);
+                let instruction = instruction_templates::get_const(new_constant_id, target_register);
+                chunk.add_instruction(instruction);
+                let constant = match value_type {
+                    PulseValueType::PVAL_INT => 
+                    {
+                        let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
+                        PulseConstant::Integer(input_value as i32)
+                    }
+                    PulseValueType::PVAL_FLOAT => 
+                    {
+                        let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
+                        PulseConstant::Float(input_value)
+                    }
+                    PulseValueType::PVAL_STRING => 
+                    {
+                        let input_value = input_param.value().clone().try_to_string().expect("Failed to unwrap input value");
+                        PulseConstant::String(input_value)
+                    }
+                    _ => panic!("Unsupported value type")
+                };
+                graph_def.add_constant(constant);
+            }
+        }
+    }
+    target_register
+}
+
 pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
     match current_node.user_data.template {
         MyNodeTemplate::CellPublicMethod => {
@@ -1220,7 +1270,7 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
         MyNodeTemplate::IntToString => {
             let value_id = current_node.get_input("value").expect("Can't find input 'value'");
             let connection_to_value = graph.connection(value_id);
-            let mut register_input: i32 = -1;
+            let register_input: i32;
             match connection_to_value {
                 Some(out) => {
                     let out_param = graph.get_output(out);
@@ -1250,27 +1300,28 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
             let var_id = create_or_get_variable(graph_def, name.borrow());
             let value_id = current_node.get_input("value").expect("Can't find input 'value'");
             let connection_to_value = graph.connection(value_id);
+            let mut target_register: i32 = -1;
             match connection_to_value {
                 Some(out) => {
                     let out_param = graph.get_output(out);
                     let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
-                    let value_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
-                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                    chunk.add_instruction(instruction_templates::set_var(var_id as i32, value_register));
+                    target_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
                 }
                 None => {
-                    let mut register = try_find_input_mapping(graph_def, &Some(value_id));
+                    target_register = try_find_input_mapping(graph_def, &Some(value_id));
                     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                    if register == -1 {
+                    if target_register == -1 {
                         let value_param = graph.get_input(value_id);
                         let value = value_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
-                        register = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
-                        let instruction = instruction_templates::get_const(value as i32, register);
+                        target_register = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
+                        let instruction = instruction_templates::get_const(value as i32, target_register);
                         chunk.add_instruction(instruction);
                     }
-                    chunk.add_instruction(instruction_templates::set_var(var_id as i32, register));
                 }
+                
             }
+            let mut chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
         }
         _ => {}
     }

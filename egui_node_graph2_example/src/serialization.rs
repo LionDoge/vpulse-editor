@@ -5,7 +5,24 @@ use egui_node_graph2::{InputId, OutputId};
 // };
 use indoc::formatdoc;
 use slotmap::{SecondaryMap, SlotMap};
+use std::fmt;
 
+pub enum PulseValueType {
+    PVAL_INT,
+    PVAL_FLOAT,
+    PVAL_STRING,
+    PVAL_INVALID,
+}
+impl fmt::Display for PulseValueType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PulseValueType::PVAL_INT => write!(f, "PVAL_INT"),
+            PulseValueType::PVAL_FLOAT => write!(f, "PVAL_FLOAT"),
+            PulseValueType::PVAL_STRING => write!(f, "PVAL_STRING"),
+            PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
+        }
+    }
+}
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }

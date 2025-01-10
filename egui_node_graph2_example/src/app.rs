@@ -1,4 +1,5 @@
 use std::borrow::{Borrow, BorrowMut};
+use std::thread::current;
 use std::{borrow::Cow, cell, collections::HashMap, default};
 use std::fs::{self, File};
 use std::io::prelude::*;
@@ -105,6 +106,7 @@ pub enum MyNodeTemplate {
     SetVar,
     EventHandler,
     IntToString,
+    Operation,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -177,6 +179,7 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::SetVar => "Save variable",
             MyNodeTemplate::EventHandler => "Event Handler",
             MyNodeTemplate::IntToString => "Int to string",
+            MyNodeTemplate::Operation => "Operation",
         })
     }
 
@@ -193,6 +196,7 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::CellPublicMethod | MyNodeTemplate::EventHandler => vec!["Inflow"],
             MyNodeTemplate::EntFire => vec!["Entities"],
             MyNodeTemplate::Compare => vec!["Logic"],
+            MyNodeTemplate::Operation => vec!["Math"],
             MyNodeTemplate::ConcatString => vec!["String"],
             MyNodeTemplate::CellWait => vec!["Utility"],
             MyNodeTemplate::GetVar | MyNodeTemplate::SetVar => vec!["Variables"],
@@ -389,6 +393,11 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 input_scalar(graph, "value");
                 output_string(graph, "out");
             }
+            MyNodeTemplate::Operation => {
+                input_scalar(graph, "A");
+                input_scalar(graph, "B");
+                output_scalar(graph, "out");
+            }
         }
     }
 }
@@ -418,6 +427,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             MyNodeTemplate::SetVar,
             MyNodeTemplate::EventHandler,
             MyNodeTemplate::IntToString,
+            MyNodeTemplate::Operation,
         ]
     }
 }
@@ -801,6 +811,11 @@ pub fn evaluate_node(
         }
         MyNodeTemplate::IntToString => {
             let value = evaluator.input_scalar("value")?;
+            let out = format!("{}", value as i32);
+            evaluator.output_string("out", out)
+        }
+        MyNodeTemplate::Operation => {
+            let value = evaluator.input_scalar("A")?;
             let out = format!("{}", value as i32);
             evaluator.output_string("out", out)
         }
@@ -1320,8 +1335,30 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
                 }
                 
             }
-            let mut chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
+        }
+        MyNodeTemplate::Operation => {
+            let reg_a = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "A", PulseValueType::PVAL_FLOAT);
+            let reg_b = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "B", PulseValueType::PVAL_FLOAT);
+            let operation_input_id = current_node.get_input("operation").expect("Can't find input 'operation'");
+            let operation_input_param = graph.get_input(operation_input_id).value().clone().try_to_string().expect("Can't find input 'operation'");
+            let operation_instr_name: &str = match operation_input_param.as_str() {
+                "+" => "ADD",
+                "-" => "SUB",
+                "*" => "MUL",
+                "/" => "DIV",
+                "%" => "MOD",
+                _ => "ADD"
+            };
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let register_output = chunk.add_register(String::from("PVAL_FLOAT"), chunk.get_last_instruction_id() + 1);
+            let mut instr = Instruction::default();
+            instr.code = String::from(operation_instr_name);
+            instr.reg0 = register_output;
+            instr.reg1 = reg_a;
+            instr.reg2 = reg_b;
+            chunk.add_instruction(instr);
         }
         _ => {}
     }

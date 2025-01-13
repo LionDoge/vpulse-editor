@@ -100,3 +100,10 @@ pub fn convert_value(register_to: i32, register_from: i32) -> Instruction {
     instr.reg1 = register_from;
     instr
 }
+
+pub fn library_invoke(invoke_binding_id: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("LIBRARY_INVOKE");
+    instr.invoke_binding_index = invoke_binding_id;
+    instr
+}

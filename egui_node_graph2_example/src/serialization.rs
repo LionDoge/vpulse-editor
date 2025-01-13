@@ -1,17 +1,22 @@
+#![allow(non_camel_case_types)]
 use egui_node_graph2::{InputId, OutputId};
 // use std::{
 //     sync::atomic::{AtomicUsize, Ordering},
 //     thread,
 // };
 use indoc::formatdoc;
-use slotmap::{SecondaryMap, SlotMap};
+use slotmap::SecondaryMap;
 use std::fmt;
-
+#[allow(dead_code)]
 pub enum PulseValueType {
     PVAL_INT,
     PVAL_FLOAT,
     PVAL_STRING,
     PVAL_INVALID,
+    PVAL_EHANDLE(String),
+    PVAL_VEC3,
+    PVAL_COLOR_RGB,
+    DOMAIN_ENTITY_NAME,
 }
 impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -20,6 +25,10 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_FLOAT => write!(f, "PVAL_FLOAT"),
             PulseValueType::PVAL_STRING => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
+            PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
+            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", *ent_type),
+            PulseValueType::PVAL_VEC3 => write!(f, "PVAL_VEC3"),
+            PulseValueType::PVAL_COLOR_RGB => write!(f, "PVAL_COLOR_RGB"),
         }
     }
 }
@@ -32,8 +41,7 @@ pub enum CellType {
     InflowEvent(CPulseCell_Inflow_EventHandler),
     StepEntFire(CPulseCell_Step_EntFire),
     InflowWait(CPulseCell_Inflow_Wait),
-}
-pub trait PulseCell {
+    ValueFindEntByName(CPulseCell_Value_FindEntByName),
 }
 
 pub struct PulseRuntimeArgument {
@@ -64,8 +72,7 @@ pub struct CPulseCell_Inflow_Method {
     pub return_type: String,
     pub args: Vec<PulseRuntimeArgument>,
 }
-impl PulseCell for CPulseCell_Inflow_Method {
-}
+
 impl KV3Serialize for CPulseCell_Inflow_Method {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -171,8 +178,6 @@ impl CPulseCell_Inflow_Wait {
 pub struct CPulseCell_Step_EntFire {
     pub input: String,
 }
-impl PulseCell for CPulseCell_Step_EntFire {
-}
 
 impl CPulseCell_Step_EntFire {
     pub fn new(input: String) -> CPulseCell_Step_EntFire {
@@ -193,6 +198,31 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
             }}
             "
             , self.input
+        }
+    }
+}
+#[derive(Default)]
+pub struct CPulseCell_Value_FindEntByName {
+    entity_type: String,
+}
+impl CPulseCell_Value_FindEntByName {
+    pub fn new(entity_type: String) -> CPulseCell_Value_FindEntByName {
+        CPulseCell_Value_FindEntByName {
+            entity_type,
+        }
+    }
+}
+impl KV3Serialize for CPulseCell_Value_FindEntByName {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Value_FindEntByName\"
+                m_nEditorNodeID = -1
+                m_EntityType = \"{}\"
+            }}
+            "
+            , self.entity_type
         }
     }
 }
@@ -464,6 +494,9 @@ pub enum PulseConstant {
     String(String),
     Float(f32),
     Integer(i32),
+    Vec3(crate::app::Vec3),
+    Color_RGB(crate::app::Vec3),
+    Bool(bool),
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> String {
@@ -479,11 +512,17 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::String(_) => "PVAL_STRING",
                 PulseConstant::Float(_) => "PVAL_FLOAT",
                 PulseConstant::Integer(_) => "PVAL_INT",
+                PulseConstant::Vec3(_) => "PVAL_VEC3",
+                PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB",
+                PulseConstant::Bool(_) => "PVAL_BOOL",
             },
             match self {
                 PulseConstant::String(value) => format!("\"{}\"", value),
-                PulseConstant::Float(value) => value.to_string(),
+                PulseConstant::Float(value) => format!("{:.8}", value),
                 PulseConstant::Integer(value) => value.to_string(),
+                PulseConstant::Vec3(value) => format!("[{}, {}, {}]", value.x, value.y, value.z),
+                PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value.x, value.y, value.z),
+                PulseConstant::Bool(value) => value.to_string(),
             }
         }
     }
@@ -589,6 +628,12 @@ impl PulseGraphDef {
     pub fn get_current_constant_id(&self) -> i32 {
         self.constants.len() as i32 - 1
     }
+    pub fn get_current_domain_val_id(&self) -> i32 {
+        self.domain_values.len() as i32 - 1
+    }
+    pub fn get_current_binding_id(&self) -> i32 {
+        self.bindings.len() as i32 - 1
+    }
     pub fn add_variable(&mut self, variable: Variable) -> i32 {
         self.variables.push(variable);
         self.variables.len() as i32 - 1
@@ -646,6 +691,7 @@ impl KV3Serialize for PulseGraphDef {
                     CellType::StepEntFire(cell) => cell.serialize(),
                     CellType::InflowWait(cell) => cell.serialize(),
                     CellType::InflowEvent(cell) => cell.serialize(),
+                    CellType::ValueFindEntByName(cell) => cell.serialize(),
                 }
             }).collect::<Vec<String>>().join(",\n\n")
             , self.map_name, self.xml_name

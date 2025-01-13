@@ -19,6 +19,12 @@ pub struct MyNodeData {
     template: MyNodeTemplate,
     custom_named_outputs: HashMap<OutputId, String>,
 }
+#[derive(Clone, Copy, Debug)]
+pub struct Vec3 {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
 
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
@@ -28,8 +34,11 @@ pub struct MyNodeData {
 pub enum MyDataType {
     Scalar,
     Vec2,
+    Vec3,
     String,
+    Bool,
     Action,
+    EHandle,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -45,6 +54,9 @@ pub enum MyValueType {
     Vec2 { value: egui::Vec2 },
     Scalar { value: f32 },
     String { value: String },
+    Bool { value: bool },
+    Vec3 { value: Vec3 },
+    EHandle,
     Action,
 }
 
@@ -82,12 +94,28 @@ impl MyValueType {
             anyhow::bail!("Invalid cast from {:?} to string", self)
         }
     }
+
+    pub fn try_to_bool(self) -> anyhow::Result<bool> {
+        if let MyValueType::Bool { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to bool", self)
+        }
+    }
+
+    pub fn try_to_vec3(self) -> anyhow::Result<Vec3> {
+        if let MyValueType::Vec3 { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to vec3", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub enum MyNodeTemplate {
     MakeScalar,
@@ -107,6 +135,8 @@ pub enum MyNodeTemplate {
     EventHandler,
     IntToString,
     Operation,
+    FindEntByName,
+    DebugWorldText,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -137,8 +167,11 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
         match self {
             MyDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
             MyDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
+            MyDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             MyDataType::String => egui::Color32::from_rgb(52, 171, 235),
             MyDataType::Action => egui::Color32::from_rgb(252, 3, 165),
+            MyDataType::EHandle => egui::Color32::from_rgb(18, 227, 81),
+            MyDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
         }
     }
 
@@ -146,8 +179,11 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
         match self {
             MyDataType::Scalar => Cow::Borrowed("scalar"),
             MyDataType::Vec2 => Cow::Borrowed("2d vector"),
+            MyDataType::Vec3 => Cow::Borrowed("3d vector"),
             MyDataType::String => Cow::Borrowed("string"),
+            MyDataType::Bool => Cow::Borrowed("bool"),
             MyDataType::Action => Cow::Borrowed("action"),
+            MyDataType::EHandle => Cow::Borrowed("EHandle"),
         }
     }
 }
@@ -180,6 +216,8 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::EventHandler => "Event Handler",
             MyNodeTemplate::IntToString => "Int to string",
             MyNodeTemplate::Operation => "Operation",
+            MyNodeTemplate::FindEntByName => "Find entity by name",
+            MyNodeTemplate::DebugWorldText => "Debug world text",
         })
     }
 
@@ -194,13 +232,15 @@ impl NodeTemplateTrait for MyNodeTemplate {
             | MyNodeTemplate::SubtractVector => vec!["Vector"],
             MyNodeTemplate::VectorTimesScalar => vec!["Vector", "Scalar"],
             MyNodeTemplate::CellPublicMethod | MyNodeTemplate::EventHandler => vec!["Inflow"],
-            MyNodeTemplate::EntFire => vec!["Entities"],
+            MyNodeTemplate::EntFire
+            | MyNodeTemplate::FindEntByName => vec!["Entities"],
             MyNodeTemplate::Compare => vec!["Logic"],
             MyNodeTemplate::Operation => vec!["Math"],
             MyNodeTemplate::ConcatString => vec!["String"],
             MyNodeTemplate::CellWait => vec!["Utility"],
             MyNodeTemplate::GetVar | MyNodeTemplate::SetVar => vec!["Variables"],
             MyNodeTemplate::IntToString => vec!["Conversion"],
+            MyNodeTemplate::DebugWorldText => vec!["Debug"],
         }
     }
 
@@ -245,6 +285,26 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 true,
             );
         };
+        let input_bool = |graph: &mut MyGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                MyDataType::Bool,
+                MyValueType::Bool { value: false },
+                InputParamKind::ConstantOnly,
+                true,
+            );
+        };
+        let input_ehandle = |graph: &mut MyGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                MyDataType::EHandle,
+                MyValueType::EHandle,
+                InputParamKind::ConnectionOnly,
+                true,
+            );
+        };
         let input_vector = |graph: &mut MyGraph, name: &str| {
             graph.add_input_param(
                 node_id,
@@ -252,6 +312,18 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 MyDataType::Vec2,
                 MyValueType::Vec2 {
                     value: egui::vec2(0.0, 0.0),
+                },
+                InputParamKind::ConnectionOrConstant,
+                true,
+            );
+        };
+        let input_vector3 = |graph: &mut MyGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                MyDataType::Vec3,
+                MyValueType::Vec3 {
+                    value: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
                 },
                 InputParamKind::ConnectionOrConstant,
                 true,
@@ -279,6 +351,9 @@ impl NodeTemplateTrait for MyNodeTemplate {
         };
         let output_action = |graph: &mut MyGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), MyDataType::Action);
+        };
+        let output_ehandle = |graph: &mut MyGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), MyDataType::EHandle);
         };
 
         // input_action(graph);
@@ -398,6 +473,24 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 input_scalar(graph, "B");
                 output_scalar(graph, "out");
             }
+            MyNodeTemplate::FindEntByName => {
+                input_string(graph, "entName", InputParamKind::ConstantOnly);
+                input_string(graph, "entClass", InputParamKind::ConstantOnly);
+                output_ehandle(graph, "out");
+            }
+            MyNodeTemplate::DebugWorldText => {
+                input_action(graph);
+                input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
+                input_ehandle(graph, "hEntity");
+                input_scalar(graph, "nTextOffset");
+                input_scalar(graph, "flDuration");
+                input_scalar(graph, "flVerticalOffset");
+                input_bool(graph, "bAttached");
+                input_vector3(graph, "color");
+                input_scalar(graph, "flAlpha");
+                input_scalar(graph, "flScale");
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -428,6 +521,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             MyNodeTemplate::EventHandler,
             MyNodeTemplate::IntToString,
             MyNodeTemplate::Operation,
+            MyNodeTemplate::FindEntByName,
+            MyNodeTemplate::DebugWorldText,
         ]
     }
 }
@@ -478,8 +573,24 @@ impl WidgetValueTrait for MyValueType {
                     ui.text_edit_singleline(value);
                 });
             }
+            MyValueType::Bool { value } => {
+                ui.horizontal(|ui| {
+                    ui.checkbox(value, param_name);
+                });
+            }
+            MyValueType::Vec3 { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.add(DragValue::new(&mut value.x).range(0..=255));
+                    ui.add(DragValue::new(&mut value.y).range(0..=255));
+                    ui.add(DragValue::new(&mut value.z).range(0..=255));
+                });
+            }
             MyValueType::Action => {
                 ui.label("ACT");
+            }
+            MyValueType::EHandle => {
+                ui.label("EHandle");
             }
         }
         // This allows you to return your responses from the inline widgets.
@@ -819,6 +930,14 @@ pub fn evaluate_node(
             let out = format!("{}", value as i32);
             evaluator.output_string("out", out)
         }
+        MyNodeTemplate::FindEntByName => {
+            let value = evaluator.input_scalar("A")?;
+            let out = format!("{}", value as i32);
+            evaluator.output_string("out", out)
+        }
+        MyNodeTemplate::DebugWorldText => {
+            evaluator.output_string("out", String::from("mock"))
+        }
     }
 }
 
@@ -1036,30 +1155,56 @@ fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<My
             target_register = try_find_input_mapping(graph_def, &Some(input_id));
             if target_register == -1 {
                 let new_constant_id = graph_def.get_current_constant_id() + 1;
+                let new_domain_val_id = graph_def.get_current_domain_val_id() + 1;
                 let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
                 target_register = chunk.add_register(value_type.to_string(), chunk.get_last_instruction_id() + 1);
                 let input_param = graph.get_input(input_id);
-                let instruction = instruction_templates::get_const(new_constant_id, target_register);
-                chunk.add_instruction(instruction);
-                let constant = match value_type {
+
+                let instruction: Instruction;
+                match value_type {
                     PulseValueType::PVAL_INT => 
                     {
+                        instruction = instruction_templates::get_const(new_constant_id, target_register);
                         let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
-                        PulseConstant::Integer(input_value as i32)
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::Integer(input_value as i32));
                     }
                     PulseValueType::PVAL_FLOAT => 
                     {
+                        instruction = instruction_templates::get_const(new_constant_id, target_register);
                         let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
-                        PulseConstant::Float(input_value)
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::Float(input_value));
                     }
                     PulseValueType::PVAL_STRING => 
                     {
+                        instruction = instruction_templates::get_const(new_constant_id, target_register);
                         let input_value = input_param.value().clone().try_to_string().expect("Failed to unwrap input value");
-                        PulseConstant::String(input_value)
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::String(input_value));
+                    }
+                    PulseValueType::DOMAIN_ENTITY_NAME => {
+                        instruction = instruction_templates::get_domain_value(target_register, new_domain_val_id);
+                        let input_value = input_param.value().clone().try_to_string().expect("Failed to unwrap input value");
+                        chunk.add_instruction(instruction);
+                        graph_def.create_domain_value(String::from("ENTITY_NAME"), input_value.clone(), String::new());
+                    }
+                    PulseValueType::PVAL_VEC3 => 
+                    {
+                        instruction = instruction_templates::get_const(new_constant_id, target_register);
+                        let input_value = input_param.value().clone().try_to_vec3().expect("Failed to unwrap input value");
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::Vec3(input_value));
+                    }
+                    PulseValueType::PVAL_COLOR_RGB => 
+                    {
+                        instruction = instruction_templates::get_const(new_constant_id, target_register);
+                        let input_value = input_param.value().clone().try_to_vec3().expect("Failed to unwrap input value");
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::Color_RGB(input_value));
                     }
                     _ => panic!("Unsupported value type")
                 };
-                graph_def.add_constant(constant);
             }
         }
     }
@@ -1315,7 +1460,7 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
             let var_id = create_or_get_variable(graph_def, name.borrow());
             let value_id = current_node.get_input("value").expect("Can't find input 'value'");
             let connection_to_value = graph.connection(value_id);
-            let mut target_register: i32 = -1;
+            let mut target_register: i32;
             match connection_to_value {
                 Some(out) => {
                     let out_param = graph.get_output(out);
@@ -1344,12 +1489,12 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
             let operation_input_id = current_node.get_input("operation").expect("Can't find input 'operation'");
             let operation_input_param = graph.get_input(operation_input_id).value().clone().try_to_string().expect("Can't find input 'operation'");
             let operation_instr_name: &str = match operation_input_param.as_str() {
-                "+" => "ADD",
-                "-" => "SUB",
-                "*" => "MUL",
-                "/" => "DIV",
-                "%" => "MOD",
-                _ => "ADD"
+                "+" => "ADD_FLOAT",
+                "-" => "SUB_FLOAT",
+                "*" => "MUL_FLOAT",
+                "/" => "DIV_FLOAT",
+                "%" => "MOD_FLOAT",
+                _ => "ADD_FLOAT"
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let register_output = chunk.add_register(String::from("PVAL_FLOAT"), chunk.get_last_instruction_id() + 1);
@@ -1360,7 +1505,98 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
             instr.reg2 = reg_b;
             chunk.add_instruction(instr);
         }
-        _ => {}
+        MyNodeTemplate::FindEntByName => {
+            let reg_entname = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "entName", PulseValueType::DOMAIN_ENTITY_NAME);
+            let entclass_input_id = current_node.get_input("entClass").expect("Can't find input 'entClass'");
+            let entclass_input_param = graph.get_input(entclass_input_id).value().clone().try_to_string().expect("Can't find input 'entClass'");
+            let new_binding_idx = graph_def.get_current_binding_id() + 1;
+            let mut register_map = RegisterMap::default();
+            let mut reg_output = try_find_output_mapping(graph_def, output_id);
+            if reg_output == -1 {
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                reg_output = chunk.add_register(PulseValueType::PVAL_EHANDLE(entclass_input_param.clone()).to_string(), chunk.get_last_instruction_id() + 1);
+                if let Some(out) = output_id {
+                    graph_def.add_register_mapping(*out, reg_output);
+                }
+            } else {
+                return reg_output;
+            }
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param);
+            let cell_enum = CellType::ValueFindEntByName(cell);
+            graph_def.cells.push(Box::from(cell_enum));
+            register_map.add_inparam(String::from("pName"), reg_entname);
+            register_map.add_outparam(String::from("retval"), reg_output);
+            let instr = chunk.add_instruction(instruction_templates::cell_invoke(new_binding_idx));
+            let binding = InvokeBinding {
+                register_map,
+                func_name: String::from("Eval"),
+                cell_index: graph_def.cells.len() as i32 - 1,
+                src_chunk: target_chunk,
+                src_instruction: instr,
+            };
+            graph_def.add_binding(binding);
+            return reg_output;
+        }
+        MyNodeTemplate::DebugWorldText => {
+            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING);
+            // resolve connection to hEntity
+            let hentity_input_id = current_node.get_input("hEntity").expect("Can't find input 'value'");
+            let connection_to_hentity = graph.connection(hentity_input_id);
+            if connection_to_hentity.is_none() {
+                println!("No connection found for hEntity input in DebugWorldText node. Node will not be processed, next action won't execute.");
+                return -1;
+            }
+            let connection_to_hEntity = connection_to_hentity.unwrap();
+            let hEntity_param = graph.get_output(connection_to_hEntity);
+            let out_node = graph.nodes.get(hEntity_param.node).expect("Can't find output node");
+            let reg_hentity = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(connection_to_hEntity));
+            // other params
+            let reg_ntextoffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "nTextOffset", PulseValueType::PVAL_INT);
+            let reg_flduration = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flDuration", PulseValueType::PVAL_FLOAT);
+            let reg_flverticaloffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flVerticalOffset", PulseValueType::PVAL_FLOAT);
+            // color:
+            let reg_color = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "color", PulseValueType::PVAL_COLOR_RGB);
+            let reg_alpha = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flAlpha", PulseValueType::PVAL_FLOAT);
+            let reg_scale = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flScale", PulseValueType::PVAL_FLOAT);
+            // bAttached:
+            let new_binding_id = graph_def.get_current_binding_id() + 1;
+            let battached_input_id = current_node.get_input("bAttached").expect("Can't find input 'bAttached'");
+            let battached_input_param = graph.get_input(battached_input_id).value().clone().try_to_bool().expect("Can't find input 'bAttached'");
+            graph_def.add_constant(PulseConstant::Bool(battached_input_param));
+            // create constant, add instruction and a register to load it into.
+            let new_constant_id = graph_def.get_current_constant_id();
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let reg_battached = chunk.add_register(String::from("PVAL_BOOL"), chunk.get_last_instruction_id() + 1);
+            let instruction = instruction_templates::get_const(new_constant_id, reg_battached);
+            chunk.add_instruction(instruction);
+            let mut register_map = RegisterMap::default();
+            register_map.add_inparam(String::from("hEntity"), reg_hentity);
+            register_map.add_inparam(String::from("nTextOffset"), reg_ntextoffset);
+            register_map.add_inparam(String::from("pMessage"), reg_message);
+            register_map.add_inparam(String::from("flDuration"), reg_flduration);
+            register_map.add_inparam(String::from("flVerticalOffset"), reg_flverticaloffset);
+            register_map.add_inparam(String::from("bAttached"), reg_battached);
+            register_map.add_inparam(String::from("color"), reg_color);
+            register_map.add_inparam(String::from("flAlpha"), reg_alpha);
+            register_map.add_inparam(String::from("flScale"), reg_scale);
+            let binding = InvokeBinding {
+                register_map,
+                func_name: String::from("CPulseServerFuncs!DebugWorldText"),
+                cell_index: -1,
+                src_chunk: -1,
+                src_instruction: -1,
+            };
+            chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
+            graph_def.add_binding(binding);
+
+            // go to next action.
+            let connected_node = get_next_action_node(current_node, graph, "outAction");
+            if connected_node.is_some() {
+                return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
+            }
+        }
+        _ => todo!("Implement node template: {:?}", current_node.user_data.template),
     }
     return -1;
 }

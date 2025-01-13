@@ -42,6 +42,7 @@ pub enum CellType {
     StepEntFire(CPulseCell_Step_EntFire),
     InflowWait(CPulseCell_Inflow_Wait),
     ValueFindEntByName(CPulseCell_Value_FindEntByName),
+    DebugLog,
 }
 
 pub struct PulseRuntimeArgument {
@@ -692,6 +693,11 @@ impl KV3Serialize for PulseGraphDef {
                     CellType::InflowWait(cell) => cell.serialize(),
                     CellType::InflowEvent(cell) => cell.serialize(),
                     CellType::ValueFindEntByName(cell) => cell.serialize(),
+                    CellType::DebugLog => formatdoc!("
+                        {{
+                            _class = \"CPulseCell_Step_DebugLog\"
+                            m_nEditorNodeID = -1
+                        }}"),
                 }
             }).collect::<Vec<String>>().join(",\n\n")
             , self.map_name, self.xml_name

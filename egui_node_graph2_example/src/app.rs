@@ -137,6 +137,7 @@ pub enum MyNodeTemplate {
     Operation,
     FindEntByName,
     DebugWorldText,
+    DebugLog
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -218,6 +219,7 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::Operation => "Operation",
             MyNodeTemplate::FindEntByName => "Find entity by name",
             MyNodeTemplate::DebugWorldText => "Debug world text",
+            MyNodeTemplate::DebugLog => "Debug log",
         })
     }
 
@@ -240,7 +242,8 @@ impl NodeTemplateTrait for MyNodeTemplate {
             MyNodeTemplate::CellWait => vec!["Utility"],
             MyNodeTemplate::GetVar | MyNodeTemplate::SetVar => vec!["Variables"],
             MyNodeTemplate::IntToString => vec!["Conversion"],
-            MyNodeTemplate::DebugWorldText => vec!["Debug"],
+            MyNodeTemplate::DebugWorldText
+            | MyNodeTemplate::DebugLog => vec!["Debug"],
         }
     }
 
@@ -491,6 +494,11 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 input_scalar(graph, "flScale");
                 output_action(graph, "outAction");
             }
+            MyNodeTemplate::DebugLog => {
+                input_action(graph);
+                input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -523,6 +531,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             MyNodeTemplate::Operation,
             MyNodeTemplate::FindEntByName,
             MyNodeTemplate::DebugWorldText,
+            MyNodeTemplate::DebugLog,
         ]
     }
 }
@@ -938,6 +947,9 @@ pub fn evaluate_node(
         MyNodeTemplate::DebugWorldText => {
             evaluator.output_string("out", String::from("mock"))
         }
+        MyNodeTemplate::DebugLog => {
+            evaluator.output_string("out", String::from("mock"))
+        }
     }
 }
 
@@ -1211,6 +1223,15 @@ fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<My
     target_register
 }
 
+macro_rules! graph_next_action {
+    ($graph:ident, $current_node:ident, $graph_def:ident, $target_chunk:ident) => {
+        let connected_node = get_next_action_node($current_node, $graph, "outAction");
+        if connected_node.is_some() {
+            return traverse_nodes_and_populate($graph, connected_node.unwrap(), $graph_def, $target_chunk, &None);
+        }
+    };
+}
+
 pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
     match current_node.user_data.template {
         MyNodeTemplate::CellPublicMethod => {
@@ -1275,10 +1296,8 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
                 instr_ret_void.code = String::from("RETURN_VOID");
                 chunk.add_instruction(instr_ret_void);
             }
-            let connected_node = get_next_action_node(current_node, graph, "outAction");
-            if connected_node.is_some() {
-                return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
-            }
+
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         MyNodeTemplate::EntFire => {
             // create EntFire (step) cell
@@ -1360,10 +1379,8 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
                         value, input_param, if value_input_register != -1 { String::from("param") } else { String::default() });
                     graph_def.add_output_connection(output_connection);
                 }
-                let connected_node = get_next_action_node(current_node, graph, "outAction");
-                if connected_node.is_some() {
-                    return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
-                }
+
+                graph_next_action!(graph, current_node, graph_def, target_chunk);
             }
             
         }
@@ -1595,6 +1612,27 @@ pub fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeDa
             if connected_node.is_some() {
                 return traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, target_chunk, &None);
             }
+        }
+        MyNodeTemplate::DebugLog => {
+            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING);
+            let cell_enum = CellType::DebugLog;
+            graph_def.cells.push(Box::from(cell_enum));
+            let mut register_map = RegisterMap::default();
+            register_map.add_inparam(String::from("pMessage"), reg_message);
+            let new_binding_id = graph_def.get_current_binding_id() + 1;
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let binding = InvokeBinding {
+                register_map,
+                func_name: String::from("Run"),
+                cell_index: graph_def.cells.len() as i32 - 1,
+                src_chunk: target_chunk,
+                src_instruction: chunk.get_last_instruction_id() + 1,
+            };
+            chunk.add_instruction(instruction_templates::cell_invoke(new_binding_id));
+            graph_def.add_binding(binding);
+
+            // go to next action.
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         _ => todo!("Implement node template: {:?}", current_node.user_data.template),
     }

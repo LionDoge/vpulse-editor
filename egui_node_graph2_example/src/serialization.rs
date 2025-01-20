@@ -3,20 +3,10 @@
 use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-
+use crate::pulsetypes::*;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
-
-pub enum CellType {
-    InflowMethod(CPulseCell_Inflow_Method),
-    InflowEvent(CPulseCell_Inflow_EventHandler),
-    StepEntFire(CPulseCell_Step_EntFire),
-    InflowWait(CPulseCell_Inflow_Wait),
-    ValueFindEntByName(CPulseCell_Value_FindEntByName),
-    DebugLog,
-}
-
 pub struct PulseRuntimeArgument {
     pub name: String,
     pub description: String,
@@ -35,16 +25,6 @@ impl KV3Serialize for PulseRuntimeArgument {
             , self.name, self.description, self.typ
         }
     }
-}
-#[derive(Default)]
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Inflow_Method {
-    pub register_map: RegisterMap,
-    pub entry_chunk: i32,
-    pub name: String,
-    pub description: String,
-    pub return_type: String,
-    pub args: Vec<PulseRuntimeArgument>,
 }
 
 impl KV3Serialize for CPulseCell_Inflow_Method {
@@ -71,6 +51,7 @@ impl KV3Serialize for CPulseCell_Inflow_Method {
         }
     }
 }
+
 impl CPulseCell_Inflow_Method {
     pub fn add_arg(&mut self, name: String, description: String, typ: String, out_register: i32) {
         let arg = PulseRuntimeArgument {
@@ -83,11 +64,6 @@ impl CPulseCell_Inflow_Method {
     }
 }
 
-pub struct CPulseCell_Inflow_EventHandler {
-    pub register_map: RegisterMap,
-    pub entry_chunk: i32,
-    pub event_name: String,
-}
 impl KV3Serialize for CPulseCell_Inflow_EventHandler {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -117,11 +93,6 @@ impl CPulseCell_Inflow_EventHandler {
     }
 }
 
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Inflow_Wait {
-    dest_chunk: i32,
-    instruction: i32
-}
 impl KV3Serialize for CPulseCell_Inflow_Wait {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -149,10 +120,6 @@ impl CPulseCell_Inflow_Wait {
         }
     }
 }
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Step_EntFire {
-    pub input: String,
-}
 
 impl CPulseCell_Step_EntFire {
     pub fn new(input: String) -> CPulseCell_Step_EntFire {
@@ -176,11 +143,7 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
         }
     }
 }
-#[derive(Default)]
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Value_FindEntByName {
-    entity_type: String,
-}
+
 impl CPulseCell_Value_FindEntByName {
     pub fn new(entity_type: String) -> CPulseCell_Value_FindEntByName {
         CPulseCell_Value_FindEntByName {

@@ -1,5 +1,51 @@
 #![allow(nonstandard_style)]
 use std::fmt;
+use crate::serialization::{RegisterMap, PulseRuntimeArgument};
+
+pub enum CellType {
+    InflowMethod(CPulseCell_Inflow_Method),
+    InflowEvent(CPulseCell_Inflow_EventHandler),
+    StepEntFire(CPulseCell_Step_EntFire),
+    InflowWait(CPulseCell_Inflow_Wait),
+    ValueFindEntByName(CPulseCell_Value_FindEntByName),
+    DebugLog,
+}
+
+#[derive(Default)]
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Inflow_Method {
+    pub register_map: RegisterMap,
+    pub entry_chunk: i32,
+    pub name: String,
+    pub description: String,
+    pub return_type: String,
+    pub args: Vec<PulseRuntimeArgument>,
+}
+
+#[derive(Default)]
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Inflow_EventHandler {
+    pub register_map: RegisterMap,
+    pub entry_chunk: i32,
+    pub event_name: String,
+}
+
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Inflow_Wait {
+    pub(super) dest_chunk: i32,
+    pub(super) instruction: i32
+}
+
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Step_EntFire {
+    pub input: String,
+}
+
+#[derive(Default)]
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Value_FindEntByName {
+    pub(super) entity_type: String,
+}
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]

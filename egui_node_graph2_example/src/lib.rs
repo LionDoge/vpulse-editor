@@ -4,9 +4,9 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
-mod serialization;
 mod instruction_templates;
 mod pulsetypes;
+mod serialization;
 mod outputdefinition;
 mod compiler;
 pub use app::NodeGraphExample;

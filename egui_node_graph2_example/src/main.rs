@@ -35,12 +35,7 @@ fn main() {
         options,
         Box::new(|cc| {
             cc.egui_ctx.set_visuals(Visuals::dark());
-            #[cfg(feature = "persistence")]
-            {
-                Ok(Box::new(NodeGraphExample::new(cc)))
-            }
-            #[cfg(not(feature = "persistence"))]
-            Ok(Box::<NodeGraphExample>::default())
+            Ok(Box::new(NodeGraphExample::new(cc)))
         }),
     )
     .expect("Failed to run native example");

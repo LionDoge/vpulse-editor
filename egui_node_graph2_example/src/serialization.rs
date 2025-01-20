@@ -1,37 +1,9 @@
 #![allow(non_camel_case_types)]
+#![allow(nonstandard_style)]
 use egui_node_graph2::{InputId, OutputId};
-// use std::{
-//     sync::atomic::{AtomicUsize, Ordering},
-//     thread,
-// };
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-use std::fmt;
-#[allow(dead_code)]
-pub enum PulseValueType {
-    PVAL_INT,
-    PVAL_FLOAT,
-    PVAL_STRING,
-    PVAL_INVALID,
-    PVAL_EHANDLE(String),
-    PVAL_VEC3,
-    PVAL_COLOR_RGB,
-    DOMAIN_ENTITY_NAME,
-}
-impl fmt::Display for PulseValueType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PulseValueType::PVAL_INT => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_FLOAT => write!(f, "PVAL_FLOAT"),
-            PulseValueType::PVAL_STRING => write!(f, "PVAL_STRING"),
-            PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
-            PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", *ent_type),
-            PulseValueType::PVAL_VEC3 => write!(f, "PVAL_VEC3"),
-            PulseValueType::PVAL_COLOR_RGB => write!(f, "PVAL_COLOR_RGB"),
-        }
-    }
-}
+
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -65,6 +37,7 @@ impl KV3Serialize for PulseRuntimeArgument {
     }
 }
 #[derive(Default)]
+#[allow(non_camel_case_types)]
 pub struct CPulseCell_Inflow_Method {
     pub register_map: RegisterMap,
     pub entry_chunk: i32,
@@ -144,6 +117,7 @@ impl CPulseCell_Inflow_EventHandler {
     }
 }
 
+#[allow(non_camel_case_types)]
 pub struct CPulseCell_Inflow_Wait {
     dest_chunk: i32,
     instruction: i32
@@ -175,7 +149,7 @@ impl CPulseCell_Inflow_Wait {
         }
     }
 }
-
+#[allow(non_camel_case_types)]
 pub struct CPulseCell_Step_EntFire {
     pub input: String,
 }
@@ -203,6 +177,7 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
     }
 }
 #[derive(Default)]
+#[allow(non_camel_case_types)]
 pub struct CPulseCell_Value_FindEntByName {
     entity_type: String,
 }
@@ -491,6 +466,7 @@ impl Register {
         }
     }
 }
+#[allow(non_camel_case_types)]
 pub enum PulseConstant {
     String(String),
     Float(f32),
@@ -592,17 +568,17 @@ impl PulseGraphDef {
         self.domain_values.push(domain_value);
         self.domain_values.len() as i32 - 1
     }
-    pub fn create_invoke_binding(&mut self, register_map: RegisterMap, func_name: String, cell_index: i32, src_chunk: i32, src_instruction: i32) -> i32 {
-        let binding = InvokeBinding {
-            register_map,
-            func_name,
-            cell_index,
-            src_chunk,
-            src_instruction,
-        };
-        self.bindings.push(binding);
-        self.bindings.len() as i32 - 1
-    }
+    // pub fn create_invoke_binding(&mut self, register_map: RegisterMap, func_name: String, cell_index: i32, src_chunk: i32, src_instruction: i32) -> i32 {
+    //     let binding = InvokeBinding {
+    //         register_map,
+    //         func_name,
+    //         cell_index,
+    //         src_chunk,
+    //         src_instruction,
+    //     };
+    //     self.bindings.push(binding);
+    //     self.bindings.len() as i32 - 1
+    // }
     pub fn add_binding(&mut self, binding: InvokeBinding) -> i32 {
         self.bindings.push(binding);
         self.bindings.len() as i32 - 1

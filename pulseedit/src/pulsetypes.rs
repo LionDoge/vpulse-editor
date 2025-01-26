@@ -2,6 +2,19 @@
 use std::fmt;
 use crate::serialization::{RegisterMap, PulseRuntimeArgument};
 
+// used for a node definition
+// some instructions have named parameters as inputs and as outputs, 
+// the graph compiler will generate instructions with valid registers based on assigned inputs and outputs in nodes.
+pub enum InstructionsNamedParams {
+    CellInvoke,
+    GetVar,
+    SetVar(String),
+    GetConst(String),
+    GetDomainValue(String),
+    AddString(String, String, String),
+    ConvertValue(String, String),
+    LibraryInvoke
+}
 pub enum CellType {
     InflowMethod(CPulseCell_Inflow_Method),
     InflowEvent(CPulseCell_Inflow_EventHandler),

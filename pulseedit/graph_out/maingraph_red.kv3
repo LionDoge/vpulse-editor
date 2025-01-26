@@ -54,7 +54,6 @@
     m_SearchableUserData = 
     {
         pulse_domain = "ServerPointEntity"
-        pulse_save_execution_history = false
         IsChildResource = 0
     }
     m_SubassetReferences = null

@@ -772,6 +772,8 @@ impl NodeGraphExample {
         Self {
             state,
             user_state: MyGraphState::default(),
+            file_dialog: FileDialog::default(),
+            outputs_dropdown_choices: vec![],
         }
     }
 }

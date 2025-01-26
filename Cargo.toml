@@ -4,8 +4,8 @@ resolver = "2"
 
 members = [
     "egui_node_graph2",
-    "egui_node_graph2_example",
+    "pulseedit",
 ]
 
-[egui_node_graph2_example.profile.release]
+[pulseedit.profile.release]
 opt-level = 2 # fast and small wasm

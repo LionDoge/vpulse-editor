@@ -3,7 +3,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use eframe::egui::IconData;
-use egui_node_graph2_example::NodeGraphExample;
+use pulseedit::NodeGraphExample;
 
 fn load_icon(path: &str) -> IconData {
     let (icon_rgba, icon_width, icon_height) = {

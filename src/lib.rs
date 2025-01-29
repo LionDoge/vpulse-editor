@@ -9,7 +9,7 @@ mod pulsetypes;
 mod serialization;
 mod outputdefinition;
 mod compiler;
-pub use app::NodeGraphExample;
+pub use app::PulseGraphEditor;
 
 // ----------------------------------------------------------------------------
 // When compiling for web:
@@ -24,6 +24,6 @@ use eframe::wasm_bindgen::{self, prelude::*};
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
-    let app = NodeGraphExample::default();
+    let app = PulseGraphEditor::default();
     eframe::start_web(canvas_id, Box::new(app))
 }

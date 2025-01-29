@@ -15,8 +15,8 @@ use crate::compiler::compile_graph;
 /// store additional information that doesn't live in parameters. For this
 /// example, the node data stores the template (i.e. the "type") of the node.
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
-pub struct MyNodeData {
-    pub template: MyNodeTemplate,
+pub struct PulseNodeData {
+    pub template: PulseNodeTemplate,
     pub custom_named_outputs: HashMap<OutputId, String>,
 }
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
@@ -37,7 +37,7 @@ impl Default for Vec3 {
 /// attaching incompatible datatypes.
 #[derive(PartialEq, Eq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub enum MyDataType {
+pub enum PulseDataType {
     Scalar,
     Vec2,
     Vec3,
@@ -58,7 +58,7 @@ pub enum MyDataType {
 /// with a DataType of Scalar and a ValueType of Vec2.
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub enum MyValueType {
+pub enum PulseGraphValueType {
     Vec2 { value: egui::Vec2 },
     Scalar { value: f32 },
     String { value: String },
@@ -70,7 +70,7 @@ pub enum MyValueType {
     InternalVariableName { prevvalue: String, value: String },
 }
 
-impl Default for MyValueType {
+impl Default for PulseGraphValueType {
     fn default() -> Self {
         // NOTE: This is just a dummy `Default` implementation. The library
         // requires it to circumvent some internal borrow checker issues.
@@ -78,10 +78,10 @@ impl Default for MyValueType {
     }
 }
 
-impl MyValueType {
+impl PulseGraphValueType {
     /// Tries to downcast this value type to a scalar
     pub fn try_to_scalar(self) -> anyhow::Result<f32> {
-        if let MyValueType::Scalar { value } = self {
+        if let PulseGraphValueType::Scalar { value } = self {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to scalar", self)
@@ -89,7 +89,7 @@ impl MyValueType {
     }
 
     pub fn try_to_string(self) -> anyhow::Result<String> {
-        if let MyValueType::String { value } = self {
+        if let PulseGraphValueType::String { value } = self {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to string", self)
@@ -97,7 +97,7 @@ impl MyValueType {
     }
 
     pub fn try_to_bool(self) -> anyhow::Result<bool> {
-        if let MyValueType::Bool { value } = self {
+        if let PulseGraphValueType::Bool { value } = self {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to bool", self)
@@ -105,7 +105,7 @@ impl MyValueType {
     }
 
     pub fn try_to_vec3(self) -> anyhow::Result<Vec3> {
-        if let MyValueType::Vec3 { value } = self {
+        if let PulseGraphValueType::Vec3 { value } = self {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to vec3", self)
@@ -113,7 +113,7 @@ impl MyValueType {
     }
 
     pub fn try_output_name(self) -> anyhow::Result<String> {
-        if let MyValueType::InternalOutputName { value, .. } = self {
+        if let PulseGraphValueType::InternalOutputName { value, .. } = self {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to output name", self)
@@ -126,7 +126,7 @@ impl MyValueType {
 /// library how to convert a NodeTemplate into a Node.
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub enum MyNodeTemplate {
+pub enum PulseNodeTemplate {
     CellPublicMethod,
     EntFire,
     Compare,
@@ -148,7 +148,7 @@ pub enum MyNodeTemplate {
 /// nodes, handling connections...) are already handled by the library, but this
 /// mechanism allows creating additional side effects from user code.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum MyResponse {
+pub enum PulseGraphResponse {
     AddOutputParam(NodeId, String),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
@@ -159,7 +159,7 @@ pub enum MyResponse {
 /// the user. For this example, we use it to keep track of the 'active' node.
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct MyGraphState {
+pub struct PulseGraphState {
     pub custom_input_string: String,
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
@@ -169,79 +169,79 @@ pub struct MyGraphState {
 // =========== Then, you need to implement some traits ============
 
 // A trait for the data types, to tell the library how to display them
-impl DataTypeTrait<MyGraphState> for MyDataType {
-    fn data_type_color(&self, _user_state: &mut MyGraphState) -> egui::Color32 {
+impl DataTypeTrait<PulseGraphState> for PulseDataType {
+    fn data_type_color(&self, _user_state: &mut PulseGraphState) -> egui::Color32 {
         match self {
-            MyDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
-            MyDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
-            MyDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
-            MyDataType::String => egui::Color32::from_rgb(52, 171, 235),
-            MyDataType::Action => egui::Color32::from_rgb(252, 3, 165),
-            MyDataType::EHandle => egui::Color32::from_rgb(18, 227, 81),
-            MyDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
-            MyDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
-            MyDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
+            PulseDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
+            PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
+            PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
+            PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
+            PulseDataType::EHandle => egui::Color32::from_rgb(18, 227, 81),
+            PulseDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
+            PulseDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
     fn name(&self) -> Cow<'_, str> {
         match self {
-            MyDataType::Scalar => Cow::Borrowed("scalar"),
-            MyDataType::Vec2 => Cow::Borrowed("2d vector"),
-            MyDataType::Vec3 => Cow::Borrowed("3d vector"),
-            MyDataType::String => Cow::Borrowed("string"),
-            MyDataType::Bool => Cow::Borrowed("bool"),
-            MyDataType::Action => Cow::Borrowed("action"),
-            MyDataType::EHandle => Cow::Borrowed("EHandle"),
-            MyDataType::InternalOutputName => Cow::Borrowed("Output name"),
-            MyDataType::InternalVariableName => Cow::Borrowed("Variable name"),
+            PulseDataType::Scalar => Cow::Borrowed("scalar"),
+            PulseDataType::Vec2 => Cow::Borrowed("2d vector"),
+            PulseDataType::Vec3 => Cow::Borrowed("3d vector"),
+            PulseDataType::String => Cow::Borrowed("string"),
+            PulseDataType::Bool => Cow::Borrowed("bool"),
+            PulseDataType::Action => Cow::Borrowed("action"),
+            PulseDataType::EHandle => Cow::Borrowed("EHandle"),
+            PulseDataType::InternalOutputName => Cow::Borrowed("Output name"),
+            PulseDataType::InternalVariableName => Cow::Borrowed("Variable name"),
         }
     }
 }
 
 // A trait for the node kinds, which tells the library how to build new nodes
 // from the templates in the node finder
-impl NodeTemplateTrait for MyNodeTemplate {
-    type NodeData = MyNodeData;
-    type DataType = MyDataType;
-    type ValueType = MyValueType;
-    type UserState = MyGraphState;
+impl NodeTemplateTrait for PulseNodeTemplate {
+    type NodeData = PulseNodeData;
+    type DataType = PulseDataType;
+    type ValueType = PulseGraphValueType;
+    type UserState = PulseGraphState;
     type CategoryType = &'static str;
 
     fn node_finder_label(&self, _user_state: &mut Self::UserState) -> Cow<'_, str> {
         Cow::Borrowed(match self {
-            MyNodeTemplate::CellPublicMethod => "Public Method",
-            MyNodeTemplate::EntFire => "EntFire",
-            MyNodeTemplate::Compare => "Compare",
-            MyNodeTemplate::ConcatString => "Concatenate strings",
-            MyNodeTemplate::CellWait => "Wait",
-            MyNodeTemplate::GetVar => "Load variable",
-            MyNodeTemplate::SetVar => "Save variable",
-            MyNodeTemplate::EventHandler => "Event Handler",
-            MyNodeTemplate::IntToString => "Int to string",
-            MyNodeTemplate::Operation => "Operation",
-            MyNodeTemplate::FindEntByName => "Find entity by name",
-            MyNodeTemplate::DebugWorldText => "Debug world text",
-            MyNodeTemplate::DebugLog => "Debug log",
-            MyNodeTemplate::FireOutput => "Fire output",
+            PulseNodeTemplate::CellPublicMethod => "Public Method",
+            PulseNodeTemplate::EntFire => "EntFire",
+            PulseNodeTemplate::Compare => "Compare",
+            PulseNodeTemplate::ConcatString => "Concatenate strings",
+            PulseNodeTemplate::CellWait => "Wait",
+            PulseNodeTemplate::GetVar => "Load variable",
+            PulseNodeTemplate::SetVar => "Save variable",
+            PulseNodeTemplate::EventHandler => "Event Handler",
+            PulseNodeTemplate::IntToString => "Int to string",
+            PulseNodeTemplate::Operation => "Operation",
+            PulseNodeTemplate::FindEntByName => "Find entity by name",
+            PulseNodeTemplate::DebugWorldText => "Debug world text",
+            PulseNodeTemplate::DebugLog => "Debug log",
+            PulseNodeTemplate::FireOutput => "Fire output",
         })
     }
 
     // this is what allows the library to show collapsible lists in the node finder.
     fn node_finder_categories(&self, _user_state: &mut Self::UserState) -> Vec<&'static str> {
         match self {
-            MyNodeTemplate::CellPublicMethod | MyNodeTemplate::EventHandler => vec!["Inflow"],
-            MyNodeTemplate::EntFire
-            | MyNodeTemplate::FindEntByName => vec!["Entities"],
-            MyNodeTemplate::Compare => vec!["Logic"],
-            MyNodeTemplate::Operation => vec!["Math"],
-            MyNodeTemplate::ConcatString => vec!["String"],
-            MyNodeTemplate::CellWait => vec!["Utility"],
-            MyNodeTemplate::GetVar | MyNodeTemplate::SetVar => vec!["Variables"],
-            MyNodeTemplate::IntToString => vec!["Conversion"],
-            MyNodeTemplate::DebugWorldText
-            | MyNodeTemplate::DebugLog => vec!["Debug"],
-            MyNodeTemplate::FireOutput => vec!["Outflow"],
+            PulseNodeTemplate::CellPublicMethod | PulseNodeTemplate::EventHandler => vec!["Inflow"],
+            PulseNodeTemplate::EntFire
+            | PulseNodeTemplate::FindEntByName => vec!["Entities"],
+            PulseNodeTemplate::Compare => vec!["Logic"],
+            PulseNodeTemplate::Operation => vec!["Math"],
+            PulseNodeTemplate::ConcatString => vec!["String"],
+            PulseNodeTemplate::CellWait => vec!["Utility"],
+            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => vec!["Variables"],
+            PulseNodeTemplate::IntToString => vec!["Conversion"],
+            PulseNodeTemplate::DebugWorldText
+            | PulseNodeTemplate::DebugLog => vec!["Debug"],
+            PulseNodeTemplate::FireOutput => vec!["Outflow"],
         }
     }
 
@@ -252,7 +252,7 @@ impl NodeTemplateTrait for MyNodeTemplate {
     }
 
     fn user_data(&self, _user_state: &mut Self::UserState) -> Self::NodeData {
-        MyNodeData { template: *self, custom_named_outputs: HashMap::new() }
+        PulseNodeData { template: *self, custom_named_outputs: HashMap::new() }
     }
 
     fn build_node(
@@ -266,91 +266,91 @@ impl NodeTemplateTrait for MyNodeTemplate {
 
         // We define some closures here to avoid boilerplate. Note that this is
         // entirely optional.
-        let input_string = |graph: &mut MyGraph, name: &str, kind: InputParamKind| {
+        let input_string = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
-                MyDataType::String,
-                MyValueType::String {value: String::default()},
+                PulseDataType::String,
+                PulseGraphValueType::String {value: String::default()},
                 kind,
                 true,
             );
         };
-        let input_scalar = |graph: &mut MyGraph, name: &str| {
+        let input_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
-                MyDataType::Scalar,
-                MyValueType::Scalar { value: 0.0 },
+                PulseDataType::Scalar,
+                PulseGraphValueType::Scalar { value: 0.0 },
                 InputParamKind::ConnectionOrConstant,
                 true,
             );
         };
-        let input_bool = |graph: &mut MyGraph, name: &str| {
+        let input_bool = |graph: &mut PulseGraph, name: &str| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
-                MyDataType::Bool,
-                MyValueType::Bool { value: false },
+                PulseDataType::Bool,
+                PulseGraphValueType::Bool { value: false },
                 InputParamKind::ConstantOnly,
                 true,
             );
         };
-        let input_ehandle = |graph: &mut MyGraph, name: &str| {
+        let input_ehandle = |graph: &mut PulseGraph, name: &str| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
-                MyDataType::EHandle,
-                MyValueType::EHandle,
+                PulseDataType::EHandle,
+                PulseGraphValueType::EHandle,
                 InputParamKind::ConnectionOnly,
                 true,
             );
         };
-        let input_vector3 = |graph: &mut MyGraph, name: &str| {
+        let input_vector3 = |graph: &mut PulseGraph, name: &str| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
-                MyDataType::Vec3,
-                MyValueType::Vec3 {
+                PulseDataType::Vec3,
+                PulseGraphValueType::Vec3 {
                     value: Vec3 { x: 0.0, y: 0.0, z: 0.0 },
                 },
                 InputParamKind::ConnectionOrConstant,
                 true,
             );
         };
-        let input_action = |graph: &mut MyGraph| {
+        let input_action = |graph: &mut PulseGraph| {
             graph.add_input_param(
                 node_id,
                 "ActionIn".to_string(),
-                MyDataType::Action,
-                MyValueType::Action,
+                PulseDataType::Action,
+                PulseGraphValueType::Action,
                 InputParamKind::ConnectionOnly,
                 true,
             );
         };
 
-        let output_scalar = |graph: &mut MyGraph, name: &str| {
-            graph.add_output_param(node_id, name.to_string(), MyDataType::Scalar);
+        let output_scalar = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
         };
-        let output_string = |graph: &mut MyGraph, name: &str| {
-            graph.add_output_param(node_id, name.to_string(), MyDataType::String);
+        let output_string = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::String);
         };
-        let output_action = |graph: &mut MyGraph, name: &str| {
-            graph.add_output_param(node_id, name.to_string(), MyDataType::Action);
+        let output_action = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Action);
         };
-        let output_ehandle = |graph: &mut MyGraph, name: &str| {
-            graph.add_output_param(node_id, name.to_string(), MyDataType::EHandle);
+        let output_ehandle = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::EHandle);
         };
 
         // input_action(graph);
         // output_action(graph);
         match self {
-            MyNodeTemplate::CellPublicMethod => {
+            PulseNodeTemplate::CellPublicMethod => {
                 graph.add_input_param(
                     node_id,
                     "name".into(),
-                    MyDataType::String,
-                    MyValueType::String {
+                    PulseDataType::String,
+                    PulseGraphValueType::String {
                         value: "method".to_string(),
                     },
                     InputParamKind::ConnectionOrConstant,
@@ -359,14 +359,14 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 output_string(graph, "argument1");
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::EntFire => {
+            PulseNodeTemplate::EntFire => {
                 input_action(graph);
                 input_string(graph, "entity", InputParamKind::ConstantOnly);
                 input_string(graph, "input", InputParamKind::ConstantOnly);
                 input_string(graph, "value", InputParamKind::ConnectionOrConstant);
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::Compare => {
+            PulseNodeTemplate::Compare => {
                 input_action(graph);
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
                 input_string(graph, "Data type (optional)", InputParamKind::ConstantOnly);
@@ -375,52 +375,52 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 output_action(graph, "True");
                 output_action(graph, "False");
             }
-            MyNodeTemplate::ConcatString => {
+            PulseNodeTemplate::ConcatString => {
                 input_string(graph, "A", InputParamKind::ConnectionOrConstant);
                 input_string(graph, "B", InputParamKind::ConnectionOrConstant);
                 output_string(graph, "out");
             }
-            MyNodeTemplate::CellWait => {
+            PulseNodeTemplate::CellWait => {
                 input_action(graph);
                 input_scalar(graph, "time");
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::GetVar => {
+            PulseNodeTemplate::GetVar => {
                 graph.add_input_param(node_id, String::from("variableName"),
-                 MyDataType::InternalOutputName,
-                  MyValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
+                 PulseDataType::InternalOutputName,
+                  PulseGraphValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
                   InputParamKind::ConstantOnly, true);
                 //output_scalar(graph, "out");
             }
-            MyNodeTemplate::SetVar => {
+            PulseNodeTemplate::SetVar => {
                 input_action(graph);
                 graph.add_input_param(node_id, String::from("variableName"),
-                 MyDataType::InternalOutputName,
-                  MyValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
+                 PulseDataType::InternalOutputName,
+                  PulseGraphValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
                   InputParamKind::ConstantOnly, true);
                 //input_scalar(graph, "value");
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::EventHandler => {
+            PulseNodeTemplate::EventHandler => {
                 input_action(graph);
                 input_string(graph, "eventName", InputParamKind::ConstantOnly);
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::IntToString => {
+            PulseNodeTemplate::IntToString => {
                 input_scalar(graph, "value");
                 output_string(graph, "out");
             }
-            MyNodeTemplate::Operation => {
+            PulseNodeTemplate::Operation => {
                 input_scalar(graph, "A");
                 input_scalar(graph, "B");
                 output_scalar(graph, "out");
             }
-            MyNodeTemplate::FindEntByName => {
+            PulseNodeTemplate::FindEntByName => {
                 input_string(graph, "entName", InputParamKind::ConstantOnly);
                 input_string(graph, "entClass", InputParamKind::ConstantOnly);
                 output_ehandle(graph, "out");
             }
-            MyNodeTemplate::DebugWorldText => {
+            PulseNodeTemplate::DebugWorldText => {
                 input_action(graph);
                 input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
                 input_ehandle(graph, "hEntity");
@@ -433,16 +433,16 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 input_scalar(graph, "flScale");
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::DebugLog => {
+            PulseNodeTemplate::DebugLog => {
                 input_action(graph);
                 input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
                 output_action(graph, "outAction");
             }
-            MyNodeTemplate::FireOutput => {
+            PulseNodeTemplate::FireOutput => {
                 input_action(graph);
                 graph.add_input_param(node_id, String::from("outputName"),
-                 MyDataType::InternalOutputName,
-                  MyValueType::InternalOutputName { prevvalue: String::default(), value: String::from("CHOOSE") },
+                 PulseDataType::InternalOutputName,
+                  PulseGraphValueType::InternalOutputName { prevvalue: String::default(), value: String::from("CHOOSE") },
                   InputParamKind::ConstantOnly, true);
                 output_action(graph, "outAction");
             }
@@ -452,48 +452,48 @@ impl NodeTemplateTrait for MyNodeTemplate {
 
 pub struct AllMyNodeTemplates;
 impl NodeTemplateIter for AllMyNodeTemplates {
-    type Item = MyNodeTemplate;
+    type Item = PulseNodeTemplate;
 
     fn all_kinds(&self) -> Vec<Self::Item> {
         // This function must return a list of node kinds, which the node finder
         // will use to display it to the user. Crates like strum can reduce the
         // boilerplate in enumerating all variants of an enum.
         vec![
-            MyNodeTemplate::CellPublicMethod,
-            MyNodeTemplate::EntFire,
-            MyNodeTemplate::Compare,
-            MyNodeTemplate::ConcatString,
-            MyNodeTemplate::CellWait,
-            MyNodeTemplate::GetVar,
-            MyNodeTemplate::SetVar,
-            MyNodeTemplate::EventHandler,
-            MyNodeTemplate::IntToString,
-            MyNodeTemplate::Operation,
-            MyNodeTemplate::FindEntByName,
-            MyNodeTemplate::DebugWorldText,
-            MyNodeTemplate::DebugLog,
-            MyNodeTemplate::FireOutput,
+            PulseNodeTemplate::CellPublicMethod,
+            PulseNodeTemplate::EntFire,
+            PulseNodeTemplate::Compare,
+            PulseNodeTemplate::ConcatString,
+            PulseNodeTemplate::CellWait,
+            PulseNodeTemplate::GetVar,
+            PulseNodeTemplate::SetVar,
+            PulseNodeTemplate::EventHandler,
+            PulseNodeTemplate::IntToString,
+            PulseNodeTemplate::Operation,
+            PulseNodeTemplate::FindEntByName,
+            PulseNodeTemplate::DebugWorldText,
+            PulseNodeTemplate::DebugLog,
+            PulseNodeTemplate::FireOutput,
         ]
     }
 }
 
-impl WidgetValueTrait for MyValueType {
-    type Response = MyResponse;
-    type UserState = MyGraphState;
-    type NodeData = MyNodeData;
+impl WidgetValueTrait for PulseGraphValueType {
+    type Response = PulseGraphResponse;
+    type UserState = PulseGraphState;
+    type NodeData = PulseNodeData;
     fn value_widget(
         &mut self,
         param_name: &str,
         _node_id: NodeId,
         ui: &mut egui::Ui,
-        _user_state: &mut MyGraphState,
-        _node_data: &MyNodeData,
-    ) -> Vec<MyResponse> {
+        _user_state: &mut PulseGraphState,
+        _node_data: &PulseNodeData,
+    ) -> Vec<PulseGraphResponse> {
         // This trait is used to tell the library which UI to display for the
         // inline parameter widgets.
         let mut responses = vec![];
         match self {
-            MyValueType::Vec2 { value } => {
+            PulseGraphValueType::Vec2 { value } => {
                 ui.label(param_name);
                 ui.horizontal(|ui| {
                     ui.label("x");
@@ -502,14 +502,14 @@ impl WidgetValueTrait for MyValueType {
                     ui.add(DragValue::new(&mut value.y));
                 });
             }
-            MyValueType::Scalar { value } => {
+            PulseGraphValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
                     // if this is a custom added parameter...
                     let vec_params = _user_state.added_parameters.get(_node_id);
                     if let Some(params) = vec_params {
                         if params.iter().find(|&x| x == param_name).is_some() {
                             if ui.button("X").on_hover_text("Remove parameter").clicked() {
-                                responses.push(MyResponse::RemoveOutputParam(_node_id, param_name.to_string()));
+                                responses.push(PulseGraphResponse::RemoveOutputParam(_node_id, param_name.to_string()));
                             }
                         }
                     }
@@ -517,18 +517,18 @@ impl WidgetValueTrait for MyValueType {
                     ui.add(DragValue::new(value));
                 });
             }
-            MyValueType::String { value } => {
+            PulseGraphValueType::String { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ui.text_edit_singleline(value);
                 });
             }
-            MyValueType::Bool { value } => {
+            PulseGraphValueType::Bool { value } => {
                 ui.horizontal(|ui| {
                     ui.checkbox(value, param_name);
                 });
             }
-            MyValueType::Vec3 { value } => {
+            PulseGraphValueType::Vec3 { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ui.add(DragValue::new(&mut value.x).range(0..=255));
@@ -536,13 +536,13 @@ impl WidgetValueTrait for MyValueType {
                     ui.add(DragValue::new(&mut value.z).range(0..=255));
                 });
             }
-            MyValueType::Action => {
+            PulseGraphValueType::Action => {
                 ui.label("ACT");
             }
-            MyValueType::EHandle => {
+            PulseGraphValueType::EHandle => {
                 ui.label("EHandle");
             }
-            MyValueType::InternalOutputName {prevvalue, value} => {
+            PulseGraphValueType::InternalOutputName {prevvalue, value} => {
                 ui.horizontal(|ui| {
                     ui.label("Output");
                     ComboBox::from_id_salt(_node_id)
@@ -555,11 +555,11 @@ impl WidgetValueTrait for MyValueType {
                     );
                 });
                 if prevvalue != value {
-                    responses.push(MyResponse::ChangeOutputParamType(_node_id, value.clone()));
+                    responses.push(PulseGraphResponse::ChangeOutputParamType(_node_id, value.clone()));
                     *prevvalue = value.clone();
                 }
             }
-            MyValueType::InternalVariableName {prevvalue, value} => {
+            PulseGraphValueType::InternalVariableName {prevvalue, value} => {
                 ui.horizontal(|ui| {
                     ui.label("Variable");
                     ComboBox::from_id_salt(_node_id)
@@ -572,7 +572,7 @@ impl WidgetValueTrait for MyValueType {
                     );
                 });
                 if prevvalue != value {
-                    responses.push(MyResponse::ChangeOutputParamType(_node_id, value.clone()));
+                    responses.push(PulseGraphResponse::ChangeOutputParamType(_node_id, value.clone()));
                     *prevvalue = value.clone();
                 }
             }
@@ -582,12 +582,12 @@ impl WidgetValueTrait for MyValueType {
     }
 }
 
-impl UserResponseTrait for MyResponse {}
-impl NodeDataTrait for MyNodeData {
-    type Response = MyResponse;
-    type UserState = MyGraphState;
-    type DataType = MyDataType;
-    type ValueType = MyValueType;
+impl UserResponseTrait for PulseGraphResponse {}
+impl NodeDataTrait for PulseNodeData {
+    type Response = PulseGraphResponse;
+    type UserState = PulseGraphState;
+    type DataType = PulseDataType;
+    type ValueType = PulseGraphValueType;
 
     // This method will be called when drawing each node. This allows adding
     // extra ui elements inside the nodes. In this case, we create an "active"
@@ -598,11 +598,11 @@ impl NodeDataTrait for MyNodeData {
         &self,
         ui: &mut egui::Ui,
         node_id: NodeId,
-        _graph: &Graph<MyNodeData, MyDataType, MyValueType>,
+        _graph: &Graph<PulseNodeData, PulseDataType, PulseGraphValueType>,
         user_state: &mut Self::UserState,
-    ) -> Vec<NodeResponse<MyResponse, MyNodeData>>
+    ) -> Vec<NodeResponse<PulseGraphResponse, PulseNodeData>>
     where
-        MyResponse: UserResponseTrait,
+        PulseGraphResponse: UserResponseTrait,
     {
         // This logic is entirely up to the user. In this case, we check if the
         // current node we're drawing is the active one, by comparing against
@@ -611,12 +611,12 @@ impl NodeDataTrait for MyNodeData {
 
         let mut responses = vec![];
         // add param to event handler node.
-        if _graph.nodes.get(node_id).unwrap().user_data.template == MyNodeTemplate::EventHandler {
+        if _graph.nodes.get(node_id).unwrap().user_data.template == PulseNodeTemplate::EventHandler {
             let textbox_str: &mut String = user_state.custom_input_string.borrow_mut();
             ui.separator();
             ui.text_edit_singleline(textbox_str);
             if ui.button("Add parameter").clicked() {
-                responses.push(NodeResponse::User(MyResponse::AddOutputParam(node_id, user_state.custom_input_string.clone())));
+                responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(node_id, user_state.custom_input_string.clone())));
                 if let Some(vec_params) = user_state.added_parameters.get_mut(node_id) {
                     vec_params.push(user_state.custom_input_string.clone());
                 } else {
@@ -628,25 +628,25 @@ impl NodeDataTrait for MyNodeData {
     }
 }
 
-pub type MyGraph = Graph<MyNodeData, MyDataType, MyValueType>;
+pub type PulseGraph = Graph<PulseNodeData, PulseDataType, PulseGraphValueType>;
 type MyEditorState =
-    GraphEditorState<MyNodeData, MyDataType, MyValueType, MyNodeTemplate, MyGraphState>;
+    GraphEditorState<PulseNodeData, PulseDataType, PulseGraphValueType, PulseNodeTemplate, PulseGraphState>;
 
 #[derive(Default, Serialize, Deserialize)]
-pub struct NodeGraphExample {
+pub struct PulseGraphEditor {
     // The `GraphEditorState` is the top-level object. You "register" all your
     // custom types by specifying it as its generic parameters.
     state: MyEditorState,
-    user_state: MyGraphState,
+    user_state: PulseGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>
 }
 
 #[cfg(feature = "persistence")]
-impl NodeGraphExample {
+impl PulseGraphEditor {
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let grph: NodeGraphExample = cc
+        let grph: PulseGraphEditor = cc
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
@@ -670,8 +670,8 @@ impl NodeGraphExample {
                         self.state.graph.add_input_param(
                             node_id,
                             String::from("param"),
-                            MyDataType::Scalar,
-                            MyValueType::Scalar { value: 0f32 },
+                            PulseDataType::Scalar,
+                            PulseGraphValueType::Scalar { value: 0f32 },
                             InputParamKind::ConnectionOrConstant,
                             true,
                         );
@@ -680,8 +680,8 @@ impl NodeGraphExample {
                         self.state.graph.add_input_param(
                             node_id,
                             String::from("param"),
-                            MyDataType::String,
-                            MyValueType::String {value: String::default()},
+                            PulseDataType::String,
+                            PulseGraphValueType::String {value: String::default()},
                             InputParamKind::ConnectionOrConstant,
                             true,
                         );
@@ -690,8 +690,8 @@ impl NodeGraphExample {
                         self.state.graph.add_input_param(
                             node_id,
                             String::from("param"),
-                            MyDataType::Vec3,
-                            MyValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } },
+                            PulseDataType::Vec3,
+                            PulseGraphValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } },
                             InputParamKind::ConnectionOrConstant,
                             true,
                         );
@@ -700,8 +700,8 @@ impl NodeGraphExample {
                         self.state.graph.add_input_param(
                             node_id,
                             String::from("param"),
-                            MyDataType::EHandle,
-                            MyValueType::EHandle,
+                            PulseDataType::EHandle,
+                            PulseGraphValueType::EHandle,
                             InputParamKind::ConnectionOrConstant,
                             true,
                         );
@@ -716,7 +716,7 @@ impl NodeGraphExample {
 #[cfg(feature = "persistence")]
 const PERSISTENCE_KEY: &str = "egui_node_graph";
 
-impl eframe::App for NodeGraphExample {
+impl eframe::App for PulseGraphEditor {
     #[cfg(feature = "persistence")]
     /// If the persistence function is enabled,
     /// Called by the frame work to save state before shutdown.
@@ -784,7 +784,7 @@ impl eframe::App for NodeGraphExample {
                     for nodeid in node_ids {
                         let node = self.state.graph.nodes.get(nodeid).unwrap();
                         match node.user_data.template {
-                            MyNodeTemplate::FireOutput => {
+                            PulseNodeTemplate::FireOutput => {
                                 let inp = node.get_input("outputName");
                                 let val = self.state.graph.get_input(inp.unwrap()).value().clone().try_output_name().unwrap();
                                 if outputdef.name == val {
@@ -871,16 +871,16 @@ impl eframe::App for NodeGraphExample {
             // connection is created
             if let NodeResponse::User(user_event) = node_response {
                 match user_event {
-                    MyResponse::AddOutputParam(node_id, name) => {
+                    PulseGraphResponse::AddOutputParam(node_id, name) => {
                         let output_id = self.state.graph.add_output_param(
                             node_id,
                             name.clone(),
-                            MyDataType::Scalar,
+                            PulseDataType::Scalar,
                         );
                         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
                         node.user_data.custom_named_outputs.insert(output_id, name);
                     }
-                    MyResponse::RemoveOutputParam(node_id, name ) => {
+                    PulseGraphResponse::RemoveOutputParam(node_id, name ) => {
                         let param = self.state.graph.nodes.get_mut(node_id).unwrap().get_output(&name).unwrap();
                         self.state.graph.remove_output_param(param);
                         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
@@ -891,7 +891,7 @@ impl eframe::App for NodeGraphExample {
                             node.user_data.custom_named_outputs.remove(&k);
                         }
                     }
-                    MyResponse::ChangeOutputParamType(node_id, name) => {
+                    PulseGraphResponse::ChangeOutputParamType(node_id, name) => {
                         self.update_output_node_param(node_id, &name);
                     }
                 }

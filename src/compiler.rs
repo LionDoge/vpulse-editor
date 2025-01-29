@@ -1,5 +1,5 @@
 use egui_node_graph2::*;
-use crate::app::{MyGraph, MyNodeData, MyNodeTemplate, MyDataType, MyValueType};
+use crate::app::{PulseGraph, PulseNodeData, PulseNodeTemplate, PulseDataType, PulseGraphValueType};
 use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
@@ -40,7 +40,7 @@ macro_rules! graph_next_action {
     };
 }
 
-fn populate_based_on_node(graph: &MyGraph, node_data: &impl PulseGraphNode, graph_def: &mut PulseGraphDef, current_node: &Node<MyNodeData>, target_chunk: i32) {
+fn populate_based_on_node(graph: &PulseGraph, node_data: &impl PulseGraphNode, graph_def: &mut PulseGraphDef, current_node: &Node<PulseNodeData>, target_chunk: i32) {
     let mut register_map = RegisterMap::default();
     for node_input in node_data.get_registered_inputs().iter() {
         match node_input {
@@ -70,12 +70,12 @@ fn populate_based_on_node(graph: &MyGraph, node_data: &impl PulseGraphNode, grap
     }   
 }
 
-fn get_connected_output_node(graph: &MyGraph, out_action_id: &OutputId) -> Option<NodeId> {
+fn get_connected_output_node(graph: &PulseGraph, out_action_id: &OutputId) -> Option<NodeId> {
     // dumb way of finding outgoing connection node.
     for group in graph.iter_connection_groups() {
         for connection in group.1 {
             if connection == *out_action_id {
-                let input_action: &InputParam<MyDataType, MyValueType> = graph.inputs.get(group.0).expect("Can't find input value");
+                let input_action: &InputParam<PulseDataType, PulseGraphValueType> = graph.inputs.get(group.0).expect("Can't find input value");
                 return Some(input_action.node);
             }
         }
@@ -83,7 +83,7 @@ fn get_connected_output_node(graph: &MyGraph, out_action_id: &OutputId) -> Optio
     None
 }
 
-fn get_next_action_node<'a>(origin_node: &'a Node<MyNodeData>, graph: &'a MyGraph, name: &str) -> Option<&'a Node<MyNodeData>> {
+fn get_next_action_node<'a>(origin_node: &'a Node<PulseNodeData>, graph: &'a PulseGraph, name: &str) -> Option<&'a Node<PulseNodeData>> {
     let out_action_id = origin_node.get_output(name);
     if out_action_id.is_ok() {
         let out_action_id = out_action_id.unwrap();
@@ -95,7 +95,7 @@ fn get_next_action_node<'a>(origin_node: &'a Node<MyNodeData>, graph: &'a MyGrap
     return None;
 }
 
-fn traverse_event_cell(graph: &MyGraph, node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef) {
+fn traverse_event_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def: &mut PulseGraphDef) {
     let input_id = node.get_input("eventName").expect("Can't find input 'eventName'");
     let input_param = graph.inputs.get(input_id).expect("Can't find input value");
     let event_name = input_param.value.clone().try_to_string().unwrap();
@@ -116,7 +116,7 @@ fn traverse_event_cell(graph: &MyGraph, node: &Node<MyNodeData>, graph_def: &mut
     }
 }
 
-fn traverse_entry_cell(graph: &MyGraph, node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef)
+fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def: &mut PulseGraphDef)
 {
     let input_id = node.get_input("name").expect("Can't find input 'name'");
     let input_param = graph.inputs.get(input_id).expect("Can't find input value");
@@ -158,16 +158,16 @@ fn traverse_entry_cell(graph: &MyGraph, node: &Node<MyNodeData>, graph_def: &mut
     }
 }
 
-pub fn compile_graph(graph: &MyGraph) {
+pub fn compile_graph(graph: &PulseGraph) {
     let mut graph_def = PulseGraphDef::default();
     graph_def.map_name = String::from("maps/test.vmap");
     graph_def.xml_name = String::default();
     for node in graph.iter_nodes() {
-        let data: &Node<MyNodeData> = graph.nodes.get(node).unwrap();
+        let data: &Node<PulseNodeData> = graph.nodes.get(node).unwrap();
         // start at all possible entry points
         match data.user_data.template {
-            MyNodeTemplate::EventHandler => traverse_event_cell(graph, &data, &mut graph_def),
-            MyNodeTemplate::CellPublicMethod => traverse_entry_cell(graph, &data, &mut graph_def),
+            PulseNodeTemplate::EventHandler => traverse_event_cell(graph, &data, &mut graph_def),
+            PulseNodeTemplate::CellPublicMethod => traverse_entry_cell(graph, &data, &mut graph_def),
             _ => {}
         }
     }
@@ -219,7 +219,7 @@ fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: &Option<InputId>)
     }
 }
 
-fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<MyNodeData>,
+fn get_input_register_or_create_constant(graph: &PulseGraph, current_node: &Node<PulseNodeData>,
      graph_def: &mut PulseGraphDef, chunk_id: i32, input_name: &str, value_type: PulseValueType) -> i32 {
 
     let input_id = current_node.get_input(input_name).expect(format!("Can't find input {}", input_name).as_str());
@@ -296,17 +296,17 @@ fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<My
     target_register
 }
 
-fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
+fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
     match current_node.user_data.template {
-        MyNodeTemplate::CellPublicMethod => {
+        PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
             return try_find_output_mapping(graph_def, output_id);
         }
-        MyNodeTemplate::EventHandler => {
+        PulseNodeTemplate::EventHandler => {
             // here we resolve connections to the argument outputs
             return try_find_output_mapping(graph_def, output_id);
         }
-        MyNodeTemplate::CellWait => {
+        PulseNodeTemplate::CellWait => {
             let time_input_id = current_node.get_input("time").expect("Can't find input 'time'");
             let connection_to_time = graph.connection(time_input_id);
             let time_input_register: i32;
@@ -363,7 +363,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
 
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
-        MyNodeTemplate::EntFire => {
+        PulseNodeTemplate::EntFire => {
             // create EntFire (step) cell
             let entity_id = current_node.get_input("entity").expect("Can't find input 'entity'");
             let value_entity = graph.inputs.get(entity_id).expect("Can't find input value").value.clone().try_to_string();
@@ -448,7 +448,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             }
             
         }
-        MyNodeTemplate::ConcatString => {
+        PulseNodeTemplate::ConcatString => {
             let id_a = current_node.get_input("A").expect("Can't find input A in node");
             let id_b = current_node.get_input("B").expect("Can't find input B in node");
             let input_ids = [id_a, id_b];
@@ -469,7 +469,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
                         // no connection.. First search if we already created it, if not create the constant input value
                         let register = try_find_input_mapping(graph_def, &Some(input_ids[i]));
                         if register == -1 {
-                            let input_info: &InputParam<MyDataType, MyValueType> = graph.get_input(input_ids[i]);
+                            let input_info: &InputParam<PulseDataType, PulseGraphValueType> = graph.get_input(input_ids[i]);
                             let constant = PulseConstant::String(input_info.value.clone().try_to_string().unwrap());
                             let const_idx = graph_def.add_constant(constant);
                             // create register to hold this value
@@ -496,7 +496,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             }
             return register;
         }
-        MyNodeTemplate::GetVar => {
+        PulseNodeTemplate::GetVar => {
             let name_id = current_node.get_input("name").expect("Can't find input 'name'");
             // name is a constant value
             let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
@@ -508,7 +508,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             chunk.add_instruction(instruction_templates::get_var(reg, var_id as i32));
             return reg;
         }
-        MyNodeTemplate::IntToString => {
+        PulseNodeTemplate::IntToString => {
             let value_id = current_node.get_input("value").expect("Can't find input 'value'");
             let connection_to_value = graph.connection(value_id);
             let register_input: i32;
@@ -534,7 +534,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             }
             return register;
         }
-        MyNodeTemplate::SetVar => {
+        PulseNodeTemplate::SetVar => {
             let name_id = current_node.get_input("name").expect("Can't find input 'name'");
             // name is a constant value
             let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
@@ -564,7 +564,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
         }
-        MyNodeTemplate::Operation => {
+        PulseNodeTemplate::Operation => {
             let reg_a = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "A", PulseValueType::PVAL_FLOAT(None));
             let reg_b = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "B", PulseValueType::PVAL_FLOAT(None));
             let operation_input_id = current_node.get_input("operation").expect("Can't find input 'operation'");
@@ -586,7 +586,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             instr.reg2 = reg_b;
             chunk.add_instruction(instr);
         }
-        MyNodeTemplate::FindEntByName => {
+        PulseNodeTemplate::FindEntByName => {
             let reg_entname = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "entName", PulseValueType::DOMAIN_ENTITY_NAME);
             let entclass_input_id = current_node.get_input("entClass").expect("Can't find input 'entClass'");
             let entclass_input_param = graph.get_input(entclass_input_id).value().clone().try_to_string().expect("Can't find input 'entClass'");
@@ -619,7 +619,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             graph_def.add_binding(binding);
             return reg_output;
         }
-        MyNodeTemplate::DebugWorldText => {
+        PulseNodeTemplate::DebugWorldText => {
             let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING(None));
             // resolve connection to hEntity
             let hentity_input_id = current_node.get_input("hEntity").expect("Can't find input 'value'");
@@ -674,7 +674,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             // go to next action.
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
-        MyNodeTemplate::DebugLog => {
+        PulseNodeTemplate::DebugLog => {
             let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING(None));
             let cell_enum = CellType::DebugLog;
             graph_def.cells.push(Box::from(cell_enum));

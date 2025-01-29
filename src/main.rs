@@ -3,7 +3,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use eframe::egui::IconData;
-use pulseedit::NodeGraphExample;
+use pulseedit::PulseGraphEditor;
 
 fn load_icon(path: &str) -> IconData {
     let (icon_rgba, icon_width, icon_height) = {
@@ -35,7 +35,7 @@ fn main() {
         options,
         Box::new(|cc| {
             cc.egui_ctx.set_visuals(Visuals::dark());
-            Ok(Box::new(NodeGraphExample::new(cc)))
+            Ok(Box::new(PulseGraphEditor::new(cc)))
         }),
     )
     .expect("Failed to run native example");

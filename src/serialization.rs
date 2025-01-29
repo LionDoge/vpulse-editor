@@ -468,30 +468,30 @@ impl KV3Serialize for PulseConstant {
     }
 }
 
-pub struct Variable {
-    pub name: String,
-    pub typ: String,
-    pub default_value: i32,
-}
+// pub struct Variable {
+//     pub name: String,
+//     pub typ: String,
+//     pub default_value: i32,
+// }
 
-impl KV3Serialize for Variable {
-    fn serialize(&self) -> String {
-        formatdoc!{
-            "
-            {{
-                m_Name = \"{}\"
-                m_Description = \"\"
-                m_Type = \"{}\"
-                m_DefaultValue = {}
-                m_bIsPublic = true
-                m_bIsObservable = false
-                m_nEditorNodeID = -1
-            }}
-            "
-            , self.name, self.typ, self.default_value
-        }
-    }
-}
+// impl KV3Serialize for Variable {
+//     fn serialize(&self) -> String {
+//         formatdoc!{
+//             "
+//             {{
+//                 m_Name = \"{}\"
+//                 m_Description = \"\"
+//                 m_Type = \"{}\"
+//                 m_DefaultValue = {}
+//                 m_bIsPublic = true
+//                 m_bIsObservable = false
+//                 m_nEditorNodeID = -1
+//             }}
+//             "
+//             , self.name, self.typ, self.default_value
+//         }
+//     }
+// }
 impl KV3Serialize for PulseVariable {
     fn serialize(&self) -> String {
         let literal = match &self.typ_and_default_value {
@@ -525,15 +525,15 @@ impl KV3Serialize for PulseVariable {
         }
     }
 }
-impl Variable{
-    pub fn new<'a>(name: String, typ: String, default_value: i32) -> Variable {
-        Variable {
-            name,
-            typ,
-            default_value,
-        }
-    }
-}
+// impl Variable{
+//     pub fn new<'a>(name: String, typ: String, default_value: i32) -> Variable {
+//         Variable {
+//             name,
+//             typ,
+//             default_value,
+//         }
+//     }
+// }
 
 #[derive(Default)]
 pub struct PulseGraphDef {

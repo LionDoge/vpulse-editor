@@ -5,6 +5,7 @@ use crate::pulsetypes::*;
 use crate::serialization::*;
 use std::fs;
 
+const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 pub enum NodeInput {
     ConstantOnly(String, PulseValueType),
     ConnectionOnly(String, PulseValueType),
@@ -171,7 +172,8 @@ pub fn compile_graph(graph: &PulseGraph) {
             _ => {}
         }
     }
-    let mut data = String::from("<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse13:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n");
+    // start 
+    let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
     fs::write("graph_out/graph.vpulse", data).expect("Cannot write to file!");
 }
@@ -190,7 +192,7 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
     }
 }
 
-fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, defaults: PulseValueType) -> i32 {
+fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, variableList: &Vec<PulseVariable>) -> i32 {
     match graph_def.get_variable_index(&name) {
         Some(var) => {
             return var as i32;
@@ -198,7 +200,9 @@ fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, defaults: P
         None => {
             let var = PulseVariable {
                 name: name.to_string(),
-                typ_and_default_value: defaults
+                typ_and_default_value: defaults.clone(),
+                old_typ: defaults,
+                default_value_buffer: String::default(),
             };
             return graph_def.add_variable(var);
         }
@@ -296,6 +300,10 @@ fn get_input_register_or_create_constant(graph: &PulseGraph, current_node: &Node
     target_register
 }
 
+// recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.
+// takes care of referencing already assigned registers or other data (like visisted list in a graph traversal)
+// it operates ONLY on a target chunk - which is basically a set of instructions related to one flow of logic
+// inside the GUI a chunk is one continous flow of logic.
 fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNodeData>, graph_def: &mut PulseGraphDef, target_chunk: i32, output_id: &Option<OutputId>) -> i32 {
     match current_node.user_data.template {
         PulseNodeTemplate::CellPublicMethod => {
@@ -565,6 +573,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
         }
         PulseNodeTemplate::Operation => {
+            // TODO: Hardcoding floats for now, until I add easier way of changing types for nodes.
             let reg_a = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "A", PulseValueType::PVAL_FLOAT(None));
             let reg_b = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "B", PulseValueType::PVAL_FLOAT(None));
             let operation_input_id = current_node.get_input("operation").expect("Can't find input 'operation'");

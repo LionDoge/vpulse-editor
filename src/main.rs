@@ -39,5 +39,4 @@ fn main() {
         }),
     )
     .expect("Failed to run native example");
-
 }

@@ -190,13 +190,16 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
     }
 }
 
-fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str) -> i32 {
+fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, defaults: PulseValueType) -> i32 {
     match graph_def.get_variable_index(&name) {
         Some(var) => {
             return var as i32;
         }
         None => {
-            let var = Variable::new(name.to_string(), String::from("PVAL_INT"), 0);
+            let var = PulseVariable {
+                name: name.to_string(),
+                typ_and_default_value: defaults
+            };
             return graph_def.add_variable(var);
         }
     }
@@ -245,21 +248,21 @@ fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<My
 
             let instruction: Instruction;
             match value_type {
-                PulseValueType::PVAL_INT => 
+                PulseValueType::PVAL_INT(_) => 
                 {
                     instruction = instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Integer(input_value as i32));
                 }
-                PulseValueType::PVAL_FLOAT => 
+                PulseValueType::PVAL_FLOAT(_) => 
                 {
                     instruction = instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Float(input_value));
                 }
-                PulseValueType::PVAL_STRING => 
+                PulseValueType::PVAL_STRING(_) => 
                 {
                     instruction = instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_string().expect("Failed to unwrap input value");
@@ -272,14 +275,14 @@ fn get_input_register_or_create_constant(graph: &MyGraph, current_node: &Node<My
                     chunk.add_instruction(instruction);
                     graph_def.create_domain_value(String::from("ENTITY_NAME"), input_value.clone(), String::new());
                 }
-                PulseValueType::PVAL_VEC3 => 
+                PulseValueType::PVAL_VEC3(_) => 
                 {
                     instruction = instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_vec3().expect("Failed to unwrap input value");
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Vec3(input_value));
                 }
-                PulseValueType::PVAL_COLOR_RGB => 
+                PulseValueType::PVAL_COLOR_RGB(_) => 
                 {
                     instruction = instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_vec3().expect("Failed to unwrap input value");
@@ -562,8 +565,8 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
         }
         MyNodeTemplate::Operation => {
-            let reg_a = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "A", PulseValueType::PVAL_FLOAT);
-            let reg_b = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "B", PulseValueType::PVAL_FLOAT);
+            let reg_a = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "A", PulseValueType::PVAL_FLOAT(None));
+            let reg_b = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "B", PulseValueType::PVAL_FLOAT(None));
             let operation_input_id = current_node.get_input("operation").expect("Can't find input 'operation'");
             let operation_input_param = graph.get_input(operation_input_id).value().clone().try_to_string().expect("Can't find input 'operation'");
             let operation_instr_name: &str = match operation_input_param.as_str() {
@@ -592,7 +595,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             let mut reg_output = try_find_output_mapping(graph_def, output_id);
             if reg_output == -1 {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                reg_output = chunk.add_register(PulseValueType::PVAL_EHANDLE(entclass_input_param.clone()).to_string(), chunk.get_last_instruction_id() + 1);
+                reg_output = chunk.add_register(PulseValueType::PVAL_EHANDLE(Some(entclass_input_param.clone())).to_string(), chunk.get_last_instruction_id() + 1);
                 if let Some(out) = output_id {
                     graph_def.add_register_mapping(*out, reg_output);
                 }
@@ -617,7 +620,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             return reg_output;
         }
         MyNodeTemplate::DebugWorldText => {
-            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING);
+            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING(None));
             // resolve connection to hEntity
             let hentity_input_id = current_node.get_input("hEntity").expect("Can't find input 'value'");
             let connection_to_hentity = graph.connection(hentity_input_id);
@@ -630,13 +633,13 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             let out_node = graph.nodes.get(hentity_param.node).expect("Can't find output node");
             let reg_hentity = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(connection_to_hentity));
             // other params
-            let reg_ntextoffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "nTextOffset", PulseValueType::PVAL_INT);
-            let reg_flduration = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flDuration", PulseValueType::PVAL_FLOAT);
-            let reg_flverticaloffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flVerticalOffset", PulseValueType::PVAL_FLOAT);
+            let reg_ntextoffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "nTextOffset", PulseValueType::PVAL_INT(None));
+            let reg_flduration = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flDuration", PulseValueType::PVAL_FLOAT(None));
+            let reg_flverticaloffset = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flVerticalOffset", PulseValueType::PVAL_FLOAT(None));
             // color:
-            let reg_color = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "color", PulseValueType::PVAL_COLOR_RGB);
-            let reg_alpha = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flAlpha", PulseValueType::PVAL_FLOAT);
-            let reg_scale = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flScale", PulseValueType::PVAL_FLOAT);
+            let reg_color = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "color", PulseValueType::PVAL_COLOR_RGB(None));
+            let reg_alpha = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flAlpha", PulseValueType::PVAL_FLOAT(None));
+            let reg_scale = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "flScale", PulseValueType::PVAL_FLOAT(None));
             // bAttached:
             let new_binding_id = graph_def.get_current_binding_id() + 1;
             let battached_input_id = current_node.get_input("bAttached").expect("Can't find input 'bAttached'");
@@ -672,7 +675,7 @@ fn traverse_nodes_and_populate(graph: &MyGraph, current_node: &Node<MyNodeData>,
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         MyNodeTemplate::DebugLog => {
-            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING);
+            let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING(None));
             let cell_enum = CellType::DebugLog;
             graph_def.cells.push(Box::from(cell_enum));
             let mut register_map = RegisterMap::default();

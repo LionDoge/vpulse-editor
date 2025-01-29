@@ -1,4 +1,6 @@
 use std::borrow::BorrowMut;
+use serde_json::to_string_pretty;
+use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 use eframe::egui::{self, ComboBox, DragValue};
@@ -19,18 +21,24 @@ pub struct MyNodeData {
     pub template: MyNodeTemplate,
     pub custom_named_outputs: HashMap<OutputId, String>,
 }
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
 
+impl Default for Vec3 {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, z: 0.0 }
+    }
+}
+
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
 #[derive(PartialEq, Eq)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum MyDataType {
     Scalar,
     Vec2,
@@ -39,7 +47,8 @@ pub enum MyDataType {
     Bool,
     Action,
     EHandle,
-    InternalOutputName
+    InternalOutputName,
+    InternalVariableName,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -50,7 +59,7 @@ pub enum MyDataType {
 /// up to the user code in this example to make sure no parameter is created
 /// with a DataType of Scalar and a ValueType of Vec2.
 #[derive(Clone, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum MyValueType {
     Vec2 { value: egui::Vec2 },
     Scalar { value: f32 },
@@ -60,6 +69,7 @@ pub enum MyValueType {
     EHandle,
     Action,
     InternalOutputName { prevvalue: String, value: String },
+    InternalVariableName { prevvalue: String, value: String },
 }
 
 impl Default for MyValueType {
@@ -117,7 +127,7 @@ impl MyValueType {
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
 #[derive(Clone, Copy, PartialEq, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum MyNodeTemplate {
     MakeScalar,
     AddScalar,
@@ -157,11 +167,12 @@ pub enum MyResponse {
 /// parameter drawing callbacks. The contents of this struct are entirely up to
 /// the user. For this example, we use it to keep track of the 'active' node.
 #[derive(Default)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct MyGraphState {
     pub custom_input_string: String,
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
-    pub public_outputs: Vec<OutputDefinition>
+    pub public_outputs: Vec<OutputDefinition>,
+    pub variables: Vec<PulseVariable>
 }
 
 // =========== Then, you need to implement some traits ============
@@ -178,6 +189,7 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
             MyDataType::EHandle => egui::Color32::from_rgb(18, 227, 81),
             MyDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
             MyDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
+            MyDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -191,6 +203,7 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
             MyDataType::Action => Cow::Borrowed("action"),
             MyDataType::EHandle => Cow::Borrowed("EHandle"),
             MyDataType::InternalOutputName => Cow::Borrowed("Output name"),
+            MyDataType::InternalVariableName => Cow::Borrowed("Variable name"),
         }
     }
 }
@@ -461,13 +474,19 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 output_action(graph, "outAction");
             }
             MyNodeTemplate::GetVar => {
-                input_string(graph, "name", InputParamKind::ConstantOnly);
-                output_scalar(graph, "out");
+                graph.add_input_param(node_id, String::from("variableName"),
+                 MyDataType::InternalOutputName,
+                  MyValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
+                  InputParamKind::ConstantOnly, true);
+                //output_scalar(graph, "out");
             }
             MyNodeTemplate::SetVar => {
                 input_action(graph);
-                input_string(graph, "name", InputParamKind::ConstantOnly);
-                input_scalar(graph, "value");
+                graph.add_input_param(node_id, String::from("variableName"),
+                 MyDataType::InternalOutputName,
+                  MyValueType::InternalVariableName { prevvalue: String::default(), value: String::from("CHOOSE") },
+                  InputParamKind::ConstantOnly, true);
+                //input_scalar(graph, "value");
                 output_action(graph, "outAction");
             }
             MyNodeTemplate::EventHandler => {
@@ -635,6 +654,23 @@ impl WidgetValueTrait for MyValueType {
                     *prevvalue = value.clone();
                 }
             }
+            MyValueType::InternalVariableName {prevvalue, value} => {
+                ui.horizontal(|ui| {
+                    ui.label("Variable");
+                    ComboBox::from_id_salt(_node_id)
+                        .selected_text(value.clone())
+                        .show_ui(ui, |ui| {
+                            for var in _user_state.variables.iter() {
+                                ui.selectable_value(value, var.name.clone(), var.name.clone());
+                            }
+                        }
+                    );
+                });
+                if prevvalue != value {
+                    responses.push(MyResponse::ChangeOutputParamType(_node_id, value.clone()));
+                    *prevvalue = value.clone();
+                }
+            }
         }
         // This allows you to return your responses from the inline widgets.
         responses
@@ -691,24 +727,28 @@ pub type MyGraph = Graph<MyNodeData, MyDataType, MyValueType>;
 type MyEditorState =
     GraphEditorState<MyNodeData, MyDataType, MyValueType, MyNodeTemplate, MyGraphState>;
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct NodeGraphExample {
     // The `GraphEditorState` is the top-level object. You "register" all your
     // custom types by specifying it as its generic parameters.
     state: MyEditorState,
-    file_dialog: FileDialog,
     user_state: MyGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>
 }
 
+#[cfg(feature = "persistence")]
 impl NodeGraphExample {
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
-    pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let grph: NodeGraphExample = cc
+            .storage
+            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
+            .unwrap_or_default();
         Self {
-            state: MyEditorState::default(),
-            file_dialog: FileDialog::new(),
-            user_state: MyGraphState::default(),
+            state: grph.state,
+            //file_dialog: FileDialog::new(),
+            user_state: grph.user_state,
             outputs_dropdown_choices: vec![],
         }
     }
@@ -722,36 +762,49 @@ impl NodeGraphExample {
         for output in self.user_state.public_outputs.iter() {
             if output.name == *name {
                 match output.typ {
-                    PulseValueType::PVAL_FLOAT
-                    | PulseValueType::PVAL_INT => {
-                        dattype = MyDataType::Scalar;
-                        valtype = MyValueType::Scalar { value: 0f32 };
+                    PulseValueType::PVAL_FLOAT(_)
+                    | PulseValueType::PVAL_INT(_) => {
+                        self.state.graph.add_input_param(
+                            node_id,
+                            String::from("param"),
+                            MyDataType::Scalar,
+                            MyValueType::Scalar { value: 0f32 },
+                            InputParamKind::ConnectionOrConstant,
+                            true,
+                        );
                     }
-                    PulseValueType::PVAL_STRING => {
-                        dattype = MyDataType::String;
-                        valtype = MyValueType::String { value: String::default() };
+                    PulseValueType::PVAL_STRING(_) => {
+                        self.state.graph.add_input_param(
+                            node_id,
+                            String::from("param"),
+                            MyDataType::String,
+                            MyValueType::String {value: String::default()},
+                            InputParamKind::ConnectionOrConstant,
+                            true,
+                        );
                     }
-                    PulseValueType::PVAL_VEC3 => {
-                        dattype = MyDataType::Vec3;
-                        valtype = MyValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } };
+                    PulseValueType::PVAL_VEC3(_) => {
+                        self.state.graph.add_input_param(
+                            node_id,
+                            String::from("param"),
+                            MyDataType::Vec3,
+                            MyValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } },
+                            InputParamKind::ConnectionOrConstant,
+                            true,
+                        );
                     }
                     PulseValueType::PVAL_EHANDLE(_) => {
-                        dattype = MyDataType::EHandle;
-                        valtype = MyValueType::EHandle;
+                        self.state.graph.add_input_param(
+                            node_id,
+                            String::from("param"),
+                            MyDataType::EHandle,
+                            MyValueType::EHandle,
+                            InputParamKind::ConnectionOrConstant,
+                            true,
+                        );
                     }
-                    _ => {
-                        dattype = MyDataType::Scalar;
-                        valtype = MyValueType::Scalar { value: 0f32 };
-                    }
+                    _ => {}
                 }
-                self.state.graph.add_input_param(
-                    node_id,
-                    String::from("param"),
-                    dattype,
-                    valtype,
-                    InputParamKind::ConnectionOnly,
-                    true,
-                );
             }
         }
     }
@@ -760,30 +813,21 @@ impl NodeGraphExample {
 #[cfg(feature = "persistence")]
 const PERSISTENCE_KEY: &str = "egui_node_graph";
 
-#[cfg(feature = "persistence")]
-impl NodeGraphExample {
-    /// If the persistence feature is enabled, Called once before the first frame.
-    /// Load previous app state (if any).
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let state = cc
-            .storage
-            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
-            .unwrap_or_default();
-        Self {
-            state,
-            user_state: MyGraphState::default(),
-            file_dialog: FileDialog::default(),
-            outputs_dropdown_choices: vec![],
-        }
-    }
-}
-
 impl eframe::App for NodeGraphExample {
     #[cfg(feature = "persistence")]
     /// If the persistence function is enabled,
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, PERSISTENCE_KEY, &self.state);
+        use std::env;
+        let save_dir = env::current_dir();
+        if save_dir.is_ok() {
+            let save_dir = save_dir.unwrap();
+            let save_dir_str = save_dir.to_str();
+            if save_dir_str.is_some() {
+                eframe::storage_dir(save_dir_str.unwrap());
+            }
+        }
+        eframe::set_value(storage, PERSISTENCE_KEY, &self);
     }
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
@@ -792,7 +836,7 @@ impl eframe::App for NodeGraphExample {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Pick save path").clicked() {
-                    self.file_dialog.pick_file();
+                    //self.file_dialog.pick_file();
                 }
                 if ui.button("Compile").clicked() {
                     compile_graph(&self.state.graph);
@@ -800,59 +844,112 @@ impl eframe::App for NodeGraphExample {
                 
             });
         });
+        let mut output_scheduled_for_deletion: usize = usize::MAX; // we can get away with just one reference (it's not like the user can click more than one at once)
+        let mut variable_scheduled_for_deletion: usize = usize::MAX;
+        let mut output_node_updates = vec![];
         egui::SidePanel::left("left_panel").show(ctx, |ui| {
             ui.label("Outputs:");
             if ui.button("Add output").clicked() {
-                self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT);
-                self.user_state.public_outputs.push(OutputDefinition { name: String::default(), typ: PulseValueType::PVAL_INT, typ_old: PulseValueType::PVAL_INT });
+                self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT(None));
+                self.user_state.public_outputs.push(OutputDefinition { name: String::default(), typ: PulseValueType::PVAL_INT(None), typ_old: PulseValueType::PVAL_INT(None) });
             }
-            let mut scheduled_for_deletion: usize = usize::MAX; // we can get away with just one reference (it's not like the user can click more than one at once)
-            let mut output_node_updates = vec![];
             for (idx, outputdef) in self.user_state.public_outputs.iter_mut().enumerate() {
                 // let output_frame = egui::Frame::default().inner_margin(4.0).begin(ui);
                 // {
-                    ui.horizontal(|ui| {
-                        if ui.button("X").clicked() {
-                            scheduled_for_deletion = idx;
+                ui.horizontal(|ui| {
+                    if ui.button("X").clicked() {
+                        output_scheduled_for_deletion = idx;
+                    }
+                    ui.label("Name");
+                    ui.text_edit_singleline(&mut outputdef.name);
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Param type");
+                    ComboBox::from_label(format!("outputpick{}", idx))
+                        .selected_text(format!("{:?}", outputdef.typ))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_INT(None), "Integer");
+                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_STRING(None), "String");
+                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_FLOAT(None), "Float");
+                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_VEC3(None), "Vec3");
+                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_EHANDLE(None), "Entity Handle");
                         }
-                        ui.label("Name");
-                        ui.text_edit_singleline(&mut outputdef.name);
-                    });
-                    ui.horizontal(|ui| {
-                        ui.label("Param type");
-                        ComboBox::from_label(format!("outputpick{}", idx))
-                            .selected_text(format!("{:?}", outputdef.typ))
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_INT, "Integer");
-                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_STRING, "String");
-                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_FLOAT, "Float");
-                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_VEC3, "Vec3");
-                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_EHANDLE(String::from("baseentity")), "Entity Handle");
+                    );
+                });
+                if outputdef.typ != outputdef.typ_old {
+                    let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
+                    for nodeid in node_ids {
+                        let node = self.state.graph.nodes.get(nodeid).unwrap();
+                        match node.user_data.template {
+                            MyNodeTemplate::FireOutput => {
+                                let inp = node.get_input("outputName");
+                                let val = self.state.graph.get_input(inp.unwrap()).value().clone().try_output_name().unwrap();
+                                if outputdef.name == val {
+                                    output_node_updates.push((nodeid, outputdef.name.clone()));
+                                }
                             }
-                        );
-                    });
-                    if outputdef.typ != outputdef.typ_old {
-                        
-                        let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
-                        for nodeid in node_ids {
-                            let node = self.state.graph.nodes.get(nodeid).unwrap();
-                            let inp = node.get_input("outputName");
-                            let val = self.state.graph.get_input(inp.unwrap()).value().clone().try_output_name().unwrap();
-                            if node.user_data.template == MyNodeTemplate::FireOutput && outputdef.name == val {
-                                output_node_updates.push((nodeid, outputdef.name.clone()));
-                            }
+                            _ => {}
                         }
                     }
+                    outputdef.typ_old = outputdef.typ.clone();
+                }
                 // }
                 // output_frame.end(ui);
             }
-            for (nodeid, name) in output_node_updates {
-                self.update_output_node_param(nodeid, &name);
-            }
-            if scheduled_for_deletion != usize::MAX {
-                self.user_state.public_outputs.remove(scheduled_for_deletion);
+            ui.label("Variables:");
+            for (idx, var) in self.user_state.variables.iter_mut().enumerate() {
+                ui.horizontal(|ui| {
+                    if ui.button("X").clicked() {
+                        variable_scheduled_for_deletion = idx;
+                    }
+                    ui.label("Name");
+                    ui.text_edit_singleline(&mut var.name);
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Default value");
+                    ui.text_edit_singleline(&mut var.default_value_buffer);
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Param type");
+                    ComboBox::from_label(format!("varpick{}", idx))
+                        .selected_text(format!("{:?}", &var.typ_and_default_value))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_INT(None), "Integer");
+                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_STRING(None), "String");
+                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_FLOAT(None), "Float");
+                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_VEC3(None), "Vec3");
+                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_EHANDLE(None), "Entity Handle");
+                        }
+                    );
+                    // compare only the variant of the enums
+                    if std::mem::discriminant(&var.typ_and_default_value) != std::mem::discriminant(&var.old_typ) {
+                        var.typ_and_default_value = match &var.typ_and_default_value {
+                            PulseValueType::PVAL_INT(_) => {
+                                var.default_value_buffer.parse::<i32>()
+                                    .map(|x| PulseValueType::PVAL_INT(Some(x)))
+                                    .unwrap_or(PulseValueType::PVAL_INT(None))
+                            }
+                            PulseValueType::PVAL_FLOAT(_) => {
+                                var.default_value_buffer.parse::<f32>()
+                                    .map(|x| PulseValueType::PVAL_FLOAT(Some(x)))
+                                    .unwrap_or(PulseValueType::PVAL_FLOAT(None))
+                            }
+                            PulseValueType::PVAL_STRING(_) => {
+                                PulseValueType::PVAL_STRING(Some(var.default_value_buffer.clone()))
+                            }
+                            _ => var.typ_and_default_value.to_owned()
+                        };
+                        var.typ_and_default_value = var.old_typ.clone();
+                    }
+                });
             }
         });
+        if output_scheduled_for_deletion != usize::MAX {
+            self.user_state.public_outputs.remove(output_scheduled_for_deletion);
+        }
+        if variable_scheduled_for_deletion != usize::MAX {
+            self.user_state.variables.remove(variable_scheduled_for_deletion);
+        }
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
                 let graph_response = self.state.draw_graph_editor(
@@ -896,6 +993,9 @@ impl eframe::App for NodeGraphExample {
                     }
                 }
             }
+        }
+        for (nodeid, name) in output_node_updates {
+            self.update_output_node_param(nodeid, &name);
         }
     }
 }

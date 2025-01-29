@@ -1,6 +1,8 @@
 #![allow(nonstandard_style)]
 use std::fmt;
-use crate::serialization::{RegisterMap, PulseRuntimeArgument};
+use serde::{Deserialize, Serialize};
+
+use crate::{app::Vec3, serialization::{PulseRuntimeArgument, RegisterMap}};
 
 // used for a node definition
 // some instructions have named parameters as inputs and as outputs, 
@@ -62,28 +64,37 @@ pub struct CPulseCell_Value_FindEntByName {
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum PulseValueType {
-    PVAL_INT,
-    PVAL_FLOAT,
-    PVAL_STRING,
+    PVAL_INT(Option<i32>),
+    PVAL_FLOAT(Option<f32>),
+    PVAL_STRING(Option<String>),
     PVAL_INVALID,
-    PVAL_EHANDLE(String),
-    PVAL_VEC3,
-    PVAL_COLOR_RGB,
+    PVAL_EHANDLE(Option<String>),
+    PVAL_VEC3(Option<Vec3>),
+    PVAL_COLOR_RGB(Option<Vec3>),
     DOMAIN_ENTITY_NAME,
 }
 impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PulseValueType::PVAL_INT => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_FLOAT => write!(f, "PVAL_FLOAT"),
-            PulseValueType::PVAL_STRING => write!(f, "PVAL_STRING"),
+            PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
+            PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
+            PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
             PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", *ent_type),
-            PulseValueType::PVAL_VEC3 => write!(f, "PVAL_VEC3"),
-            PulseValueType::PVAL_COLOR_RGB => write!(f, "PVAL_COLOR_RGB"),
+            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{:?}", ent_type),
+            PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
+            PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
         }
     }
+}
+#[derive(Serialize, Deserialize)]
+
+pub struct PulseVariable {
+    pub name: String,
+    pub typ_and_default_value: PulseValueType,
+    // ui related
+    pub old_typ: PulseValueType,
+    pub default_value_buffer: String,
 }

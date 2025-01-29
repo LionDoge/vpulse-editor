@@ -492,6 +492,39 @@ impl KV3Serialize for Variable {
         }
     }
 }
+impl KV3Serialize for PulseVariable {
+    fn serialize(&self) -> String {
+        let literal = match &self.typ_and_default_value {
+            PulseValueType::PVAL_STRING(value) => format!("\"{}\"", value.clone().unwrap_or_default()),
+            PulseValueType::PVAL_FLOAT(value) => format!("{:.8}", value.unwrap_or_default()),
+            PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
+            PulseValueType::PVAL_VEC3(value) => {
+                let val = value.unwrap_or_default();
+                format!("[{}, {}, {}]", val.x, val.y, val.z)
+            }
+            PulseValueType::PVAL_COLOR_RGB(value) => {
+                let val = value.clone().unwrap_or_default();
+                format!("[{}, {}, {}]", val.x, val.y, val.z)
+            }
+            PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle
+            PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
+            PulseValueType::PVAL_INVALID => String::from("PVAL_INVALID"),
+        };
+        formatdoc!{"
+            {{
+                m_Name = \"{}\"
+                m_Description = \"\"
+                m_Type = \"{}\"
+                m_DefaultValue = {}
+                m_bIsPublic = true
+                m_bIsObservable = false
+                m_nEditorNodeID = -1
+            }}
+            "
+            , self.name, self.typ_and_default_value.to_string(), literal
+        }
+    }
+}
 impl Variable{
     pub fn new<'a>(name: String, typ: String, default_value: i32) -> Variable {
         Variable {
@@ -512,7 +545,7 @@ pub struct PulseGraphDef {
     pub chunks: Vec<PulseChunk>,
     pub output_connections: Vec<OutputConnection>,
     pub domain_values: Vec<DomainValue>,
-    pub variables: Vec<Variable>,
+    pub variables: Vec<PulseVariable>,
     pub map_name: String,
     pub xml_name: String,
 }
@@ -574,7 +607,7 @@ impl PulseGraphDef {
     pub fn get_current_binding_id(&self) -> i32 {
         self.bindings.len() as i32 - 1
     }
-    pub fn add_variable(&mut self, variable: Variable) -> i32 {
+    pub fn add_variable(&mut self, variable: PulseVariable) -> i32 {
         self.variables.push(variable);
         self.variables.len() as i32 - 1
     }

@@ -1,10 +1,8 @@
 use std::borrow::BorrowMut;
-use serde_json::to_string_pretty;
 use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 use eframe::egui::{self, ComboBox, DragValue};
-use egui_file_dialog::FileDialog;
 use egui_node_graph2::*;
 use slotmap::SecondaryMap;
 use crate::pulsetypes::*;
@@ -129,13 +127,6 @@ impl MyValueType {
 #[derive(Clone, Copy, PartialEq, Debug)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum MyNodeTemplate {
-    MakeScalar,
-    AddScalar,
-    SubtractScalar,
-    MakeVector,
-    AddVector,
-    SubtractVector,
-    VectorTimesScalar,
     CellPublicMethod,
     EntFire,
     Compare,
@@ -219,13 +210,6 @@ impl NodeTemplateTrait for MyNodeTemplate {
 
     fn node_finder_label(&self, _user_state: &mut Self::UserState) -> Cow<'_, str> {
         Cow::Borrowed(match self {
-            MyNodeTemplate::MakeScalar => "New scalar",
-            MyNodeTemplate::AddScalar => "Scalar add",
-            MyNodeTemplate::SubtractScalar => "Scalar subtract",
-            MyNodeTemplate::MakeVector => "New vector",
-            MyNodeTemplate::AddVector => "Vector add",
-            MyNodeTemplate::SubtractVector => "Vector subtract",
-            MyNodeTemplate::VectorTimesScalar => "Vector times scalar",
             MyNodeTemplate::CellPublicMethod => "Public Method",
             MyNodeTemplate::EntFire => "EntFire",
             MyNodeTemplate::Compare => "Compare",
@@ -246,13 +230,6 @@ impl NodeTemplateTrait for MyNodeTemplate {
     // this is what allows the library to show collapsible lists in the node finder.
     fn node_finder_categories(&self, _user_state: &mut Self::UserState) -> Vec<&'static str> {
         match self {
-            MyNodeTemplate::MakeScalar
-            | MyNodeTemplate::AddScalar
-            | MyNodeTemplate::SubtractScalar => vec!["Scalar"],
-            MyNodeTemplate::MakeVector
-            | MyNodeTemplate::AddVector
-            | MyNodeTemplate::SubtractVector => vec!["Vector"],
-            MyNodeTemplate::VectorTimesScalar => vec!["Vector", "Scalar"],
             MyNodeTemplate::CellPublicMethod | MyNodeTemplate::EventHandler => vec!["Inflow"],
             MyNodeTemplate::EntFire
             | MyNodeTemplate::FindEntByName => vec!["Entities"],
@@ -329,18 +306,6 @@ impl NodeTemplateTrait for MyNodeTemplate {
                 true,
             );
         };
-        let input_vector = |graph: &mut MyGraph, name: &str| {
-            graph.add_input_param(
-                node_id,
-                name.to_string(),
-                MyDataType::Vec2,
-                MyValueType::Vec2 {
-                    value: egui::vec2(0.0, 0.0),
-                },
-                InputParamKind::ConnectionOrConstant,
-                true,
-            );
-        };
         let input_vector3 = |graph: &mut MyGraph, name: &str| {
             graph.add_input_param(
                 node_id,
@@ -367,9 +332,6 @@ impl NodeTemplateTrait for MyNodeTemplate {
         let output_scalar = |graph: &mut MyGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), MyDataType::Scalar);
         };
-        let output_vector = |graph: &mut MyGraph, name: &str| {
-            graph.add_output_param(node_id, name.to_string(), MyDataType::Vec2);
-        };
         let output_string = |graph: &mut MyGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), MyDataType::String);
         };
@@ -383,56 +345,6 @@ impl NodeTemplateTrait for MyNodeTemplate {
         // input_action(graph);
         // output_action(graph);
         match self {
-            MyNodeTemplate::AddScalar => {
-                // The first input param doesn't use the closure so we can comment
-                // it in more detail.
-                graph.add_input_param(
-                    node_id,
-                    // This is the name of the parameter. Can be later used to
-                    // retrieve the value. Parameter names should be unique.
-                    "A".into(),
-                    // The data type for this input. In this case, a scalar
-                    MyDataType::Scalar,
-                    // The value type for this input. We store zero as default
-                    MyValueType::Scalar { value: 0.0 },
-                    // The input parameter kind. This allows defining whether a
-                    // parameter accepts input connections and/or an inline
-                    // widget to set its value.
-                    InputParamKind::ConnectionOrConstant,
-                    true,
-                );
-                input_scalar(graph, "B");
-                output_scalar(graph, "out");
-            }
-            MyNodeTemplate::SubtractScalar => {
-                input_scalar(graph, "A");
-                input_scalar(graph, "B");
-                output_scalar(graph, "out");
-            }
-            MyNodeTemplate::VectorTimesScalar => {
-                input_scalar(graph, "scalar");
-                input_vector(graph, "vector");
-                output_vector(graph, "out");
-            }
-            MyNodeTemplate::AddVector => {
-                input_vector(graph, "v1");
-                input_vector(graph, "v2");
-                output_vector(graph, "out");
-            }
-            MyNodeTemplate::SubtractVector => {
-                input_vector(graph, "v1");
-                input_vector(graph, "v2");
-                output_vector(graph, "out");
-            }
-            MyNodeTemplate::MakeVector => {
-                input_scalar(graph, "x");
-                input_scalar(graph, "y");
-                output_vector(graph, "out");
-            }
-            MyNodeTemplate::MakeScalar => {
-                input_scalar(graph, "value");
-                output_scalar(graph, "out");
-            }
             MyNodeTemplate::CellPublicMethod => {
                 graph.add_input_param(
                     node_id,
@@ -547,13 +459,6 @@ impl NodeTemplateIter for AllMyNodeTemplates {
         // will use to display it to the user. Crates like strum can reduce the
         // boilerplate in enumerating all variants of an enum.
         vec![
-            MyNodeTemplate::MakeScalar,
-            MyNodeTemplate::MakeVector,
-            MyNodeTemplate::AddScalar,
-            MyNodeTemplate::SubtractScalar,
-            MyNodeTemplate::AddVector,
-            MyNodeTemplate::SubtractVector,
-            MyNodeTemplate::VectorTimesScalar,
             MyNodeTemplate::CellPublicMethod,
             MyNodeTemplate::EntFire,
             MyNodeTemplate::Compare,
@@ -757,8 +662,6 @@ impl NodeGraphExample {
         if param.is_ok() {
             self.state.graph.remove_input_param(param.unwrap());
         }
-        let mut dattype: MyDataType;
-        let mut valtype: MyValueType;
         for output in self.user_state.public_outputs.iter() {
             if output.name == *name {
                 match output.typ {

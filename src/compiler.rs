@@ -191,30 +191,6 @@ fn get_variable(graph_def: &mut PulseGraphDef, name: &str) -> Option<i32> {
     None
 }
 
-fn get_output(graph_def: &mut PulseGraphDef, name: &str) -> Option<i32> {
-    let var = graph_def.get_variable_index(name);
-    if var.is_some() {
-        return Some(var.unwrap() as i32);
-    }
-    None
-}
-
-// fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, variable_list: &Vec<PulseVariable>) -> i32 {
-//     match graph_def.get_variable_index(&name) {
-//         Some(var) => {
-//             return var as i32;
-//         }
-//         None => {
-//             let var = variable_list.iter().find(|v| v.name == name);
-//             if var.is_none() {
-//                 panic!("Variable {name} not found in list, it should be here!");
-//             } else {
-//                 return graph_def.add_variable(var.unwrap().clone());
-//             }
-//         }
-//     }
-// }
-
 fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: &Option<InputId>) -> i32 {
     match input_id {
         Some(input_id) => {

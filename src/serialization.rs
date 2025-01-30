@@ -3,7 +3,7 @@
 use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-use crate::pulsetypes::*;
+use crate::{app::OutputDefinition, pulsetypes::*};
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -414,6 +414,20 @@ impl KV3Serialize for OutputConnection {
     }
 }
 
+impl KV3Serialize for OutputDefinition {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                m_Name = \"{}\"
+                m_Type = \"{}\"
+            }}
+            "
+            , self.name, self.typ.to_string()
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Register {
     num: i32,
@@ -494,13 +508,14 @@ impl KV3Serialize for PulseConstant {
 // }
 impl KV3Serialize for PulseVariable {
     fn serialize(&self) -> String {
+        // convert default values to KV3 literal string.
         let literal = match &self.typ_and_default_value {
             PulseValueType::PVAL_STRING(value) => format!("\"{}\"", value.clone().unwrap_or_default()),
-            PulseValueType::PVAL_FLOAT(value) => format!("{:.8}", value.unwrap_or_default()),
+            PulseValueType::PVAL_FLOAT(value) => format!("{:.6}", value.unwrap_or_default()),
             PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
             PulseValueType::PVAL_VEC3(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{}, {}, {}]", val.x, val.y, val.z)
+                format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
             }
             PulseValueType::PVAL_COLOR_RGB(value) => {
                 let val = value.clone().unwrap_or_default();
@@ -508,7 +523,7 @@ impl KV3Serialize for PulseVariable {
             }
             PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle
             PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
-            PulseValueType::PVAL_INVALID => String::from("PVAL_INVALID"),
+            PulseValueType::PVAL_INVALID => String::from("null"),
         };
         formatdoc!{"
             {{
@@ -545,6 +560,7 @@ pub struct PulseGraphDef {
     pub chunks: Vec<PulseChunk>,
     pub output_connections: Vec<OutputConnection>,
     pub domain_values: Vec<DomainValue>,
+    pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
     pub map_name: String,
     pub xml_name: String,
@@ -614,6 +630,9 @@ impl PulseGraphDef {
     pub fn get_variable_index(&self, name: &str) -> Option<usize> {
         self.variables.iter().position(|variable| variable.name == name)
     }
+    pub fn get_public_output_index(&self, name: &str) -> Option<usize> {
+        self.public_outputs.iter().position(|output| output.name == name)
+    }
 }
 
 impl KV3Serialize for PulseGraphDef {
@@ -646,7 +665,10 @@ impl KV3Serialize for PulseGraphDef {
                 [
                     {}
                 ]
-                m_PublicOutputs = []
+                m_PublicOutputs = 
+                [
+                    {}
+                ]
                 m_OutputConnections = 
                 [
                     {}
@@ -670,15 +692,22 @@ impl KV3Serialize for PulseGraphDef {
                             _class = \"CPulseCell_Step_DebugLog\"
                             m_nEditorNodeID = -1
                         }}"),
+                    CellType::StepPublicOutput(idx) => formatdoc!("
+                        {{
+                            _class = \"CPulseCell_Step_PublicOutput\"
+                            m_OutputIndex = {}
+                            m_nEditorNodeID = -1
+                        }}", idx),
                 }
-            }).collect::<Vec<String>>().join(",\n\n")
+            }).collect::<Vec<_>>().join(",\n\n")
             , self.map_name, self.xml_name
-            , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.variables.iter().map(|variable| variable.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.constants.iter().map(|constant| constant.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.bindings.iter().map(|binding| binding.serialize()).collect::<Vec<String>>().join(",\n\n")
+            , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.variables.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.constants.iter().map(|constant| constant.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.public_outputs.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.bindings.iter().map(|binding| binding.serialize()).collect::<Vec<_>>().join(",\n\n")
         }
     }
 }

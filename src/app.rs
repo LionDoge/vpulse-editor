@@ -2,7 +2,7 @@ use std::borrow::BorrowMut;
 use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
-use eframe::egui::{self, ComboBox, DragValue};
+use eframe::egui::{self, output, ComboBox, DragValue};
 use egui_node_graph2::*;
 use slotmap::SecondaryMap;
 use crate::pulsetypes::*;
@@ -36,7 +36,7 @@ impl Default for Vec3 {
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
 #[derive(PartialEq, Eq)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize, Clone))]
 pub enum PulseDataType {
     Scalar,
     Vec2,
@@ -117,6 +117,14 @@ impl PulseGraphValueType {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to output name", self)
+        }
+    }
+
+    pub fn try_variable_name(self) -> anyhow::Result<String> {
+        if let PulseGraphValueType::InternalVariableName { value, .. } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to variable name", self)
         }
     }
 }
@@ -412,6 +420,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_string(graph, "out");
             }
             PulseNodeTemplate::Operation => {
+                graph.add_input_param(
+                    node_id,
+                    "operation".to_string(),
+                    PulseDataType::String,
+                    PulseGraphValueType::String {
+                        value: String::default()
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
                 input_scalar(graph, "A");
                 input_scalar(graph, "B");
                 output_scalar(graph, "out");
@@ -573,7 +591,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                     );
                 });
                 if prevvalue != value {
-                    responses.push(PulseGraphResponse::ChangeOutputParamType(_node_id, value.clone()));
+                    responses.push(PulseGraphResponse::ChangeVariableParamType(_node_id, value.clone()));
                     *prevvalue = value.clone();
                 }
             }
@@ -640,6 +658,16 @@ pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>
+}
+
+fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
+    return match typ {
+        PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0f32 },
+        PulseDataType::String => PulseGraphValueType::String { value: String::default() },
+        PulseDataType::Vec3 => PulseGraphValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } },
+        PulseDataType::EHandle => PulseGraphValueType::EHandle,
+        _ => PulseGraphValueType::Scalar { value: 0f32 },
+    };
 }
 
 #[cfg(feature = "persistence")]
@@ -712,79 +740,78 @@ impl PulseGraphEditor {
             }
         }
     }
-    fn add_node_input_simple(graph: &mut PulseGraph, node_id: NodeId, data_typ: PulseDataType, value_typ: PulseGraphValueType, input_name: &str, kind: InputParamKind) {
-        graph.add_input_param(node_id, String::from(input_name), data_typ, value_typ, kind, true);
+    fn add_node_input_simple(&mut self, node_id: NodeId, data_typ: PulseDataType, value_typ: PulseGraphValueType, input_name: &str, kind: InputParamKind) {
+        self.state.graph.add_input_param(node_id, String::from(input_name), data_typ, value_typ, kind, true);
     }
-    fn add_node_output_simple(graph: &mut PulseGraph, node_id: NodeId, data_typ: PulseDataType, output_name: &str) {
-        graph.add_output_param(node_id, String::from(output_name), data_typ);
+    fn add_node_output_simple(&mut self, node_id: NodeId, data_typ: PulseDataType, output_name: &str) {
+        self.state.graph.add_output_param(node_id, String::from(output_name), data_typ);
     }
-
     pub fn update_variable_inputs_outputs(&mut self, node_id: NodeId, name: &String, input_output_name: &str) {
         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
         match node.user_data.template {
             PulseNodeTemplate::GetVar => {
-                let param = node.get_input(input_output_name);
-                if param.is_ok() {
-                    self.state.graph.remove_input_param(param.unwrap());
-                }
-            }
-            PulseNodeTemplate::SetVar => {
                 let param = node.get_output(input_output_name);
                 if param.is_ok() {
                     self.state.graph.remove_output_param(param.unwrap());
                 }
+                let var = self.user_state.variables.iter().find(|var| var.name == *name);
+                if var.is_some() {
+                    let var_unwrp = var.unwrap();
+                    self.add_node_output_simple(node_id, var_unwrp.data_type.clone(), input_output_name);
+                }
+            }
+            PulseNodeTemplate::SetVar => {
+                let param = node.get_input(input_output_name);
+                if param.is_ok() {
+                    self.state.graph.remove_input_param(param.unwrap());
+                }
+                let var = self.user_state.variables.iter().find(|var| var.name == *name);
+                if var.is_some() {
+                    let var_unwrp = var.unwrap();
+                    let val_typ = data_type_to_value_type(&var_unwrp.data_type);
+                    self.add_node_input_simple(
+                        node_id, 
+                        var_unwrp.data_type.clone(),
+                        val_typ, 
+                        input_output_name, 
+                        InputParamKind::ConnectionOrConstant
+                    );
+                }
             }
             _ => {}
         }
-        for output in self.user_state.public_outputs.iter() {
-            if output.name == *name {
-                match output.typ {
-                    PulseValueType::PVAL_FLOAT(_)
-                    | PulseValueType::PVAL_INT(_) => {
-                        self.state.graph.add_input_param(
-                            node_id,
-                            String::from(input_output_name),
-                            PulseDataType::Scalar,
-                            PulseGraphValueType::Scalar { value: 0f32 },
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_STRING(_) => {
-                        self.state.graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::String,
-                            PulseGraphValueType::String {value: String::default()},
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_VEC3(_) => {
-                        self.state.graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::Vec3,
-                            PulseGraphValueType::Vec3 { value: Vec3 { x: 0.0, y: 0.0, z: 0.0 } },
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_EHANDLE(_) => {
-                        self.state.graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::EHandle,
-                            PulseGraphValueType::EHandle,
-                            InputParamKind::ConnectionOnly,
-                            true,
-                        );
-                    }
-                    _ => {}
-                }
-            }
-        }
     }
+}
+
+// assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)
+// this happens when input buffer changes, or the selected type changes.
+pub fn update_variable_data(var: &mut PulseVariable) {
+    var.typ_and_default_value = match &var.typ_and_default_value {
+        PulseValueType::PVAL_INT(_) => {
+            var.data_type = PulseDataType::Scalar;
+            var.default_value_buffer.parse::<i32>()
+                .map(|x| PulseValueType::PVAL_INT(Some(x)))
+                .unwrap_or(PulseValueType::PVAL_INT(None))
+        }
+        PulseValueType::PVAL_FLOAT(_) => {
+            var.data_type = PulseDataType::Scalar;
+            var.default_value_buffer.parse::<f32>()
+                .map(|x| PulseValueType::PVAL_FLOAT(Some(x)))
+                .unwrap_or(PulseValueType::PVAL_FLOAT(None))
+        }
+        PulseValueType::PVAL_STRING(_) => {
+            var.data_type = PulseDataType::String;
+            PulseValueType::PVAL_STRING(Some(var.default_value_buffer.clone()))
+        }
+        PulseValueType::PVAL_VEC3(_) => {
+            var.data_type = PulseDataType::Vec3;
+            PulseValueType::PVAL_VEC3(Some(Vec3 { x: 0.0, y: 0.0, z: 0.0 }))
+        }
+        _ => {
+            var.data_type = PulseDataType::Scalar;
+            var.typ_and_default_value.to_owned()
+        }
+    };
 }
 
 #[cfg(feature = "persistence")]
@@ -816,7 +843,7 @@ impl eframe::App for PulseGraphEditor {
                     //self.file_dialog.pick_file();
                 }
                 if ui.button("Compile").clicked() {
-                    compile_graph(&self.state.graph);
+                    compile_graph(&self.state.graph, &self.user_state);
                 }
                 
             });
@@ -843,7 +870,7 @@ impl eframe::App for PulseGraphEditor {
                 ui.horizontal(|ui| {
                     ui.label("Param type");
                     ComboBox::from_label(format!("outputpick{}", idx))
-                        .selected_text(format!("{:?}", outputdef.typ))
+                        .selected_text(outputdef.typ.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_INT(None), "Integer");
                             ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_STRING(None), "String");
@@ -881,6 +908,7 @@ impl eframe::App for PulseGraphEditor {
                     PulseVariable { 
                         name: String::default(),
                         typ_and_default_value: PulseValueType::PVAL_INT(None),
+                        data_type: PulseDataType::Scalar,
                         old_typ: PulseValueType::PVAL_INT(None),
                         default_value_buffer: String::default()
                     }
@@ -896,40 +924,27 @@ impl eframe::App for PulseGraphEditor {
                 });
                 ui.horizontal(|ui| {
                     ui.label("Default value");
-                    ui.text_edit_singleline(&mut var.default_value_buffer);
+                    let response = ui.text_edit_singleline(&mut var.default_value_buffer);
+                    if response.changed() {
+                        update_variable_data(var);
+                    }
                 });
                 ui.horizontal(|ui| {
                     ui.label("Param type");
                     ComboBox::from_label(format!("varpick{}", idx))
-                        .selected_text(format!("{:?}", &var.typ_and_default_value))
+                        .selected_text(var.typ_and_default_value.to_string())
                         .show_ui(ui, |ui| {
                             ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_INT(None), "Integer");
                             ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_STRING(None), "String");
                             ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_FLOAT(None), "Float");
                             ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_VEC3(None), "Vec3");
-                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_EHANDLE(None), "Entity Handle");
                         }
                     );
                     // add the default value.
-                    // compare only the variant of the enums
+                    // compare only the variant of the enums, if they differ assign default value and data type.
                     if std::mem::discriminant(&var.typ_and_default_value) != std::mem::discriminant(&var.old_typ) {
-                        var.typ_and_default_value = match &var.typ_and_default_value {
-                            PulseValueType::PVAL_INT(_) => {
-                                var.default_value_buffer.parse::<i32>()
-                                    .map(|x| PulseValueType::PVAL_INT(Some(x)))
-                                    .unwrap_or(PulseValueType::PVAL_INT(None))
-                            }
-                            PulseValueType::PVAL_FLOAT(_) => {
-                                var.default_value_buffer.parse::<f32>()
-                                    .map(|x| PulseValueType::PVAL_FLOAT(Some(x)))
-                                    .unwrap_or(PulseValueType::PVAL_FLOAT(None))
-                            }
-                            PulseValueType::PVAL_STRING(_) => {
-                                PulseValueType::PVAL_STRING(Some(var.default_value_buffer.clone()))
-                            }
-                            _ => var.typ_and_default_value.to_owned()
-                        };
-                        var.typ_and_default_value = var.old_typ.clone();
+                        update_variable_data(var);
+                        var.old_typ = var.typ_and_default_value.clone();
                     }
                 });
             }
@@ -992,7 +1007,7 @@ impl eframe::App for PulseGraphEditor {
                         self.update_output_node_param(node_id, &name, "param");
                     }
                     PulseGraphResponse::ChangeVariableParamType(node_id, name) => {
-                        self.update_output_node_param(node_id, &name, "value");
+                        self.update_variable_inputs_outputs(node_id, &name, "value");
                     }
                 }
             }

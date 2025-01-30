@@ -1,5 +1,5 @@
 use egui_node_graph2::*;
-use crate::app::{PulseGraph, PulseNodeData, PulseNodeTemplate, PulseDataType, PulseGraphValueType};
+use crate::app::{PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData, PulseNodeTemplate};
 use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
@@ -139,17 +139,6 @@ fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
 
     let cell_enum = CellType::InflowMethod(cell_method);
     graph_def.cells.push(Box::from(cell_enum));
-    //let mut connected_node_id = NodeId::default();
-    // dumb way of finding outgoing connection node.
-    // graph.iter_connection_groups().for_each(|group| {
-    //     group.1.iter().for_each(|connection| {
-    //         if *connection == out_action_id {
-    //             let input_action: &InputParam<MyDataType, MyValueType> = graph.inputs.get(group.0).expect("Can't find input value");
-    //             connected_node_id = input_action.node;
-    //             return;
-    //         }
-    //     });
-    // });
     let connected_node_id = get_connected_output_node(graph, &out_action_id);
     if connected_node_id.is_some() {
         let connected_node = graph.nodes.get(connected_node_id.unwrap());
@@ -159,9 +148,12 @@ fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
     }
 }
 
-pub fn compile_graph(graph: &PulseGraph) {
+pub fn compile_graph(graph: &PulseGraph, graph_state: &PulseGraphState) {
     let mut graph_def = PulseGraphDef::default();
-    graph_def.map_name = String::from("maps/test.vmap");
+    graph_def.variables = graph_state.variables.clone();
+    graph_def.public_outputs = graph_state.public_outputs.clone();
+
+    graph_def.map_name = String::from("maps/main.vmap");
     graph_def.xml_name = String::default();
     for node in graph.iter_nodes() {
         let data: &Node<PulseNodeData> = graph.nodes.get(node).unwrap();
@@ -172,7 +164,6 @@ pub fn compile_graph(graph: &PulseGraph) {
             _ => {}
         }
     }
-    // start 
     let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
     fs::write("graph_out/graph.vpulse", data).expect("Cannot write to file!");
@@ -192,22 +183,37 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
     }
 }
 
-fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, variableList: &Vec<PulseVariable>) -> i32 {
-    match graph_def.get_variable_index(&name) {
-        Some(var) => {
-            return var as i32;
-        }
-        None => {
-            let var = PulseVariable {
-                name: name.to_string(),
-                typ_and_default_value: defaults.clone(),
-                old_typ: defaults,
-                default_value_buffer: String::default(),
-            };
-            return graph_def.add_variable(var);
-        }
+fn get_variable(graph_def: &mut PulseGraphDef, name: &str) -> Option<i32> {
+    let var = graph_def.get_variable_index(name);
+    if var.is_some() {
+        return Some(var.unwrap() as i32);
     }
+    None
 }
+
+fn get_output(graph_def: &mut PulseGraphDef, name: &str) -> Option<i32> {
+    let var = graph_def.get_variable_index(name);
+    if var.is_some() {
+        return Some(var.unwrap() as i32);
+    }
+    None
+}
+
+// fn create_or_get_variable(graph_def: &mut PulseGraphDef, name: &str, variable_list: &Vec<PulseVariable>) -> i32 {
+//     match graph_def.get_variable_index(&name) {
+//         Some(var) => {
+//             return var as i32;
+//         }
+//         None => {
+//             let var = variable_list.iter().find(|v| v.name == name);
+//             if var.is_none() {
+//                 panic!("Variable {name} not found in list, it should be here!");
+//             } else {
+//                 return graph_def.add_variable(var.unwrap().clone());
+//             }
+//         }
+//     }
+// }
 
 fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: &Option<InputId>) -> i32 {
     match input_id {
@@ -505,15 +511,19 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             return register;
         }
         PulseNodeTemplate::GetVar => {
-            let name_id = current_node.get_input("name").expect("Can't find input 'name'");
+            let name_id = current_node.get_input("variableName").expect("Can't find input 'variableName'");
             // name is a constant value
-            let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
-            let var_id = create_or_get_variable(graph_def, name.as_str());
+            let name = graph.get_input(name_id).value().clone().try_variable_name().expect("Can't find variableName parameter");
+            let var_id = get_variable(graph_def, name.as_str());
+            if var_id.is_none() {
+                panic!("Variable {name} not found in list, it should be here!");
+            }
+            let typ = graph_def.variables.get(var_id.unwrap() as usize).unwrap().typ_and_default_value.to_string();
             // add register
             // add instruction to load the variable value
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let reg = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
-            chunk.add_instruction(instruction_templates::get_var(reg, var_id as i32));
+            let reg = chunk.add_register(typ, chunk.get_last_instruction_id() + 1);
+            chunk.add_instruction(instruction_templates::get_var(reg, var_id.unwrap()));
             return reg;
         }
         PulseNodeTemplate::IntToString => {
@@ -543,34 +553,38 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             return register;
         }
         PulseNodeTemplate::SetVar => {
-            let name_id = current_node.get_input("name").expect("Can't find input 'name'");
+            let name_id = current_node.get_input("variableName").expect("Can't find input 'variableName'");
             // name is a constant value
-            let name = graph.get_input(name_id).value().clone().try_to_string().expect("Can't find name parameter");
-            let var_id = create_or_get_variable(graph_def, name.as_str());
-            let value_id = current_node.get_input("value").expect("Can't find input 'value'");
-            let connection_to_value = graph.connection(value_id);
-            let mut target_register: i32;
-            match connection_to_value {
-                Some(out) => {
-                    let out_param = graph.get_output(out);
-                    let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
-                    target_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
-                }
-                None => {
-                    target_register = try_find_input_mapping(graph_def, &Some(value_id));
-                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                    if target_register == -1 {
-                        let value_param = graph.get_input(value_id);
-                        let value = value_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
-                        target_register = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
-                        let instruction = instruction_templates::get_const(value as i32, target_register);
-                        chunk.add_instruction(instruction);
-                    }
-                }
-                
+            let name = graph.get_input(name_id).value().clone().try_variable_name().expect("Can't find variableName parameter");
+            let var_id = get_variable(graph_def, name.as_str());
+            if var_id.is_none() {
+                panic!("Variable {name} not found in list, it should be here!");
             }
+            let typ = graph_def.variables.get(var_id.unwrap() as usize).unwrap().typ_and_default_value.clone();
+            let reg_value = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "value", typ);
+            // match connection_to_value {
+            //     Some(out) => {
+            //         let out_param = graph.get_output(out);
+            //         let out_node = graph.nodes.get(out_param.node).expect("Can't find output node");
+            //         target_register = traverse_nodes_and_populate(graph, out_node, graph_def, target_chunk, &Some(out));
+            //     }
+            //     None => {
+            //         target_register = try_find_input_mapping(graph_def, &Some(value_id));
+            //         let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            //         if target_register == -1 {
+            //             let value_param = graph.get_input(value_id);
+            //             let value = value_param.value().clone().try_to_scalar().expect("Failed to unwrap input value");
+            //             target_register = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
+            //             let instruction = instruction_templates::get_const(value as i32, target_register);
+            //             chunk.add_instruction(instruction);
+            //         }
+            //     }
+                
+            // }
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            chunk.add_instruction(instruction_templates::set_var(var_id as i32, target_register));
+            chunk.add_instruction(instruction_templates::set_var(reg_value, var_id.unwrap()));
+
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::Operation => {
             // TODO: Hardcoding floats for now, until I add easier way of changing types for nodes.
@@ -594,6 +608,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             instr.reg1 = reg_a;
             instr.reg2 = reg_b;
             chunk.add_instruction(instr);
+            return register_output;
         }
         PulseNodeTemplate::FindEntByName => {
             let reg_entname = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "entName", PulseValueType::DOMAIN_ENTITY_NAME);
@@ -703,6 +718,14 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
 
             // go to next action.
             graph_next_action!(graph, current_node, graph_def, target_chunk);
+        }
+        PulseNodeTemplate::FireOutput => {
+            let input_id = current_node.get_input("outputName").expect(format!("Can't find input outputName").as_str());
+            let input_val = graph.get_input(input_id).value().clone().try_output_name().expect("Failed to unwrap input outputName");
+            let pub_output = graph_def.get_public_output_index(input_val.as_str());
+            if pub_output.is_some() {
+                graph_def.cells.push(Box::from(CellType::StepPublicOutput(pub_output.unwrap() as i32)));
+            }
         }
         _ => todo!("Implement node template: {:?}", current_node.user_data.template),
     }

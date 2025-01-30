@@ -5,7 +5,7 @@
             "name": "Debug",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/../target/debug/pulseedit.exe",
+            "program": "${workspaceFolder}/target/debug/pulseedit.exe",
             "args": [
                 //"no_launcher"
             ],

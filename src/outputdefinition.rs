@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::pulsetypes::*;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OutputDefinition {
     pub name: String,
     pub typ: PulseValueType,

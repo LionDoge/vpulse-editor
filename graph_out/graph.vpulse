@@ -1,4 +1,4 @@
-<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse13:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->
 {
     m_Cells = 
     [
@@ -13,7 +13,7 @@
 }
 }
 
-    m_MethodName = "method"
+    m_MethodName = "SavVal"
     m_Description = ""
     m_bIsPublic = true
     m_ReturnType = "PVAL_INVALID"
@@ -30,26 +30,41 @@
 ,
 
 {
-    _class = "CPulseCell_Inflow_Wait"
+    _class = "CPulseCell_Inflow_Method"
     m_nEditorNodeID = -1
-    m_WakeResume = 
-    {
-        m_SourceOutflowName = "m_WakeResume"
-        m_DestChunk = 0
-        m_Instruction = 3
-    }
+    m_EntryChunk = 1
+    m_RegisterMap = {
+    m_Inparams = null
+    m_Outparams = {
+    arg1 = 0
+}
+}
+
+    m_MethodName = "GetVal"
+    m_Description = ""
+    m_bIsPublic = true
+    m_ReturnType = "PVAL_INVALID"
+    m_Args =
+    [
+        {
+    m_Name = "arg1"
+    m_Description = ""
+    m_Type = "PVAL_STRING"
+}
+
+    ]
 }
 ,
 
 {
     _class = "CPulseCell_Step_EntFire"
     m_nEditorNodeID = -1
-    m_Input = "Kill"
+    m_Input = "Set"
 }
 
     ]
     m_DomainIdentifier = "ServerPointEntity"
-    m_ParentMapName = "maps/test.vmap"
+    m_ParentMapName = "maps/main.vmap"
     m_ParentXmlName = ""
     m_vecGameBlackboards = []
     m_BlackboardReferences = []
@@ -75,60 +90,12 @@
 ,
 
 {
-    m_nCode = "CELL_INVOKE"
-    m_nVar = -1
-    m_nReg0 = -1
-    m_nReg1 = -1
-    m_nReg2 = -1
-    m_nInvokeBindingIndex = 0
-    m_nChunk = -1
-    m_nDestInstruction = 0
-    m_nCallInfoIndex = -1
-    m_nConstIdx = -1
-    m_nDomainValueIdx = -1
-    m_nBlackboardReferenceIdx = -1
-}
-,
-
-{
-    m_nCode = "RETURN_VOID"
-    m_nVar = -1
-    m_nReg0 = -1
+    m_nCode = "SET_VAR"
+    m_nVar = 0
+    m_nReg0 = 1
     m_nReg1 = -1
     m_nReg2 = -1
     m_nInvokeBindingIndex = -1
-    m_nChunk = -1
-    m_nDestInstruction = 0
-    m_nCallInfoIndex = -1
-    m_nConstIdx = -1
-    m_nDomainValueIdx = -1
-    m_nBlackboardReferenceIdx = -1
-}
-,
-
-{
-    m_nCode = "GET_DOMAIN_VALUE"
-    m_nVar = -1
-    m_nReg0 = 2
-    m_nReg1 = -1
-    m_nReg2 = -1
-    m_nInvokeBindingIndex = -1
-    m_nChunk = -1
-    m_nDestInstruction = 0
-    m_nCallInfoIndex = -1
-    m_nConstIdx = -1
-    m_nDomainValueIdx = 0
-    m_nBlackboardReferenceIdx = -1
-}
-,
-
-{
-    m_nCode = "CELL_INVOKE"
-    m_nVar = -1
-    m_nReg0 = -1
-    m_nReg1 = -1
-    m_nReg2 = -1
-    m_nInvokeBindingIndex = 1
     m_nChunk = -1
     m_nDestInstruction = 0
     m_nCallInfoIndex = -1
@@ -151,18 +118,9 @@
 
 {
     m_nReg = 1
-    m_Type = "PVAL_FLOAT"
+    m_Type = "PVAL_INT"
     m_OriginName = "0:null"
     m_nWrittenByInstruction = 0
-    m_nLastReadByInstruction = -1
-}
-,
-
-{
-    m_nReg = 2
-    m_Type = "PVAL_ENTITY_NAME"
-    m_OriginName = "0:null"
-    m_nWrittenByInstruction = 3
     m_nLastReadByInstruction = -1
 }
 
@@ -171,7 +129,119 @@
     [
         -1,
 
--1,
+-1
+    ]
+}
+,
+
+{
+    m_Instructions = 
+    [
+        {
+    m_nCode = "GET_VAR"
+    m_nVar = 0
+    m_nReg0 = 1
+    m_nReg1 = -1
+    m_nReg2 = -1
+    m_nInvokeBindingIndex = -1
+    m_nChunk = -1
+    m_nDestInstruction = 0
+    m_nCallInfoIndex = -1
+    m_nConstIdx = -1
+    m_nDomainValueIdx = -1
+    m_nBlackboardReferenceIdx = -1
+}
+,
+
+{
+    m_nCode = "CONVERT_VALUE"
+    m_nVar = -1
+    m_nReg0 = 2
+    m_nReg1 = 1
+    m_nReg2 = -1
+    m_nInvokeBindingIndex = -1
+    m_nChunk = -1
+    m_nDestInstruction = 0
+    m_nCallInfoIndex = -1
+    m_nConstIdx = -1
+    m_nDomainValueIdx = -1
+    m_nBlackboardReferenceIdx = -1
+}
+,
+
+{
+    m_nCode = "GET_DOMAIN_VALUE"
+    m_nVar = -1
+    m_nReg0 = 3
+    m_nReg1 = -1
+    m_nReg2 = -1
+    m_nInvokeBindingIndex = -1
+    m_nChunk = -1
+    m_nDestInstruction = 0
+    m_nCallInfoIndex = -1
+    m_nConstIdx = -1
+    m_nDomainValueIdx = 0
+    m_nBlackboardReferenceIdx = -1
+}
+,
+
+{
+    m_nCode = "CELL_INVOKE"
+    m_nVar = -1
+    m_nReg0 = -1
+    m_nReg1 = -1
+    m_nReg2 = -1
+    m_nInvokeBindingIndex = 0
+    m_nChunk = -1
+    m_nDestInstruction = 0
+    m_nCallInfoIndex = -1
+    m_nConstIdx = -1
+    m_nDomainValueIdx = -1
+    m_nBlackboardReferenceIdx = -1
+}
+
+    ]
+    m_Registers = 
+    [
+        {
+    m_nReg = 0
+    m_Type = "PVAL_STRING"
+    m_OriginName = "0:null"
+    m_nWrittenByInstruction = 0
+    m_nLastReadByInstruction = -1
+}
+,
+
+{
+    m_nReg = 1
+    m_Type = "PVAL_INT"
+    m_OriginName = "0:null"
+    m_nWrittenByInstruction = 0
+    m_nLastReadByInstruction = -1
+}
+,
+
+{
+    m_nReg = 2
+    m_Type = "PVAL_STRING"
+    m_OriginName = "0:null"
+    m_nWrittenByInstruction = 1
+    m_nLastReadByInstruction = -1
+}
+,
+
+{
+    m_nReg = 3
+    m_Type = "PVAL_ENTITY_NAME"
+    m_OriginName = "0:null"
+    m_nWrittenByInstruction = 2
+    m_nLastReadByInstruction = -1
+}
+
+    ]
+    m_InstructionEditorIDs = 
+    [
+        -1,
 
 -1,
 
@@ -186,30 +256,53 @@
     [
         {
     m_nType = "ENTITY_NAME"
-    m_Value = "SomeEntity"
+    m_Value = "SomeEnt"
     m_ExpectedRuntimeType = ""
 }
 
     ]
     m_Vars =
     [
-        
+        {
+    m_Name = "nam1"
+    m_Description = ""
+    m_Type = "PVAL_INT"
+    m_DefaultValue = 0
+    m_bIsPublic = true
+    m_bIsObservable = false
+    m_nEditorNodeID = -1
+}
+,
+
+{
+    m_Name = "nam2"
+    m_Description = ""
+    m_Type = "PVAL_STRING"
+    m_DefaultValue = "DEF"
+    m_bIsPublic = true
+    m_bIsObservable = false
+    m_nEditorNodeID = -1
+}
+
     ]
     m_Constants = 
     [
         {
-    m_Type = "PVAL_FLOAT"
-    m_Value = 5.00000000
+    m_Type = "PVAL_INT"
+    m_Value = 5
 }
 
     ]
-    m_PublicOutputs = []
+    m_PublicOutputs = 
+    [
+        
+    ]
     m_OutputConnections = 
     [
         {
     m_SourceOutput = "Step_EntFire:-1"
-    m_TargetEntity = "SomeEntity"
-    m_TargetInput = "Kill"
+    m_TargetEntity = "SomeEnt"
+    m_TargetInput = "Set"
     m_Param = "param"
 }
 
@@ -219,31 +312,16 @@
         {
     m_RegisterMap = {
     m_Inparams = {
-    flDurationSec = 1
-}
-    m_Outparams = null
-}
-
-    m_FuncName = "Wait"
-    m_nCellIndex = 1
-    m_nSrcChunk = 0
-    m_nSrcInstruction = 1
-}
-,
-
-{
-    m_RegisterMap = {
-    m_Inparams = {
-    TargetName = 2
-pParam = 0
+    TargetName = 3
+pParam = 2
 }
     m_Outparams = null
 }
 
     m_FuncName = "FireAtName"
     m_nCellIndex = 2
-    m_nSrcChunk = 0
-    m_nSrcInstruction = 4
+    m_nSrcChunk = 1
+    m_nSrcInstruction = 3
 }
 
     ]

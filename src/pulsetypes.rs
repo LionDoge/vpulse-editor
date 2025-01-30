@@ -2,7 +2,7 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
 
-use crate::{app::Vec3, serialization::{PulseRuntimeArgument, RegisterMap}};
+use crate::{app::{PulseDataType, Vec3}, serialization::{PulseRuntimeArgument, RegisterMap}};
 
 // used for a node definition
 // some instructions have named parameters as inputs and as outputs, 
@@ -23,6 +23,7 @@ pub enum CellType {
     StepEntFire(CPulseCell_Step_EntFire),
     InflowWait(CPulseCell_Inflow_Wait),
     ValueFindEntByName(CPulseCell_Value_FindEntByName),
+    StepPublicOutput(i32),
     DebugLog,
 }
 
@@ -83,18 +84,19 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
             PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{:?}", ent_type),
+            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", ent_type.clone().unwrap_or_default()),
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
         }
     }
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 
 pub struct PulseVariable {
     pub name: String,
     pub typ_and_default_value: PulseValueType,
     // ui related
+    pub data_type: PulseDataType,
     pub old_typ: PulseValueType,
     pub default_value_buffer: String,
 }

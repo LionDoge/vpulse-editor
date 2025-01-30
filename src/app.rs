@@ -852,102 +852,104 @@ impl eframe::App for PulseGraphEditor {
         let mut variable_scheduled_for_deletion: usize = usize::MAX;
         let mut output_node_updates = vec![];
         egui::SidePanel::left("left_panel").show(ctx, |ui| {
-            ui.label("Outputs:");
-            if ui.button("Add output").clicked() {
-                self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT(None));
-                self.user_state.public_outputs.push(OutputDefinition { name: String::default(), typ: PulseValueType::PVAL_INT(None), typ_old: PulseValueType::PVAL_INT(None) });
-            }
-            for (idx, outputdef) in self.user_state.public_outputs.iter_mut().enumerate() {
-                // let output_frame = egui::Frame::default().inner_margin(4.0).begin(ui);
-                // {
-                ui.horizontal(|ui| {
-                    if ui.button("X").clicked() {
-                        output_scheduled_for_deletion = idx;
-                    }
-                    ui.label("Name");
-                    ui.text_edit_singleline(&mut outputdef.name);
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Param type");
-                    ComboBox::from_label(format!("outputpick{}", idx))
-                        .selected_text(outputdef.typ.to_string())
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_INT(None), "Integer");
-                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_STRING(None), "String");
-                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_FLOAT(None), "Float");
-                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_VEC3(None), "Vec3");
-                            ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_EHANDLE(None), "Entity Handle");
-                        }
-                    );
-                });
-                if outputdef.typ != outputdef.typ_old {
-                    let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
-                    for nodeid in node_ids {
-                        let node = self.state.graph.nodes.get(nodeid).unwrap();
-                        match node.user_data.template {
-                            PulseNodeTemplate::FireOutput => {
-                                let inp = node.get_input("outputName");
-                                let val = self.state.graph.get_input(inp.unwrap()).value().clone().try_output_name().unwrap();
-                                if outputdef.name == val {
-                                    output_node_updates.push((nodeid, outputdef.name.clone()));
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    outputdef.typ_old = outputdef.typ.clone();
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                ui.label("Outputs:");
+                if ui.button("Add output").clicked() {
+                    self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT(None));
+                    self.user_state.public_outputs.push(OutputDefinition { name: String::default(), typ: PulseValueType::PVAL_INT(None), typ_old: PulseValueType::PVAL_INT(None) });
                 }
-                // }
-                // output_frame.end(ui);
-            }
-            ui.separator();
-            ui.label("Variables:");
-            if ui.button("Add variable").clicked() {
-                self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT(None));
-                self.user_state.variables.push(
-                    PulseVariable { 
-                        name: String::default(),
-                        typ_and_default_value: PulseValueType::PVAL_INT(None),
-                        data_type: PulseDataType::Scalar,
-                        old_typ: PulseValueType::PVAL_INT(None),
-                        default_value_buffer: String::default()
+                for (idx, outputdef) in self.user_state.public_outputs.iter_mut().enumerate() {
+                    // let output_frame = egui::Frame::default().inner_margin(4.0).begin(ui);
+                    // {
+                    ui.horizontal(|ui| {
+                        if ui.button("X").clicked() {
+                            output_scheduled_for_deletion = idx;
+                        }
+                        ui.label("Name");
+                        ui.text_edit_singleline(&mut outputdef.name);
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Param type");
+                        ComboBox::from_label(format!("outputpick{}", idx))
+                            .selected_text(outputdef.typ.to_string())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_INT(None), "Integer");
+                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_STRING(None), "String");
+                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_FLOAT(None), "Float");
+                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_VEC3(None), "Vec3");
+                                ui.selectable_value(&mut outputdef.typ, PulseValueType::PVAL_EHANDLE(None), "Entity Handle");
+                            }
+                        );
+                    });
+                    if outputdef.typ != outputdef.typ_old {
+                        let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
+                        for nodeid in node_ids {
+                            let node = self.state.graph.nodes.get(nodeid).unwrap();
+                            match node.user_data.template {
+                                PulseNodeTemplate::FireOutput => {
+                                    let inp = node.get_input("outputName");
+                                    let val = self.state.graph.get_input(inp.unwrap()).value().clone().try_output_name().unwrap();
+                                    if outputdef.name == val {
+                                        output_node_updates.push((nodeid, outputdef.name.clone()));
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                        outputdef.typ_old = outputdef.typ.clone();
                     }
-                );
-            }
-            for (idx, var) in self.user_state.variables.iter_mut().enumerate() {
-                ui.horizontal(|ui| {
-                    if ui.button("X").clicked() {
-                        variable_scheduled_for_deletion = idx;
-                    }
-                    ui.label("Name");
-                    ui.text_edit_singleline(&mut var.name);
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Default value");
-                    let response = ui.text_edit_singleline(&mut var.default_value_buffer);
-                    if response.changed() {
-                        update_variable_data(var);
-                    }
-                });
-                ui.horizontal(|ui| {
-                    ui.label("Param type");
-                    ComboBox::from_label(format!("varpick{}", idx))
-                        .selected_text(var.typ_and_default_value.to_string())
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_INT(None), "Integer");
-                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_STRING(None), "String");
-                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_FLOAT(None), "Float");
-                            ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_VEC3(None), "Vec3");
+                    // }
+                    // output_frame.end(ui);
+                }
+                ui.separator();
+                ui.label("Variables:");
+                if ui.button("Add variable").clicked() {
+                    self.outputs_dropdown_choices.push(PulseValueType::PVAL_INT(None));
+                    self.user_state.variables.push(
+                        PulseVariable { 
+                            name: String::default(),
+                            typ_and_default_value: PulseValueType::PVAL_INT(None),
+                            data_type: PulseDataType::Scalar,
+                            old_typ: PulseValueType::PVAL_INT(None),
+                            default_value_buffer: String::default()
                         }
                     );
-                    // add the default value.
-                    // compare only the variant of the enums, if they differ assign default value and data type.
-                    if std::mem::discriminant(&var.typ_and_default_value) != std::mem::discriminant(&var.old_typ) {
-                        update_variable_data(var);
-                        var.old_typ = var.typ_and_default_value.clone();
-                    }
-                });
-            }
+                }
+                for (idx, var) in self.user_state.variables.iter_mut().enumerate() {
+                    ui.horizontal(|ui| {
+                        if ui.button("X").clicked() {
+                            variable_scheduled_for_deletion = idx;
+                        }
+                        ui.label("Name");
+                        ui.text_edit_singleline(&mut var.name);
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Default value");
+                        let response = ui.text_edit_singleline(&mut var.default_value_buffer);
+                        if response.changed() {
+                            update_variable_data(var);
+                        }
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Param type");
+                        ComboBox::from_label(format!("varpick{}", idx))
+                            .selected_text(var.typ_and_default_value.to_string())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_INT(None), "Integer");
+                                ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_STRING(None), "String");
+                                ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_FLOAT(None), "Float");
+                                ui.selectable_value(&mut var.typ_and_default_value, PulseValueType::PVAL_VEC3(None), "Vec3");
+                            }
+                        );
+                        // add the default value.
+                        // compare only the variant of the enums, if they differ assign default value and data type.
+                        if std::mem::discriminant(&var.typ_and_default_value) != std::mem::discriminant(&var.old_typ) {
+                            update_variable_data(var);
+                            var.old_typ = var.typ_and_default_value.clone();
+                        }
+                    });
+                }
+            });
         });
         if output_scheduled_for_deletion != usize::MAX {
             self.user_state.public_outputs.remove(output_scheduled_for_deletion);

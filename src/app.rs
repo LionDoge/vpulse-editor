@@ -653,11 +653,11 @@ type MyEditorState =
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct PulseGraphEditor {
-    // The `GraphEditorState` is the top-level object. You "register" all your
-    // custom types by specifying it as its generic parameters.
     state: MyEditorState,
     user_state: PulseGraphState,
-    outputs_dropdown_choices: Vec<PulseValueType>
+    outputs_dropdown_choices: Vec<PulseValueType>,
+    // #[serde(skip)]
+    // picked_file: Option<PathBuf>,
 }
 
 fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
@@ -681,9 +681,10 @@ impl PulseGraphEditor {
             .unwrap_or_default();
         Self {
             state: grph.state,
-            //file_dialog: FileDialog::new(),
             user_state: grph.user_state,
             outputs_dropdown_choices: vec![],
+            // file_dialog: FileDialog::new(),
+            // picked_file: None,
         }
     }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
@@ -835,13 +836,10 @@ impl eframe::App for PulseGraphEditor {
     }
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
-                if ui.button("Pick save path").clicked() {
-                    //self.file_dialog.pick_file();
-                }
                 if ui.button("Compile").clicked() {
                     compile_graph(&self.state.graph, &self.user_state);
                 }

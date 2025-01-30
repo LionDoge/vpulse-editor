@@ -6,32 +6,6 @@ use crate::serialization::*;
 use std::fs;
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
-pub enum NodeInput {
-    ConstantOnly(String, PulseValueType),
-    ConnectionOnly(String, PulseValueType),
-    ConstantOrConnection(String, PulseValueType),
-}
-
-#[derive(PartialEq, Eq)]
-pub enum NodeType {
-    Evaluate,
-    Action,
-}
-pub trait PulseGraphNode {
-    fn get_registered_inputs(&self) -> Vec<NodeInput>;
-    fn get_registered_outputs(&self) -> Vec<String>;
-    fn get_type(&self) -> NodeType;
-    fn get_binding_name(&self) -> Option<String>;
-    fn get_cell_type(&self) -> Option<CellType>;
-}
-struct PulseNodeInfo {
-    defined_inputs: Vec<String>,
-    defined_outputs: Vec<String>,
-    node_type: NodeType,
-    binding_name: Option<String>,
-    cell_type: Option<CellType>,
-}
-
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $target_chunk:ident) => {
         let connected_node = get_next_action_node($current_node, $graph, "outAction");
@@ -39,36 +13,6 @@ macro_rules! graph_next_action {
             return traverse_nodes_and_populate($graph, connected_node.unwrap(), $graph_def, $target_chunk, &None);
         }
     };
-}
-
-fn populate_based_on_node(graph: &PulseGraph, node_data: &impl PulseGraphNode, graph_def: &mut PulseGraphDef, current_node: &Node<PulseNodeData>, target_chunk: i32) {
-    let mut register_map = RegisterMap::default();
-    for node_input in node_data.get_registered_inputs().iter() {
-        match node_input {
-            NodeInput::ConstantOnly(name, valtyp)
-            | NodeInput::ConstantOrConnection(name, valtyp) => {
-                let reg = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, name, valtyp.clone());
-                register_map.add_inparam(name.clone(), reg);
-            }
-            NodeInput::ConnectionOnly(_, pulse_value_type) => todo!(),
-        }
-    }
-    let mut chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-    // only if the node actually calls a binding... which we can find out by checking if the binding name is set.
-    let binding_name = node_data.get_binding_name();
-    if binding_name.is_some() {
-        let binding = InvokeBinding {
-            register_map,
-            func_name: binding_name.unwrap(),
-            cell_index: graph_def.cells.len() as i32 - 1,
-            src_chunk: target_chunk,
-            src_instruction: chunk.get_last_instruction_id() + 1,
-        };
-    }
-
-    if node_data.get_type() == NodeType::Action {
-        //graph_next_action!(graph, current_node, graph_def, target_chunk);
-    }   
 }
 
 fn get_connected_output_node(graph: &PulseGraph, out_action_id: &OutputId) -> Option<NodeId> {

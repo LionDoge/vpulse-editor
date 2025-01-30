@@ -2,7 +2,7 @@ use std::borrow::BorrowMut;
 use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
-use eframe::egui::{self, output, ComboBox, DragValue};
+use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use slotmap::SecondaryMap;
 use crate::pulsetypes::*;

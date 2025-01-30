@@ -623,10 +623,6 @@ impl PulseGraphDef {
     pub fn get_current_binding_id(&self) -> i32 {
         self.bindings.len() as i32 - 1
     }
-    pub fn add_variable(&mut self, variable: PulseVariable) -> i32 {
-        self.variables.push(variable);
-        self.variables.len() as i32 - 1
-    }
     pub fn get_variable_index(&self, name: &str) -> Option<usize> {
         self.variables.iter().position(|variable| variable.name == name)
     }

@@ -1,10 +1,12 @@
 use std::borrow::BorrowMut;
+use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use slotmap::SecondaryMap;
+use rfd::{MessageDialog, FileDialog};
 use crate::pulsetypes::*;
 pub use crate::outputdefinition::*;
 use crate::compiler::compile_graph;
@@ -172,7 +174,9 @@ pub struct PulseGraphState {
     pub custom_input_string: String,
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
-    pub variables: Vec<PulseVariable>
+    pub variables: Vec<PulseVariable>,
+
+    pub save_file_path: PathBuf,
 }
 
 // =========== Then, you need to implement some traits ============
@@ -556,7 +560,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::Action => {
-                ui.label("ACT");
+                ui.label("Input action");
             }
             PulseGraphValueType::EHandle => {
                 ui.label("EHandle");
@@ -656,8 +660,6 @@ pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>,
-    // #[serde(skip)]
-    // picked_file: Option<PathBuf>,
 }
 
 fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
@@ -683,8 +685,6 @@ impl PulseGraphEditor {
             state: grph.state,
             user_state: grph.user_state,
             outputs_dropdown_choices: vec![],
-            // file_dialog: FileDialog::new(),
-            // picked_file: None,
         }
     }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
@@ -841,9 +841,25 @@ impl eframe::App for PulseGraphEditor {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
-                    compile_graph(&self.state.graph, &self.user_state);
+                    let compile_res = compile_graph(&self.state.graph, &self.user_state);
+                    if compile_res.is_err() {
+                        MessageDialog::new()
+                            .set_level(rfd::MessageLevel::Error)
+                            .set_title("Compile failed")
+                            .set_buttons(rfd::MessageButtons::Ok)
+                            .set_description(compile_res.err().unwrap())
+                            .show();
+                    }
                 }
-                
+                if ui.button("Pick save location").clicked() {
+                    let chosen_file = FileDialog::new()
+                        .add_filter("Pulse Graph", &["vpulse"])
+                        .save_file();
+                    if chosen_file.is_some() {
+                        self.user_state.save_file_path = chosen_file.unwrap();
+                    }
+                    // else it was most likely cancelled.
+                }
             });
         });
         let mut output_scheduled_for_deletion: usize = usize::MAX; // we can get away with just one reference (it's not like the user can click more than one at once)

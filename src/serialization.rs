@@ -12,6 +12,8 @@ pub struct PulseRuntimeArgument {
     pub description: String,
     pub typ: String,
 }
+
+
 impl KV3Serialize for PulseRuntimeArgument {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -554,7 +556,7 @@ impl KV3Serialize for PulseVariable {
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
-    pub cells: Vec<Box<CellType>>,
+    pub cells: Vec<Box<PulseCell>>,
     pub constants: Vec<Box<PulseConstant>>,
     pub bindings: Vec<InvokeBinding>,
     pub chunks: Vec<PulseChunk>,
@@ -580,18 +582,7 @@ impl PulseGraphDef {
         self.domain_values.push(domain_value);
         self.domain_values.len() as i32 - 1
     }
-    // pub fn create_invoke_binding(&mut self, register_map: RegisterMap, func_name: String, cell_index: i32, src_chunk: i32, src_instruction: i32) -> i32 {
-    //     let binding = InvokeBinding {
-    //         register_map,
-    //         func_name,
-    //         cell_index,
-    //         src_chunk,
-    //         src_instruction,
-    //     };
-    //     self.bindings.push(binding);
-    //     self.bindings.len() as i32 - 1
-    // }
-    pub fn add_binding(&mut self, binding: InvokeBinding) -> i32 {
+    pub fn add_invoke_binding(&mut self, binding: InvokeBinding) -> i32 {
         self.bindings.push(binding);
         self.bindings.len() as i32 - 1
     }
@@ -678,17 +669,17 @@ impl KV3Serialize for PulseGraphDef {
             "
             , self.cells.iter().map(|cell| {
                 match cell.as_ref() {
-                    CellType::InflowMethod(cell) => cell.serialize(),
-                    CellType::StepEntFire(cell) => cell.serialize(),
-                    CellType::InflowWait(cell) => cell.serialize(),
-                    CellType::InflowEvent(cell) => cell.serialize(),
-                    CellType::ValueFindEntByName(cell) => cell.serialize(),
-                    CellType::DebugLog => formatdoc!("
+                    PulseCell::InflowMethod(cell) => cell.serialize(),
+                    PulseCell::StepEntFire(cell) => cell.serialize(),
+                    PulseCell::InflowWait(cell) => cell.serialize(),
+                    PulseCell::InflowEvent(cell) => cell.serialize(),
+                    PulseCell::ValueFindEntByName(cell) => cell.serialize(),
+                    PulseCell::DebugLog => formatdoc!("
                         {{
                             _class = \"CPulseCell_Step_DebugLog\"
                             m_nEditorNodeID = -1
                         }}"),
-                    CellType::StepPublicOutput(idx) => formatdoc!("
+                    PulseCell::StepPublicOutput(idx) => formatdoc!("
                         {{
                             _class = \"CPulseCell_Step_PublicOutput\"
                             m_OutputIndex = {}

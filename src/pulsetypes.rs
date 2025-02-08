@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{app::{PulseDataType, Vec3}, serialization::{PulseRuntimeArgument, RegisterMap}};
 
-pub enum CellType {
+pub enum PulseCell {
     InflowMethod(CPulseCell_Inflow_Method),
     InflowEvent(CPulseCell_Inflow_EventHandler),
     StepEntFire(CPulseCell_Step_EntFire),
@@ -12,6 +12,14 @@ pub enum CellType {
     ValueFindEntByName(CPulseCell_Value_FindEntByName),
     StepPublicOutput(i32),
     DebugLog,
+}
+
+pub enum CellType {
+    Inflow,
+    Step,
+    Outflow,
+    Value,
+    Debug,
 }
 
 #[derive(Default)]

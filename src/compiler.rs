@@ -54,7 +54,7 @@ fn traverse_event_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
         cell_event.add_outparam(name.clone(), reg_id);
         graph_def.add_register_mapping(*output_id, reg_id);
     }
-    graph_def.cells.push(Box::from(CellType::InflowEvent(cell_event)));
+    graph_def.cells.push(Box::from(PulseCell::InflowEvent(cell_event)));
     let connected_node = get_next_action_node(node, graph, "outAction");
     if connected_node.is_some() {
         traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None);
@@ -66,13 +66,13 @@ fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
     let input_id = node.get_input("name").expect("Can't find input 'name'");
     let input_param = graph.inputs.get(input_id).expect("Can't find input value");
     // create new pulse cell node.
+
     let mut cell_method = CPulseCell_Inflow_Method::default();
     let chunk_id = graph_def.create_chunk();
     cell_method.name = input_param.value.clone().try_to_string().unwrap();
     cell_method.entry_chunk = chunk_id;
     cell_method.return_type = String::from("PVAL_INVALID");
-    // get action connection
-    let out_action_id = node.get_output("outAction").expect("Can't find output 'outAction'");
+    
     //let out_action_param = graph.outputs.get(out_action_id).expect("Can't find output value");
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     // create argument1 (TODO only if connection exists)
@@ -80,9 +80,11 @@ fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
     let output_id_arg1 = node.get_output("argument1").expect("Can't find output 'argument1'");
     cell_method.add_arg(String::from("arg1"), String::default(), String::from("PVAL_STRING"), reg_id_arg1);
     graph_def.add_register_mapping(output_id_arg1, reg_id_arg1);
-
-    let cell_enum = CellType::InflowMethod(cell_method);
+    
+    let cell_enum = PulseCell::InflowMethod(cell_method);
     graph_def.cells.push(Box::from(cell_enum));
+    // get action connection
+    let out_action_id = node.get_output("outAction").expect("Can't find output 'outAction'");
     let connected_node_id = get_connected_output_node(graph, &out_action_id);
     if connected_node_id.is_some() {
         let connected_node = graph.nodes.get(connected_node_id.unwrap());
@@ -92,7 +94,7 @@ fn traverse_entry_cell(graph: &PulseGraph, node: &Node<PulseNodeData>, graph_def
     }
 }
 
-pub fn compile_graph(graph: &PulseGraph, graph_state: &PulseGraphState) {
+pub fn compile_graph(graph: &PulseGraph, graph_state: &PulseGraphState) -> Result<(), String> {
     let mut graph_def = PulseGraphDef::default();
     graph_def.variables = graph_state.variables.clone();
     graph_def.public_outputs = graph_state.public_outputs.clone();
@@ -110,7 +112,17 @@ pub fn compile_graph(graph: &PulseGraph, graph_state: &PulseGraphState) {
     }
     let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
-    fs::write("graph_out/graph.vpulse", data).expect("Cannot write to file!");
+    let file_dir = graph_state.save_file_path.as_path().parent();
+    if file_dir.is_none() {
+        return Err("Output file path is set incorrectly".to_string());
+    }
+    let file_dir = file_dir.unwrap();
+    let dir_res = fs::create_dir_all(file_dir);
+    if dir_res.is_err() {
+        return Err(format!("Failed to create output directory: {}", dir_res.err().unwrap()));
+    }
+    fs::write(graph_state.save_file_path.as_path(), data)
+    .map_err(|e| format!("Failed to write to file: {}", e))
 }
 
 fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputId>) -> i32 {
@@ -272,7 +284,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // ! Important (might change). We assume that after waiting we go to the next instruction after the cell invoke.
             let cell_wait = CPulseCell_Inflow_Wait::new(target_chunk, chunk.get_last_instruction_id() + 3);
-            graph_def.cells.push(Box::from(CellType::InflowWait(cell_wait)));
+            graph_def.cells.push(Box::from(PulseCell::InflowWait(cell_wait)));
 
             let chunk_opt = graph_def.chunks.get(target_chunk as usize);
             if chunk_opt.is_some() {
@@ -286,7 +298,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                     src_chunk: target_chunk,
                     src_instruction: chunk.get_last_instruction_id() + 1,
                 };
-                let binding_idx = graph_def.add_binding(binding);
+                let binding_idx = graph_def.add_invoke_binding(binding);
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 chunk.add_instruction(instruction_templates::cell_invoke(binding_idx));
                 // early return.
@@ -308,7 +320,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                 let input_id = current_node.get_input("input").expect("Can't find input 'input'");
                 let input_param = graph.inputs.get(input_id).expect("Can't find input value").value.clone().try_to_string().expect("Failed to unwrap input value");
                 let step_cell = CPulseCell_Step_EntFire::new(input_param.clone());
-                let cell_enum = CellType::StepEntFire(step_cell);
+                let cell_enum = PulseCell::StepEntFire(step_cell);
                 
                 let value_id = current_node.get_input("value").expect("Can't find input 'value'");
                 let mut value_input_register: i32 = -1;
@@ -366,7 +378,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                         src_chunk: target_chunk,
                         src_instruction: chunk.get_last_instruction_id() + 1,
                     };
-                    let binding_idx = graph_def.add_binding(binding);
+                    let binding_idx = graph_def.add_invoke_binding(binding);
                     // add instruction for invoking the binding.
                     // rust doesn't like reusing the borrowed chunks reference, but we know that it doesn't change.
                     graph_def.chunks.get_mut(target_chunk as usize).unwrap()
@@ -548,7 +560,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             }
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param);
-            let cell_enum = CellType::ValueFindEntByName(cell);
+            let cell_enum = PulseCell::ValueFindEntByName(cell);
             graph_def.cells.push(Box::from(cell_enum));
             register_map.add_inparam(String::from("pName"), reg_entname);
             register_map.add_outparam(String::from("retval"), reg_output);
@@ -560,7 +572,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                 src_chunk: target_chunk,
                 src_instruction: instr,
             };
-            graph_def.add_binding(binding);
+            graph_def.add_invoke_binding(binding);
             return reg_output;
         }
         PulseNodeTemplate::DebugWorldText => {
@@ -613,14 +625,14 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                 src_instruction: -1,
             };
             chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
-            graph_def.add_binding(binding);
+            graph_def.add_invoke_binding(binding);
 
             // go to next action.
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::DebugLog => {
             let reg_message = get_input_register_or_create_constant(graph, current_node, graph_def, target_chunk, "pMessage", PulseValueType::PVAL_STRING(None));
-            let cell_enum = CellType::DebugLog;
+            let cell_enum = PulseCell::DebugLog;
             graph_def.cells.push(Box::from(cell_enum));
             let mut register_map = RegisterMap::default();
             register_map.add_inparam(String::from("pMessage"), reg_message);
@@ -634,7 +646,7 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
                 src_instruction: chunk.get_last_instruction_id() + 1,
             };
             chunk.add_instruction(instruction_templates::cell_invoke(new_binding_id));
-            graph_def.add_binding(binding);
+            graph_def.add_invoke_binding(binding);
 
             // go to next action.
             graph_next_action!(graph, current_node, graph_def, target_chunk);
@@ -644,8 +656,9 @@ fn traverse_nodes_and_populate(graph: &PulseGraph, current_node: &Node<PulseNode
             let input_val = graph.get_input(input_id).value().clone().try_output_name().expect("Failed to unwrap input outputName");
             let pub_output = graph_def.get_public_output_index(input_val.as_str());
             if pub_output.is_some() {
-                graph_def.cells.push(Box::from(CellType::StepPublicOutput(pub_output.unwrap() as i32)));
+                graph_def.cells.push(Box::from(PulseCell::StepPublicOutput(pub_output.unwrap() as i32)));
             }
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         _ => todo!("Implement node template: {:?}", current_node.user_data.template),
     }

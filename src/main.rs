@@ -4,6 +4,12 @@
 
 use pulseedit::PulseGraphEditor;
 
+// struct IconData {
+//     rgba: Vec<u8>,
+//     width: u32,
+//     height: u32,
+// }
+
 // fn load_icon(path: &str) -> IconData {
 //     let (icon_rgba, icon_width, icon_height) = {
 //         let image = image::open(path)

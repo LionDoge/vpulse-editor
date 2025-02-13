@@ -1,5 +1,7 @@
+use core::panic;
 use std::borrow::BorrowMut;
 use std::path::PathBuf;
+use eframe::glow::NONE;
 use serde::{Serialize, Deserialize};
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
@@ -49,6 +51,7 @@ pub enum PulseDataType {
     EHandle,
     InternalOutputName,
     InternalVariableName,
+    Typ,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -70,6 +73,7 @@ pub enum PulseGraphValueType {
     Action,
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
+    Typ { value: PulseValueType }
 }
 
 impl Default for PulseGraphValueType {
@@ -129,6 +133,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to variable name", self)
         }
     }
+
+    pub fn try_pulse_type(self) -> anyhow::Result<PulseValueType> {
+        if let PulseGraphValueType::Typ { value, .. } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to variable name", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
@@ -151,18 +163,20 @@ pub enum PulseNodeTemplate {
     DebugWorldText,
     DebugLog,
     FireOutput,
+    GraphHook,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
 /// node in the graph. Most side-effects (creating new nodes, deleting existing
 /// nodes, handling connections...) are already handled by the library, but this
 /// mechanism allows creating additional side effects from user code.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PulseGraphResponse {
     AddOutputParam(NodeId, String),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
+    ChangeParamType(NodeId, String, PulseValueType),
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -194,6 +208,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
             PulseDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Typ => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -208,6 +223,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::EHandle => Cow::Borrowed("EHandle"),
             PulseDataType::InternalOutputName => Cow::Borrowed("Output name"),
             PulseDataType::InternalVariableName => Cow::Borrowed("Variable name"),
+            PulseDataType::Typ => Cow::Borrowed("Type"),
         }
     }
 }
@@ -237,13 +253,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::DebugWorldText => "Debug world text",
             PulseNodeTemplate::DebugLog => "Debug log",
             PulseNodeTemplate::FireOutput => "Fire output",
+            PulseNodeTemplate::GraphHook => "Graph Hook",
         })
     }
 
     // this is what allows the library to show collapsible lists in the node finder.
     fn node_finder_categories(&self, _user_state: &mut Self::UserState) -> Vec<&'static str> {
         match self {
-            PulseNodeTemplate::CellPublicMethod | PulseNodeTemplate::EventHandler => vec!["Inflow"],
+            PulseNodeTemplate::CellPublicMethod 
+            | PulseNodeTemplate::EventHandler 
+            | PulseNodeTemplate::GraphHook => vec!["Inflow"],
             PulseNodeTemplate::EntFire
             | PulseNodeTemplate::FindEntByName => vec!["Entities"],
             PulseNodeTemplate::Compare => vec!["Logic"],
@@ -341,6 +360,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
+        let input_typ = |graph: &mut PulseGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::Typ,
+                PulseGraphValueType::Typ { value: PulseValueType::PVAL_INT(None) },
+                InputParamKind::ConstantOnly,
+                true,
+            );
+        };
 
         let output_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
@@ -424,16 +453,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_string(graph, "out");
             }
             PulseNodeTemplate::Operation => {
-                graph.add_input_param(
-                    node_id,
-                    "operation".to_string(),
-                    PulseDataType::String,
-                    PulseGraphValueType::String {
-                        value: String::default()
-                    },
-                    InputParamKind::ConstantOnly,
-                    true,
-                );
+                input_typ(graph, "type");
+                input_string(graph, "operation", InputParamKind::ConstantOnly);
                 input_scalar(graph, "A");
                 input_scalar(graph, "B");
                 output_scalar(graph, "out");
@@ -469,6 +490,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                   InputParamKind::ConstantOnly, true);
                 output_action(graph, "outAction");
             }
+            PulseNodeTemplate::GraphHook => {
+                input_string(graph, "hookName", InputParamKind::ConstantOnly);
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -496,6 +521,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::DebugWorldText,
             PulseNodeTemplate::DebugLog,
             PulseNodeTemplate::FireOutput,
+            PulseNodeTemplate::GraphHook,
         ]
     }
 }
@@ -598,6 +624,25 @@ impl WidgetValueTrait for PulseGraphValueType {
                     responses.push(PulseGraphResponse::ChangeVariableParamType(_node_id, value.clone()));
                     *prevvalue = value.clone();
                 }
+            }
+            PulseGraphValueType::Typ { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ComboBox::from_id_salt(_node_id)
+                        .selected_text(value.to_string())
+                        .show_ui(ui, |ui| {
+                            if ui.selectable_value(value, PulseValueType::PVAL_INT(None), "Integer").clicked() {
+                                responses.push(PulseGraphResponse::ChangeParamType(_node_id, param_name.to_string(), PulseValueType::PVAL_INT(None)));
+                            };
+                            if ui.selectable_value(value, PulseValueType::PVAL_FLOAT(None), "Float").clicked() {
+                                responses.push(PulseGraphResponse::ChangeParamType(_node_id, param_name.to_string(), PulseValueType::PVAL_FLOAT(None)));
+                            };
+                            if ui.selectable_value(value, PulseValueType::PVAL_VEC3(None), "Vector").clicked() {
+                                responses.push(PulseGraphResponse::ChangeParamType(_node_id, param_name.to_string(), PulseValueType::PVAL_VEC3(None)));
+                            };
+                        }
+                    );
+                });
             }
         }
         // This allows you to return your responses from the inline widgets.
@@ -747,22 +792,22 @@ impl PulseGraphEditor {
     fn add_node_output_simple(&mut self, node_id: NodeId, data_typ: PulseDataType, output_name: &str) {
         self.state.graph.add_output_param(node_id, String::from(output_name), data_typ);
     }
-    pub fn update_variable_inputs_outputs(&mut self, node_id: NodeId, name: &String, input_output_name: &str) {
+    pub fn update_node_inputs_outputs(&mut self, node_id: NodeId, name: &String, new_type: Option<PulseValueType>) {
         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
         match node.user_data.template {
             PulseNodeTemplate::GetVar => {
-                let param = node.get_output(input_output_name);
+                let param = node.get_output("value");
                 if param.is_ok() {
                     self.state.graph.remove_output_param(param.unwrap());
                 }
                 let var = self.user_state.variables.iter().find(|var| var.name == *name);
                 if var.is_some() {
                     let var_unwrp = var.unwrap();
-                    self.add_node_output_simple(node_id, var_unwrp.data_type.clone(), input_output_name);
+                    self.add_node_output_simple(node_id, var_unwrp.data_type.clone(), "value");
                 }
             }
             PulseNodeTemplate::SetVar => {
-                let param = node.get_input(input_output_name);
+                let param = node.get_input("value");
                 if param.is_ok() {
                     self.state.graph.remove_input_param(param.unwrap());
                 }
@@ -774,10 +819,50 @@ impl PulseGraphEditor {
                         node_id, 
                         var_unwrp.data_type.clone(),
                         val_typ, 
-                        input_output_name, 
+                        "value", 
                         InputParamKind::ConnectionOrConstant
                     );
                 }
+            }
+            PulseNodeTemplate::Operation => {
+                if new_type.is_none() {
+                    panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
+                }
+                let new_type = new_type.unwrap();
+                let param_a = node.get_input("A");
+                let param_b = node.get_input("B");
+                let param_out = node.get_output("out");
+                if !param_a.is_ok() || !param_b.is_ok() || !param_out.is_ok() {
+                    panic!("node that requires inputs 'A', 'B' and output 'out', but one of them was not found");
+                }
+                self.state.graph.remove_input_param(param_a.unwrap());
+                self.state.graph.remove_input_param(param_b.unwrap());
+                self.state.graph.remove_output_param(param_out.unwrap());
+
+                let data_typ;
+                let value_typ;
+                match new_type {
+                    PulseValueType::PVAL_INT(_)
+                    | PulseValueType::PVAL_FLOAT(_) => {
+                        data_typ = PulseDataType::Scalar;
+                        value_typ = PulseGraphValueType::Scalar { value: 0f32 };
+                    }
+                    PulseValueType::PVAL_VEC3(_) => {
+                        data_typ = PulseDataType::Vec3;
+                        value_typ = PulseGraphValueType::Vec3 { value: Vec3::default() };
+                    }
+                    _ => {
+                        data_typ = PulseDataType::Scalar;
+                        value_typ = PulseGraphValueType::Scalar { value: 0f32 };
+                    }
+                }
+                self.add_node_input_simple(node_id, 
+                    data_typ.clone(), value_typ.clone(), "A",
+                    InputParamKind::ConnectionOrConstant);
+                self.add_node_input_simple(node_id, 
+                    data_typ.clone(), value_typ, "B",
+                    InputParamKind::ConnectionOrConstant);
+                self.add_node_output_simple(node_id, data_typ, "out");
             }
             _ => {}
         }
@@ -1023,7 +1108,10 @@ impl eframe::App for PulseGraphEditor {
                         self.update_output_node_param(node_id, &name, "param");
                     }
                     PulseGraphResponse::ChangeVariableParamType(node_id, name) => {
-                        self.update_variable_inputs_outputs(node_id, &name, "value");
+                        self.update_node_inputs_outputs(node_id, &name, None);
+                    }
+                    PulseGraphResponse::ChangeParamType(node_id, name, typ) => {
+                        self.update_node_inputs_outputs(node_id, &name, Some(typ));
                     }
                 }
             }

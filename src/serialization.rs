@@ -1,5 +1,6 @@
 #![allow(non_camel_case_types)]
 #![allow(nonstandard_style)]
+
 use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
@@ -12,7 +13,6 @@ pub struct PulseRuntimeArgument {
     pub description: String,
     pub typ: String,
 }
-
 
 impl KV3Serialize for PulseRuntimeArgument {
     fn serialize(&self) -> String {
@@ -168,6 +168,52 @@ impl KV3Serialize for CPulseCell_Value_FindEntByName {
     }
 }
 
+impl KV3Serialize for CPulseCell_Step_DebugLog {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Step_DebugLog\"
+                m_nEditorNodeID = -1
+            }}
+            "
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Step_PublicOutput {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Step_PublicOutput\"
+                m_nEditorNodeID = -1
+                m_OutputIndex = {}
+            }}
+            "
+            , self.output_idx
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Inflow_GraphHook {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Inflow_GraphHook\"
+                m_nEditorNodeID = -1
+                m_EntryChunk = {}
+                m_RegisterMap = {}
+                m_HookName = \"{}\"
+            }}
+            "
+            , self.entry_chunk, self.register_map.serialize(), self.hook_name
+        }
+    }
+}
+
+
 impl KV3Serialize for Register {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -187,11 +233,11 @@ impl KV3Serialize for Register {
 
 #[derive(Default)]
 pub struct RegisterMap {
-    pub inparams: Vec<(String, i32)>,
+    pub inparams: Vec<(&'static str, i32)>,
     pub outparams: Vec<(String, i32)>,
 }
 impl RegisterMap {
-    pub fn add_inparam(&mut self, name: String, num: i32) {
+    pub fn add_inparam(&mut self, name: &'static str, num: i32) {
         self.inparams.push((name, num));
     }
     pub fn add_outparam(&mut self, name: String, num: i32) {
@@ -340,7 +386,7 @@ impl KV3Serialize for PulseChunk {
 
 pub struct InvokeBinding {
     pub register_map: RegisterMap,
-    pub func_name: String,
+    pub func_name: &'static str,
     pub cell_index: i32,
     pub src_chunk: i32,
     pub src_instruction: i32
@@ -476,7 +522,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::String(value) => format!("\"{}\"", value),
                 PulseConstant::Float(value) => format!("{:.8}", value),
                 PulseConstant::Integer(value) => value.to_string(),
-                PulseConstant::Vec3(value) => format!("[{}, {}, {}]", value.x, value.y, value.z),
+                PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value.x, value.y, value.z),
                 PulseConstant::Bool(value) => value.to_string(),
             }
@@ -552,11 +598,12 @@ impl KV3Serialize for PulseVariable {
 //     }
 // }
 
+trait PulseCellTrait: KV3Serialize + GetCellType {}
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
-    pub cells: Vec<Box<PulseCell>>,
+    pub cells: Vec<Box<dyn KV3Serialize>>,
     pub constants: Vec<Box<PulseConstant>>,
     pub bindings: Vec<InvokeBinding>,
     pub chunks: Vec<PulseChunk>,
@@ -668,24 +715,25 @@ impl KV3Serialize for PulseGraphDef {
             }}
             "
             , self.cells.iter().map(|cell| {
-                match cell.as_ref() {
-                    PulseCell::InflowMethod(cell) => cell.serialize(),
-                    PulseCell::StepEntFire(cell) => cell.serialize(),
-                    PulseCell::InflowWait(cell) => cell.serialize(),
-                    PulseCell::InflowEvent(cell) => cell.serialize(),
-                    PulseCell::ValueFindEntByName(cell) => cell.serialize(),
-                    PulseCell::DebugLog => formatdoc!("
-                        {{
-                            _class = \"CPulseCell_Step_DebugLog\"
-                            m_nEditorNodeID = -1
-                        }}"),
-                    PulseCell::StepPublicOutput(idx) => formatdoc!("
-                        {{
-                            _class = \"CPulseCell_Step_PublicOutput\"
-                            m_OutputIndex = {}
-                            m_nEditorNodeID = -1
-                        }}", idx),
-                }
+                cell.serialize()
+                // match cell.as_ref() {
+                //     PulseCell::InflowMethod(cell) => cell.serialize(),
+                //     PulseCell::StepEntFire(cell) => cell.serialize(),
+                //     PulseCell::InflowWait(cell) => cell.serialize(),
+                //     PulseCell::InflowEvent(cell) => cell.serialize(),
+                //     PulseCell::ValueFindEntByName(cell) => cell.serialize(),
+                //     PulseCell::DebugLog => formatdoc!("
+                //         {{
+                //             _class = \"CPulseCell_Step_DebugLog\"
+                //             m_nEditorNodeID = -1
+                //         }}"),
+                //     PulseCell::StepPublicOutput(idx) => formatdoc!("
+                //         {{
+                //             _class = \"CPulseCell_Step_PublicOutput\"
+                //             m_OutputIndex = {}
+                //             m_nEditorNodeID = -1
+                //         }}", idx),
+                // }
             }).collect::<Vec<_>>().join(",\n\n")
             , self.map_name, self.xml_name
             , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<_>>().join(",\n\n")

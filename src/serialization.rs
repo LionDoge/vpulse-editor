@@ -498,6 +498,7 @@ impl Register {
     }
 }
 #[allow(non_camel_case_types)]
+#[derive(PartialEq)]
 pub enum PulseConstant {
     String(String),
     Float(f32),
@@ -640,6 +641,10 @@ impl PulseGraphDef {
         self.bindings.len() as i32 - 1
     }
     pub fn add_constant(&mut self, constant: PulseConstant) -> i32 {
+        // try to find existing constant (TODO: hashing constants, and caching the hashes to compare would be faster)
+        // if self.constants.iter().any(|c| **c == constant) {
+        //     return self.constants.iter().position(|c| **c == constant).unwrap() as i32;
+        // }
         self.constants.push(Box::from(constant));
         self.constants.len() as i32 - 1
     }

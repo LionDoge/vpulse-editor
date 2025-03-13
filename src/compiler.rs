@@ -1364,6 +1364,40 @@ fn traverse_nodes_and_populate(
                 );
             }
         }
+        PulseNodeTemplate::StringToEntityName => {
+            let reg_input = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "entityName",
+                PulseValueType::PVAL_STRING(None),
+                false,
+            );
+            let mut reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out == -1 {
+                let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, I've put it here because borrow checker
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                let mut reg_map = RegisterMap::default();
+                reg_out = chunk.add_register(
+                    String::from("PVAL_ENTITY_NAME"),
+                    chunk.get_last_instruction_id() + 1,
+                );
+                reg_map.add_inparam("pStr", reg_input);
+                reg_map.add_outparam(String::from("retval"), reg_out);
+                let invoke_binding = InvokeBinding {
+                    register_map: RegisterMap::default(),
+                    func_name: "CPulseServerFuncs!StringToEntityName",
+                    cell_index: graph_def.cells.len() as i32 - 1,
+                    src_chunk: target_chunk,
+                    src_instruction: chunk.get_last_instruction_id() + 1,
+                };
+                chunk.add_instruction(instruction_templates::library_invoke(binding_id));
+                graph_def.add_invoke_binding(invoke_binding);
+                graph_def.add_register_mapping(output_id.unwrap(), reg_out);
+            }
+            return reg_out;
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

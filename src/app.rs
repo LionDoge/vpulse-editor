@@ -53,6 +53,7 @@ pub enum PulseDataType {
     Bool,
     Action,
     EHandle,
+    EntityName,
     InternalOutputName,
     InternalVariableName,
     Typ,
@@ -74,6 +75,7 @@ pub enum PulseGraphValueType {
     Bool { value: bool },
     Vec3 { value: Vec3 },
     EHandle,
+    EntityName { value: String },
     Action,
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
@@ -172,6 +174,7 @@ pub enum PulseNodeTemplate {
     SetNextThink,
     Convert,
     ForLoop,
+    StringToEntityName,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -212,7 +215,8 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
-            PulseDataType::EHandle => egui::Color32::from_rgb(18, 227, 81),
+            PulseDataType::EHandle => egui::Color32::from_rgb(11, 77, 31),
+            PulseDataType::EntityName => egui::Color32::from_rgb(11, 77, 31),
             PulseDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
             PulseDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
@@ -229,6 +233,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Bool => Cow::Borrowed("bool"),
             PulseDataType::Action => Cow::Borrowed("action"),
             PulseDataType::EHandle => Cow::Borrowed("EHandle"),
+            PulseDataType::EntityName => Cow::Borrowed("Entity name"),
             PulseDataType::InternalOutputName => Cow::Borrowed("Output name"),
             PulseDataType::InternalVariableName => Cow::Borrowed("Variable name"),
             PulseDataType::Typ => Cow::Borrowed("Type"),
@@ -266,6 +271,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::SetNextThink => "Set next think",
             PulseNodeTemplate::Convert => "Convert",
             PulseNodeTemplate::ForLoop => "For loop",
+            PulseNodeTemplate::StringToEntityName => "String to entity name",
         })
     }
 
@@ -281,7 +287,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait => vec!["Utility"],
             PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => vec!["Variables"],
-            PulseNodeTemplate::IntToString | PulseNodeTemplate::Convert => vec!["Conversion"],
+            PulseNodeTemplate::IntToString | PulseNodeTemplate::Convert | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
             PulseNodeTemplate::DebugWorldText | PulseNodeTemplate::DebugLog => vec!["Debug"],
             PulseNodeTemplate::FireOutput => vec!["Outflow"],
             PulseNodeTemplate::GetGameTime | PulseNodeTemplate::SetNextThink => {
@@ -357,6 +363,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
+        let input_entityname = |graph: &mut PulseGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::EntityName,
+                PulseGraphValueType::EntityName {
+                    value: String::default(),
+                },
+                InputParamKind::ConnectionOrConstant,
+                true,
+            );
+        };
         let input_vector3 = |graph: &mut PulseGraph, name: &str| {
             graph.add_input_param(
                 node_id,
@@ -408,6 +426,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         let output_ehandle = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::EHandle);
         };
+        let output_entityname = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::EntityName);
+        };
 
         // input_action(graph);
         // output_action(graph);
@@ -428,7 +449,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::EntFire => {
                 input_action(graph);
-                input_string(graph, "entity", InputParamKind::ConstantOnly);
+                input_entityname(graph, "entity");
                 input_string(graph, "input", InputParamKind::ConstantOnly);
                 input_string(graph, "value", InputParamKind::ConnectionOrConstant);
                 output_action(graph, "outAction");
@@ -564,6 +585,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
             }
+            PulseNodeTemplate::StringToEntityName => {
+                input_string(graph, "entityName", InputParamKind::ConnectionOrConstant);
+                output_entityname(graph, "out");
+            }
         }
     }
 }
@@ -596,6 +621,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::SetNextThink,
             PulseNodeTemplate::Convert,
             PulseNodeTemplate::ForLoop,
+            PulseNodeTemplate::StringToEntityName,
         ]
     }
 }
@@ -667,6 +693,12 @@ impl WidgetValueTrait for PulseGraphValueType {
             }
             PulseGraphValueType::EHandle => {
                 ui.label("EHandle");
+            }
+            PulseGraphValueType::EntityName { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.text_edit_singleline(value);
+                });
             }
             PulseGraphValueType::InternalOutputName { prevvalue, value } => {
                 ui.horizontal(|ui| {

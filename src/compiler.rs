@@ -1300,6 +1300,10 @@ fn traverse_nodes_and_populate(
             // we don't actually add the register right now, because we know the written_by_instruction id to make one.
             // however the index it will have is known, so we are free to use it, and then actually add it later, once the instruction id is known
             let reg_idx = chunk.add_register(String::from("PVAL_INT"), chunk.get_last_instruction_id() + 1);
+            // remember the output index, for nodes that want to access this output
+            let output_idx_id = current_node.get_output("index").expect("Can't find output 'idx'");
+            graph_def.add_register_mapping(output_idx_id, reg_idx);
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_copy = instruction_templates::copy_value(reg_idx, reg_from);
             chunk.add_instruction(instr_copy);
             let reg_cond = chunk.add_register(String::from("PVAL_BOOL"), chunk.get_last_instruction_id() + 1);
@@ -1333,7 +1337,7 @@ fn traverse_nodes_and_populate(
             instr_add.reg0 = reg_idx;
             instr_add.reg1 = reg_idx;
             instr_add.reg2 = reg_step;
-            let instr_add_id = chunk.add_instruction(instr_add);
+            chunk.add_instruction(instr_add);
             
             // jump to conditional check
             let instr_jump = instruction_templates::jump(instr_compare_id);
@@ -1359,9 +1363,6 @@ fn traverse_nodes_and_populate(
                     &None
                 );
             }
-            // remember the output index, for nodes that want to access this output
-            let output_idx_id = current_node.get_output("index").expect("Can't find output 'idx'");
-            graph_def.add_register_mapping(output_idx_id, reg_idx);
         }
         _ => todo!(
             "Implement node template: {:?}",

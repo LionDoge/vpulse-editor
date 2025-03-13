@@ -107,3 +107,31 @@ pub fn library_invoke(invoke_binding_id: i32) -> Instruction {
     instr.invoke_binding_index = invoke_binding_id;
     instr
 }
+
+pub fn return_void() -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("RETURN_VOID");
+    instr
+}
+
+pub fn jump(instruction_id: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("JUMP");
+    instr.dest_instruction = instruction_id;
+    instr
+}
+
+pub fn jump_cond(register_cond: i32, instruction_id: i32) -> Instruction {
+    let mut instr = jump(instruction_id);
+    instr.code = String::from("JUMP_COND");
+    instr.reg0 = register_cond;
+    instr
+}
+
+pub fn copy_value(register_to: i32, register_from: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("COPY");
+    instr.reg0 = register_to;
+    instr.reg1 = register_from;
+    instr
+}

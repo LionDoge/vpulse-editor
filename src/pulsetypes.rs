@@ -149,8 +149,20 @@ impl fmt::Display for PulseValueType {
         }
     }
 }
-#[derive(Serialize, Deserialize, Clone)]
+impl PulseValueType {
+    pub fn get_operation_suffix_name(&self) -> &'static str {
+        return match self {
+            PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
+            PulseValueType::PVAL_INT(_) => "_INT",
+            PulseValueType::PVAL_VEC3(_) => "", // Vec3 uses generic comparison (I think)
+            PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
+            PulseValueType::PVAL_STRING(_) => "_STRING",
+            _ => ""
+        }
+    }
+}
 
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PulseVariable {
     pub name: String,
     pub typ_and_default_value: PulseValueType,

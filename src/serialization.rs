@@ -357,6 +357,12 @@ impl PulseChunk {
     pub fn get_last_instruction_id(&self) -> i32 {
         self.instructions.len() as i32 - 1
     }
+    pub fn get_instruction_from_id_mut(&mut self, id: i32) -> Option<&mut Instruction> {
+        self.instructions.get_mut(id as usize)
+    }
+    pub fn get_last_register_id(&self) -> i32 {
+        self.registers.len() as i32 - 1
+    }
 }
 impl KV3Serialize for PulseChunk {
     fn serialize(&self) -> String {

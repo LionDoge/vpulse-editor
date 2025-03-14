@@ -1333,9 +1333,9 @@ fn traverse_nodes_and_populate(
                 let invoke_binding = InvokeBinding {
                     register_map: reg_map,
                     func_name: "CPulseServerFuncs!StringToEntityName",
-                    cell_index: graph_def.cells.len() as i32 - 1,
-                    src_chunk: target_chunk,
-                    src_instruction: chunk.get_last_instruction_id() + 1,
+                    cell_index: -1,
+                    src_chunk: -1,
+                    src_instruction: -1,
                 };
                 chunk.add_instruction(instruction_templates::library_invoke(binding_id));
                 graph_def.add_invoke_binding(invoke_binding);

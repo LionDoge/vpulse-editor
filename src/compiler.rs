@@ -1331,7 +1331,7 @@ fn traverse_nodes_and_populate(
                 reg_map.add_inparam("pStr", reg_input);
                 reg_map.add_outparam(String::from("retval"), reg_out);
                 let invoke_binding = InvokeBinding {
-                    register_map: RegisterMap::default(),
+                    register_map: reg_map,
                     func_name: "CPulseServerFuncs!StringToEntityName",
                     cell_index: graph_def.cells.len() as i32 - 1,
                     src_chunk: target_chunk,

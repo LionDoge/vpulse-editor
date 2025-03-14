@@ -343,7 +343,7 @@ fn get_input_register_or_create_constant(
                     let input_value = input_param
                         .value()
                         .clone()
-                        .try_to_string()
+                        .try_entity_name()
                         .expect("Failed to unwrap input value");
                     chunk.add_instruction(instruction);
                     graph_def.create_domain_value(
@@ -479,142 +479,87 @@ fn traverse_nodes_and_populate(
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::EntFire => {
-            // create EntFire (step) cell
-            let entity_id = current_node
-                .get_input("entity")
-                .expect("Can't find input 'entity'");
-            let value_entity = graph
-                .inputs
-                .get(entity_id)
-                .expect("Can't find input value")
-                .value
-                .clone()
-                .try_to_string();
-            if let Ok(value) = value_entity {
-                // create domain value (only if we know value already)
-                let domain_val_idx = graph_def.create_domain_value(
-                    String::from("ENTITY_NAME"),
-                    value.clone(),
-                    String::new(),
-                );
+            let reg_entity = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "entity",
+                PulseValueType::DOMAIN_ENTITY_NAME,
+                false,
+            );
+            let input_value = get_constant_graph_input_value!(graph, current_node, "input", try_to_string);
+            // this one might be empty, but we want to use it for OutputConnection if we know it at compile time.
+            let entity_name_static_value = get_constant_graph_input_value!(graph, current_node, "entity", try_entity_name); 
 
+            // check for existence of the parameter value (connection, or non empty string)
+            // to determine if we need to add it to the EntFire call
+            let param_value_exists = 'checkParmValue: {
                 let input_id = current_node
-                    .get_input("input")
-                    .expect("Can't find input 'input'");
-                let input_param = graph
-                    .inputs
-                    .get(input_id)
-                    .expect("Can't find input value")
-                    .value
-                    .clone()
-                    .try_to_string()
-                    .expect("Failed to unwrap input value");
-
-                let value_id = current_node
                     .get_input("value")
-                    .expect("Can't find input 'value'");
-                let mut value_input_register: i32 = -1;
-                // try to resolve the value input node
-                let connection_to_value = graph.connection(value_id);
-                match connection_to_value {
-                    Some(out) => {
-                        let out_param = graph.get_output(out);
-                        let out_node = graph
-                            .nodes
-                            .get(out_param.node)
-                            .expect("Can't find output node");
-                        value_input_register = traverse_nodes_and_populate(
-                            graph,
-                            out_node,
-                            graph_def,
-                            target_chunk,
-                            &Some(out),
-                        );
-                    }
-                    None => {
-                        // no connection, create constant value
-                        let value_param = graph.get_input(value_id);
-                        let str = value_param.value().clone().try_to_string();
-                        match str {
-                            Ok(str) => {
-                                if !str.is_empty() {
-                                    let constant = PulseConstant::String(str);
-                                    let const_idx = graph_def.add_constant(constant);
-                                    // create register to hold this value
-                                    let chunk =
-                                        graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                                    value_input_register = chunk.add_register(
-                                        String::from("PVAL_STRING"),
-                                        chunk.get_last_instruction_id() + 1,
-                                    );
-                                    // create instruction to load this value now.
-                                    let instruction = instruction_templates::get_const(
-                                        const_idx,
-                                        value_input_register,
-                                    );
-                                    chunk.add_instruction(instruction);
-                                }
-                            }
-                            Err(err) => {
-                                println!("Error getting string from node value: {}", err);
-                            }
-                        }
-                    }
+                    .expect("Can't find input value");
+                let connection_to_input: Option<OutputId> = graph.connection(input_id);
+                if connection_to_input.is_some() {
+                    break 'checkParmValue true;
                 }
 
-                let step_cell = CPulseCell_Step_EntFire::new(input_param.clone());
-                graph_def.cells.push(Box::from(step_cell));
-                // now build instructions and bindings to get the domain value, and invoke the cell
-                let chunk_opt = graph_def.chunks.get_mut(target_chunk as usize);
-                if chunk_opt.is_some() {
-                    let chunk = chunk_opt.unwrap();
-                    // new register to load in the domain value
-                    let reg_id = chunk.add_register(
-                        String::from("PVAL_ENTITY_NAME"),
-                        chunk.get_last_instruction_id() + 1,
-                    );
-                    // load the domain value instruction
-                    chunk.add_instruction(instruction_templates::get_domain_value(
-                        reg_id,
-                        domain_val_idx,
-                    ));
-                    // add invoke binding for FireAtName cell
-                    let mut register_map = RegisterMap::default();
-                    register_map.add_inparam("TargetName", reg_id);
-                    if value_input_register != -1 {
-                        register_map.add_inparam("pParam", value_input_register);
-                    }
-                    let binding = InvokeBinding {
-                        register_map: register_map,
-                        func_name: "FireAtName",
-                        cell_index: graph_def.cells.len() as i32 - 1,
-                        src_chunk: target_chunk,
-                        src_instruction: chunk.get_last_instruction_id() + 1,
-                    };
-                    let binding_idx = graph_def.add_invoke_binding(binding);
-                    // add instruction for invoking the binding.
-                    // rust doesn't like reusing the borrowed chunks reference, but we know that it doesn't change.
-                    graph_def
-                        .chunks
-                        .get_mut(target_chunk as usize)
-                        .unwrap()
-                        .add_instruction(instruction_templates::cell_invoke(binding_idx));
-                    //graph.connection(input)
-                    let output_connection = OutputConnection::new(
-                        String::from("Step_EntFire:-1"),
-                        value,
-                        input_param,
-                        if value_input_register != -1 {
-                            String::from("param")
-                        } else {
-                            String::default()
-                        },
-                    );
-                    graph_def.add_output_connection(output_connection);
-                }
+                let val = graph.get_input(input_id).value().clone().try_to_string().unwrap();
+                break 'checkParmValue !val.is_empty();
+            };
 
-                graph_next_action!(graph, current_node, graph_def, target_chunk);
+            let mut reg_param = -1;
+            if param_value_exists {
+                reg_param = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    target_chunk,
+                    "value",
+                    PulseValueType::PVAL_STRING(None),
+                    false,
+                );
             }
+            // create EntFire (step) cell
+            let step_cell = CPulseCell_Step_EntFire::new(input_value.clone());
+            graph_def.cells.push(Box::from(step_cell));
+            // now build instructions and bindings to get the domain value, and invoke the cell
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+
+            // add invoke binding for FireAtName cell
+            let mut register_map = RegisterMap::default();
+            register_map.add_inparam("TargetName", reg_entity);
+            if param_value_exists {  
+                register_map.add_inparam("pParam", reg_param);
+            }
+            let binding = InvokeBinding {
+                register_map: register_map,
+                func_name: "FireAtName",
+                cell_index: graph_def.cells.len() as i32 - 1,
+                src_chunk: target_chunk,
+                src_instruction: chunk.get_last_instruction_id() + 1,
+            };
+            let binding_idx = graph_def.add_invoke_binding(binding);
+            // add instruction for invoking the binding.
+            // rust doesn't like reusing the borrowed chunks reference, but we know that it doesn't change.
+            graph_def
+                .chunks
+                .get_mut(target_chunk as usize)
+                .unwrap()
+                .add_instruction(instruction_templates::cell_invoke(binding_idx));
+
+            let output_connection = OutputConnection::new(
+                String::from("Step_EntFire:-1"),
+                entity_name_static_value,
+                input_value,
+                if param_value_exists {
+                    String::from("param")
+                } else {
+                    String::default()
+                },
+            );
+            graph_def.add_output_connection(output_connection);
+
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::ConcatString => {
             let id_a = current_node

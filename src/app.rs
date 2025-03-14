@@ -147,6 +147,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to variable name", self)
         }
     }
+
+    pub fn try_entity_name(self) -> anyhow::Result<String> {
+        if let PulseGraphValueType::EntityName { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to entity name", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph

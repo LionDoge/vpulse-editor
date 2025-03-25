@@ -4,9 +4,12 @@
     {
         "displayname": "Event_OnRoundStart",
         "libname": "CCSPointPulseAPI!Event_OnRoundStart",
-        "inparams": {
-            "nRoundNumber": "PVAL_INT"
-        }
+        "inparams": [
+            {
+                "name": "nRoundNumber",
+                "type": "PVAL_INT"
+            }
+        ]
     },
     {
         "displayname": "Event_OnRoundFreezeEnd",
@@ -15,10 +18,16 @@
     {
         "displayname": "Event_OnRoundEnd",
         "libname": "CCSPointPulseAPI!Event_OnRoundEnd",
-        "inparams": {
-            "nWinner": "PVAL_INT",
-            "nReason": "PVAL_INT"
-        }
+        "inparams": [
+            {
+                "name": "nWinner",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "nReason",
+                "type": "PVAL_INT"
+            }
+        ]
     }
 
     ],

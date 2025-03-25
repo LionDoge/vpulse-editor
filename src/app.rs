@@ -1,9 +1,9 @@
+use crate::bindings::GraphBindings;
 use crate::compiler::compile_graph;
 pub use crate::outputdefinition::*;
 use crate::pulsetypes::*;
 use core::panic;
 use eframe::egui::{self, ComboBox, DragValue};
-use eframe::glow::NONE;
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
 use serde::{Deserialize, Serialize};
@@ -43,8 +43,8 @@ impl Default for Vec3 {
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
-#[derive(PartialEq, Eq)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize, Clone))]
+#[derive(PartialEq, Eq, Clone)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseDataType {
     Scalar,
     Vec2,
@@ -210,6 +210,7 @@ pub struct PulseGraphState {
     pub variables: Vec<PulseVariable>,
 
     pub save_file_path: PathBuf,
+    pub bindings: GraphBindings,
 }
 
 // =========== Then, you need to implement some traits ============
@@ -223,7 +224,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
-            PulseDataType::EHandle => egui::Color32::from_rgb(11, 77, 31),
+            PulseDataType::EHandle => egui::Color32::from_rgb(11, 200, 31),
             PulseDataType::EntityName => egui::Color32::from_rgb(11, 77, 31),
             PulseDataType::Bool => egui::Color32::from_rgb(54, 61, 194),
             PulseDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
@@ -528,7 +529,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_scalar(graph, "out");
             }
             PulseNodeTemplate::FindEntByName => {
-                input_string(graph, "entName", InputParamKind::ConstantOnly);
+                input_entityname(graph, "entName");
                 input_string(graph, "entClass", InputParamKind::ConstantOnly);
                 output_ehandle(graph, "out");
             }
@@ -884,7 +885,8 @@ type MyEditorState = GraphEditorState<
     PulseGraphState,
 >;
 
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Default)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
@@ -931,22 +933,7 @@ fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, Pulse
         _ => todo!("Implement more type conversions"),
     }
 }
-
-#[cfg(feature = "persistence")]
 impl PulseGraphEditor {
-    /// If the persistence feature is enabled, Called once before the first frame.
-    /// Load previous app state (if any).
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let grph: PulseGraphEditor = cc
-            .storage
-            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
-            .unwrap_or_default();
-        Self {
-            state: grph.state,
-            user_state: grph.user_state,
-            outputs_dropdown_choices: vec![],
-        }
-    }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
         let param = self
             .state
@@ -1173,6 +1160,24 @@ impl PulseGraphEditor {
             _ => {}
         }
     }
+}
+
+#[cfg(feature = "persistence")]
+impl PulseGraphEditor {
+    /// If the persistence feature is enabled, Called once before the first frame.
+    /// Load previous app state (if any).
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let grph: PulseGraphEditor = cc
+            .storage
+            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
+            .unwrap_or_default();
+        Self {
+            state: grph.state,
+            user_state: grph.user_state,
+            outputs_dropdown_choices: vec![],
+        }
+    }
+    
 }
 
 // assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)

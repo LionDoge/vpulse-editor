@@ -162,7 +162,8 @@ impl PulseValueType {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseVariable {
     pub name: String,
     pub typ_and_default_value: PulseValueType,

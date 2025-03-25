@@ -9,6 +9,7 @@ mod pulsetypes;
 mod serialization;
 mod outputdefinition;
 mod compiler;
+mod bindings;
 pub use app::PulseGraphEditor;
 
 // ----------------------------------------------------------------------------

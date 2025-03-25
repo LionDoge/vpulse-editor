@@ -39,7 +39,12 @@ fn main() {
         options,
         Box::new(|cc| {
             cc.egui_ctx.set_visuals(Visuals::dark());
-            Ok(Box::new(PulseGraphEditor::new(cc)))
+            #[cfg(feature = "persistence")]
+            {
+                Ok(Box::new(PulseGraphEditor::new(cc)))
+            }
+            #[cfg(not(feature = "persistence"))]
+            Ok(Box::<PulseGraphEditor>::default())
         }),
     )
     .expect("Failed to run native example");

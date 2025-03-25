@@ -1,4 +1,4 @@
-use crate::bindings::GraphBindings;
+use crate::bindings::{GraphBindings, load_bindings};
 use crate::compiler::compile_graph;
 pub use crate::outputdefinition::*;
 use crate::pulsetypes::*;
@@ -12,6 +12,7 @@ use std::borrow::BorrowMut;
 use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
+// Compare this snippet from src/instruction_templates.rs:
 
 // ========= First, define your user data types =============
 
@@ -210,7 +211,6 @@ pub struct PulseGraphState {
     pub variables: Vec<PulseVariable>,
 
     pub save_file_path: PathBuf,
-    pub bindings: GraphBindings,
 }
 
 // =========== Then, you need to implement some traits ============
@@ -891,6 +891,7 @@ pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>,
+    bindings: GraphBindings,
 }
 
 fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
@@ -1162,20 +1163,38 @@ impl PulseGraphEditor {
     }
 }
 
-#[cfg(feature = "persistence")]
+//#[cfg(feature = "persistence")]
 impl PulseGraphEditor {
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        #[cfg(feature = "persistence")]
         let grph: PulseGraphEditor = cc
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
-        Self {
-            state: grph.state,
-            user_state: grph.user_state,
-            outputs_dropdown_choices: vec![],
-        }
+        #[cfg(not(feature = "persistence"))]
+        let mut grph: PulseGraphEditor = Default::default();
+        // Self {
+        //     state: grph.state,
+        //     user_state: grph.user_state,
+        //     outputs_dropdown_choices: vec![],
+        // }
+        let bindings = load_bindings(std::path::Path::new("bindings_cs2.json"));
+        match bindings {
+            Ok(bindings) => {
+                grph.bindings = bindings;
+            }
+            Err(e) => {
+                MessageDialog::new()
+                    .set_level(rfd::MessageLevel::Error)
+                    .set_title("Failed to load bindings for CS2")
+                    .set_buttons(rfd::MessageButtons::Ok)
+                    .set_description(e.to_string())
+                    .show();
+            }
+        };
+        grph
     }
     
 }

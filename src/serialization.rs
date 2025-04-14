@@ -4,7 +4,7 @@
 use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-use crate::{app::OutputDefinition, pulsetypes::*};
+use crate::{app::OutputDefinition, pulsetypes::*, typing::{PulseValueType, Vec3}};
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -503,8 +503,8 @@ pub enum PulseConstant {
     String(String),
     Float(f32),
     Integer(i32),
-    Vec3(crate::app::Vec3),
-    Color_RGB(crate::app::Vec3),
+    Vec3(Vec3),
+    Color_RGB(Vec3),
     Bool(bool),
 }
 impl KV3Serialize for PulseConstant {
@@ -579,6 +579,7 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle
             PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
             PulseValueType::PVAL_INVALID => String::from("null"),
+            PulseValueType::PVAL_BOOL => String::from("false"),
         };
         formatdoc!{"
             {{

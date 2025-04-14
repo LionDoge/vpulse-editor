@@ -10,6 +10,7 @@ mod serialization;
 mod outputdefinition;
 mod compiler;
 mod bindings;
+mod typing;
 pub use app::PulseGraphEditor;
 
 // ----------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 #![allow(nonstandard_style)]
 use std::fmt;
 use serde::{Deserialize, Serialize};
+use crate::typing::{PulseValueType, Vec3};
 
-use crate::{app::{PulseDataType, Vec3}, serialization::{PulseRuntimeArgument, RegisterMap}};
+use crate::{app::{PulseDataType}, serialization::{PulseRuntimeArgument, RegisterMap}};
 
 pub enum CellType {
     Inflow,
@@ -125,44 +126,7 @@ impl CPulseCell_Inflow_GraphHook {
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub enum PulseValueType {
-    PVAL_INT(Option<i32>),
-    PVAL_FLOAT(Option<f32>),
-    PVAL_STRING(Option<String>),
-    PVAL_INVALID,
-    PVAL_EHANDLE(Option<String>),
-    PVAL_VEC3(Option<Vec3>),
-    PVAL_COLOR_RGB(Option<Vec3>),
-    DOMAIN_ENTITY_NAME,
-}
-impl fmt::Display for PulseValueType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
-            PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
-            PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
-            PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", ent_type.clone().unwrap_or_default()),
-            PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
-            PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
-        }
-    }
-}
-impl PulseValueType {
-    pub fn get_operation_suffix_name(&self) -> &'static str {
-        return match self {
-            PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
-            PulseValueType::PVAL_INT(_) => "_INT",
-            PulseValueType::PVAL_VEC3(_) => "", // Vec3 uses generic comparison (I think)
-            PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
-            PulseValueType::PVAL_STRING(_) => "_STRING",
-            _ => ""
-        }
-    }
-}
 
-#[derive(Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseVariable {
     pub name: String,

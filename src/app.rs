@@ -1,5 +1,6 @@
-use crate::bindings::{GraphBindings, load_bindings};
+use crate::bindings::{load_bindings, EventBinding, GraphBindings};
 use crate::compiler::compile_graph;
+use crate::typing::{PulseValueType, Vec3};
 pub use crate::outputdefinition::*;
 use crate::pulsetypes::*;
 use core::panic;
@@ -24,28 +25,11 @@ pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
     pub custom_named_outputs: HashMap<OutputId, String>,
 }
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
-pub struct Vec3 {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-impl Default for Vec3 {
-    fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
-}
 
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
-#[derive(PartialEq, Eq, Clone)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+#[derive(PartialEq, Eq, Clone, Serialize, Deserialize, Debug)]
 pub enum PulseDataType {
     Scalar,
     Vec2,
@@ -58,6 +42,7 @@ pub enum PulseDataType {
     InternalOutputName,
     InternalVariableName,
     Typ,
+    EventBindingChoice,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -81,6 +66,7 @@ pub enum PulseGraphValueType {
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
     Typ { value: PulseValueType },
+    EventBindingChoice { value: String },
 }
 
 impl Default for PulseGraphValueType {
@@ -190,13 +176,14 @@ pub enum PulseNodeTemplate {
 /// node in the graph. Most side-effects (creating new nodes, deleting existing
 /// nodes, handling connections...) are already handled by the library, but this
 /// mechanism allows creating additional side effects from user code.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
     AddOutputParam(NodeId, String),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
     ChangeParamType(NodeId, String, PulseValueType),
+    ChangeEventBinding(NodeId, EventBinding)
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -211,6 +198,7 @@ pub struct PulseGraphState {
     pub variables: Vec<PulseVariable>,
 
     pub save_file_path: PathBuf,
+    pub bindings: GraphBindings,
 }
 
 // =========== Then, you need to implement some traits ============
@@ -230,6 +218,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::InternalOutputName => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Typ => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::EventBindingChoice => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -246,6 +235,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::InternalOutputName => Cow::Borrowed("Output name"),
             PulseDataType::InternalVariableName => Cow::Borrowed("Variable name"),
             PulseDataType::Typ => Cow::Borrowed("Type"),
+            PulseDataType::EventBindingChoice => Cow::Borrowed("Event binding"),
         }
     }
 }
@@ -818,6 +808,24 @@ impl WidgetValueTrait for PulseGraphValueType {
                         });
                 });
             }
+            PulseGraphValueType::EventBindingChoice { value } => {
+                ui.horizontal(|ui| { 
+                    ui.label("Event");
+                    ComboBox::from_id_salt(_node_id)
+                        .selected_text(value.clone())
+                        .show_ui(ui, |ui| {
+                            for event in _user_state.bindings.events.iter() {
+                                if ui.selectable_value(value, 
+                                    event.displayname.clone(),
+                                     event.displayname.clone()).clicked() {
+                                    responses.push(
+                                        PulseGraphResponse::ChangeEventBinding(_node_id, event.clone())
+                                    );
+                                }
+                            }
+                        });
+                });
+            }
         }
         // This allows you to return your responses from the inline widgets.
         responses
@@ -891,7 +899,6 @@ pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
     outputs_dropdown_choices: Vec<PulseValueType>,
-    bindings: GraphBindings,
 }
 
 fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
@@ -1161,6 +1168,31 @@ impl PulseGraphEditor {
             _ => {}
         }
     }
+
+    fn update_event_binding_params(&mut self, node_id: &NodeId, binding: &EventBinding) {
+        let output_ids: Vec<_> = {
+            let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
+            node.output_ids().collect()
+        };
+        for output in output_ids {
+            self.state.graph.remove_output_param(output);
+        }
+        for param in binding.inparams.as_ref().unwrap() {
+            let valtyp = match param.typ.as_str() {
+                "string" => PulseGraphValueType::String {
+                    value: String::default(),
+                },
+                "int" => PulseGraphValueType::Scalar { value: 0f32 },
+                "float" => PulseGraphValueType::Scalar { value: 0f32 },
+                _ => PulseGraphValueType::Scalar { value: 0f32 },
+            };
+            self.state.graph.add_output_param(
+                *node_id,
+                String::from(param.name.as_str()),
+                valtyp,
+            );
+        }
+    }
 }
 
 //#[cfg(feature = "persistence")]
@@ -1183,7 +1215,7 @@ impl PulseGraphEditor {
         let bindings = load_bindings(std::path::Path::new("bindings_cs2.json"));
         match bindings {
             Ok(bindings) => {
-                grph.bindings = bindings;
+                grph.user_state.bindings = bindings;
             }
             Err(e) => {
                 MessageDialog::new()
@@ -1513,6 +1545,10 @@ impl eframe::App for PulseGraphEditor {
                     }
                     PulseGraphResponse::ChangeParamType(node_id, name, typ) => {
                         self.update_node_inputs_outputs_types(node_id, &name, Some(typ));
+                    }
+                    PulseGraphResponse::ChangeEventBinding(node_id, bindings) => {
+                        //let node = self.state.graph.nodes.get_mut(node_id).unwrap();
+                        self.update_event_binding_params(&node_id, &bindings);
                     }
                 }
             }

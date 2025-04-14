@@ -3,11 +3,11 @@ use serde::Deserialize;
 use std::path::Path;
 use serde_json::from_str;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct ParamInfo {
-    name: String,
+    pub name: String,
     #[serde(rename = "type")]
-    typ: String,
+    pub typ: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -19,17 +19,17 @@ pub struct FunctionBinding {
     inparams: Option<Vec<ParamInfo>>,
     outparams: Option<Vec<ParamInfo>>
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EventBinding {
-    displayname: String,
-    libname: String,
-    inparams: Option<Vec<ParamInfo>>,
+    pub displayname: String,
+    pub libname: String,
+    pub inparams: Option<Vec<ParamInfo>>,
 }
 
 #[derive(Deserialize, Debug, Default)]
 pub struct GraphBindings {
-    gamefunctions: Vec<FunctionBinding>,
-    events: Vec<EventBinding>
+    pub gamefunctions: Vec<FunctionBinding>,
+    pub events: Vec<EventBinding>
 }
 
 pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::io::Error> {

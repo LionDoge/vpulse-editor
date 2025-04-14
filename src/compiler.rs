@@ -5,6 +5,7 @@ use crate::app::{
 use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
+use crate::typing::PulseValueType;
 use egui_node_graph2::*;
 use std::fs;
 

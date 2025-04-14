@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-
-use crate::pulsetypes::*;
+use crate::typing::PulseValueType;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OutputDefinition {

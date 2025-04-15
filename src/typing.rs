@@ -1,7 +1,9 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use anyhow::Error;
+use crate::app::{PulseDataType, PulseGraphValueType};
 
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum PulseTypeError {
     StringToEnumConversionMissing(String),
     StringToEnumSubtypeParseError(String),
@@ -37,19 +39,27 @@ impl Default for Vec3 {
 #[allow(non_camel_case_types)]
 pub enum PulseValueType {
     PVAL_INT(Option<i32>),
+    PVAL_TYPESAFE_INT(Option<String>, Option<i32>),
     PVAL_FLOAT(Option<f32>),
     PVAL_STRING(Option<String>),
     PVAL_INVALID,
     PVAL_EHANDLE(Option<String>),
     PVAL_VEC3(Option<Vec3>),
     PVAL_COLOR_RGB(Option<Vec3>),
+    PVAL_SNDEVT_GUID(Option<String>),
     PVAL_BOOL,
     DOMAIN_ENTITY_NAME,
+}
+impl Default for PulseValueType {
+    fn default() -> Self {
+        PulseValueType::PVAL_INVALID
+    }
 }
 impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
+            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => write!(f, "PVAL_TYPESAFE_INT:{}", int_type.clone().unwrap_or_default()),
             PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
@@ -58,6 +68,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
+            PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
         }
     }
 }
@@ -76,7 +87,7 @@ impl PulseValueType {
 
 pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeError> {
     match s {
-        "PVAL_INT" => Ok(PulseValueType::PVAL_INT(None)),
+        "PVAL_INT" | "PVAL_TYPESAFE_INT" => Ok(PulseValueType::PVAL_INT(None)),
         "PVAL_FLOAT" => Ok(PulseValueType::PVAL_FLOAT(None)),
         "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL),
         "PVAL_STRING" => Ok(PulseValueType::PVAL_STRING(None)),
@@ -84,6 +95,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_VEC3" => Ok(PulseValueType::PVAL_VEC3(None)),
         "PVAL_COLOR_RGB" => Ok(PulseValueType::PVAL_COLOR_RGB(None)),
         "PVAL_INVALID" => Ok(PulseValueType::PVAL_INVALID),
+        "PVAL_SNDEVT_GUID" => Ok(PulseValueType::PVAL_SNDEVT_GUID(None)),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
@@ -92,5 +104,53 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }
         }
+    }
+}
+
+pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
+    return match typ {
+        PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0f32 },
+        PulseDataType::String => PulseGraphValueType::String {
+            value: String::default(),
+        },
+        PulseDataType::Vec3 => PulseGraphValueType::Vec3 {
+            value: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        },
+        PulseDataType::EHandle => PulseGraphValueType::EHandle,
+        _ => PulseGraphValueType::Scalar { value: 0f32 },
+    };
+}
+
+pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, PulseGraphValueType) {
+    match typ {
+        PulseValueType::PVAL_INT(_) | PulseValueType::PVAL_FLOAT(_) => (
+            PulseDataType::Scalar,
+            PulseGraphValueType::Scalar { value: 0f32 },
+        ),
+        PulseValueType::PVAL_VEC3(_) => (
+            PulseDataType::Vec3,
+            PulseGraphValueType::Vec3 {
+                value: Vec3::default(),
+            },
+        ),
+        PulseValueType::PVAL_STRING(_) => (
+            PulseDataType::String,
+            PulseGraphValueType::String {
+                value: String::default(),
+            },
+        ),
+        PulseValueType::PVAL_BOOL => (PulseDataType::Scalar, PulseGraphValueType::Scalar { value: 0f32 }),
+        PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
+        PulseValueType::PVAL_COLOR_RGB(_) => (
+            PulseDataType::Vec3,
+            PulseGraphValueType::Vec3 {
+                value: Vec3::default(),
+            },
+        ),
+        _ => todo!("Implement more type conversions"),
     }
 }

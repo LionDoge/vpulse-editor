@@ -568,6 +568,7 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_STRING(value) => format!("\"{}\"", value.clone().unwrap_or_default()),
             PulseValueType::PVAL_FLOAT(value) => format!("{:.6}", value.unwrap_or_default()),
             PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
+            PulseValueType::PVAL_TYPESAFE_INT(_, value) => format!("{:?}", value.unwrap_or_default()),
             PulseValueType::PVAL_VEC3(value) => {
                 let val = value.unwrap_or_default();
                 format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
@@ -580,6 +581,8 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
             PulseValueType::PVAL_INVALID => String::from("null"),
             PulseValueType::PVAL_BOOL => String::from("false"),
+            PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
+            
         };
         formatdoc!{"
             {{

@@ -1,6 +1,6 @@
 use crate::bindings::{load_bindings, EventBinding, GraphBindings};
 use crate::compiler::compile_graph;
-use crate::typing::{PulseValueType, Vec3};
+use crate::typing::{PulseValueType, Vec3, data_type_to_value_type, pulse_value_type_to_node_types};
 pub use crate::outputdefinition::*;
 use crate::pulsetypes::*;
 use core::panic;
@@ -66,7 +66,7 @@ pub enum PulseGraphValueType {
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
     Typ { value: PulseValueType },
-    EventBindingChoice { value: String },
+    EventBindingChoice { value: EventBinding },
 }
 
 impl Default for PulseGraphValueType {
@@ -140,6 +140,14 @@ impl PulseGraphValueType {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to entity name", self)
+        }
+    }
+
+    pub fn try_event_binding(self) -> anyhow::Result<EventBinding> {
+        if let PulseGraphValueType::EventBindingChoice { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to event binding", self)
         }
     }
 }
@@ -503,8 +511,15 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::EventHandler => {
-                input_action(graph);
-                input_string(graph, "eventName", InputParamKind::ConstantOnly);
+                graph.add_input_param(
+                    node_id,
+                    String::from("event"),
+                    PulseDataType::EventBindingChoice,
+                    PulseGraphValueType::EventBindingChoice 
+                    { value: _user_state.bindings.events[0].clone() },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::IntToString => {
@@ -812,12 +827,13 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| { 
                     ui.label("Event");
                     ComboBox::from_id_salt(_node_id)
-                        .selected_text(value.clone())
+                        .selected_text(value.displayname.clone())
                         .show_ui(ui, |ui| {
                             for event in _user_state.bindings.events.iter() {
-                                if ui.selectable_value(value, 
-                                    event.displayname.clone(),
-                                     event.displayname.clone()).clicked() {
+                                let str = event.displayname.as_str();
+                                if ui.selectable_value::<EventBinding>(value, 
+                                    event.clone(),
+                                     str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeEventBinding(_node_id, event.clone())
                                     );
@@ -901,46 +917,7 @@ pub struct PulseGraphEditor {
     outputs_dropdown_choices: Vec<PulseValueType>,
 }
 
-fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
-    return match typ {
-        PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0f32 },
-        PulseDataType::String => PulseGraphValueType::String {
-            value: String::default(),
-        },
-        PulseDataType::Vec3 => PulseGraphValueType::Vec3 {
-            value: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-        },
-        PulseDataType::EHandle => PulseGraphValueType::EHandle,
-        _ => PulseGraphValueType::Scalar { value: 0f32 },
-    };
-}
 
-fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, PulseGraphValueType) {
-    match typ {
-        PulseValueType::PVAL_INT(_) | PulseValueType::PVAL_FLOAT(_) => (
-            PulseDataType::Scalar,
-            PulseGraphValueType::Scalar { value: 0f32 },
-        ),
-        PulseValueType::PVAL_VEC3(_) => (
-            PulseDataType::Vec3,
-            PulseGraphValueType::Vec3 {
-                value: Vec3::default(),
-            },
-        ),
-        PulseValueType::PVAL_STRING(_) => (
-            PulseDataType::String,
-            PulseGraphValueType::String {
-                value: String::default(),
-            },
-        ),
-        PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
-        _ => todo!("Implement more type conversions"),
-    }
-}
 impl PulseGraphEditor {
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
         let param = self
@@ -1177,20 +1154,17 @@ impl PulseGraphEditor {
         for output in output_ids {
             self.state.graph.remove_output_param(output);
         }
-        for param in binding.inparams.as_ref().unwrap() {
-            let valtyp = match param.typ.as_str() {
-                "string" => PulseGraphValueType::String {
-                    value: String::default(),
-                },
-                "int" => PulseGraphValueType::Scalar { value: 0f32 },
-                "float" => PulseGraphValueType::Scalar { value: 0f32 },
-                _ => PulseGraphValueType::Scalar { value: 0f32 },
-            };
-            self.state.graph.add_output_param(
-                *node_id,
-                String::from(param.name.as_str()),
-                valtyp,
-            );
+        // TODO: maybe instead of adding this back instead check in the upper loop, altho is seems a bit involved
+        // so maybe this is just more efficient?
+        self.state.graph.add_output_param(*node_id, "outAction".to_string(), PulseDataType::Action);
+        if let Some(inparams) = &binding.inparams {
+            for param in inparams {
+                self.state.graph.add_output_param(
+                    *node_id,
+                    param.name.clone(),
+                    pulse_value_type_to_node_types(&param.pulsetype).0,
+                );
+            }
         }
     }
 }

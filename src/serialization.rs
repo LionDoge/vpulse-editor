@@ -233,11 +233,11 @@ impl KV3Serialize for Register {
 
 #[derive(Default)]
 pub struct RegisterMap {
-    pub inparams: Vec<(&'static str, i32)>,
+    pub inparams: Vec<(String, i32)>,
     pub outparams: Vec<(String, i32)>,
 }
 impl RegisterMap {
-    pub fn add_inparam(&mut self, name: &'static str, num: i32) {
+    pub fn add_inparam(&mut self, name: String, num: i32) {
         self.inparams.push((name, num));
     }
     pub fn add_outparam(&mut self, name: String, num: i32) {

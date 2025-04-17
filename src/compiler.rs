@@ -1428,7 +1428,7 @@ fn traverse_nodes_and_populate(
                         // we already have a register for this output, so we don't need to invoke the binding again.
                         evaluation_required = false;
                     }
-                    register_map.add_outparam("retval".into(), 0);
+                    register_map.add_outparam("retval".into(), reg_output);
                 }
             }
             if evaluation_required {

@@ -6,6 +6,7 @@ use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
 use crate::typing::PulseValueType;
+use crate::bindings::LibraryBindingType;
 use egui_node_graph2::*;
 use std::fs;
 
@@ -1373,19 +1374,54 @@ fn traverse_nodes_and_populate(
                         param.pulsetype.clone(),
                         false
                     );
-                    register_map.add_inparam(param.name.into(), inp);
+                    register_map.add_inparam(param.name.clone().into(), inp);
                 }
             }
 
-            let invoke_binding = InvokeBinding {
-                register_map,
-                func_name: binding.libname.into(),
-                cell_index: -1,
-                src_chunk: -1,
-                src_instruction: -1,
-            };
-            // chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
-            // graph_def.add_invoke_binding(binding);
+            let mut reg_output = -1;
+            let mut evaluation_required: bool = true; // set to true if we need to invoke something instead of re-using the register
+            if let Some(outparams) = binding.outparams {
+                // super dirty assumption as we only support one return value for now.
+                if outparams.len() > 1 {
+                    todo!("InvokeLibraryBinding node: More than one output parameter is not supported yet.");
+                }
+                if let Some(retval) = outparams.first() {
+                    reg_output = try_find_output_mapping(graph_def, output_id);
+                    if reg_output == -1 {
+                        let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                        reg_output = chunk.add_register(
+                            retval.pulsetype.to_string(),
+                            chunk.get_last_instruction_id() + 1,
+                        );
+                        if let Some(out) = output_id {
+                            graph_def.add_register_mapping(*out, reg_output);
+                        }
+                    } else {
+                        // we already have a register for this output, so we don't need to invoke the binding again.
+                        evaluation_required = false;
+                    }
+                    register_map.add_outparam("retval".into(), 0);
+                }
+            }
+            if evaluation_required {
+                let invoke_binding = InvokeBinding {
+                    register_map,
+                    func_name: binding.libname.into(),
+                    cell_index: -1,
+                    src_chunk: -1,
+                    src_instruction: -1,
+                };
+                let new_binding_id = graph_def.get_current_binding_id() + 1;
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
+                graph_def.add_invoke_binding(invoke_binding);
+            }
+            match binding.typ {
+                LibraryBindingType::Action => {
+                    graph_next_action!(graph, current_node, graph_def, target_chunk);
+                },
+                LibraryBindingType::Value => return reg_output,
+            }
         }
         _ => todo!(
             "Implement node template: {:?}",

@@ -650,7 +650,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::IsValidEntity => {
                 input_action(graph);
-                input_ehandle(graph, "pEntity");
+                input_ehandle(graph, "hEntity");
                 output_action(graph, "True");
                 output_action(graph, "False");
             }

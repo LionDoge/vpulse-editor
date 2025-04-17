@@ -442,79 +442,80 @@ fn traverse_nodes_and_populate(
             return try_find_output_mapping(graph_def, output_id);
         }
         PulseNodeTemplate::CellWait => {
-            let time_input_id = current_node
-                .get_input("time")
-                .expect("Can't find input 'time'");
-            let connection_to_time = graph.connection(time_input_id);
-            let time_input_register: i32;
-            match connection_to_time {
-                Some(out) => {
-                    // get existing register id to note for the wait time
-                    let out_param = graph.get_output(out);
-                    let out_node = graph
-                        .nodes
-                        .get(out_param.node)
-                        .expect("Can't find output node");
-                    time_input_register = traverse_nodes_and_populate(
-                        graph,
-                        out_node,
-                        graph_def,
-                        target_chunk,
-                        &Some(out),
-                    );
-                }
-                None => {
-                    // create a constant value for the wait time
-                    // have to do this way because of the borrow checker's mutability rules.
-                    let new_constant_id = graph_def.get_current_constant_id() + 1;
+            let reg_time = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "time",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            );
+            // match connection_to_time {
+            //     Some(out) => {
+            //         // get existing register id to note for the wait time
+            //         let out_param = graph.get_output(out);
+            //         let out_node = graph
+            //             .nodes
+            //             .get(out_param.node)
+            //             .expect("Can't find output node");
+            //         time_input_register = traverse_nodes_and_populate(
+            //             graph,
+            //             out_node,
+            //             graph_def,
+            //             target_chunk,
+            //             &Some(out),
+            //         );
+            //     }
+            //     None => {
+            //         // create a constant value for the wait time
+            //         // have to do this way because of the borrow checker's mutability rules.
+            //         let new_constant_id = graph_def.get_current_constant_id() + 1;
 
-                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                    // add a new register to store the wait time
-                    time_input_register = chunk.add_register(
-                        String::from("PVAL_FLOAT"),
-                        chunk.get_last_instruction_id() + 1,
-                    );
-                    // get the wait time constant
-                    let instruction =
-                        instruction_templates::get_const(new_constant_id, time_input_register);
-                    chunk.add_instruction(instruction);
-                    // add the actual constant definition for the waiting time
-                    let value_param = graph.get_input(time_input_id);
-                    let time = value_param
-                        .value()
-                        .clone()
-                        .try_to_scalar()
-                        .expect("Failed to unwrap input value");
-                    let constant = PulseConstant::Float(time);
-                    graph_def.add_constant(constant);
-                }
-            }
+            //         let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            //         // add a new register to store the wait time
+            //         time_input_register = chunk.add_register(
+            //             String::from("PVAL_FLOAT"),
+            //             chunk.get_last_instruction_id() + 1,
+            //         );
+            //         // get the wait time constant
+            //         let instruction =
+            //             instruction_templates::get_const(new_constant_id, time_input_register);
+            //         chunk.add_instruction(instruction);
+            //         // add the actual constant definition for the waiting time
+            //         let value_param = graph.get_input(time_input_id);
+            //         let time = value_param
+            //             .value()
+            //             .clone()
+            //             .try_to_scalar()
+            //             .expect("Failed to unwrap input value");
+            //         let constant = PulseConstant::Float(time);
+            //         graph_def.add_constant(constant);
+            //     }
+            // }
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // ! Important (might change). We assume that after waiting we go to the next instruction after the cell invoke.
             let cell_wait =
                 CPulseCell_Inflow_Wait::new(target_chunk, chunk.get_last_instruction_id() + 3);
             graph_def.cells.push(Box::from(cell_wait));
 
-            let chunk_opt = graph_def.chunks.get(target_chunk as usize);
-            if chunk_opt.is_some() {
-                let chunk = chunk_opt.unwrap();
-                let mut register_map = RegisterMap::default();
-                register_map.add_inparam("flDurationSec".into(), time_input_register);
-                let binding = InvokeBinding {
-                    register_map,
-                    func_name: "Wait".into(),
-                    cell_index: graph_def.cells.len() as i32 - 1,
-                    src_chunk: target_chunk,
-                    src_instruction: chunk.get_last_instruction_id() + 1,
-                };
-                let binding_idx = graph_def.add_invoke_binding(binding);
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                chunk.add_instruction(instruction_templates::cell_invoke(binding_idx));
-                // early return.
-                let mut instr_ret_void = Instruction::default();
-                instr_ret_void.code = String::from("RETURN_VOID");
-                chunk.add_instruction(instr_ret_void);
-            }
+            let chunk = graph_def.chunks.get(target_chunk as usize).unwrap();
+            let mut register_map = RegisterMap::default();
+            register_map.add_inparam("flDurationSec".into(), reg_time);
+            let binding = InvokeBinding {
+                register_map,
+                func_name: "Wait".into(),
+                cell_index: graph_def.cells.len() as i32 - 1,
+                src_chunk: target_chunk,
+                src_instruction: chunk.get_last_instruction_id() + 1,
+            };
+            let binding_idx = graph_def.add_invoke_binding(binding);
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            chunk.add_instruction(instruction_templates::cell_invoke(binding_idx));
+            // early return.
+            let mut instr_ret_void = Instruction::default();
+            instr_ret_void.code = String::from("RETURN_VOID");
+            chunk.add_instruction(instr_ret_void);
 
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }

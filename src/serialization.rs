@@ -106,8 +106,8 @@ impl KV3Serialize for CPulseCell_Inflow_Wait {
                 m_WakeResume = 
                 {{
                     m_SourceOutflowName = \"m_WakeResume\"
-                    m_DestChunk = {}
-                    m_Instruction = {}
+                    m_nDestChunk = {}
+                    m_nInstruction = {}
                 }}
             }}
             "

@@ -4,6 +4,13 @@ use serde_json::from_str;
 use crate::typing::{PulseValueType, PulseTypeError, try_string_to_pulsevalue};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum LibraryBindingType {
+    Action,
+    Value,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct ParamInfo {
     pub name: String,
     #[serde(rename = "type")]
@@ -12,14 +19,14 @@ pub struct ParamInfo {
     pub pulsetype: PulseValueType,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct FunctionBinding {
     #[serde(rename = "type")]
-    typ: String,
-    displayname: String,
-    libname: String,
-    inparams: Option<Vec<ParamInfo>>,
-    outparams: Option<Vec<ParamInfo>>
+    pub typ: LibraryBindingType,
+    pub displayname: String,
+    pub libname: String,
+    pub inparams: Option<Vec<ParamInfo>>,
+    pub outparams: Option<Vec<ParamInfo>>
 }
 #[derive(Deserialize, Debug, Clone, PartialEq, Default)]
 pub struct EventBinding {

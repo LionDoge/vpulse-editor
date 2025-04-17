@@ -1,4 +1,5 @@
 use std::fmt;
+use egui_node_graph2::InputParamKind;
 use serde::{Deserialize, Serialize};
 use anyhow::Error;
 use crate::app::{PulseDataType, PulseGraphValueType};
@@ -127,7 +128,7 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
 
 pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, PulseGraphValueType) {
     match typ {
-        PulseValueType::PVAL_INT(_) | PulseValueType::PVAL_FLOAT(_) => (
+        PulseValueType::PVAL_INT(_) | PulseValueType::PVAL_FLOAT(_) | PulseValueType::PVAL_TYPESAFE_INT(_, _) => (
             PulseDataType::Scalar,
             PulseGraphValueType::Scalar { value: 0f32 },
         ),
@@ -151,6 +152,25 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
                 value: Vec3::default(),
             },
         ),
+        PulseValueType::PVAL_SNDEVT_GUID(_) => (PulseDataType::SndEventHandle, PulseGraphValueType::SndEventHandle),
         _ => todo!("Implement more type conversions"),
     }
+}
+
+pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputParamKind {
+   match typ { 
+        PulseValueType::PVAL_INT(_)
+        | PulseValueType::PVAL_TYPESAFE_INT(_, _)
+        | PulseValueType::PVAL_FLOAT(_)
+        | PulseValueType::PVAL_STRING(_)
+        | PulseValueType::PVAL_VEC3(_)
+        | PulseValueType::DOMAIN_ENTITY_NAME
+        | PulseValueType::PVAL_COLOR_RGB(_) => InputParamKind::ConnectionOrConstant,
+
+        PulseValueType::PVAL_EHANDLE(_)
+        | PulseValueType::PVAL_SNDEVT_GUID(_)
+        | PulseValueType::PVAL_INVALID => InputParamKind::ConnectionOnly,
+        
+        PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
+   }
 }

@@ -1,6 +1,6 @@
-use crate::bindings::{load_bindings, EventBinding, GraphBindings};
+use crate::bindings::{load_bindings, EventBinding, FunctionBinding, GraphBindings, LibraryBindingType};
 use crate::compiler::compile_graph;
-use crate::typing::{PulseValueType, Vec3, data_type_to_value_type, pulse_value_type_to_node_types};
+use crate::typing::{data_type_to_value_type, get_preffered_inputparamkind_from_type, pulse_value_type_to_node_types, PulseValueType, Vec3};
 pub use crate::outputdefinition::*;
 use crate::pulsetypes::*;
 use core::panic;
@@ -38,11 +38,13 @@ pub enum PulseDataType {
     Bool,
     Action,
     EHandle,
+    SndEventHandle,
     EntityName,
     InternalOutputName,
     InternalVariableName,
     Typ,
     EventBindingChoice,
+    LibraryBindingChoice,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -61,12 +63,14 @@ pub enum PulseGraphValueType {
     Bool { value: bool },
     Vec3 { value: Vec3 },
     EHandle,
+    SndEventHandle,
     EntityName { value: String },
     Action,
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
     Typ { value: PulseValueType },
     EventBindingChoice { value: EventBinding },
+    LibraryBindingChoice { value: FunctionBinding },
 }
 
 impl Default for PulseGraphValueType {
@@ -178,6 +182,7 @@ pub enum PulseNodeTemplate {
     Convert,
     ForLoop,
     StringToEntityName,
+    InvokeLibraryBinding,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -191,7 +196,8 @@ pub enum PulseGraphResponse {
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
     ChangeParamType(NodeId, String, PulseValueType),
-    ChangeEventBinding(NodeId, EventBinding)
+    ChangeEventBinding(NodeId, EventBinding),
+    ChangeFunctionBinding(NodeId, FunctionBinding),
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -227,6 +233,8 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::InternalVariableName => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Typ => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::EventBindingChoice => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::LibraryBindingChoice => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
         }
     }
 
@@ -244,6 +252,8 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::InternalVariableName => Cow::Borrowed("Variable name"),
             PulseDataType::Typ => Cow::Borrowed("Type"),
             PulseDataType::EventBindingChoice => Cow::Borrowed("Event binding"),
+            PulseDataType::LibraryBindingChoice => Cow::Borrowed("Library binding"),
+            PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
         }
     }
 }
@@ -279,6 +289,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Convert => "Convert",
             PulseNodeTemplate::ForLoop => "For loop",
             PulseNodeTemplate::StringToEntityName => "String to entity name",
+            PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding",
         })
     }
 
@@ -297,7 +308,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::IntToString | PulseNodeTemplate::Convert | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
             PulseNodeTemplate::DebugWorldText | PulseNodeTemplate::DebugLog => vec!["Debug"],
             PulseNodeTemplate::FireOutput => vec!["Outflow"],
-            PulseNodeTemplate::GetGameTime | PulseNodeTemplate::SetNextThink => {
+            PulseNodeTemplate::GetGameTime | PulseNodeTemplate::SetNextThink | PulseNodeTemplate::InvokeLibraryBinding => {
                 vec!["Game functions"]
             }
             PulseNodeTemplate::ForLoop => vec!["Loops"],
@@ -603,6 +614,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_string(graph, "entityName", InputParamKind::ConnectionOrConstant);
                 output_entityname(graph, "out");
             }
+            PulseNodeTemplate::InvokeLibraryBinding => {
+                graph.add_input_param(
+                    node_id,
+                    String::from("binding"),
+                    PulseDataType::LibraryBindingChoice,
+                    PulseGraphValueType::LibraryBindingChoice {
+                        value: _user_state.bindings.gamefunctions[0].clone(),
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+            }
         }
     }
 }
@@ -636,6 +659,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::Convert,
             PulseNodeTemplate::ForLoop,
             PulseNodeTemplate::StringToEntityName,
+            PulseNodeTemplate::InvokeLibraryBinding,
         ]
     }
 }
@@ -706,7 +730,10 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.label("Input action");
             }
             PulseGraphValueType::EHandle => {
-                ui.label("EHandle");
+                ui.label(format!("EHandle {}", param_name));
+            }
+            PulseGraphValueType::SndEventHandle => {
+                ui.label(format!("SNDEVT {}", param_name));
             }
             PulseGraphValueType::EntityName { value } => {
                 ui.horizontal(|ui| {
@@ -836,6 +863,25 @@ impl WidgetValueTrait for PulseGraphValueType {
                                      str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeEventBinding(_node_id, event.clone())
+                                    );
+                                }
+                            }
+                        });
+                });
+            }
+            PulseGraphValueType::LibraryBindingChoice { value } => {
+                ui.horizontal(|ui| { 
+                    ui.label("Function");
+                    ComboBox::from_id_salt(_node_id)
+                        .selected_text(value.displayname.clone())
+                        .show_ui(ui, |ui| {
+                            for func in _user_state.bindings.gamefunctions.iter() {
+                                let str = func.displayname.as_str();
+                                if ui.selectable_value::<FunctionBinding>(value, 
+                                    func.clone(),
+                                     str).clicked() {
+                                    responses.push(
+                                        PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
                                     );
                                 }
                             }
@@ -1143,6 +1189,60 @@ impl PulseGraphEditor {
                 );
             }
             _ => {}
+        }
+    }
+
+    fn update_library_binding_params(&mut self, node_id: &NodeId, binding: &FunctionBinding) {
+        let output_ids: Vec<_> = {
+            let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
+            node.output_ids().collect()
+        };
+        for output in output_ids {
+            self.state.graph.remove_output_param(output);
+        }
+        let input_ids: Vec<_> = {
+            let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
+            node.input_ids().collect()
+        };
+        let node = self.state.graph.nodes.get(*node_id).unwrap();
+        let binding_chooser_input_id = node.get_input("binding")
+        .expect("Expected 'Invoke library binding' node to have 'binding' input param");
+        for input in input_ids {
+            if input != binding_chooser_input_id {
+                self.state.graph.remove_input_param(input);
+            }
+        }
+        // If it's action type (nodes that usually don't provide a value) make it have in and out actions.
+        if binding.typ == LibraryBindingType::Action {
+            self.state.graph.add_output_param(*node_id, "outAction".to_string(), PulseDataType::Action);
+            self.state.graph.add_input_param(*node_id, "ActionIn".to_string(),
+            PulseDataType::Action,
+            PulseGraphValueType::Action,
+            InputParamKind::ConnectionOrConstant,
+            true);
+        }
+        if let Some(inparams) = &binding.inparams {
+            for param in inparams {
+                let connection_kind = get_preffered_inputparamkind_from_type(&param.pulsetype);
+                let graph_types = pulse_value_type_to_node_types(&param.pulsetype);
+                self.state.graph.add_input_param(
+                    *node_id,
+                    param.name.clone(),
+                    graph_types.0,
+                    graph_types.1,
+                    connection_kind,
+                    true,
+                );
+            }
+        }
+        if let Some(outparams) = &binding.outparams {
+            for param in outparams {
+                self.state.graph.add_output_param(
+                    *node_id,
+                    param.name.clone(),
+                    pulse_value_type_to_node_types(&param.pulsetype).0,
+                );
+            }
         }
     }
 
@@ -1523,6 +1623,10 @@ impl eframe::App for PulseGraphEditor {
                     PulseGraphResponse::ChangeEventBinding(node_id, bindings) => {
                         //let node = self.state.graph.nodes.get_mut(node_id).unwrap();
                         self.update_event_binding_params(&node_id, &bindings);
+                    }
+                    PulseGraphResponse::ChangeFunctionBinding(node_id, bindings) => {
+                        //let node = self.state.graph.nodes.get_mut(node_id).unwrap();
+                        self.update_library_binding_params(&node_id, &bindings);
                     }
                 }
             }

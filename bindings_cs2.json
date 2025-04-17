@@ -92,6 +92,23 @@
     },
     {
         "type": "value",
+        "displayname": "Get Entity Nav Mesh Position",
+        "libname": "CPulseServerFuncs!GetEntityNavMeshPosition",
+        "inparams": [
+            {
+                "name": "hEnt",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
         "displayname": "Get Entity Height Above World Collision",
         "libname": "CPulseServerFuncs!GetEntityHeightAboveWorldCollision",
         "inparams": [

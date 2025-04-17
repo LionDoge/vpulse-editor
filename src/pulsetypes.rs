@@ -2,9 +2,8 @@
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use crate::typing::{PulseValueType, Vec3};
-
 use crate::{app::{PulseDataType}, serialization::{PulseRuntimeArgument, RegisterMap}};
-
+use std::borrow::Cow;
 pub enum CellType {
     Inflow,
     Step,
@@ -38,7 +37,7 @@ impl GetCellType for CPulseCell_Inflow_Method {
 pub struct CPulseCell_Inflow_EventHandler {
     pub register_map: RegisterMap,
     pub entry_chunk: i32,
-    pub event_name: String,
+    pub event_name: Cow<'static, str>,
 }
 impl GetCellType for CPulseCell_Inflow_EventHandler {
     fn get_cell_type(&self) -> CellType {

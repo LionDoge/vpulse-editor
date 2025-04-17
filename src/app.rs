@@ -154,6 +154,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to event binding", self)
         }
     }
+
+    pub fn try_library_binding(self) -> anyhow::Result<FunctionBinding> {
+        if let PulseGraphValueType::LibraryBindingChoice { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to library binding", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph

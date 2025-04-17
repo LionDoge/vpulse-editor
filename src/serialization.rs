@@ -5,6 +5,7 @@ use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
 use crate::{app::OutputDefinition, pulsetypes::*, typing::{PulseValueType, Vec3}};
+use std::borrow::Cow;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -62,7 +63,7 @@ impl CPulseCell_Inflow_Method {
             typ,
         };
         self.args.push(arg);
-        self.register_map.add_outparam(name, out_register);
+        self.register_map.add_outparam(name.into(), out_register);
     }
 }
 
@@ -83,14 +84,14 @@ impl KV3Serialize for CPulseCell_Inflow_EventHandler {
     }
 }
 impl CPulseCell_Inflow_EventHandler {
-    pub fn new(entry_chunk: i32, event_name: String) -> CPulseCell_Inflow_EventHandler {
+    pub fn new(entry_chunk: i32, event_name: Cow<'static, str>) -> CPulseCell_Inflow_EventHandler {
         CPulseCell_Inflow_EventHandler {
             register_map: RegisterMap::default(),
             entry_chunk,
             event_name,
         }
     }
-    pub fn add_outparam(&mut self, name: String, num: i32) {
+    pub fn add_outparam(&mut self, name: Cow<'static, str>, num: i32) {
         self.register_map.add_outparam(name, num);
     }
 }
@@ -233,14 +234,14 @@ impl KV3Serialize for Register {
 
 #[derive(Default)]
 pub struct RegisterMap {
-    pub inparams: Vec<(String, i32)>,
-    pub outparams: Vec<(String, i32)>,
+    pub inparams: Vec<(Cow<'static, str>, i32)>,
+    pub outparams: Vec<(Cow<'static, str>, i32)>,
 }
 impl RegisterMap {
-    pub fn add_inparam(&mut self, name: String, num: i32) {
+    pub fn add_inparam(&mut self, name: Cow<'static, str>, num: i32) {
         self.inparams.push((name, num));
     }
-    pub fn add_outparam(&mut self, name: String, num: i32) {
+    pub fn add_outparam(&mut self, name: Cow<'static, str>, num: i32) {
         self.outparams.push((name, num));
     }
 }
@@ -392,7 +393,7 @@ impl KV3Serialize for PulseChunk {
 
 pub struct InvokeBinding {
     pub register_map: RegisterMap,
-    pub func_name: &'static str,
+    pub func_name: Cow<'static, str>,
     pub cell_index: i32,
     pub src_chunk: i32,
     pub src_instruction: i32

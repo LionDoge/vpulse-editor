@@ -191,6 +191,8 @@ pub enum PulseNodeTemplate {
     ForLoop,
     StringToEntityName,
     InvokeLibraryBinding,
+    FindEntitiesWithin,
+    IsValidEntity,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -298,6 +300,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ForLoop => "For loop",
             PulseNodeTemplate::StringToEntityName => "String to entity name",
             PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding",
+            PulseNodeTemplate::FindEntitiesWithin => "Find entities within",
+            PulseNodeTemplate::IsValidEntity => "Is valid entity",
         })
     }
 
@@ -307,7 +311,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CellPublicMethod
             | PulseNodeTemplate::EventHandler
             | PulseNodeTemplate::GraphHook => vec!["Inflow"],
-            PulseNodeTemplate::EntFire | PulseNodeTemplate::FindEntByName => vec!["Entities"],
+            PulseNodeTemplate::EntFire
+            | PulseNodeTemplate::FindEntByName
+            | PulseNodeTemplate::FindEntitiesWithin
+            | PulseNodeTemplate::IsValidEntity => vec!["Entities"],
             PulseNodeTemplate::Compare => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
@@ -634,6 +641,19 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     true,
                 );
             }
+            PulseNodeTemplate::FindEntitiesWithin => {
+                input_string(graph, "classname", InputParamKind::ConstantOnly);
+                input_ehandle(graph, "pSearchFromEntity");
+                input_scalar(graph, "flSearchRadius");
+                input_ehandle(graph, "pStartEntity");
+                output_ehandle(graph, "out");
+            }
+            PulseNodeTemplate::IsValidEntity => {
+                input_action(graph);
+                input_ehandle(graph, "pEntity");
+                output_action(graph, "True");
+                output_action(graph, "False");
+            }
         }
     }
 }
@@ -668,6 +688,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ForLoop,
             PulseNodeTemplate::StringToEntityName,
             PulseNodeTemplate::InvokeLibraryBinding,
+            PulseNodeTemplate::FindEntitiesWithin,
+            PulseNodeTemplate::IsValidEntity,
         ]
     }
 }

@@ -197,6 +197,21 @@ impl KV3Serialize for CPulseCell_Step_PublicOutput {
     }
 }
 
+impl KV3Serialize for CPulseCell_Value_FindEntByClassNameWithin {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Value_FindEntByClassNameWithin\"
+                m_nEditorNodeID = -1
+                m_EntityType = \"{}\"
+            }}
+            "
+            , self.entity_type
+        }
+    }
+}
+
 impl KV3Serialize for CPulseCell_Inflow_GraphHook {
     fn serialize(&self) -> String {
         formatdoc!{

@@ -100,7 +100,21 @@ impl CPulseCell_Step_PublicOutput {
         }
     }
 }
-
+pub struct CPulseCell_Value_FindEntByClassNameWithin {
+    pub (super) entity_type: String,
+}
+impl CPulseCell_Value_FindEntByClassNameWithin {
+    pub fn new(entity_type: String) -> Self {
+        Self {
+            entity_type
+        }
+    }
+}
+impl GetCellType for CPulseCell_Value_FindEntByClassNameWithin {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Value
+    }
+}
 pub struct CPulseCell_Inflow_GraphHook {
     pub(super) hook_name: String,
     pub(super) register_map: RegisterMap,

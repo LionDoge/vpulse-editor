@@ -40,6 +40,34 @@ macro_rules! get_constant_graph_input_value {
     }};
 }
 
+macro_rules! get_connection_only_graph_input_value {
+    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $target_chunk:ident) => {{
+        let input_id = $node
+            .get_input($input)
+            .expect(format!("Can't find input {}", $input).as_str());
+        let connection = $graph.connection(input_id);
+        let result: i32 = if connection.is_some() {
+            let connection = connection.unwrap();
+            let param = $graph.get_output(connection);
+            let out_node = $graph
+                .nodes
+                .get(param.node)
+                .expect("Can't find output node");
+            traverse_nodes_and_populate(
+                $graph,
+                out_node,
+                $graph_def,
+                $target_chunk,
+                &Some(connection),
+            )
+        } else {
+            -1
+        };
+        result
+    }}
+    
+}
+
 fn get_connected_output_node(graph: &PulseGraph, out_action_id: &OutputId) -> Option<NodeId> {
     // dumb way of finding outgoing connection node.
     for group in graph.iter_connection_groups() {
@@ -1421,6 +1449,156 @@ fn traverse_nodes_and_populate(
                     graph_next_action!(graph, current_node, graph_def, target_chunk);
                 },
                 LibraryBindingType::Value => return reg_output,
+            }
+        }
+        PulseNodeTemplate::FindEntitiesWithin => {
+            let classname = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "classname",
+                try_to_string
+            );
+            let reg_searchfroment = get_connection_only_graph_input_value!(
+                graph,
+                current_node,
+                "pSearchFromEntity",
+                graph_def,
+                target_chunk
+            );
+            let reg_radius = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "flSearchRadius",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            );
+            let reg_startentity = get_connection_only_graph_input_value!(
+                graph,
+                current_node,
+                "pStartEntity",
+                graph_def,
+                target_chunk
+            );
+
+            let new_binding_idx = graph_def.get_current_binding_id() + 1;
+            let mut register_map = RegisterMap::default();
+            let mut reg_output = try_find_output_mapping(graph_def, output_id);
+            if reg_output == -1 {
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                reg_output = chunk.add_register(
+                    PulseValueType::PVAL_EHANDLE(Some(classname.clone())).to_string(),
+                    chunk.get_last_instruction_id() + 1,
+                );
+                if let Some(out) = output_id {
+                    graph_def.add_register_mapping(*out, reg_output);
+                }
+            } else {
+                return reg_output;
+            }
+
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let cell = CPulseCell_Value_FindEntByClassNameWithin::new(classname);
+            graph_def.cells.push(Box::from(cell));
+            if reg_searchfroment != -1 {
+                register_map.add_inparam("pSearchFromEntity".into(), reg_searchfroment);
+            }
+            register_map.add_inparam("flSearchRadius".into(), reg_radius);
+            if reg_startentity != -1 {
+                register_map.add_inparam("pStartEntity".into(), reg_startentity);
+            }
+            register_map.add_outparam("retval".into(), reg_output);
+            let instr = chunk.add_instruction(instruction_templates::cell_invoke(new_binding_idx));
+            let binding = InvokeBinding {
+                register_map,
+                func_name: "Eval".into(),
+                cell_index: graph_def.cells.len() as i32 - 1,
+                src_chunk: target_chunk,
+                src_instruction: instr,
+            };
+            graph_def.add_invoke_binding(binding);
+            return reg_output;
+        }
+        PulseNodeTemplate::IsValidEntity => {
+            let hentity_input_id = current_node
+                .get_input("hEntity")
+                .expect("Can't find input 'value'");
+            let connection_to_hentity = graph.connection(hentity_input_id);
+            if connection_to_hentity.is_none() {
+                println!("No connection found for hEntity input in IsValidEntity node. Node will not be processed, next action won't execute.");
+                return -1;
+            }
+            let connection_to_hentity = connection_to_hentity.unwrap();
+            let hentity_param = graph.get_output(connection_to_hentity);
+            let out_node = graph
+                .nodes
+                .get(hentity_param.node)
+                .expect("Can't find output node");
+            let reg_hentity = traverse_nodes_and_populate(
+                graph,
+                out_node,
+                graph_def,
+                target_chunk,
+                &Some(connection_to_hentity),
+            );
+            // This is literally copy-paste from Condition node. TODO: refactor this. PLEASE!!!!!!
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr_jump_cond =
+                instruction_templates::jump_cond(reg_hentity, chunk.get_last_instruction_id() + 3);
+            chunk.add_instruction(instr_jump_cond);
+            let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
+            let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
+            // instruction set for the true condition (if exists)
+            let connected_node = get_next_action_node(current_node, graph, "True");
+            if connected_node.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    connected_node.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                );
+            }
+            // have to reborrow the chunk after we did borrow of graph_def.
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
+            // jump over the false condition
+            let instr_jump_end = instruction_templates::jump(-1);
+            let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
+
+            let connected_node_false = get_next_action_node(current_node, graph, "False");
+            if connected_node_false.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    connected_node_false.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                );
+            }
+            // aaand borrow yet again lol
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
+            chunk.add_instruction(instruction_templates::return_void());
+            let ending_instr_id = chunk.get_last_instruction_id();
+            let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
+            if instr_jump_false.is_some() {
+                instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;
+            } else {
+                panic!(
+                    "IsEntValid node: Failed to find JUMP[false_condition] with id: {}",
+                    jump_false_instr_id
+                );
+            }
+            let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
+            if instr_jump_end.is_some() {
+                instr_jump_end.unwrap().dest_instruction = ending_instr_id;
+            } else {
+                panic!(
+                    "IsEntValid node: Failed to find JUMP[end] with id: {}",
+                    jump_end_instr_id
+                );
             }
         }
         _ => todo!(

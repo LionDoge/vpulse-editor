@@ -1430,6 +1430,19 @@ fn traverse_nodes_and_populate(
             chunk.get_instruction_from_id_mut(jump_end_instr_id)
                 .unwrap().dest_instruction = chunk.get_last_instruction_id() + 1;
             chunk.add_instruction(Instruction::default()); // NOP just in case.
+
+            // after loop is finished (and if something is connected here) proceed.
+            let end_action_node = get_next_action_node(current_node, graph, "endAction");
+            if end_action_node.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    end_action_node.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                    new_context
+                );
+            }
         }
         PulseNodeTemplate::StringToEntityName => {
             let reg_input = get_input_register_or_create_constant(

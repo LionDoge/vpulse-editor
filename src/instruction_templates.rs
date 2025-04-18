@@ -135,3 +135,12 @@ pub fn copy_value(register_to: i32, register_from: i32) -> Instruction {
     instr.reg1 = register_from;
     instr
 }
+
+pub fn add_value(register_to: i32, register_from: i32, register_out: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("ADD_INT");
+    instr.reg0 = register_out;
+    instr.reg1 = register_to;
+    instr.reg2 = register_from;
+    instr
+}

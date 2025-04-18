@@ -168,6 +168,23 @@
     },
     {
         "type": "value",
+        "displayname": "Get Entity Name",
+        "libname": "CPulseServerFuncs!GetEntityName",
+        "inparams": [
+            {
+                "name": "hEnt",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ENTITY_NAME"
+            }
+        ]
+    },
+    {
+        "type": "value",
         "displayname": "Count Entities With Name",
         "libname": "CPulseServerFuncs!CountEntitiesWithName",
         "inparams": [
@@ -941,6 +958,70 @@
             {
                 "name": "retval",
                 "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+
+    {
+        "type": "value",
+        "displayname": "Point Template: Force Spawn",
+        "libname": "CPointTemplateAPI!ForceSpawn",
+        "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_template"
+            },
+            {
+                "name": "pLocationEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pSpawnedEntityName",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Player Slot",
+        "libname": "CBasePlayerControllerAPI!GetPlayerSlot",
+        "description": "",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:baseplayercontroller"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+
+    {
+        "type": "value",
+        "displayname": "Is Fake Client",
+        "libname": "CBasePlayerControllerAPI!IsFakeClient",
+        "description": "",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:baseplayercontroller"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
             }
         ]
     }

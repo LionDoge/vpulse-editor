@@ -2,6 +2,7 @@ use crate::app::{
     PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
     PulseNodeTemplate,
 };
+use std::borrow::Cow;
 use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
@@ -21,6 +22,7 @@ macro_rules! graph_next_action {
                 $graph_def,
                 $target_chunk,
                 &None,
+                None,
             );
         }
     };
@@ -41,7 +43,7 @@ macro_rules! get_constant_graph_input_value {
 }
 
 macro_rules! get_connection_only_graph_input_value {
-    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $target_chunk:ident) => {{
+    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $target_chunk:ident, $context:ident) => {{
         let input_id = $node
             .get_input($input)
             .expect(format!("Can't find input {}", $input).as_str());
@@ -59,6 +61,7 @@ macro_rules! get_connection_only_graph_input_value {
                 $graph_def,
                 $target_chunk,
                 &Some(connection),
+                $context,
             )
         } else {
             -1
@@ -158,7 +161,7 @@ fn traverse_event_cell(
     graph_def.cells.push(Box::from(cell_event));
     let connected_node = get_next_action_node(node, graph, "outAction");
     if connected_node.is_some() {
-        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None);
+        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
@@ -175,7 +178,7 @@ fn traverse_graphhook_cell(
     graph_def.cells.push(Box::from(cell_hook));
     let connected_node = get_next_action_node(node, graph, "outAction");
     if connected_node.is_some() {
-        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None);
+        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
@@ -216,7 +219,7 @@ fn traverse_entry_cell(
     if connected_node_id.is_some() {
         let connected_node = graph.nodes.get(connected_node_id.unwrap());
         if connected_node.is_some() {
-            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None);
+            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
         }
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
@@ -324,7 +327,7 @@ fn get_input_register_or_create_constant(
                 .get(out_param.node)
                 .expect("Can't find output node");
             target_register =
-                traverse_nodes_and_populate(graph, out_node, graph_def, chunk_id, &Some(out));
+                traverse_nodes_and_populate(graph, out_node, graph_def, chunk_id, &Some(out), None);
         }
         None => {
             if !always_reevaluate {
@@ -421,6 +424,15 @@ fn get_input_register_or_create_constant(
     target_register
 }
 
+
+// this might be used to get more context information while traversing other nodes
+// for example WhileLoop requires jumping back to the original instruction that
+// reevaluates the condition, so we need to know which instruction that was.
+#[derive(Debug, Clone, Copy)]
+pub enum NodeTraverseOriginContext {
+    WhileLoop(i32), // i32 is instruction id, we want to find the lowest one.
+}
+
 // recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.
 // takes care of referencing already assigned registers or other data (like visisted list in a graph traversal)
 // it operates ONLY on a target chunk - which is basically a set of instructions related to one flow of logic
@@ -431,7 +443,18 @@ fn traverse_nodes_and_populate(
     graph_def: &mut PulseGraphDef,
     target_chunk: i32,
     output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, (not action)
+    context: Option<NodeTraverseOriginContext>, // if this is Some, then we are in a context of a node that needs to be evaluated
 ) -> i32 {
+    let mut new_context = context.clone();
+    if let Some(context) = context {
+        match context {
+            NodeTraverseOriginContext::WhileLoop(instr_id) => {
+                // we are in a while loop, so we need to set the instruction id to the one that will be evaluated
+                // this is the one that will be used for the next iteration of the loop.
+                new_context = Some(NodeTraverseOriginContext::WhileLoop(instr_id));
+            }
+        }
+    }
     match current_node.user_data.template {
         PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
@@ -630,6 +653,7 @@ fn traverse_nodes_and_populate(
                             graph_def,
                             target_chunk,
                             &Some(*out),
+                            new_context,
                         );
                     }
                     None => {
@@ -725,6 +749,7 @@ fn traverse_nodes_and_populate(
                         graph_def,
                         target_chunk,
                         &Some(out),
+                        new_context
                     );
                 }
                 None => {
@@ -906,6 +931,7 @@ fn traverse_nodes_and_populate(
                 graph_def,
                 target_chunk,
                 &Some(connection_to_hentity),
+                new_context
             );
             // other params
             let reg_ntextoffset = get_input_register_or_create_constant(
@@ -1189,6 +1215,7 @@ fn traverse_nodes_and_populate(
                     graph_def,
                     target_chunk,
                     &None,
+                    new_context
                 );
             }
             // have to reborrow the chunk after we did borrow of graph_def.
@@ -1206,6 +1233,7 @@ fn traverse_nodes_and_populate(
                     graph_def,
                     target_chunk,
                     &None,
+                    new_context
                 );
             }
             // aaand borrow yet again lol
@@ -1277,7 +1305,7 @@ fn traverse_nodes_and_populate(
             // copy "from" value to "idx"
             // new reg "cond" (written by following instruction)
             // "idx" LTE "to" "cond"
-            // JUMP_COND[cond][curr + 3]
+            // JUMP_COND{reg_cond}[curr + 3]
             // JUMP[end] (to the end)
             // body
             // "idx" ADD 1 "idx"
@@ -1312,23 +1340,21 @@ fn traverse_nodes_and_populate(
                     action_node.unwrap(),
                     graph_def,
                     target_chunk,
-                    &None
+                    &None,
+                    new_context
                 );
             }
             // borrow again (we know that it still is fine)
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // increment the index by step
-            let mut instr_add = Instruction::default();
-            instr_add.code = String::from("ADD_INT");
-            instr_add.reg0 = reg_idx;
-            instr_add.reg1 = reg_idx;
-            instr_add.reg2 = reg_step;
+            let instr_add = instruction_templates::add_value(reg_idx, reg_step, reg_idx);
             chunk.add_instruction(instr_add);
             
             // jump to conditional check
             let instr_jump = instruction_templates::jump(instr_compare_id);
             chunk.add_instruction(instr_jump);
             let end_instr_id = chunk.get_last_instruction_id() + 1;
+            // update the jump instruction defined ealier to point to the end of the loop
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
             if instr_jump_end.is_some() {
                 instr_jump_end.unwrap().dest_instruction = end_instr_id;
@@ -1346,9 +1372,64 @@ fn traverse_nodes_and_populate(
                     end_action_node.unwrap(),
                     graph_def,
                     target_chunk,
-                    &None
+                    &None,
+                    new_context
                 );
             }
+        }
+        PulseNodeTemplate::WhileLoop => {
+            let context = Some(
+                NodeTraverseOriginContext::WhileLoop(
+                    graph_def.chunks
+                        .get_mut(target_chunk as usize)
+                        .unwrap()
+                        .get_last_instruction_id()
+                    )
+                );
+            // save the current instruction id before populating the instruction for the condition
+            // this will be the instruction that will be used to jump to the condition check
+            let cond_instr_id = graph_def.chunks
+                .get_mut(target_chunk as usize)
+                .unwrap()
+                .get_last_instruction_id() + 1;
+            let reg_condition = get_connection_only_graph_input_value!(
+                graph,
+                current_node,
+                "condition",
+                graph_def,
+                target_chunk,
+                context
+            );
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
+            // JUMP[end] (to the end)
+            // instructions
+            // JUMP[evaluator] (to the condition evaluation)
+
+            let instr_jump_cond = instruction_templates::jump_cond(
+                reg_condition, chunk.get_last_instruction_id() + 3);
+            chunk.add_instruction(instr_jump_cond);
+            let instr_jump_end = instruction_templates::jump(-1);
+            let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
+
+            let action_node = get_next_action_node(current_node, graph, "loopAction");
+            if action_node.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    action_node.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                    new_context 
+                );
+            }
+            // reborrow the chunk after we did borrow of graph_def.
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr_jump = instruction_templates::jump(cond_instr_id);
+            chunk.add_instruction(instr_jump);
+            chunk.get_instruction_from_id_mut(jump_end_instr_id)
+                .unwrap().dest_instruction = chunk.get_last_instruction_id() + 1;
+            chunk.add_instruction(Instruction::default()); // NOP just in case.
         }
         PulseNodeTemplate::StringToEntityName => {
             let reg_input = get_input_register_or_create_constant(
@@ -1464,7 +1545,8 @@ fn traverse_nodes_and_populate(
                 current_node,
                 "pSearchFromEntity",
                 graph_def,
-                target_chunk
+                target_chunk,
+                context
             );
             let reg_radius = get_input_register_or_create_constant(
                 graph,
@@ -1480,7 +1562,8 @@ fn traverse_nodes_and_populate(
                 current_node,
                 "pStartEntity",
                 graph_def,
-                target_chunk
+                target_chunk,
+                context
             );
 
             let new_binding_idx = graph_def.get_current_binding_id() + 1;
@@ -1542,6 +1625,7 @@ fn traverse_nodes_and_populate(
                 graph_def,
                 target_chunk,
                 &Some(connection_to_hentity),
+                new_context
             );
             // This is literally copy-paste from Condition node. TODO: refactor this. PLEASE!!!!!!
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1559,6 +1643,7 @@ fn traverse_nodes_and_populate(
                     graph_def,
                     target_chunk,
                     &None,
+                    new_context
                 );
             }
             // have to reborrow the chunk after we did borrow of graph_def.
@@ -1576,6 +1661,7 @@ fn traverse_nodes_and_populate(
                     graph_def,
                     target_chunk,
                     &None,
+                    new_context
                 );
             }
             // aaand borrow yet again lol
@@ -1601,6 +1687,109 @@ fn traverse_nodes_and_populate(
                     jump_end_instr_id
                 );
             }
+        }
+        PulseNodeTemplate::CompareOutput => {
+            let compare_type =
+                get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
+            let reg_a = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "A",
+                compare_type.clone(),
+                false,
+            );
+            let reg_b = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "B",
+                compare_type.clone(),
+                false,
+            );
+            // value that we will match to generate a operation
+            // this might get turned into a proper enum at some point
+            let compare_value = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "operation",
+                try_to_string
+            );
+            let mut create_comp_instructions =
+             |code: Cow<'_, str>, reg_a: Option<i32>, reg_b: Option<i32>| -> i32 {
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                let mut instr_compare = Instruction::default();
+                instr_compare.code = String::from(code);
+                let reg_cond;
+                reg_cond = chunk.add_register(
+                    String::from("PVAL_BOOL"),
+                    chunk.get_last_instruction_id() + 1,
+                );
+                instr_compare.reg0 = reg_cond;
+                instr_compare.reg1 = reg_a.unwrap_or(-1);
+                instr_compare.reg2 = reg_b.unwrap_or(-1);
+                chunk.add_instruction(instr_compare);
+                reg_cond
+            };
+            let reg_comp: i32 = match compare_value.as_str() {
+                "==" => {
+                    create_comp_instructions(
+                        format!("EQ{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b))
+                }
+                "!=" => {
+                    create_comp_instructions(
+                        format!("NE{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b))
+                }
+                "<" => {
+                    create_comp_instructions(
+                        format!("LT{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b))
+                }
+                "<=" => {
+                    create_comp_instructions(
+                        format!("LTE{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b))
+                }
+                // > is NOT <=
+                ">" => {
+                    let reg_lte= create_comp_instructions(
+                        format!("LTE{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b));
+                    
+                    create_comp_instructions(
+                        "NOT".into(),
+                        Some(reg_lte),
+                        None)
+                }
+                // >= is NOT <
+                ">=" => {
+                    let reg_lt= create_comp_instructions(
+                        format!("LT{}", compare_type.get_operation_suffix_name()).into(),
+                        Some(reg_a),
+                        Some(reg_b));
+                    
+                    create_comp_instructions(
+                        "NOT".into(),
+                        Some(reg_lt),
+                        None)
+                }
+                _ => {
+                    panic!(
+                        "CompareOutput node: Unknown operation value: {}",
+                        compare_value
+                    );
+                }
+            };
+            return reg_comp;
         }
         _ => todo!(
             "Implement node template: {:?}",

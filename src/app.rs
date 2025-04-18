@@ -189,10 +189,12 @@ pub enum PulseNodeTemplate {
     SetNextThink,
     Convert,
     ForLoop,
+    WhileLoop,
     StringToEntityName,
     InvokeLibraryBinding,
     FindEntitiesWithin,
     IsValidEntity,
+    CompareOutput,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -298,10 +300,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::SetNextThink => "Set next think",
             PulseNodeTemplate::Convert => "Convert",
             PulseNodeTemplate::ForLoop => "For loop",
+            PulseNodeTemplate::WhileLoop => "While loop",
             PulseNodeTemplate::StringToEntityName => "String to entity name",
             PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding",
             PulseNodeTemplate::FindEntitiesWithin => "Find entities within",
             PulseNodeTemplate::IsValidEntity => "Is valid entity",
+            PulseNodeTemplate::CompareOutput => "Compare output",
         })
     }
 
@@ -315,7 +319,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::FindEntByName
             | PulseNodeTemplate::FindEntitiesWithin
             | PulseNodeTemplate::IsValidEntity => vec!["Entities"],
-            PulseNodeTemplate::Compare => vec!["Logic"],
+            PulseNodeTemplate::Compare
+            | PulseNodeTemplate::CompareOutput => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait => vec!["Utility"],
@@ -326,7 +331,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GetGameTime | PulseNodeTemplate::SetNextThink | PulseNodeTemplate::InvokeLibraryBinding => {
                 vec!["Game functions"]
             }
-            PulseNodeTemplate::ForLoop => vec!["Loops"],
+            PulseNodeTemplate::ForLoop
+            | PulseNodeTemplate::WhileLoop => vec!["Loops"],
         }
     }
 
@@ -376,13 +382,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-        let input_bool = |graph: &mut PulseGraph, name: &str| {
+        let input_bool = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
                 PulseDataType::Bool,
                 PulseGraphValueType::Bool { value: false },
-                InputParamKind::ConstantOnly,
+                kind,
                 true,
             );
         };
@@ -461,6 +467,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         };
         let output_entityname = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::EntityName);
+        };
+        let output_bool = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Bool);
         };
 
         // input_action(graph);
@@ -571,7 +580,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_scalar(graph, "nTextOffset");
                 input_scalar(graph, "flDuration");
                 input_scalar(graph, "flVerticalOffset");
-                input_bool(graph, "bAttached");
+                input_bool(graph, "bAttached", InputParamKind::ConstantOnly);
                 input_vector3(graph, "color");
                 input_scalar(graph, "flAlpha");
                 input_scalar(graph, "flScale");
@@ -654,6 +663,19 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "True");
                 output_action(graph, "False");
             }
+            PulseNodeTemplate::CompareOutput => {
+                input_typ(graph, "type");
+                input_string(graph, "operation", InputParamKind::ConstantOnly);
+                input_scalar(graph, "A");
+                input_scalar(graph, "B");
+                output_bool(graph, "out");
+            }
+            PulseNodeTemplate::WhileLoop => {
+                input_action(graph);
+                input_bool(graph, "condition", InputParamKind::ConnectionOnly);
+                output_action(graph, "loopAction");
+                output_action(graph, "endAction");
+            }
         }
     }
 }
@@ -686,10 +708,12 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::SetNextThink,
             PulseNodeTemplate::Convert,
             PulseNodeTemplate::ForLoop,
+            PulseNodeTemplate::WhileLoop,
             PulseNodeTemplate::StringToEntityName,
             PulseNodeTemplate::InvokeLibraryBinding,
             PulseNodeTemplate::FindEntitiesWithin,
             PulseNodeTemplate::IsValidEntity,
+            PulseNodeTemplate::CompareOutput,
         ]
     }
 }

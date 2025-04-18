@@ -630,6 +630,7 @@ trait PulseCellTrait: KV3Serialize + GetCellType {}
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
+    mapped_contexts: SecondaryMap<OutputId, crate::compiler::NodeTraverseOriginContext>,
     pub cells: Vec<Box<dyn KV3Serialize>>,
     pub constants: Vec<Box<PulseConstant>>,
     pub bindings: Vec<InvokeBinding>,
@@ -697,6 +698,9 @@ impl PulseGraphDef {
     }
     pub fn get_public_output_index(&self, name: &str) -> Option<usize> {
         self.public_outputs.iter().position(|output| output.name == name)
+    }
+    pub fn get_mapped_context(&self, output_id: OutputId) -> Option<&i32> {
+        self.mapped_registers_outputs.get(output_id)
     }
 }
 

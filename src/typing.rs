@@ -97,6 +97,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_COLOR_RGB" => Ok(PulseValueType::PVAL_COLOR_RGB(None)),
         "PVAL_INVALID" => Ok(PulseValueType::PVAL_INVALID),
         "PVAL_SNDEVT_GUID" => Ok(PulseValueType::PVAL_SNDEVT_GUID(None)),
+        "PVAL_ENTITY_NAME" => Ok(PulseValueType::DOMAIN_ENTITY_NAME),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
@@ -153,6 +154,7 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
             },
         ),
         PulseValueType::PVAL_SNDEVT_GUID(_) => (PulseDataType::SndEventHandle, PulseGraphValueType::SndEventHandle),
+        PulseValueType::DOMAIN_ENTITY_NAME => (PulseDataType::EntityName, PulseGraphValueType::EntityName { value: String::default() }),
         _ => todo!("Implement more type conversions"),
     }
 }
@@ -170,7 +172,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)
         | PulseValueType::PVAL_INVALID => InputParamKind::ConnectionOnly,
-        
+
         PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
    }
 }

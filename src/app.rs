@@ -1213,7 +1213,8 @@ impl PulseGraphEditor {
                     }
                 }
             }
-            PulseNodeTemplate::Compare => {
+            PulseNodeTemplate::Compare
+            | PulseNodeTemplate::CompareOutput => {
                 if new_type.is_none() {
                     panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
                 }

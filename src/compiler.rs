@@ -1246,6 +1246,9 @@ fn traverse_nodes_and_populate(
                     &None,
                     new_context
                 );
+            } else {
+                // empty instruction, so we can jump to it. (don't think that's necessary tho)
+                chunk.add_instruction(Instruction::default());
             }
             // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();

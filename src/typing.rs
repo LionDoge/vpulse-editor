@@ -65,7 +65,13 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
             PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => write!(f, "PVAL_EHANDLE:{}", ent_type.clone().unwrap_or_default()),
+            PulseValueType::PVAL_EHANDLE(ent_type) => {
+                if let Some(ent_type) = ent_type {
+                    write!(f, "PVAL_EHANDLE:{}", ent_type)
+                } else {
+                    write!(f, "PVAL_EHANDLE")
+                }
+            },
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),

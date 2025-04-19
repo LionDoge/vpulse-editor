@@ -1390,6 +1390,11 @@ pub fn update_variable_data(var: &mut PulseVariable) {
                 z: 0.0,
             }))
         }
+        // horrible stuff, this will likely be refactored.
+        PulseValueType::PVAL_EHANDLE(_) => {
+            var.data_type = PulseDataType::EHandle;
+            PulseValueType::PVAL_EHANDLE(Some(var.default_value_buffer.clone()))
+        }
         _ => {
             var.data_type = PulseDataType::Scalar;
             var.typ_and_default_value.to_owned()
@@ -1550,7 +1555,13 @@ impl eframe::App for PulseGraphEditor {
                         ui.text_edit_singleline(&mut var.name);
                     });
                     ui.horizontal(|ui| {
-                        ui.label("Default value");
+                        // change the label text if we're working on an EHandle type, as it can't have a default value.
+                        // the internal value will be used and updated approperiately as the ehandle type instead of the default value. 
+                        if matches!(var.typ_and_default_value, PulseValueType::PVAL_EHANDLE(_)) {
+                            ui.label("EHandle class");
+                        } else {
+                            ui.label("Default value");
+                        }
                         let response = ui.text_edit_singleline(&mut var.default_value_buffer);
                         if response.changed() {
                             update_variable_data(var);
@@ -1580,6 +1591,11 @@ impl eframe::App for PulseGraphEditor {
                                     &mut var.typ_and_default_value,
                                     PulseValueType::PVAL_VEC3(None),
                                     "Vec3",
+                                );
+                                ui.selectable_value(
+                                    &mut var.typ_and_default_value,
+                                    PulseValueType::PVAL_EHANDLE(None),
+                                    "EHandle",
                                 );
                             });
                         // add the default value.

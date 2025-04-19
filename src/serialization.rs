@@ -598,7 +598,6 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_INVALID => String::from("null"),
             PulseValueType::PVAL_BOOL => String::from("false"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
-            
         };
         formatdoc!{"
             {{

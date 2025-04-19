@@ -417,6 +417,17 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Color_RGB(input_value));
                 }
+                PulseValueType::PVAL_BOOL => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param
+                        .value()
+                        .clone()
+                        .try_to_bool()
+                        .expect("Failed to unwrap input value");
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Bool(input_value));
+                }
                 _ => panic!("Unsupported value type"),
             };
         }
@@ -1443,7 +1454,7 @@ fn traverse_nodes_and_populate(
                 // run condition checks
                 // JUMP_COND{reg_condition == true}[start of loopAction instructions]
                 // loopEnd instructions
-                
+
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 // remember the instruction id of the first instruction of the loop action to jump to later
                 let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;

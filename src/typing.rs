@@ -129,6 +129,7 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
             },
         },
         PulseDataType::EHandle => PulseGraphValueType::EHandle,
+        PulseDataType::Bool => PulseGraphValueType::Bool { value: false },
         _ => PulseGraphValueType::Scalar { value: 0f32 },
     };
 }
@@ -151,7 +152,7 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
                 value: String::default(),
             },
         ),
-        PulseValueType::PVAL_BOOL => (PulseDataType::Scalar, PulseGraphValueType::Scalar { value: 0f32 }),
+        PulseValueType::PVAL_BOOL => (PulseDataType::Bool, PulseGraphValueType::Bool { value: false }),
         PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
         PulseValueType::PVAL_COLOR_RGB(_) => (
             PulseDataType::Vec3,

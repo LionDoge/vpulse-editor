@@ -901,6 +901,20 @@ impl WidgetValueTrait for PulseGraphValueType {
                                     PulseValueType::PVAL_STRING(None),
                                 ));
                             };
+                            if ui
+                                .selectable_value(
+                                    value,
+                                    PulseValueType::PVAL_BOOL,
+                                    "Boolean",
+                                )
+                                .clicked()
+                            {
+                                responses.push(PulseGraphResponse::ChangeParamType(
+                                    _node_id,
+                                    param_name.to_string(),
+                                    PulseValueType::PVAL_BOOL,
+                                ));
+                            };
                         });
                 });
             }

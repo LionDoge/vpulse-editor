@@ -1437,25 +1437,13 @@ fn traverse_nodes_and_populate(
                 chunk.get_instruction_from_id_mut(jump_end_instr_id)
                     .unwrap().dest_instruction = chunk.get_last_instruction_id() + 1;
                 chunk.add_instruction(Instruction::default()); // NOP just in case.
-
-                // after loop is finished (and if something is connected here) proceed.
-                let end_action_node = get_next_action_node(current_node, graph, "endAction");
-                if end_action_node.is_some() {
-                    traverse_nodes_and_populate(
-                        graph,
-                        end_action_node.unwrap(),
-                        graph_def,
-                        target_chunk,
-                        &None,
-                        new_context
-                    );
-                }
             } else {
                 // Do-While loop:
                 // loopAction instructions
                 // run condition checks
                 // JUMP_COND{reg_condition == true}[start of loopAction instructions]
                 // loopEnd instructions
+                
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 // remember the instruction id of the first instruction of the loop action to jump to later
                 let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;
@@ -1485,18 +1473,19 @@ fn traverse_nodes_and_populate(
                 let instr_jump_cond = instruction_templates::jump_cond(
                     reg_condition, loop_action_instructions_start);
                 chunk.add_instruction(instr_jump_cond);
-                // after loop is finished (and if something is connected here) proceed.
-                let end_action_node = get_next_action_node(current_node, graph, "endAction");
-                if end_action_node.is_some() {
-                    traverse_nodes_and_populate(
-                        graph,
-                        end_action_node.unwrap(),
-                        graph_def,
-                        target_chunk,
-                        &None,
-                        new_context
-                    );
-                }
+            }
+
+            // after loop is finished (and if something is connected here) proceed.
+            let end_action_node = get_next_action_node(current_node, graph, "endAction");
+            if end_action_node.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    end_action_node.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                    new_context
+                );
             }
         }
         PulseNodeTemplate::StringToEntityName => {

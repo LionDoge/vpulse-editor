@@ -1,9 +1,10 @@
 #![allow(dead_code)]
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 use crate::typing::{PulseValueType, PulseTypeError, try_string_to_pulsevalue};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "persistence", derive(Serialize))]
 #[serde(rename_all = "snake_case")]
 pub enum LibraryBindingType {
     Action,
@@ -11,6 +12,7 @@ pub enum LibraryBindingType {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "persistence", derive(Serialize))]
 pub struct ParamInfo {
     pub name: String,
     #[serde(rename = "type")]
@@ -20,6 +22,7 @@ pub struct ParamInfo {
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "persistence", derive(Serialize))]
 pub struct FunctionBinding {
     #[serde(rename = "type")]
     pub typ: LibraryBindingType,
@@ -28,7 +31,7 @@ pub struct FunctionBinding {
     pub inparams: Option<Vec<ParamInfo>>,
     pub outparams: Option<Vec<ParamInfo>>
 }
-#[derive(Deserialize, Debug, Clone, PartialEq, Default)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
 pub struct EventBinding {
     pub displayname: String,
     pub libname: String,

@@ -139,8 +139,6 @@ impl CPulseCell_Inflow_GraphHook {
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseVariable {
     pub name: String,
     pub typ_and_default_value: PulseValueType,

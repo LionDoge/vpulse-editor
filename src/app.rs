@@ -224,6 +224,7 @@ pub struct PulseGraphState {
     pub variables: Vec<PulseVariable>,
 
     pub save_file_path: PathBuf,
+    #[serde(skip)]
     pub bindings: GraphBindings,
 }
 
@@ -1345,7 +1346,7 @@ impl PulseGraphEditor {
     /// Load previous app state (if any).
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         #[cfg(feature = "persistence")]
-        let grph: PulseGraphEditor = cc
+        let mut grph: PulseGraphEditor = cc
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();

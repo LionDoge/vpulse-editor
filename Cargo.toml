@@ -21,5 +21,6 @@ egui_node_graph2 = "0.7.0"
 rfd = "0.15.2"
 
 [features]
+default = ["persistence"]
 persistence = ["egui_node_graph2/persistence", "eframe/persistence"]
 

@@ -1386,62 +1386,117 @@ fn traverse_nodes_and_populate(
                         .get_last_instruction_id()
                     )
                 );
-            // save the current instruction id before populating the instruction for the condition
-            // this will be the instruction that will be used to jump to the condition check
-            let cond_instr_id = graph_def.chunks
-                .get_mut(target_chunk as usize)
-                .unwrap()
-                .get_last_instruction_id() + 1;
-            let reg_condition = get_connection_only_graph_input_value!(
-                graph,
-                current_node,
-                "condition",
-                graph_def,
-                target_chunk,
-                context
+            
+            let is_dowhile_loop = get_constant_graph_input_value!(
+                graph, current_node, "do-while", try_to_bool
             );
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
-            // JUMP[end] (to the end)
-            // instructions
-            // JUMP[evaluator] (to the condition evaluation)
+            
+            if !is_dowhile_loop {
+                // While loop:
+                // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
+                // JUMP[end] (to the end)
+                // instructions
+                // JUMP[evaluator] (to the condition evaluation)
 
-            let instr_jump_cond = instruction_templates::jump_cond(
-                reg_condition, chunk.get_last_instruction_id() + 3);
-            chunk.add_instruction(instr_jump_cond);
-            let instr_jump_end = instruction_templates::jump(-1);
-            let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
-
-            let action_node = get_next_action_node(current_node, graph, "loopAction");
-            if action_node.is_some() {
-                traverse_nodes_and_populate(
+                // save the current instruction id before populating the instruction for the condition
+                // this will be the instruction that will be used to jump to the condition check
+                let cond_instr_id = graph_def.chunks
+                    .get_mut(target_chunk as usize)
+                    .unwrap()
+                    .get_last_instruction_id() + 1;
+                let reg_condition = get_connection_only_graph_input_value!(
                     graph,
-                    action_node.unwrap(),
+                    current_node,
+                    "condition",
                     graph_def,
                     target_chunk,
-                    &None,
-                    new_context 
+                    context
                 );
-            }
-            // reborrow the chunk after we did borrow of graph_def.
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let instr_jump = instruction_templates::jump(cond_instr_id);
-            chunk.add_instruction(instr_jump);
-            chunk.get_instruction_from_id_mut(jump_end_instr_id)
-                .unwrap().dest_instruction = chunk.get_last_instruction_id() + 1;
-            chunk.add_instruction(Instruction::default()); // NOP just in case.
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                let instr_jump_cond = instruction_templates::jump_cond(
+                    reg_condition, chunk.get_last_instruction_id() + 3);
+                chunk.add_instruction(instr_jump_cond);
+                let instr_jump_end = instruction_templates::jump(-1);
+                let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
-            // after loop is finished (and if something is connected here) proceed.
-            let end_action_node = get_next_action_node(current_node, graph, "endAction");
-            if end_action_node.is_some() {
-                traverse_nodes_and_populate(
+                let action_node = get_next_action_node(current_node, graph, "loopAction");
+                if action_node.is_some() {
+                    traverse_nodes_and_populate(
+                        graph,
+                        action_node.unwrap(),
+                        graph_def,
+                        target_chunk,
+                        &None,
+                        new_context 
+                    );
+                }
+                // reborrow the chunk after we did borrow of graph_def.
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                let instr_jump = instruction_templates::jump(cond_instr_id);
+                chunk.add_instruction(instr_jump);
+                chunk.get_instruction_from_id_mut(jump_end_instr_id)
+                    .unwrap().dest_instruction = chunk.get_last_instruction_id() + 1;
+                chunk.add_instruction(Instruction::default()); // NOP just in case.
+
+                // after loop is finished (and if something is connected here) proceed.
+                let end_action_node = get_next_action_node(current_node, graph, "endAction");
+                if end_action_node.is_some() {
+                    traverse_nodes_and_populate(
+                        graph,
+                        end_action_node.unwrap(),
+                        graph_def,
+                        target_chunk,
+                        &None,
+                        new_context
+                    );
+                }
+            } else {
+                // Do-While loop:
+                // loopAction instructions
+                // run condition checks
+                // JUMP_COND{reg_condition == true}[start of loopAction instructions]
+                // loopEnd instructions
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                // remember the instruction id of the first instruction of the loop action to jump to later
+                let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;
+                // first we fill out the instructions to run per iteration (it will always be run first without checking the condition)
+                let action_node = get_next_action_node(current_node, graph, "loopAction");
+                if action_node.is_some() {
+                    traverse_nodes_and_populate(
+                        graph,
+                        action_node.unwrap(),
+                        graph_def,
+                        target_chunk,
+                        &None,
+                        new_context 
+                    );
+                }
+                // next do all the condition check instructions
+                let reg_condition = get_connection_only_graph_input_value!(
                     graph,
-                    end_action_node.unwrap(),
+                    current_node,
+                    "condition",
                     graph_def,
                     target_chunk,
-                    &None,
-                    new_context
+                    context
                 );
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                // jump back if condition is true
+                let instr_jump_cond = instruction_templates::jump_cond(
+                    reg_condition, loop_action_instructions_start);
+                chunk.add_instruction(instr_jump_cond);
+                // after loop is finished (and if something is connected here) proceed.
+                let end_action_node = get_next_action_node(current_node, graph, "endAction");
+                if end_action_node.is_some() {
+                    traverse_nodes_and_populate(
+                        graph,
+                        end_action_node.unwrap(),
+                        graph_def,
+                        target_chunk,
+                        &None,
+                        new_context
+                    );
+                }
             }
         }
         PulseNodeTemplate::StringToEntityName => {

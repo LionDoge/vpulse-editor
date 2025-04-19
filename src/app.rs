@@ -672,6 +672,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::WhileLoop => {
                 input_action(graph);
+                input_bool(graph, "do-while", InputParamKind::ConstantOnly);
                 input_bool(graph, "condition", InputParamKind::ConnectionOnly);
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");

@@ -195,6 +195,7 @@ pub enum PulseNodeTemplate {
     FindEntitiesWithin,
     IsValidEntity,
     CompareOutput,
+    CompareIf,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -307,6 +308,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::FindEntitiesWithin => "Find entities within",
             PulseNodeTemplate::IsValidEntity => "Is valid entity",
             PulseNodeTemplate::CompareOutput => "Compare output",
+            PulseNodeTemplate::CompareIf => "If",
         })
     }
 
@@ -321,7 +323,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::FindEntitiesWithin
             | PulseNodeTemplate::IsValidEntity => vec!["Entities"],
             PulseNodeTemplate::Compare
-            | PulseNodeTemplate::CompareOutput => vec!["Logic"],
+            | PulseNodeTemplate::CompareOutput
+            | PulseNodeTemplate::CompareIf => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait => vec!["Utility"],
@@ -678,6 +681,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
             }
+            PulseNodeTemplate::CompareIf => {
+                input_action(graph);
+                input_bool(graph, "condition", InputParamKind::ConnectionOnly);
+                output_action(graph, "True");
+                output_action(graph, "False");
+                output_action(graph, "Either");
+            }
         }
     }
 }
@@ -693,13 +703,13 @@ impl NodeTemplateIter for AllMyNodeTemplates {
         vec![
             PulseNodeTemplate::CellPublicMethod,
             PulseNodeTemplate::EntFire,
-            PulseNodeTemplate::Compare,
+            //PulseNodeTemplate::Compare,
             PulseNodeTemplate::ConcatString,
             PulseNodeTemplate::CellWait,
             PulseNodeTemplate::GetVar,
             PulseNodeTemplate::SetVar,
             PulseNodeTemplate::EventHandler,
-            PulseNodeTemplate::IntToString,
+            //PulseNodeTemplate::IntToString,
             PulseNodeTemplate::Operation,
             PulseNodeTemplate::FindEntByName,
             PulseNodeTemplate::DebugWorldText,
@@ -716,6 +726,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::FindEntitiesWithin,
             PulseNodeTemplate::IsValidEntity,
             PulseNodeTemplate::CompareOutput,
+            PulseNodeTemplate::CompareIf,
         ]
     }
 }

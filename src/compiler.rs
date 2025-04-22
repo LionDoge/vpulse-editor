@@ -428,7 +428,10 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Bool(input_value));
                 }
-                _ => panic!("Unsupported value type"),
+                _ => {
+                    println!("Warning: Unsupported value type for input {}: {}", input_name, value_type);
+                    // if we don't know the type, we can't create a constant for it.
+                }
             };
         }
     }
@@ -1254,6 +1257,77 @@ fn traverse_nodes_and_populate(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
             chunk.add_instruction(instruction_templates::return_void());
+            let ending_instr_id = chunk.get_last_instruction_id();
+            let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
+            if instr_jump_false.is_some() {
+                instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;
+            } else {
+                panic!(
+                    "Compare node: Failed to find JUMP[false_condition] with id: {}",
+                    jump_false_instr_id
+                );
+            }
+            let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
+            if instr_jump_end.is_some() {
+                instr_jump_end.unwrap().dest_instruction = ending_instr_id;
+            } else {
+                panic!(
+                    "Compare node: Failed to find JUMP[end] with id: {}",
+                    jump_end_instr_id
+                );
+            }
+        }
+        PulseNodeTemplate::CompareIf => {
+            let reg_cond = get_connection_only_graph_input_value!(
+                graph,
+                current_node,
+                "condition",
+                graph_def,
+                target_chunk,
+                context
+            );
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr_jump_cond =
+                instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
+            chunk.add_instruction(instr_jump_cond);
+            let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
+            let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
+            // instruction set for the true condition (if exists)
+            let connected_node = get_next_action_node(current_node, graph, "True");
+            if connected_node.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    connected_node.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                    new_context
+                );
+            }
+            // have to reborrow the chunk after we did borrow of graph_def.
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
+            // jump over the false condition
+            let instr_jump_end = instruction_templates::jump(-1);
+            let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
+
+            let connected_node_false = get_next_action_node(current_node, graph, "False");
+            if connected_node_false.is_some() {
+                traverse_nodes_and_populate(
+                    graph,
+                    connected_node_false.unwrap(),
+                    graph_def,
+                    target_chunk,
+                    &None,
+                    new_context
+                );
+            } else {
+                // empty instruction, so we can jump to it. (don't think that's necessary tho)
+                chunk.add_instruction(Instruction::default());
+            }
+            // aaand borrow yet again lol
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
             let ending_instr_id = chunk.get_last_instruction_id();
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
             if instr_jump_false.is_some() {

@@ -963,7 +963,7 @@
     },
 
     {
-        "type": "value",
+        "type": "action",
         "displayname": "Point Template: Force Spawn",
         "libname": "CPointTemplateAPI!ForceSpawn",
         "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
@@ -974,16 +974,6 @@
             },
             {
                 "name": "pLocationEntity",
-                "type": "PVAL_EHANDLE"
-            },
-            {
-                "name": "pSpawnedEntityName",
-                "type": "PVAL_STRING"
-            }
-        ],
-        "outparams": [
-            {
-                "name": "retval",
                 "type": "PVAL_EHANDLE"
             }
         ]

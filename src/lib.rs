@@ -7,7 +7,6 @@ mod app;
 mod instruction_templates;
 mod pulsetypes;
 mod serialization;
-mod outputdefinition;
 mod compiler;
 mod bindings;
 mod typing;

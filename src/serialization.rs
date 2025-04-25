@@ -4,7 +4,7 @@
 use egui_node_graph2::{InputId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-use crate::{app::OutputDefinition, pulsetypes::*, typing::{PulseValueType, Vec3}};
+use crate::{pulsetypes::*, typing::{PulseValueType, Vec3}};
 use std::borrow::Cow;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;

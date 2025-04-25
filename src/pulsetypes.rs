@@ -1,8 +1,8 @@
 #![allow(nonstandard_style)]
-use std::fmt;
 use serde::{Deserialize, Serialize};
-use crate::typing::{PulseValueType, Vec3};
-use crate::{app::{PulseDataType}, serialization::{PulseRuntimeArgument, RegisterMap}};
+use crate::typing::PulseValueType;
+use crate::app::PulseDataType;
+use crate::serialization::{PulseRuntimeArgument, RegisterMap};
 use std::borrow::Cow;
 pub enum CellType {
     Inflow,
@@ -146,4 +146,11 @@ pub struct PulseVariable {
     pub data_type: PulseDataType,
     pub old_typ: PulseValueType,
     pub default_value_buffer: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OutputDefinition {
+    pub name: String,
+    pub typ: PulseValueType,
+    pub typ_old: PulseValueType // used for detecting change in combobox, eugh.
 }

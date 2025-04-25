@@ -1,7 +1,6 @@
 use std::fmt;
 use egui_node_graph2::InputParamKind;
 use serde::{Deserialize, Serialize};
-use anyhow::Error;
 use crate::app::{PulseDataType, PulseGraphValueType};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]

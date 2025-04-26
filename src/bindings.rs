@@ -17,7 +17,7 @@ pub struct ParamInfo {
     pub name: String,
     #[serde(rename = "type")]
     pub typ: String,
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub pulsetype: PulseValueType,
 }
 

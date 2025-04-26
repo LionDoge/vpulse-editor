@@ -852,6 +852,17 @@ fn traverse_nodes_and_populate(
             let new_binding_idx = graph_def.get_current_binding_id() + 1;
             let mut register_map = RegisterMap::default();
             let mut reg_output = try_find_output_mapping(graph_def, output_id);
+            let reg_entname = if reg_output == -1 { get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "entName",
+                PulseValueType::DOMAIN_ENTITY_NAME,
+                false,
+            ) } else {
+                None
+            };
             if reg_output == -1 {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 reg_output = chunk.add_register(
@@ -864,15 +875,6 @@ fn traverse_nodes_and_populate(
             } else {
                 return reg_output;
             }
-            let reg_entname = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                target_chunk,
-                "entName",
-                PulseValueType::DOMAIN_ENTITY_NAME,
-                false,
-            );
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param);
             graph_def.cells.push(Box::from(cell));

@@ -10,7 +10,7 @@ use crate::serialization::*;
 use crate::typing::PulseValueType;
 use crate::bindings::LibraryBindingType;
 use egui_node_graph2::*;
-use std::fs;
+use std::{default, fs};
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -1956,6 +1956,103 @@ fn traverse_nodes_and_populate(
                 }
             };
             return reg_comp;
+        }
+        PulseNodeTemplate::IntSwitch => {
+            let reg_value = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_INT(None),
+                false,
+            );
+            let mut register_map = RegisterMap::default();
+            if let Some(reg_value) = reg_value {
+                register_map.add_inparam("nSwitchValue".into(), reg_value);
+            }
+            let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, it's here because of borrow checker
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr = chunk.get_last_instruction_id() + 1;
+            chunk.add_instruction(instruction_templates::cell_invoke(binding_id)); // -1 because we don't know the id yet.
+            let binding = InvokeBinding {
+                register_map,
+                func_name: "Run".into(),
+                cell_index: graph_def.cells.len() as i32, // the cell to be added
+                src_chunk: target_chunk,
+                src_instruction: instr,
+            };
+            graph_def.add_invoke_binding(binding);
+            // now comes the processing of the outflows
+            let mut outflow_connections = vec![];
+            let mut instructions_jump_end = vec![];
+            let mut value_idx = 0; // used for outflow names only
+            current_node.outputs.iter().for_each(|out| {
+                if out.0.parse::<i32>().is_ok() {
+                    let next_action_node_id = get_connected_output_node(graph,&out.1);
+                    if let Some(next_action_node_id) = next_action_node_id {
+                        let this_action_instruction_id = graph_def.chunks.get(target_chunk as usize).unwrap().get_last_instruction_id() + 1;
+                        let node = graph.nodes.get(next_action_node_id).unwrap();
+                        traverse_nodes_and_populate(
+                            graph,
+                            node,
+                            graph_def,
+                            target_chunk,
+                            &None,
+                            new_context 
+                        );
+                        // add a JUMP instruction to the end of all of the cases
+                        // we don't really know where that will be so we will have to note down the instruction id and modify it later.
+                        let instr_jump = instruction_templates::jump(-1);
+                        instructions_jump_end.push(
+                            graph_def.chunks.get_mut(target_chunk as usize).unwrap().add_instruction(instr_jump));
+
+                        outflow_connections.push(OutflowConnection::new(
+                            out.0.clone().into(),
+                            target_chunk,
+                            this_action_instruction_id, 
+                            RegisterMap::default()
+                        ));
+                    }
+                    value_idx += 1;
+                }
+            });
+            // now let's process the default case
+            let default_case_instruction_id = graph_def.chunks.get(target_chunk as usize).unwrap().get_last_instruction_id() + 1;
+            let default_action_node = get_next_action_node(current_node, graph, "defaultcase");
+            let mut default_case_outflow = None;
+            if let Some(default_action_node) = default_action_node {
+                traverse_nodes_and_populate(graph, default_action_node, graph_def, target_chunk, output_id, context);
+                default_case_outflow = Some(OutflowConnection::new(
+                    "default".into(),
+                    target_chunk,
+                    default_case_instruction_id,
+                    RegisterMap::default()
+                ));
+            }
+            
+            // as the default case is the last one, we do not need a jump here.
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let ending_instruction_id = chunk.add_instruction(Instruction::default()); // NOP for the end jump
+            // Now update all the jumps defined before to point to the end of the switch statement.
+            for instr in instructions_jump_end.iter() {
+                let instr_jump_end = chunk.get_instruction_from_id_mut(*instr);
+                if let Some(instr_jump_end) = instr_jump_end {
+                    instr_jump_end.dest_instruction = ending_instruction_id;
+                } else { // We expect this to be a valid instruction id, so we panic if it isn't.
+                    panic!(
+                        "IntSwitch node: Failed to find JUMP[end] with id: {}",
+                        instr
+                    );
+                }
+            }
+            let cell = CPulseCell_Outflow_IntSwitch::new(
+                default_case_outflow.unwrap_or_default(),
+                outflow_connections,
+            );
+            graph_def.cells.push(Box::from(cell));
+
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         _ => todo!(
             "Implement node template: {:?}",

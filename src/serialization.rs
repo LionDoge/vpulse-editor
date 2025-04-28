@@ -598,6 +598,7 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_INVALID => String::from("null"),
             PulseValueType::PVAL_BOOL => String::from("false"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
+            PulseValueType::PVAL_ACT => String::from("null"),
         };
         formatdoc!{"
             {{
@@ -614,15 +615,42 @@ impl KV3Serialize for PulseVariable {
         }
     }
 }
-// impl Variable{
-//     pub fn new<'a>(name: String, typ: String, default_value: i32) -> Variable {
-//         Variable {
-//             name,
-//             typ,
-//             default_value,
-//         }
-//     }
-// }
+
+impl KV3Serialize for OutflowConnection {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                m_SourceOutflowName = \"{}\"
+                m_nDestChunk = {}
+                m_nInstruction = {}
+                m_OutflowRegisterMap = {}
+            }}
+            "
+            , self.outflow_name, self.dest_chunk, self.dest_instruction, self.register_map.serialize()
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Outflow_IntSwitch {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Outflow_IntSwitch\"
+                m_nEditorNodeID = -1
+                m_DefaultCaseOutflow = {}
+                m_CaseOutflows = 
+                [
+                    {}
+                ]
+            }}
+            "
+            , self.default_outflow.serialize()
+            , self.ouflows.iter().map(|outflow| outflow.serialize()).collect::<Vec<String>>().join(",\n\n")
+        }
+    }
+}
 
 trait PulseCellTrait: KV3Serialize + GetCellType {}
 #[derive(Default)]

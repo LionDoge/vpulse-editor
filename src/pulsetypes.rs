@@ -134,7 +134,49 @@ impl CPulseCell_Inflow_GraphHook {
         }
     }
 }
-
+pub struct OutflowConnection {
+    pub outflow_name: Cow<'static, str>,
+    pub dest_chunk: i32,
+    pub dest_instruction: i32,
+    pub register_map: RegisterMap,
+}
+impl Default for OutflowConnection {
+    fn default() -> Self {
+        Self {
+            outflow_name: Cow::Borrowed(""),
+            dest_chunk: -1,
+            dest_instruction: -1,
+            register_map: RegisterMap::default()
+        }
+    }
+}
+impl OutflowConnection {
+    pub fn new(outflow_name: Cow<'static, str>, dest_chunk: i32, dest_instruction: i32, register_map: RegisterMap) -> Self {
+        Self {
+            outflow_name,
+            dest_chunk,
+            dest_instruction,
+            register_map
+        }
+    }
+}
+pub struct CPulseCell_Outflow_IntSwitch {
+    pub(super) default_outflow: OutflowConnection,
+    pub(super) ouflows: Vec<OutflowConnection>
+}
+impl GetCellType for CPulseCell_Outflow_IntSwitch {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Outflow
+    }
+}
+impl CPulseCell_Outflow_IntSwitch {
+    pub fn new(default_outflow: OutflowConnection, ouflows: Vec<OutflowConnection>) -> Self {
+        Self {
+            default_outflow,
+            ouflows
+        }
+    }
+}
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]

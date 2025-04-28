@@ -3,6 +3,7 @@ use crate::bindings::*;
 use crate::typing::*;
 use crate::pulsetypes::*;
 use core::panic;
+use eframe::egui::output;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
@@ -13,7 +14,11 @@ use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 // Compare this snippet from src/instruction_templates.rs:
-
+#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+struct CustomOutputInfo {
+    pub name: String,
+    pub data: PulseValueType,
+}
 // ========= First, define your user data types =============
 
 /// The NodeData holds a custom data struct inside each node. It's useful to
@@ -22,7 +27,7 @@ use std::{borrow::Cow, collections::HashMap};
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
-    pub custom_named_outputs: HashMap<OutputId, String>,
+    pub custom_named_outputs: HashMap<OutputId, CustomOutputInfo>,
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -195,6 +200,7 @@ pub enum PulseNodeTemplate {
     IsValidEntity,
     CompareOutput,
     CompareIf,
+    IntSwitch,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -203,7 +209,7 @@ pub enum PulseNodeTemplate {
 /// mechanism allows creating additional side effects from user code.
 #[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
-    AddOutputParam(NodeId, String),
+    AddOutputParam(NodeId, String, PulseValueType),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
@@ -218,7 +224,6 @@ pub enum PulseGraphResponse {
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
-    pub custom_input_string: String,
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
@@ -308,6 +313,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::IsValidEntity => "Is valid entity",
             PulseNodeTemplate::CompareOutput => "Compare output",
             PulseNodeTemplate::CompareIf => "If",
+            PulseNodeTemplate::IntSwitch => "Int Switch",
         })
     }
 
@@ -323,7 +329,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::IsValidEntity => vec!["Entities"],
             PulseNodeTemplate::Compare
             | PulseNodeTemplate::CompareOutput
-            | PulseNodeTemplate::CompareIf => vec!["Logic"],
+            | PulseNodeTemplate::CompareIf
+            | PulseNodeTemplate::IntSwitch => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait => vec!["Utility"],
@@ -687,6 +694,23 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "False");
                 output_action(graph, "Either");
             }
+            PulseNodeTemplate::IntSwitch => {
+                input_action(graph);
+                input_scalar(graph, "value");
+                // cases will be added dynamically by user
+                // this field will be a buffer that will be used to create the cases
+                // once the button to add it is pressed - which is defined in bottom_ui func.
+                graph.add_input_param(
+                    node_id,
+                    "caselabel".into(),
+                    PulseDataType::Scalar,
+                    PulseGraphValueType::Scalar { value: 0.0 },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+                output_action(graph, "defaultcase");
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -726,6 +750,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::IsValidEntity,
             PulseNodeTemplate::CompareOutput,
             PulseNodeTemplate::CompareIf,
+            PulseNodeTemplate::IntSwitch,
         ]
     }
 }
@@ -793,7 +818,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::Action => {
-                ui.label("Input action");
+                ui.label(format!("Action {}", param_name));
             }
             PulseGraphValueType::EHandle => {
                 ui.label(format!("EHandle {}", param_name));
@@ -1003,22 +1028,25 @@ impl NodeDataTrait for PulseNodeData {
 
         let mut responses = vec![];
         // add param to event handler node.
-        if _graph.nodes.get(node_id).unwrap().user_data.template == PulseNodeTemplate::EventHandler
+        let node = _graph.nodes.get(node_id).unwrap();
+        if node.user_data.template == PulseNodeTemplate::IntSwitch
         {
-            let textbox_str: &mut String = user_state.custom_input_string.borrow_mut();
-            ui.separator();
-            ui.text_edit_singleline(textbox_str);
+            let param = node.get_input("caselabel")
+                .expect("caselabel is not defined for IntSwitch node, this is a programming error!");
+            let param_value = _graph.get_input(param).value().clone().try_to_scalar().unwrap().round() as i32;
             if ui.button("Add parameter").clicked() {
+                let param_name = format!("{}", param_value);
                 responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
                     node_id,
-                    user_state.custom_input_string.clone(),
+                    param_name.clone(),
+                    PulseValueType::PVAL_ACT
                 )));
                 if let Some(vec_params) = user_state.added_parameters.get_mut(node_id) {
-                    vec_params.push(user_state.custom_input_string.clone());
+                    vec_params.push(param_name);
                 } else {
                     user_state
                         .added_parameters
-                        .insert(node_id, vec![user_state.custom_input_string.clone()]);
+                        .insert(node_id, vec![param_name]);
                 }
             }
         }
@@ -1663,7 +1691,7 @@ impl eframe::App for PulseGraphEditor {
             if let NodeResponse::User(user_event) = node_response {
                 match user_event {
                     // node that supports adding parameters is trying to add one
-                    PulseGraphResponse::AddOutputParam(node_id, name) => {
+                    PulseGraphResponse::AddOutputParam(node_id, name,data) => {
                         {
                             let node = self.state.graph.nodes.get(node_id).unwrap();
                             // check if the output of the name exists already...
@@ -1671,7 +1699,7 @@ impl eframe::App for PulseGraphEditor {
                                 .user_data
                                 .custom_named_outputs
                                 .iter()
-                                .find(|v| v.1 == &name);
+                                .find(|v| v.1.name == name);
                             if nam.is_some() {
                                 continue;
                             }
@@ -1679,11 +1707,15 @@ impl eframe::App for PulseGraphEditor {
                         let output_id = self.state.graph.add_output_param(
                             node_id,
                             name.clone(),
-                            PulseDataType::Scalar,
+                            pulse_value_type_to_node_types(&data).0,
                         );
                         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
-                        // remember the custom output name
-                        node.user_data.custom_named_outputs.insert(output_id, name);
+                        let output_info = CustomOutputInfo {
+                            name,
+                            data,
+                        };
+                        // remember the custom output
+                        node.user_data.custom_named_outputs.insert(output_id, output_info);
                     }
                     PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                         // node that supports adding parameters is removing one
@@ -1702,7 +1734,7 @@ impl eframe::App for PulseGraphEditor {
                             .user_data
                             .custom_named_outputs
                             .iter()
-                            .filter_map(|(k, v)| if v == &name { Some(*k) } else { None })
+                            .filter_map(|(k, v)| if v.name == name { Some(*k) } else { None })
                             .collect();
                         for k in keys_to_remove {
                             node.user_data.custom_named_outputs.remove(&k);

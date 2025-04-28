@@ -49,6 +49,7 @@ pub enum PulseValueType {
     PVAL_SNDEVT_GUID(Option<String>),
     PVAL_BOOL,
     DOMAIN_ENTITY_NAME,
+    PVAL_ACT, // only used in the editor, not in the engine
 }
 impl Default for PulseValueType {
     fn default() -> Self {
@@ -75,6 +76,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
+            PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
         }
     }
 }
@@ -129,6 +131,11 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
         },
         PulseDataType::EHandle => PulseGraphValueType::EHandle,
         PulseDataType::Bool => PulseGraphValueType::Bool { value: false },
+        PulseDataType::SndEventHandle => PulseGraphValueType::SndEventHandle,
+        PulseDataType::EntityName => PulseGraphValueType::EntityName {
+            value: String::default(),
+        },
+        PulseDataType::Action => PulseGraphValueType::Action,
         _ => PulseGraphValueType::Scalar { value: 0f32 },
     };
 }
@@ -161,6 +168,7 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
         ),
         PulseValueType::PVAL_SNDEVT_GUID(_) => (PulseDataType::SndEventHandle, PulseGraphValueType::SndEventHandle),
         PulseValueType::DOMAIN_ENTITY_NAME => (PulseDataType::EntityName, PulseGraphValueType::EntityName { value: String::default() }),
+        PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
         _ => todo!("Implement more type conversions"),
     }
 }
@@ -177,7 +185,8 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
 
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)
-        | PulseValueType::PVAL_INVALID => InputParamKind::ConnectionOnly,
+        | PulseValueType::PVAL_INVALID
+        | PulseValueType::PVAL_ACT => InputParamKind::ConnectionOnly,
 
         PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
    }

@@ -806,6 +806,10 @@ fn traverse_nodes_and_populate(
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::Operation => {
+            let existing_reg_mapping = try_find_output_mapping(graph_def, output_id);
+            if existing_reg_mapping != -1 {
+                return existing_reg_mapping;
+            }
             let operation_typ =
                 get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
             let reg_a = get_input_register_or_create_constant(
@@ -848,6 +852,9 @@ fn traverse_nodes_and_populate(
             instr.reg1 = reg_a.unwrap_or(-1);
             instr.reg2 = reg_b.unwrap_or(-1);
             chunk.add_instruction(instr);
+            if let Some(output) = output_id {
+                graph_def.add_register_mapping(*output, register_output);
+            }
             return register_output;
         }
         PulseNodeTemplate::FindEntByName => {

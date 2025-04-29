@@ -49,6 +49,7 @@ pub enum PulseDataType {
     Typ,
     EventBindingChoice,
     LibraryBindingChoice,
+    SoundEventName,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -68,6 +69,7 @@ pub enum PulseGraphValueType {
     Vec3 { value: Vec3 },
     EHandle,
     SndEventHandle,
+    SoundEventName { value: String },
     EntityName { value: String },
     Action,
     InternalOutputName { prevvalue: String, value: String },
@@ -166,6 +168,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to library binding", self)
         }
     }
+
+    pub fn try_sndevt_name(self) -> anyhow::Result<String> {
+        if let PulseGraphValueType::SoundEventName { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to string", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
@@ -254,6 +264,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::EventBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::LibraryBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
+            PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 171, 235),
         }
     }
 
@@ -273,6 +284,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::EventBindingChoice => Cow::Borrowed("Event binding"),
             PulseDataType::LibraryBindingChoice => Cow::Borrowed("Library binding"),
             PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
+            PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
         }
     }
 }
@@ -462,6 +474,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     value: PulseValueType::PVAL_INT(None),
                 },
                 InputParamKind::ConstantOnly,
+                true,
+            );
+        };
+        let input_sndevt_name = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::SoundEventName,
+                PulseGraphValueType::SoundEventName {
+                    value: String::default(),
+                },
+                kind,
                 true,
             );
         };
@@ -715,7 +739,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::SoundEventStart => {
-                input_string(graph, "strSoundEventName", InputParamKind::ConnectionOrConstant);
+                input_sndevt_name(graph, "strSoundEventName", InputParamKind::ConnectionOrConstant);
                 input_ehandle(graph, "hTargetEntity");
                 graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
             }
@@ -834,6 +858,12 @@ impl WidgetValueTrait for PulseGraphValueType {
             }
             PulseGraphValueType::SndEventHandle => {
                 ui.label(format!("SNDEVT {}", param_name));
+            }
+            PulseGraphValueType::SoundEventName { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(format!("SNDEVT {}", param_name));
+                    ui.text_edit_singleline(value);
+                });
             }
             PulseGraphValueType::EntityName { value } => {
                 ui.horizontal(|ui| {

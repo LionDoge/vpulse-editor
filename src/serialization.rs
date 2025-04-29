@@ -517,6 +517,7 @@ impl Register {
 #[derive(PartialEq)]
 pub enum PulseConstant {
     String(String),
+    SoundEventName(String),
     Float(f32),
     Integer(i32),
     Vec3(Vec3),
@@ -535,6 +536,7 @@ impl KV3Serialize for PulseConstant {
             , 
             match self {
                 PulseConstant::String(_) => "PVAL_STRING",
+                PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME",
                 PulseConstant::Float(_) => "PVAL_FLOAT",
                 PulseConstant::Integer(_) => "PVAL_INT",
                 PulseConstant::Vec3(_) => "PVAL_VEC3",
@@ -542,7 +544,8 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Bool(_) => "PVAL_BOOL",
             },
             match self {
-                PulseConstant::String(value) => format!("\"{}\"", value),
+                PulseConstant::String(value)
+                | PulseConstant::SoundEventName(value) => format!("\"{}\"", value),
                 PulseConstant::Float(value) => format!("{:.8}", value),
                 PulseConstant::Integer(value) => value.to_string(),
                 PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
@@ -597,6 +600,9 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_INVALID => String::from("null"),
             PulseValueType::PVAL_BOOL => String::from("false"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
+            PulseValueType::PVAL_SNDEVT_NAME(val) => {
+                val.clone().unwrap_or_default()
+            }
             PulseValueType::PVAL_ACT => String::from("null"),
         };
         formatdoc!{"

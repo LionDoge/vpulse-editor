@@ -47,6 +47,7 @@ pub enum PulseValueType {
     PVAL_VEC3(Option<Vec3>),
     PVAL_COLOR_RGB(Option<Vec3>),
     PVAL_SNDEVT_GUID(Option<String>),
+    PVAL_SNDEVT_NAME(Option<String>),
     PVAL_BOOL,
     DOMAIN_ENTITY_NAME,
     PVAL_ACT, // only used in the editor, not in the engine
@@ -76,6 +77,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
+            PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
         }
     }
@@ -136,6 +138,9 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
             value: String::default(),
         },
         PulseDataType::Action => PulseGraphValueType::Action,
+        PulseDataType::SoundEventName => PulseGraphValueType::SoundEventName {
+            value: String::default(),
+        },
         _ => PulseGraphValueType::Scalar { value: 0f32 },
     };
 }
@@ -167,6 +172,7 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
             },
         ),
         PulseValueType::PVAL_SNDEVT_GUID(_) => (PulseDataType::SndEventHandle, PulseGraphValueType::SndEventHandle),
+        PulseValueType::PVAL_SNDEVT_NAME(_) => (PulseDataType::SoundEventName, PulseGraphValueType::SoundEventName { value: String::default() }),
         PulseValueType::DOMAIN_ENTITY_NAME => (PulseDataType::EntityName, PulseGraphValueType::EntityName { value: String::default() }),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
         _ => todo!("Implement more type conversions"),
@@ -181,7 +187,8 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_STRING(_)
         | PulseValueType::PVAL_VEC3(_)
         | PulseValueType::DOMAIN_ENTITY_NAME
-        | PulseValueType::PVAL_COLOR_RGB(_) => InputParamKind::ConnectionOrConstant,
+        | PulseValueType::PVAL_COLOR_RGB(_)
+        | PulseValueType::PVAL_SNDEVT_NAME(_) => InputParamKind::ConnectionOrConstant,
 
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)

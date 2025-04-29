@@ -385,6 +385,17 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::String(input_value));
                 }
+                PulseValueType::PVAL_SNDEVT_NAME(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param
+                        .value()
+                        .clone()
+                        .try_sndevt_name()
+                        .expect("Failed to unwrap input value");
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::SoundEventName(input_value));
+                }
                 PulseValueType::DOMAIN_ENTITY_NAME => {
                     instruction =
                         instruction_templates::get_domain_value(target_register, new_domain_val_id);
@@ -2063,7 +2074,7 @@ fn traverse_nodes_and_populate(
                     graph_def,
                     target_chunk,
                     "strSoundEventName",
-                    PulseValueType::PVAL_STRING(None),
+                    PulseValueType::PVAL_SNDEVT_NAME(None),
                     false,
                 );
                 let reg_target_entity = get_input_register_or_create_constant(

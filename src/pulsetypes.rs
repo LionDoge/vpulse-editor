@@ -177,6 +177,27 @@ impl CPulseCell_Outflow_IntSwitch {
         }
     }
 }
+pub enum SoundEventStartType {
+    SOUNDEVENT_START_PLAYER,
+	SOUNDEVENT_START_WORLD,
+	SOUNDEVENT_START_ENTITY
+}
+
+pub struct CPulseCell_SoundEventStart {
+    pub(super) typ: SoundEventStartType,
+}
+impl GetCellType for CPulseCell_SoundEventStart {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Step
+    }
+}
+impl CPulseCell_SoundEventStart {
+    pub fn new(typ: SoundEventStartType) -> Self {
+        Self {
+            typ
+        }
+    }
+}
 
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]

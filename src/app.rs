@@ -15,7 +15,7 @@ use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 // Compare this snippet from src/instruction_templates.rs:
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
-struct CustomOutputInfo {
+pub struct CustomOutputInfo {
     pub name: String,
     pub data: PulseValueType,
 }
@@ -201,6 +201,7 @@ pub enum PulseNodeTemplate {
     CompareOutput,
     CompareIf,
     IntSwitch,
+    SoundEventStart,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -314,6 +315,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CompareOutput => "Compare output",
             PulseNodeTemplate::CompareIf => "If",
             PulseNodeTemplate::IntSwitch => "Int Switch",
+            PulseNodeTemplate::SoundEventStart => "Sound event start",
         })
     }
 
@@ -343,6 +345,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ForLoop
             | PulseNodeTemplate::WhileLoop => vec!["Loops"],
+            PulseNodeTemplate::SoundEventStart => vec!["Sound"],
         }
     }
 
@@ -711,6 +714,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "defaultcase");
                 output_action(graph, "outAction");
             }
+            PulseNodeTemplate::SoundEventStart => {
+                input_string(graph, "strSoundEventName", InputParamKind::ConnectionOrConstant);
+                input_ehandle(graph, "hTargetEntity");
+                graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
+            }
         }
     }
 }
@@ -751,6 +759,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::CompareOutput,
             PulseNodeTemplate::CompareIf,
             PulseNodeTemplate::IntSwitch,
+            PulseNodeTemplate::SoundEventStart,
         ]
     }
 }
@@ -1449,6 +1458,10 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.data_type = PulseDataType::EHandle;
             PulseValueType::PVAL_EHANDLE(Some(var.default_value_buffer.clone()))
         }
+        PulseValueType::PVAL_SNDEVT_GUID(_) => {
+            var.data_type = PulseDataType::SndEventHandle;
+            PulseValueType::PVAL_SNDEVT_GUID(None)
+        }
         _ => {
             var.data_type = PulseDataType::Scalar;
             var.typ_and_default_value.to_owned()
@@ -1558,6 +1571,11 @@ impl eframe::App for PulseGraphEditor {
                                     PulseValueType::PVAL_EHANDLE(None),
                                     "Entity Handle",
                                 );
+                                ui.selectable_value(
+                                    &mut outputdef.typ,
+                                    PulseValueType::PVAL_SNDEVT_GUID(None),
+                                    "Sound Event",
+                                );
                             });
                     });
                     if outputdef.typ != outputdef.typ_old {
@@ -1650,6 +1668,11 @@ impl eframe::App for PulseGraphEditor {
                                     &mut var.typ_and_default_value,
                                     PulseValueType::PVAL_EHANDLE(None),
                                     "EHandle",
+                                );
+                                ui.selectable_value(
+                                    &mut var.typ_and_default_value,
+                                    PulseValueType::PVAL_SNDEVT_GUID(None),
+                                    "Sound Event",
                                 );
                             });
                         // add the default value.

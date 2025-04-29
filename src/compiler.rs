@@ -2054,6 +2054,62 @@ fn traverse_nodes_and_populate(
 
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
+        PulseNodeTemplate::SoundEventStart => {
+            let mut reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out == -1 {
+                let reg_soundevent = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    target_chunk,
+                    "strSoundEventName",
+                    PulseValueType::PVAL_STRING(None),
+                    false,
+                );
+                let reg_target_entity = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    target_chunk,
+                    "hTargetEntity",
+                    PulseValueType::PVAL_EHANDLE(None),
+                    false,
+                );
+                let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, it's here because of borrow checker
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                let instr = chunk.get_last_instruction_id() + 1;
+                chunk.add_instruction(instruction_templates::cell_invoke(binding_id)); // -1 because we don't know the id yet.
+
+                reg_out = chunk.add_register(
+                    PulseValueType::PVAL_SNDEVT_GUID(None).to_string(),
+                    instr,
+                );
+                if let Some(out) = output_id {
+                    graph_def.add_register_mapping(*out, reg_out);
+                }
+
+                let mut register_map = RegisterMap::default();
+                if let Some(reg_soundevent) = reg_soundevent {
+                    register_map.add_inparam("strSoundEventName".into(), reg_soundevent);
+                }
+                if let Some(reg_target_entity) = reg_target_entity {
+                    register_map.add_inparam("hTargetEntity".into(), reg_target_entity);
+                }
+                register_map.add_outparam("retval".into(), reg_out);
+                let binding = InvokeBinding {
+                    register_map,
+                    func_name: "Run".into(),
+                    cell_index: graph_def.cells.len() as i32, // the cell to be added
+                    src_chunk: target_chunk,
+                    src_instruction: instr,
+                };
+                // TODO: allow user to customize start type
+                let cell = CPulseCell_SoundEventStart::new(SoundEventStartType::SOUNDEVENT_START_ENTITY);
+                graph_def.cells.push(Box::from(cell));
+                graph_def.add_invoke_binding(binding);
+            }
+            return reg_out;
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

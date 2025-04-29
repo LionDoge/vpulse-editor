@@ -552,7 +552,6 @@ impl KV3Serialize for PulseConstant {
         }
     }
 }
-
 // pub struct Variable {
 //     pub name: String,
 //     pub typ: String,
@@ -648,6 +647,31 @@ impl KV3Serialize for CPulseCell_Outflow_IntSwitch {
             "
             , self.default_outflow.serialize()
             , self.ouflows.iter().map(|outflow| outflow.serialize()).collect::<Vec<String>>().join(",\n\n")
+        }
+    }
+}
+
+impl KV3Serialize for SoundEventStartType {
+    fn serialize(&self) -> String {
+        match self {
+            SoundEventStartType::SOUNDEVENT_START_PLAYER => "SOUNDEVENT_START_PLAYER".into(),
+            SoundEventStartType::SOUNDEVENT_START_WORLD => "SOUNDEVENT_START_WORLD".into(),
+            SoundEventStartType::SOUNDEVENT_START_ENTITY => "SOUNDEVENT_START_ENTITY".into(),
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_SoundEventStart {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_SoundEventStart\"
+                m_nEditorNodeID = -1
+                m_Type = \"{}\"
+            }}
+            "
+            , self.typ.serialize()
         }
     }
 }

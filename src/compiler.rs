@@ -154,8 +154,8 @@ fn add_cell_and_invoking(
 ) {
     let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, it's here because of borrow checker
     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-    let instr = chunk.get_last_instruction_id() + 1;
-    chunk.add_instruction(instruction_templates::cell_invoke(binding_id));
+    let instr = chunk.add_instruction(instruction_templates::cell_invoke(binding_id));
+    // NOTE: Cell invokes require information about where they're been called from
     let binding = InvokeBinding {
         register_map,
         func_name: func_name.into(),
@@ -165,6 +165,26 @@ fn add_cell_and_invoking(
     };
     graph_def.cells.push(cell);
     graph_def.add_invoke_binding(binding);
+}
+
+fn add_library_invoking(
+    graph_def: &mut PulseGraphDef,
+    register_map: RegisterMap,
+    target_chunk: i32,
+    func_name: Cow<'static, str>
+) {
+    // NOTE: Library invokes don't require source information unlike cell bindings.
+    let invoke_binding = InvokeBinding {
+        register_map,
+        func_name,
+        cell_index: -1,
+        src_chunk: -1,
+        src_instruction: -1,
+    };
+    let binding_id = graph_def.get_current_binding_id() + 1;
+    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+    chunk.add_instruction(instruction_templates::library_invoke(binding_id));
+    graph_def.add_invoke_binding(invoke_binding);
 }
 
 fn traverse_event_cell(
@@ -533,30 +553,17 @@ fn traverse_nodes_and_populate(
                 PulseValueType::PVAL_FLOAT(None),
                 false,
             );
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // ! Important (might change). We assume that after waiting we go to the next instruction after the cell invoke.
-            let cell_wait =
-                CPulseCell_Inflow_Wait::new(target_chunk, chunk.get_last_instruction_id() + 3);
-            graph_def.cells.push(Box::from(cell_wait));
-
-            let chunk = graph_def.chunks.get(target_chunk as usize).unwrap();
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_time) = reg_time {
-                register_map.add_inparam("flDurationSec".into(), reg_time);
-            }
-            let binding = InvokeBinding {
-                register_map,
-                func_name: "Wait".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: chunk.get_last_instruction_id() + 1,
-            };
-            let binding_idx = graph_def.add_invoke_binding(binding);
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            chunk.add_instruction(instruction_templates::cell_invoke(binding_idx));
+            
+            let register_map = reg_map_setup_inputs!(
+                "flDurationSec", reg_time
+            );
+            let cell =
+                CPulseCell_Inflow_Wait::new(target_chunk, graph_def.get_chunk_last_instruction_id(target_chunk) + 3);
+            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Wait".into());
             // early return.
             let mut instr_ret_void = Instruction::default();
             instr_ret_void.code = String::from("RETURN_VOID");
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instr_ret_void);
 
             graph_next_action!(graph, current_node, graph_def, target_chunk);
@@ -602,36 +609,14 @@ fn traverse_nodes_and_populate(
                     false,
                 );
             }
-            // create EntFire (step) cell
-            let step_cell = CPulseCell_Step_EntFire::new(input_value.clone().into());
-            graph_def.cells.push(Box::from(step_cell));
-            // now build instructions and bindings to get the domain value, and invoke the cell
             
             // add invoke binding for FireAtName cell
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_entity) = reg_entity {
-                register_map.add_inparam("TargetName".into(), reg_entity);
-            }
-            if let Some(reg_param) = reg_param {  
-                register_map.add_inparam("pParam".into(), reg_param);
-            }
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let binding = InvokeBinding {
-                register_map: register_map,
-                func_name: "FireAtName".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: chunk.get_last_instruction_id() + 1,
-            };
-            let binding_idx = graph_def.add_invoke_binding(binding);
-            // add instruction for invoking the binding.
-            // rust doesn't like reusing the borrowed chunks reference, but we know that it doesn't change.
-            graph_def
-                .chunks
-                .get_mut(target_chunk as usize)
-                .unwrap()
-                .add_instruction(instruction_templates::cell_invoke(binding_idx));
-
+            let register_map = reg_map_setup_inputs!(
+                "TargetName", reg_entity,
+                "pParam", reg_param
+            );
+            let cell = CPulseCell_Step_EntFire::new(input_value.clone().into());
+            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "FireAtName".into());
             let output_connection = OutputConnection::new(
                 String::from("Step_EntFire:-1"),
                 entity_name_static_value,
@@ -890,8 +875,6 @@ fn traverse_nodes_and_populate(
                 .clone()
                 .try_to_string()
                 .expect("Can't find input 'entClass'");
-            let new_binding_idx = graph_def.get_current_binding_id() + 1;
-            let mut register_map = RegisterMap::default();
             let mut reg_output = try_find_output_mapping(graph_def, output_id);
             let reg_entname = if reg_output == -1 { get_input_register_or_create_constant(
                 graph,
@@ -916,23 +899,12 @@ fn traverse_nodes_and_populate(
             } else {
                 return reg_output;
             }
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param.into());
-            graph_def.cells.push(Box::from(cell));
-            // TODO: note or return if it's not found.
-            if let Some(reg_entname) = reg_entname {
-                register_map.add_inparam("pName".into(), reg_entname);
-            }
+            let mut register_map = reg_map_setup_inputs!(
+                "pName", reg_entname
+            );
             register_map.add_outparam("retval".into(), reg_output);
-            let instr = chunk.add_instruction(instruction_templates::cell_invoke(new_binding_idx));
-            let binding = InvokeBinding {
-                register_map,
-                func_name: "Eval".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: instr,
-            };
-            graph_def.add_invoke_binding(binding);
+            let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param.into());
+            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Eval".into());
             return reg_output;
         }
         PulseNodeTemplate::DebugWorldText => {
@@ -1020,7 +992,6 @@ fn traverse_nodes_and_populate(
                 false,
             );
             // bAttached:
-            let new_binding_id = graph_def.get_current_binding_id() + 1;
             let attached =
                 get_constant_graph_input_value!(graph, current_node, "bAttached", try_to_bool);
             graph_def.add_constant(PulseConstant::Bool(attached));
@@ -1033,41 +1004,18 @@ fn traverse_nodes_and_populate(
             );
             let instruction = instruction_templates::get_const(new_constant_id, reg_battached);
             chunk.add_instruction(instruction);
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_hentity) = reg_hentity {
-                register_map.add_inparam("hEntity".into(), reg_hentity);
-            }
-            if let Some(reg_message) = reg_message {
-                register_map.add_inparam("pMessage".into(), reg_message);
-            }
-            if let Some(reg_ntextoffset) = reg_ntextoffset {
-                register_map.add_inparam("nTextOffset".into(), reg_ntextoffset);
-            }
-            if let Some(reg_flduration) = reg_flduration {
-                register_map.add_inparam("flDuration".into(), reg_flduration);
-            }
-            if let Some(reg_flverticaloffset) = reg_flverticaloffset {
-                register_map.add_inparam("flVerticalOffset".into(), reg_flverticaloffset);
-            }
+            let mut register_map = reg_map_setup_inputs!(
+                "hEntity", reg_hentity,
+                "pMessage", reg_message,
+                "nTextOffset", reg_ntextoffset,
+                "flDuration", reg_flduration,
+                "flVerticalOffset", reg_flverticaloffset,
+                "color", reg_color,
+                "flAlpha", reg_alpha,
+                "flScale", reg_scale
+            );
             register_map.add_inparam("bAttached".into(), reg_battached);
-            if let Some(reg_color) = reg_color {
-                register_map.add_inparam("color".into(), reg_color);
-            }
-            if let Some(reg_alpha) = reg_alpha {
-                register_map.add_inparam("flAlpha".into(), reg_alpha);
-            }
-            if let Some(reg_scale) = reg_scale {
-                register_map.add_inparam("flScale".into(), reg_scale);
-            }
-            let binding = InvokeBinding {
-                register_map,
-                func_name: "CPulseServerFuncs!DebugWorldText".into(),
-                cell_index: -1,
-                src_chunk: -1,
-                src_instruction: -1,
-            };
-            chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
-            graph_def.add_invoke_binding(binding);
+            add_library_invoking(graph_def, register_map, target_chunk, "CPulseServerFuncs!DebugWorldText".into());
 
             // go to next action.
             graph_next_action!(graph, current_node, graph_def, target_chunk);
@@ -1745,34 +1693,7 @@ fn traverse_nodes_and_populate(
                 "classname",
                 try_to_string
             );
-            let reg_searchfroment = get_connection_only_graph_input_value!(
-                graph,
-                current_node,
-                "pSearchFromEntity",
-                graph_def,
-                target_chunk,
-                context
-            );
-            let reg_radius = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                target_chunk,
-                "flSearchRadius",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            );
-            let reg_startentity = get_connection_only_graph_input_value!(
-                graph,
-                current_node,
-                "pStartEntity",
-                graph_def,
-                target_chunk,
-                context
-            );
-
-            let new_binding_idx = graph_def.get_current_binding_id() + 1;
-            let mut register_map = RegisterMap::default();
+            // Has this been already evaulated?
             let mut reg_output = try_find_output_mapping(graph_def, output_id);
             if reg_output == -1 {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1786,29 +1707,44 @@ fn traverse_nodes_and_populate(
             } else {
                 return reg_output;
             }
+            // connection only
+            let reg_searchfroment = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "pSearchFromEntity",
+                PulseValueType::PVAL_EHANDLE(None),
+                false,
+            );
+            let reg_radius = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "flSearchRadius",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            );
+            // connection only
+            let reg_startentity = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                target_chunk,
+                "pStartEntity",
+                PulseValueType::PVAL_EHANDLE(None),
+                false,
+            );
 
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let cell = CPulseCell_Value_FindEntByClassNameWithin::new(classname.into());
-            graph_def.cells.push(Box::from(cell));
-            if reg_searchfroment != -1 {
-                register_map.add_inparam("pSearchFromEntity".into(), reg_searchfroment);
-            }
-            if let Some(reg_radius) = reg_radius {
-                register_map.add_inparam("flSearchRadius".into(), reg_radius);
-            }
-            if reg_startentity != -1 {
-                register_map.add_inparam("pStartEntity".into(), reg_startentity);
-            }
+            let mut register_map = reg_map_setup_inputs!(
+                "pSearchFromEntity", reg_searchfroment,
+                "flSearchRadius", reg_radius,
+                "pStartEntity", reg_startentity
+            );
             register_map.add_outparam("retval".into(), reg_output);
-            let instr = chunk.add_instruction(instruction_templates::cell_invoke(new_binding_idx));
-            let binding = InvokeBinding {
-                register_map,
-                func_name: "Eval".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: instr,
-            };
-            graph_def.add_invoke_binding(binding);
+            let cell = CPulseCell_Value_FindEntByClassNameWithin::new(classname.into());
+            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Eval".into());
             return reg_output;
         }
         PulseNodeTemplate::IsValidEntity => {
@@ -2008,22 +1944,9 @@ fn traverse_nodes_and_populate(
                 PulseValueType::PVAL_INT(None),
                 false,
             );
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_value) = reg_value {
-                register_map.add_inparam("nSwitchValue".into(), reg_value);
-            }
-            let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, it's here because of borrow checker
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let instr = chunk.get_last_instruction_id() + 1;
-            chunk.add_instruction(instruction_templates::cell_invoke(binding_id)); // -1 because we don't know the id yet.
-            let binding = InvokeBinding {
-                register_map,
-                func_name: "Run".into(),
-                cell_index: graph_def.cells.len() as i32, // the cell to be added
-                src_chunk: target_chunk,
-                src_instruction: instr,
-            };
-            graph_def.add_invoke_binding(binding);
+            let register_map = reg_map_setup_inputs!(
+                "nSwitchValue", reg_value
+            );
             // now comes the processing of the outflows
             let mut outflow_connections = vec![];
             let mut instructions_jump_end = vec![];
@@ -2091,8 +2014,7 @@ fn traverse_nodes_and_populate(
                 default_case_outflow.unwrap_or_default(),
                 outflow_connections,
             );
-            graph_def.cells.push(Box::from(cell));
-
+            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Run".into());
             graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         PulseNodeTemplate::SoundEventStart => {

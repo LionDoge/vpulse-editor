@@ -6,6 +6,7 @@ use indoc::formatdoc;
 use slotmap::SecondaryMap;
 use crate::{pulsetypes::*, typing::{PulseValueType, Vec3}};
 use std::borrow::Cow;
+use crate::pulsetypes::PulseCellTrait;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -124,13 +125,6 @@ impl CPulseCell_Inflow_Wait {
     }
 }
 
-impl CPulseCell_Step_EntFire {
-    pub fn new(input: String) -> CPulseCell_Step_EntFire {
-        CPulseCell_Step_EntFire {
-            input: input,
-        }
-    }
-}
 
 impl KV3Serialize for CPulseCell_Step_EntFire {
     fn serialize(&self) -> String {
@@ -147,13 +141,6 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
     }
 }
 
-impl CPulseCell_Value_FindEntByName {
-    pub fn new(entity_type: String) -> CPulseCell_Value_FindEntByName {
-        CPulseCell_Value_FindEntByName {
-            entity_type,
-        }
-    }
-}
 impl KV3Serialize for CPulseCell_Value_FindEntByName {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -682,13 +669,11 @@ impl KV3Serialize for CPulseCell_SoundEventStart {
     }
 }
 
-trait PulseCellTrait: KV3Serialize + GetCellType {}
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
-    mapped_contexts: SecondaryMap<OutputId, crate::compiler::NodeTraverseOriginContext>,
-    pub cells: Vec<Box<dyn KV3Serialize>>,
+    pub cells: Vec<Box<dyn PulseCellTrait>>,
     pub constants: Vec<Box<PulseConstant>>,
     pub bindings: Vec<InvokeBinding>,
     pub chunks: Vec<PulseChunk>,
@@ -756,8 +741,12 @@ impl PulseGraphDef {
     pub fn get_public_output_index(&self, name: &str) -> Option<usize> {
         self.public_outputs.iter().position(|output| output.name == name)
     }
-    pub fn get_mapped_context(&self, output_id: OutputId) -> Option<&i32> {
-        self.mapped_registers_outputs.get(output_id)
+    pub fn get_chunk_last_instruction_id(&self, chunk_id: i32) -> i32 {
+        if let Some(chunk) = self.chunks.get(chunk_id as usize) {
+            chunk.get_last_instruction_id()
+        } else {
+            -1
+        }
     }
 }
 
@@ -808,24 +797,6 @@ impl KV3Serialize for PulseGraphDef {
             "
             , self.cells.iter().map(|cell| {
                 cell.serialize()
-                // match cell.as_ref() {
-                //     PulseCell::InflowMethod(cell) => cell.serialize(),
-                //     PulseCell::StepEntFire(cell) => cell.serialize(),
-                //     PulseCell::InflowWait(cell) => cell.serialize(),
-                //     PulseCell::InflowEvent(cell) => cell.serialize(),
-                //     PulseCell::ValueFindEntByName(cell) => cell.serialize(),
-                //     PulseCell::DebugLog => formatdoc!("
-                //         {{
-                //             _class = \"CPulseCell_Step_DebugLog\"
-                //             m_nEditorNodeID = -1
-                //         }}"),
-                //     PulseCell::StepPublicOutput(idx) => formatdoc!("
-                //         {{
-                //             _class = \"CPulseCell_Step_PublicOutput\"
-                //             m_OutputIndex = {}
-                //             m_nEditorNodeID = -1
-                //         }}", idx),
-                // }
             }).collect::<Vec<_>>().join(",\n\n")
             , self.map_name, self.xml_name
             , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<_>>().join(",\n\n")

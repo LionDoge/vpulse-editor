@@ -4,6 +4,8 @@ use crate::typing::PulseValueType;
 use crate::app::PulseDataType;
 use crate::serialization::{PulseRuntimeArgument, RegisterMap};
 use std::borrow::Cow;
+
+// Pulse Cells
 pub enum CellType {
     Inflow,
     Step,
@@ -12,10 +14,14 @@ pub enum CellType {
     Debug,
 }
 
-pub trait GetCellType {
+pub trait PulseCell {
     fn get_cell_type(&self) -> CellType;
 }
+pub trait PulseCellTrait: PulseCell + crate::serialization::KV3Serialize {}
+// blanket impl to make sure all cells implement the trait
+impl<T> PulseCellTrait for T where T: PulseCell + crate::serialization::KV3Serialize {}
 
+// Inflow Cells
 #[derive(Default)]
 #[allow(non_camel_case_types)]
 pub struct CPulseCell_Inflow_Method {
@@ -26,7 +32,7 @@ pub struct CPulseCell_Inflow_Method {
     pub return_type: String,
     pub args: Vec<PulseRuntimeArgument>,
 }
-impl GetCellType for CPulseCell_Inflow_Method {
+impl PulseCell for CPulseCell_Inflow_Method {
     fn get_cell_type(&self) -> CellType {
         CellType::Inflow
     }
@@ -39,7 +45,7 @@ pub struct CPulseCell_Inflow_EventHandler {
     pub entry_chunk: i32,
     pub event_name: Cow<'static, str>,
 }
-impl GetCellType for CPulseCell_Inflow_EventHandler {
+impl PulseCell for CPulseCell_Inflow_EventHandler {
     fn get_cell_type(&self) -> CellType {
         CellType::Inflow
     }
@@ -50,45 +56,61 @@ pub struct CPulseCell_Inflow_Wait {
     pub(super) dest_chunk: i32,
     pub(super) instruction: i32
 }
-impl GetCellType for CPulseCell_Inflow_Wait {
+impl PulseCell for CPulseCell_Inflow_Wait {
     fn get_cell_type(&self) -> CellType {
         CellType::Inflow
     }
 }
 
+pub struct CPulseCell_Inflow_GraphHook {
+    pub(super) hook_name: Cow<'static, str>,
+    pub(super) register_map: RegisterMap,
+    pub(super) entry_chunk: i32,
+}
+impl PulseCell for CPulseCell_Inflow_GraphHook {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Inflow
+    }
+}
+impl CPulseCell_Inflow_GraphHook {
+    pub fn new(hook_name: Cow<'static, str>, register_map: RegisterMap, entry_chunk: i32) -> Self {
+        Self {
+            hook_name,
+            register_map,
+            entry_chunk
+        }
+    }
+}
+
+// Step Cells
 #[allow(non_camel_case_types)]
 pub struct CPulseCell_Step_EntFire {
-    pub input: String,
+    pub input: Cow<'static, str>,
 }
-impl GetCellType for CPulseCell_Step_EntFire {
+impl PulseCell for CPulseCell_Step_EntFire {
     fn get_cell_type(&self) -> CellType {
         CellType::Step
     }
 }
-
-#[derive(Default)]
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Value_FindEntByName {
-    pub(super) entity_type: String,
-}
-impl GetCellType for CPulseCell_Value_FindEntByName {
-    fn get_cell_type(&self) -> CellType {
-        CellType::Value
+impl CPulseCell_Step_EntFire {
+    pub fn new(input: Cow<'static, str>) -> CPulseCell_Step_EntFire {
+        CPulseCell_Step_EntFire {
+            input: input,
+        }
     }
 }
 
 #[derive(Default)]
 pub struct CPulseCell_Step_DebugLog;
-impl GetCellType for CPulseCell_Step_DebugLog {
+impl PulseCell for CPulseCell_Step_DebugLog {
     fn get_cell_type(&self) -> CellType {
         CellType::Step
     }
 }
-
 pub struct CPulseCell_Step_PublicOutput {
     pub(super) output_idx: i32,
 }
-impl GetCellType for CPulseCell_Step_PublicOutput {
+impl PulseCell for CPulseCell_Step_PublicOutput {
     fn get_cell_type(&self) -> CellType {
         CellType::Step
     }
@@ -100,40 +122,43 @@ impl CPulseCell_Step_PublicOutput {
         }
     }
 }
+
+// Value Cells
+#[derive(Default)]
+#[allow(non_camel_case_types)]
+pub struct CPulseCell_Value_FindEntByName {
+    pub(super) entity_type: Cow<'static, str>,
+}
+impl PulseCell for CPulseCell_Value_FindEntByName {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Value
+    }
+}
+impl CPulseCell_Value_FindEntByName {
+    pub fn new(entity_type: Cow<'static, str>) -> CPulseCell_Value_FindEntByName {
+        CPulseCell_Value_FindEntByName {
+            entity_type,
+        }
+    }
+}
+
 pub struct CPulseCell_Value_FindEntByClassNameWithin {
-    pub (super) entity_type: String,
+    pub (super) entity_type: Cow<'static, str>,
 }
 impl CPulseCell_Value_FindEntByClassNameWithin {
-    pub fn new(entity_type: String) -> Self {
+    pub fn new(entity_type: Cow<'static, str>) -> Self {
         Self {
             entity_type
         }
     }
 }
-impl GetCellType for CPulseCell_Value_FindEntByClassNameWithin {
+impl PulseCell for CPulseCell_Value_FindEntByClassNameWithin {
     fn get_cell_type(&self) -> CellType {
         CellType::Value
     }
 }
-pub struct CPulseCell_Inflow_GraphHook {
-    pub(super) hook_name: String,
-    pub(super) register_map: RegisterMap,
-    pub(super) entry_chunk: i32,
-}
-impl GetCellType for CPulseCell_Inflow_GraphHook {
-    fn get_cell_type(&self) -> CellType {
-        CellType::Inflow
-    }
-}
-impl CPulseCell_Inflow_GraphHook {
-    pub fn new(hook_name: String, register_map: RegisterMap, entry_chunk: i32) -> Self {
-        Self {
-            hook_name,
-            register_map,
-            entry_chunk
-        }
-    }
-}
+
+// Outflow Cells
 pub struct OutflowConnection {
     pub outflow_name: Cow<'static, str>,
     pub dest_chunk: i32,
@@ -164,7 +189,7 @@ pub struct CPulseCell_Outflow_IntSwitch {
     pub(super) default_outflow: OutflowConnection,
     pub(super) ouflows: Vec<OutflowConnection>
 }
-impl GetCellType for CPulseCell_Outflow_IntSwitch {
+impl PulseCell for CPulseCell_Outflow_IntSwitch {
     fn get_cell_type(&self) -> CellType {
         CellType::Outflow
     }
@@ -177,6 +202,8 @@ impl CPulseCell_Outflow_IntSwitch {
         }
     }
 }
+
+// Other
 pub enum SoundEventStartType {
     SOUNDEVENT_START_PLAYER,
 	SOUNDEVENT_START_WORLD,
@@ -186,7 +213,7 @@ pub enum SoundEventStartType {
 pub struct CPulseCell_SoundEventStart {
     pub(super) typ: SoundEventStartType,
 }
-impl GetCellType for CPulseCell_SoundEventStart {
+impl PulseCell for CPulseCell_SoundEventStart {
     fn get_cell_type(&self) -> CellType {
         CellType::Step
     }

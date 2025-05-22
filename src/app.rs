@@ -9,6 +9,7 @@ use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
+use slotmap::SlotMap;
 use std::borrow::BorrowMut;
 use std::path::PathBuf;
 use std::usize;
@@ -50,6 +51,7 @@ pub enum PulseDataType {
     EventBindingChoice,
     LibraryBindingChoice,
     SoundEventName,
+    NoideChoice,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -77,6 +79,7 @@ pub enum PulseGraphValueType {
     Typ { value: PulseValueType },
     EventBindingChoice { value: EventBinding },
     LibraryBindingChoice { value: FunctionBinding },
+    NodeChoice {value: String}
 }
 
 impl Default for PulseGraphValueType {
@@ -176,6 +179,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to string", self)
         }
     }
+
+    pub fn try_node_id(self) -> anyhow::Result<String> {
+        if let PulseGraphValueType::NodeChoice { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to node id", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
@@ -212,6 +223,8 @@ pub enum PulseNodeTemplate {
     CompareIf,
     IntSwitch,
     SoundEventStart,
+    Function,
+    CallNode,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -238,6 +251,7 @@ pub struct PulseGraphState {
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
+    pub exposed_nodes: HashMap<NodeId, String>,
 
     pub save_file_path: PathBuf,
     #[serde(skip)]
@@ -265,6 +279,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::LibraryBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
             PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 171, 235),
+            PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -285,6 +300,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::LibraryBindingChoice => Cow::Borrowed("Library binding"),
             PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
             PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
+            PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
         }
     }
 }
@@ -328,6 +344,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CompareIf => "If",
             PulseNodeTemplate::IntSwitch => "Int Switch",
             PulseNodeTemplate::SoundEventStart => "Sound event start",
+            PulseNodeTemplate::Function => "Function",
+            PulseNodeTemplate::CallNode => "Call node",
         })
     }
 
@@ -344,7 +362,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Compare
             | PulseNodeTemplate::CompareOutput
             | PulseNodeTemplate::CompareIf
-            | PulseNodeTemplate::IntSwitch => vec!["Logic"],
+            | PulseNodeTemplate::IntSwitch
+            | PulseNodeTemplate::CallNode
+            | PulseNodeTemplate::Function => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait => vec!["Utility"],
@@ -743,6 +763,30 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_ehandle(graph, "hTargetEntity");
                 graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
             }
+            PulseNodeTemplate::Function => {
+                _user_state.exposed_nodes.insert(node_id, String::default());
+                graph.add_input_param(
+                    node_id,
+                    "funcName".into(),
+                    PulseDataType::String,
+                    PulseGraphValueType::String { value: String::default() },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+                output_action(graph, "outAction");
+            }
+            PulseNodeTemplate::CallNode => {
+                graph.add_input_param(
+                    node_id,
+                    "funcName".into(),
+                    PulseDataType::NoideChoice,
+                    PulseGraphValueType::NodeChoice { value: String::default() },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+                input_action(graph);
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -784,6 +828,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::CompareIf,
             PulseNodeTemplate::IntSwitch,
             PulseNodeTemplate::SoundEventStart,
+            PulseNodeTemplate::Function,
+            PulseNodeTemplate::CallNode,
         ]
     }
 }
@@ -1026,6 +1072,25 @@ impl WidgetValueTrait for PulseGraphValueType {
                                      str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
+                                    );
+                                }
+                            }
+                        });
+                });
+            }
+            PulseGraphValueType::NodeChoice { value } => {
+                ui.horizontal(|ui| { 
+                    ui.label("Node");
+                    ComboBox::from_id_salt(_node_id)
+                        .selected_text(value.clone())
+                        .show_ui(ui, |ui| {
+                            for node in _user_state.graph.nodes.iter() {
+                                let str = node.user_data.node_graph_label(_user_state);
+                                if ui.selectable_value::<String>(value,
+                                    str.clone(),
+                                     str).clicked() {
+                                    responses.push(
+                                        PulseGraphResponse::ChangeNodeBinding(_node_id, str)
                                     );
                                 }
                             }

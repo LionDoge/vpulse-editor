@@ -3,14 +3,11 @@ use crate::bindings::*;
 use crate::typing::*;
 use crate::pulsetypes::*;
 use core::panic;
-use eframe::egui::output;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
-use slotmap::SlotMap;
-use std::borrow::BorrowMut;
 use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
@@ -79,7 +76,7 @@ pub enum PulseGraphValueType {
     Typ { value: PulseValueType },
     EventBindingChoice { value: EventBinding },
     LibraryBindingChoice { value: FunctionBinding },
-    NodeChoice {value: String}
+    NodeChoice {node: Option<NodeId>}
 }
 
 impl Default for PulseGraphValueType {
@@ -180,9 +177,13 @@ impl PulseGraphValueType {
         }
     }
 
-    pub fn try_node_id(self) -> anyhow::Result<String> {
-        if let PulseGraphValueType::NodeChoice { value } = self {
-            Ok(value)
+    pub fn try_node_id(self) -> anyhow::Result<NodeId> {
+        if let PulseGraphValueType::NodeChoice { node } = self {
+            if let Some(node_id) = node {
+                Ok(node_id)
+            } else {
+                anyhow::bail!("Node choice is empty")
+            }
         } else {
             anyhow::bail!("Invalid cast from {:?} to node id", self)
         }
@@ -240,6 +241,7 @@ pub enum PulseGraphResponse {
     ChangeParamType(NodeId, String, PulseValueType),
     ChangeEventBinding(NodeId, EventBinding),
     ChangeFunctionBinding(NodeId, FunctionBinding),
+    //ChangeNodeId(NodeId, String),
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -251,7 +253,7 @@ pub struct PulseGraphState {
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
-    pub exposed_nodes: HashMap<NodeId, String>,
+    pub exposed_nodes: SecondaryMap<NodeId, String>,
 
     pub save_file_path: PathBuf,
     #[serde(skip)]
@@ -765,14 +767,6 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::Function => {
                 _user_state.exposed_nodes.insert(node_id, String::default());
-                graph.add_input_param(
-                    node_id,
-                    "funcName".into(),
-                    PulseDataType::String,
-                    PulseGraphValueType::String { value: String::default() },
-                    InputParamKind::ConstantOnly,
-                    true,
-                );
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::CallNode => {
@@ -780,7 +774,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     node_id,
                     "funcName".into(),
                     PulseDataType::NoideChoice,
-                    PulseGraphValueType::NodeChoice { value: String::default() },
+                    PulseGraphValueType::NodeChoice { node: None },
                     InputParamKind::ConstantOnly,
                     true,
                 );
@@ -1078,20 +1072,21 @@ impl WidgetValueTrait for PulseGraphValueType {
                         });
                 });
             }
-            PulseGraphValueType::NodeChoice { value } => {
+            PulseGraphValueType::NodeChoice { node } => {
                 ui.horizontal(|ui| { 
                     ui.label("Node");
+                    let node_name = match node {
+                        Some(n) => _user_state.exposed_nodes.get(*n).map(|s| s.as_str()).unwrap_or("-- CHOOSE --"),
+                        None => "-- CHOOSE --",
+                    };
                     ComboBox::from_id_salt(_node_id)
-                        .selected_text(value.clone())
+                        .selected_text(node_name)
                         .show_ui(ui, |ui| {
-                            for node in _user_state.graph.nodes.iter() {
-                                let str = node.user_data.node_graph_label(_user_state);
-                                if ui.selectable_value::<String>(value,
-                                    str.clone(),
+                            for node_pair in _user_state.exposed_nodes.iter() {
+                                let str: &str = node_pair.1.as_str();
+                                if ui.selectable_value::<Option<NodeId>>(node,
+                                    Some(node_pair.0),
                                      str).clicked() {
-                                    responses.push(
-                                        PulseGraphResponse::ChangeNodeBinding(_node_id, str)
-                                    );
                                 }
                             }
                         });
@@ -1109,6 +1104,22 @@ impl NodeDataTrait for PulseNodeData {
     type UserState = PulseGraphState;
     type DataType = PulseDataType;
     type ValueType = PulseGraphValueType;
+
+    fn top_bar_ui(
+        &self,
+        _ui: &mut egui::Ui,
+        _node_id: NodeId,
+        _graph: &Graph<Self, Self::DataType, Self::ValueType>,
+        _user_state: &mut Self::UserState,
+    ) -> Vec<NodeResponse<Self::Response, Self>>
+    where
+        Self::Response: UserResponseTrait,
+    {
+        if let Some(node_name) = _user_state.exposed_nodes.get_mut(_node_id) {
+            _ui.text_edit_singleline(node_name);
+        }
+        vec![]
+    }
 
     // This method will be called when drawing each node. This allows adding
     // extra ui elements inside the nodes. In this case, we create an "active"
@@ -1572,6 +1583,18 @@ impl eframe::App for PulseGraphEditor {
     /// If the persistence function is enabled,
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        // clear deprecated references
+        // this is a bit inefficient but will do for now.
+        for node in self.state.graph.nodes.iter() {
+            for exposed_node in self.user_state.exposed_nodes.iter_mut() {
+                if exposed_node.0 == node.0 {
+                    // remove the node if it doesn't exist anymore.
+                    if !self.state.graph.nodes.contains_key(node.0) {
+                        exposed_node.1.clear();
+                    }
+                }
+            }
+        }
         use std::env;
         let save_dir = env::current_dir();
         if save_dir.is_ok() {

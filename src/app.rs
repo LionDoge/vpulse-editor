@@ -4,6 +4,7 @@ use crate::typing::*;
 use crate::pulsetypes::*;
 use core::panic;
 use std::fs;
+use anyhow::anyhow;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
@@ -1195,8 +1196,8 @@ impl PulseGraphEditor {
         fs::write(filepath, res)?;
         Ok(())
     }
-    // performs additional cleanup and other things before saving
-    fn perform_save(&mut self, filepath: Option<&PathBuf>) -> Result<(), anyhow::Error> {
+    // perform a save including including some cleanup
+    fn perform_save(&mut self, ctx: &eframe::egui::Context, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
         // clear deprecated references
         // this is a bit inefficient but will do for now.
         for node in self.state.graph.nodes.iter() {
@@ -1209,16 +1210,19 @@ impl PulseGraphEditor {
                 }
             }
         }
+        let mut dest_path;
         if let Some(filepath) = filepath {
-            self.save_graph(filepath)
+            dest_path = filepath;
         } else {
             // if no filepath is provided, assume the one in saved state
             if let Some(filepath) = &self.user_state.save_file_path {
-                self.save_graph(filepath)
+                dest_path = filepath;
             } else {
-                Err(anyhow::anyhow!("No filepath provided for saving the graph.").context("PulseGraphEditor::perform_save"))
+                return Err(anyhow!("No file path provided for saving the graph. This should not happen"));
             }
         }
+        self.save_graph(dest_path)?;
+        Ok(())
     }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(&filepath)?;
@@ -1643,7 +1647,9 @@ impl eframe::App for PulseGraphEditor {
                             .show();
                     }
                 }
-                if ui.button("Save").clicked() {
+                // User pressed the "Save" button or 
+                if ui.button("Save").clicked() ||
+                ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S)) {
                     let mut perform_save: bool = true;
                     if self.user_state.save_file_path.is_none() {
                         perform_save = false;
@@ -1656,10 +1662,10 @@ impl eframe::App for PulseGraphEditor {
                         self.user_state.save_file_path = chosen_file;
                     }
                     if perform_save {
-                        if let Err(e) = self.perform_save(None) {
+                        if let Err(e) = self.perform_save(ctx, None) {
                             MessageDialog::new()
                                 .set_level(rfd::MessageLevel::Error)
-                                .set_title("Save failed")
+                                .set_title("Save failed (Programming Error - Report this!)")
                                 .set_buttons(rfd::MessageButtons::Ok)
                                 .set_description(e.to_string())
                                 .show();

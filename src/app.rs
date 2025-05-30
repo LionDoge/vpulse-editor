@@ -1242,6 +1242,15 @@ impl PulseGraphEditor {
         self.save_graph(dest_path)?;
         Ok(())
     }
+    // promts user to choose a file to save the graph to and remembers the location for saving.
+    fn dialog_change_save_file(&mut self) -> bool {
+        let chosen_file = FileDialog::new()
+            .add_filter("Pulse Graph Editor State", &["ron"])
+            .save_file();
+        let did_pick = chosen_file.as_ref().is_some(); // if not, the user cancelled so we should note that
+        self.user_state.save_file_path = chosen_file;
+        did_pick
+    }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(&filepath)?;
         let loaded_graph: PulseGraphEditor = ron::from_str(&contents)?;
@@ -1680,16 +1689,10 @@ impl eframe::App for PulseGraphEditor {
                 // User pressed the "Save" button or 
                 if ui.button("Save").clicked() ||
                 ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S)) {
+                    // is path set? if yes then save, if not promt the user first
                     let mut perform_save: bool = true;
                     if self.user_state.save_file_path.is_none() {
-                        perform_save = false;
-                        let chosen_file = FileDialog::new()
-                            .add_filter("Pulse Graph Editor State", &["ron"])
-                            .save_file();
-                        if chosen_file.is_some() { // if not, the user cancelled so we should note that
-                            perform_save = true;
-                        }
-                        self.user_state.save_file_path = chosen_file;
+                        perform_save = self.dialog_change_save_file();
                     }
                     if perform_save {
                         if let Err(e) = self.perform_save(None) {
@@ -1702,6 +1705,20 @@ impl eframe::App for PulseGraphEditor {
                         }
                     }
                     // else it was most likely cancelled.
+                }
+                if ui.button("Save as...").clicked() ||
+                ctx.input(|i| i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::S)) {
+                    if self.dialog_change_save_file() {
+                        // TODO: DRY
+                        if let Err(e) = self.perform_save(None) {
+                            MessageDialog::new()
+                                .set_level(rfd::MessageLevel::Error)
+                                .set_title("Save failed")
+                                .set_buttons(rfd::MessageButtons::Ok)
+                                .set_description(e.to_string())
+                                .show();
+                        }
+                    }
                 }
                 if ui.button("Open").clicked() {
                     let chosen_file = FileDialog::new()

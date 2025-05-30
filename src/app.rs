@@ -1197,7 +1197,7 @@ impl PulseGraphEditor {
         Ok(())
     }
     // perform a save including including some cleanup
-    fn perform_save(&mut self, ctx: &eframe::egui::Context, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
+    fn perform_save(&mut self, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
         // clear deprecated references
         // this is a bit inefficient but will do for now.
         for node in self.state.graph.nodes.iter() {
@@ -1210,7 +1210,7 @@ impl PulseGraphEditor {
                 }
             }
         }
-        let mut dest_path;
+        let dest_path;
         if let Some(filepath) = filepath {
             dest_path = filepath;
         } else {
@@ -1662,7 +1662,7 @@ impl eframe::App for PulseGraphEditor {
                         self.user_state.save_file_path = chosen_file;
                     }
                     if perform_save {
-                        if let Err(e) = self.perform_save(ctx, None) {
+                        if let Err(e) = self.perform_save(None) {
                             MessageDialog::new()
                                 .set_level(rfd::MessageLevel::Error)
                                 .set_title("Save failed (Programming Error - Report this!)")

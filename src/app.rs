@@ -1665,7 +1665,7 @@ impl eframe::App for PulseGraphEditor {
                         if let Err(e) = self.perform_save(None) {
                             MessageDialog::new()
                                 .set_level(rfd::MessageLevel::Error)
-                                .set_title("Save failed (Programming Error - Report this!)")
+                                .set_title("Save failed")
                                 .set_buttons(rfd::MessageButtons::Ok)
                                 .set_description(e.to_string())
                                 .show();

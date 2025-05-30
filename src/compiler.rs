@@ -1,9 +1,10 @@
 use crate::app::{
-    PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
-    PulseNodeTemplate,
+    EditorConfig, PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData, PulseNodeTemplate
 };
 use crate::typing::get_preffered_inputparamkind_from_type;
 use std::borrow::Cow;
+use std::ffi::OsStr;
+use std::path::PathBuf;
 use crate::instruction_templates;
 use crate::pulsetypes::*;
 use crate::serialization::*;
@@ -11,6 +12,7 @@ use crate::typing::PulseValueType;
 use crate::bindings::LibraryBindingType;
 use egui_node_graph2::*;
 use std::fs;
+use std::process::Command;
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -285,8 +287,9 @@ fn traverse_entry_cell(
     chunk.add_instruction(instruction_templates::return_void());
 }
 
-pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState) -> Result<(), String> {
+pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState, config: &EditorConfig) -> Result<(), String> {
     let mut graph_def = PulseGraphDef::default();
+    let file_dir = graph_state.save_file_path.as_ref().ok_or("Output file path is not set, this should not be reached!")?;
     graph_def.variables = graph_state.variables.clone();
     graph_def.public_outputs = graph_state.public_outputs.clone();
     graph_def.map_name = String::from("maps/main.vmap");
@@ -297,20 +300,43 @@ pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState) -> R
     }
     let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
-    let file_dir = &graph_state.save_file_path;
-    if file_dir.is_none() {
-        return Err("Output file path is set incorrectly".to_string());
+    
+    let _ = fs::create_dir_all(file_dir).map_err(|e| format!("Failed to create output directory: {}", e));
+    // change extension to .vpulse for saving
+    let mut file_path = file_dir.clone();
+    file_path.set_extension("vpulse");
+    fs::write(&file_path, data).map_err(|e| format!("Failed to write to file: {}", e))?;
+    run_asset_builder(config, &file_path).map_err(|e| format!("Failed to run asset builder: {}", e))
+}
+
+fn run_asset_builder(config: &EditorConfig, path_src: &PathBuf) -> anyhow::Result<()> {
+    let assetbuilder_path = config.assetassembler_path.as_path();
+    let red2_path = config.red2_template_path.as_path();
+    if !assetbuilder_path.exists() || !assetbuilder_path.is_file() {
+        return Err(anyhow::anyhow!("Asset assembler location was specified incorrectly in the config: {}", assetbuilder_path.display()));
     }
-    let file_dir = file_dir.as_ref().unwrap().parent().unwrap();
-    let dir_res = fs::create_dir_all(file_dir);
-    if dir_res.is_err() {
-        return Err(format!(
-            "Failed to create output directory: {}",
-            dir_res.err().unwrap()
-        ));
+    if !red2_path.exists() || !red2_path.is_file() {
+        return Err(anyhow::anyhow!("RED2 template location was specified incorrectly in the config: {}", red2_path.display()));
     }
-    fs::write(graph_state.save_file_path.as_ref().unwrap().as_path(), data)
-        .map_err(|e| format!("Failed to write to file: {}", e))
+    if !path_src.exists() || !path_src.is_file() {
+        return Err(anyhow::anyhow!("File needs to be saved before compilation"));
+    }
+    let mut out_file = path_src.clone();
+    out_file.set_extension("vpulse_c");
+    let mut process = Command::new(config.python_interpreter.as_str())
+        .arg(assetbuilder_path)
+        .arg("-p")
+        .arg("vpulse")
+        .arg("-f")
+        .arg(red2_path)
+        .arg(path_src)
+        .arg("-o")
+        .arg(out_file)
+        .spawn()?;
+    // it's fine to freeze the UI here, because recompiling while loading could lead to issues.
+    // this process should usually be fast enough to not be very noticable.
+    process.wait()?;
+    Ok(())
 }
 
 fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputId>) -> i32 {

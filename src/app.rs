@@ -13,6 +13,7 @@ use slotmap::SecondaryMap;
 use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
+use std::ffi::OsString;
 // Compare this snippet from src/instruction_templates.rs:
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct CustomOutputInfo {
@@ -1182,13 +1183,30 @@ type MyEditorState = GraphEditorState<
     PulseGraphState,
 >;
 
+#[derive(Deserialize)]
+pub struct EditorConfig {
+    pub python_interpreter: String,
+    pub assetassembler_path: PathBuf,
+    pub red2_template_path: PathBuf,
+}
+impl Default for EditorConfig {
+    fn default() -> Self {
+        EditorConfig {
+            // TODO: it could be python3 on Linux
+            python_interpreter: String::from("python"),
+            assetassembler_path: PathBuf::from(""),
+            red2_template_path: PathBuf::from("graph_red2_template.kv3"),
+        }
+    }
+}
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
+    #[serde(skip)]
+    editor_config: EditorConfig,
 }
-
 
 impl PulseGraphEditor {
     fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
@@ -1538,7 +1556,6 @@ impl PulseGraphEditor {
     }
 }
 
-//#[cfg(feature = "persistence")]
 impl PulseGraphEditor {
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
@@ -1548,13 +1565,26 @@ impl PulseGraphEditor {
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
-        #[cfg(not(feature = "persistence"))]
-        let mut grph: PulseGraphEditor = Default::default();
-        // Self {
-        //     state: grph.state,
-        //     user_state: grph.user_state,
-        //     outputs_dropdown_choices: vec![],
-        // }
+
+        let cfg_res: anyhow::Result<EditorConfig> = {
+            let cfg_str = std::fs::read_to_string("config.json");
+            match cfg_str {
+                Ok(cfg_str) => serde_json::from_str(&cfg_str).map_err(|e| {
+                    anyhow::anyhow!("Failed to parse config.json: {}", e)
+                }),
+                Err(e) => Err(anyhow::anyhow!("Failed to read config.json: {}", e)),
+            }
+        };
+        if let Err(e) = &cfg_res {
+            MessageDialog::new()
+            .set_level(rfd::MessageLevel::Error)
+            .set_title("Failed to load config file")
+            .set_buttons(rfd::MessageButtons::Ok)
+            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {}", e.to_string()))
+            .show();
+        };
+        grph.editor_config = cfg_res.unwrap_or_default();
+
         let bindings = load_bindings(std::path::Path::new("bindings_cs2.json"));
         match bindings {
             Ok(bindings) => {
@@ -1637,7 +1667,7 @@ impl eframe::App for PulseGraphEditor {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
-                    let compile_res = compile_graph(&self.state.graph, &self.user_state);
+                    let compile_res = compile_graph(&self.state.graph, &self.user_state, &self.editor_config);
                     if compile_res.is_err() {
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)

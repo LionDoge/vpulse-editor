@@ -289,7 +289,7 @@ fn traverse_entry_cell(
 
 pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState, config: &EditorConfig) -> Result<(), String> {
     let mut graph_def = PulseGraphDef::default();
-    let file_dir = graph_state.save_file_path.as_ref().ok_or("Output file path is not set, this should not be reached!")?;
+    let file_dir = graph_state.save_file_path.as_ref().ok_or("File needs to be saved before compiling")?;
     graph_def.variables = graph_state.variables.clone();
     graph_def.public_outputs = graph_state.public_outputs.clone();
     graph_def.map_name = String::from("maps/main.vmap");

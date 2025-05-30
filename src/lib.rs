@@ -11,7 +11,6 @@ mod compiler;
 mod bindings;
 mod typing;
 pub use app::PulseGraphEditor;
-
 // ----------------------------------------------------------------------------
 // When compiling for web:
 

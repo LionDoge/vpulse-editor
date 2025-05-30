@@ -3,6 +3,7 @@ use crate::bindings::*;
 use crate::typing::*;
 use crate::pulsetypes::*;
 use core::panic;
+use std::fs;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
@@ -254,8 +255,10 @@ pub struct PulseGraphState {
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
     pub exposed_nodes: SecondaryMap<NodeId, String>,
+    pub outputs_dropdown_choices: Vec<PulseValueType>,
 
-    pub save_file_path: PathBuf,
+    #[serde(skip)]
+    pub save_file_path: Option<PathBuf>,
     #[serde(skip)]
     pub bindings: GraphBindings,
 }
@@ -1183,11 +1186,49 @@ type MyEditorState = GraphEditorState<
 pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
-    outputs_dropdown_choices: Vec<PulseValueType>,
 }
 
 
 impl PulseGraphEditor {
+    fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        let res = ron::to_string::<PulseGraphEditor>(&self)?;
+        fs::write(filepath, res)?;
+        Ok(())
+    }
+    // performs additional cleanup and other things before saving
+    fn perform_save(&mut self, filepath: Option<&PathBuf>) -> Result<(), anyhow::Error> {
+        // clear deprecated references
+        // this is a bit inefficient but will do for now.
+        for node in self.state.graph.nodes.iter() {
+            for exposed_node in self.user_state.exposed_nodes.iter_mut() {
+                if exposed_node.0 == node.0 {
+                    // remove the node if it doesn't exist anymore.
+                    if !self.state.graph.nodes.contains_key(node.0) {
+                        exposed_node.1.clear();
+                    }
+                }
+            }
+        }
+        if let Some(filepath) = filepath {
+            self.save_graph(filepath)
+        } else {
+            // if no filepath is provided, assume the one in saved state
+            if let Some(filepath) = &self.user_state.save_file_path {
+                self.save_graph(filepath)
+            } else {
+                Err(anyhow::anyhow!("No filepath provided for saving the graph.").context("PulseGraphEditor::perform_save"))
+            }
+        }
+    }
+    fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
+        let contents = fs::read_to_string(&filepath)?;
+        let loaded_graph: PulseGraphEditor = ron::from_str(&contents)?;
+        self.state = loaded_graph.state;
+        self.user_state = loaded_graph.user_state;
+        // we don't serialize file path since the file could be moved between save/open.
+        self.user_state.save_file_path = Some(filepath);
+        Ok(())
+    }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
         let param = self
             .state
@@ -1583,27 +1624,6 @@ impl eframe::App for PulseGraphEditor {
     /// If the persistence function is enabled,
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        // clear deprecated references
-        // this is a bit inefficient but will do for now.
-        for node in self.state.graph.nodes.iter() {
-            for exposed_node in self.user_state.exposed_nodes.iter_mut() {
-                if exposed_node.0 == node.0 {
-                    // remove the node if it doesn't exist anymore.
-                    if !self.state.graph.nodes.contains_key(node.0) {
-                        exposed_node.1.clear();
-                    }
-                }
-            }
-        }
-        use std::env;
-        let save_dir = env::current_dir();
-        if save_dir.is_ok() {
-            let save_dir = save_dir.unwrap();
-            let save_dir_str = save_dir.to_str();
-            if save_dir_str.is_some() {
-                eframe::storage_dir(save_dir_str.unwrap());
-            }
-        }
         eframe::set_value(storage, PERSISTENCE_KEY, &self);
     }
     /// Called each time the UI needs repainting, which may be many times per second.
@@ -1623,14 +1643,44 @@ impl eframe::App for PulseGraphEditor {
                             .show();
                     }
                 }
-                if ui.button("Pick save location").clicked() {
-                    let chosen_file = FileDialog::new()
-                        .add_filter("Pulse Graph", &["vpulse"])
-                        .save_file();
-                    if chosen_file.is_some() {
-                        self.user_state.save_file_path = chosen_file.unwrap();
+                if ui.button("Save").clicked() {
+                    let mut perform_save: bool = true;
+                    if self.user_state.save_file_path.is_none() {
+                        perform_save = false;
+                        let chosen_file = FileDialog::new()
+                            .add_filter("Pulse Graph Editor State", &["ron"])
+                            .save_file();
+                        if chosen_file.is_some() { // if not, the user cancelled so we should note that
+                            perform_save = true;
+                        }
+                        self.user_state.save_file_path = chosen_file;
+                    }
+                    if perform_save {
+                        if let Err(e) = self.perform_save(None) {
+                            MessageDialog::new()
+                                .set_level(rfd::MessageLevel::Error)
+                                .set_title("Save failed")
+                                .set_buttons(rfd::MessageButtons::Ok)
+                                .set_description(e.to_string())
+                                .show();
+                        }
                     }
                     // else it was most likely cancelled.
+                }
+                if ui.button("Open").clicked() {
+                    let chosen_file = FileDialog::new()
+                            .add_filter("Pulse Graph Editor State", &["ron"])
+                            .pick_file();
+                    if let Some(filepath) = chosen_file {
+                        if let Err(e) = self.load_graph(filepath) {
+                            MessageDialog::new()
+                                .set_level(rfd::MessageLevel::Error)
+                                .set_title("Load failed")
+                                .set_buttons(rfd::MessageButtons::Ok)
+                                .set_description(e.to_string())
+                                .show();
+                        }
+                    }
                 }
             });
         });
@@ -1641,7 +1691,7 @@ impl eframe::App for PulseGraphEditor {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.label("Outputs:");
                 if ui.button("Add output").clicked() {
-                    self.outputs_dropdown_choices
+                    self.user_state.outputs_dropdown_choices
                         .push(PulseValueType::PVAL_INT(None));
                     self.user_state.public_outputs.push(OutputDefinition {
                         name: String::default(),
@@ -1726,7 +1776,7 @@ impl eframe::App for PulseGraphEditor {
                 ui.separator();
                 ui.label("Variables:");
                 if ui.button("Add variable").clicked() {
-                    self.outputs_dropdown_choices
+                    self.user_state.outputs_dropdown_choices
                         .push(PulseValueType::PVAL_INT(None));
                     self.user_state.variables.push(PulseVariable {
                         name: String::default(),

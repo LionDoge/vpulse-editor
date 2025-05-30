@@ -1,18 +1,24 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/target/debug/pulseedit.exe",
-            "args": [
-                //"no_launcher"
-            ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "console": "integratedTerminal",
-        }
-    ]
-}
+     "version": "0.2.0",
+     "configurations": [
+         {
+             "name": "(Windows) Launch",
+             "type": "cppvsdbg",
+             "request": "launch",
+             "program": "${workspaceRoot}/target/debug/pulseedit.exe",
+             "args": [],
+             "stopAtEntry": false,
+             "cwd": "${workspaceRoot}",
+             "environment": [],
+             "externalConsole": true
+         },
+         {
+             "name": "(OSX) Launch",
+             "type": "lldb",
+             "request": "launch",
+             "program": "${workspaceRoot}/target/debug/foo",
+             "args": [],
+             "cwd": "${workspaceRoot}",
+         }
+     ]
+ }

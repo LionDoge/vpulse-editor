@@ -297,11 +297,11 @@ pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState) -> R
     }
     let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
-    let file_dir = graph_state.save_file_path.as_path().parent();
+    let file_dir = &graph_state.save_file_path;
     if file_dir.is_none() {
         return Err("Output file path is set incorrectly".to_string());
     }
-    let file_dir = file_dir.unwrap();
+    let file_dir = file_dir.as_ref().unwrap().parent().unwrap();
     let dir_res = fs::create_dir_all(file_dir);
     if dir_res.is_err() {
         return Err(format!(
@@ -309,7 +309,7 @@ pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState) -> R
             dir_res.err().unwrap()
         ));
     }
-    fs::write(graph_state.save_file_path.as_path(), data)
+    fs::write(graph_state.save_file_path.as_ref().unwrap().as_path(), data)
         .map_err(|e| format!("Failed to write to file: {}", e))
 }
 

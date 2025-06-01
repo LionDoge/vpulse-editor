@@ -189,6 +189,23 @@ fn add_library_invoking(
     graph_def.add_invoke_binding(invoke_binding);
 }
 
+fn add_call_reference(
+    graph_def: &mut PulseGraphDef,
+    src_chunk: i32,
+    src_instruction: i32,
+) -> i32 {
+    // add call info, return the index
+    // PULSE_CALL_SYNC instruction is required later to call it
+    let call_info = CallInfo {
+        port_name: "Call".into(),
+        register_map: RegisterMap::default(), // no parameter support yet
+        call_method_id: -1,
+        src_chunk,
+        src_instruction,
+    };
+    graph_def.add_call_info(call_info)
+}
+
 fn traverse_event_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
@@ -243,6 +260,32 @@ fn traverse_graphhook_cell(
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
+}
+
+// traverse a function node that can be referenced to call remotely.
+fn traverse_function_entry(
+    graph: &PulseGraph,
+    node: &Node<PulseNodeData>,
+    graph_def: &mut PulseGraphDef,
+) -> i32 {
+    let existing_entrypoint = graph_def
+        .traversed_entrypoints
+        .iter()
+        .find(|&x| x.0 == node.id);
+
+    if existing_entrypoint.is_none() {
+        let chunk_id = graph_def.create_chunk();
+        let connected_node: Option<&Node<PulseNodeData>> = get_next_action_node(node, graph, "outAction");
+        if connected_node.is_some() {
+            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
+        }
+        // remember that we traversed this already!
+        graph_def.traversed_entrypoints.push((node.id, chunk_id));
+        chunk_id
+    } else {
+        // we already traversed this entrypoint, so we can just return the chunk id
+        existing_entrypoint.unwrap().1
+    }
 }
 
 fn traverse_entry_cell(
@@ -2082,6 +2125,28 @@ fn traverse_nodes_and_populate(
                 add_cell_and_invoking(graph_def, Box::new(cell), register_map, target_chunk, "Run".into());
             }
             return reg_out;
+        }
+        PulseNodeTemplate::CallNode => {
+            // CallNode is a special node that is used to call another node, which is defined by the template.
+            // The template is stored in the user_data of the current node.
+            let node_id = get_constant_graph_input_value!(
+                graph, current_node, "nodeId", try_node_id
+            );
+            if let Some(node) = graph.nodes.get(node_id) {
+                let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
+                let func_chunk = traverse_function_entry(graph, node, graph_def);
+                
+                let instr = instruction_templates::call_sync(
+                    add_call_reference(graph_def, target_chunk, call_instr_id),
+                    func_chunk,
+                    0
+                );
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                chunk.add_instruction(instr);
+            } else {
+                println!("CallNode: Node not found in the graph.");
+            }
+            graph_next_action!(graph, current_node, graph_def, target_chunk);
         }
         _ => todo!(
             "Implement node template: {:?}",

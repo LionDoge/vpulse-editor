@@ -144,3 +144,12 @@ pub fn add_value(register_to: i32, register_from: i32, register_out: i32) -> Ins
     instr.reg2 = register_from;
     instr
 }
+
+pub fn call_sync(call_info_index: i32, dest_chunk: i32, dest_instruction: i32) -> Instruction {
+    let mut instr = Instruction::default();
+    instr.code = String::from("PULSE_CALL_SYNC");
+    instr.call_info_index = call_info_index;
+    instr.chunk = dest_chunk;
+    instr.dest_instruction = dest_instruction;
+    instr
+}

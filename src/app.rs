@@ -777,7 +777,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CallNode => {
                 graph.add_input_param(
                     node_id,
-                    "funcName".into(),
+                    "nodeId".into(),
                     PulseDataType::NoideChoice,
                     PulseGraphValueType::NodeChoice { node: None },
                     InputParamKind::ConstantOnly,

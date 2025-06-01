@@ -1,7 +1,7 @@
 #![allow(non_camel_case_types)]
 #![allow(nonstandard_style)]
 
-use egui_node_graph2::{InputId, OutputId};
+use egui_node_graph2::{InputId, OutputId, NodeId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
 use crate::{pulsetypes::*, typing::{PulseValueType, Vec3}};
@@ -669,10 +669,40 @@ impl KV3Serialize for CPulseCell_SoundEventStart {
     }
 }
 
+pub struct CallInfo {
+    pub port_name: Cow<'static, str>,
+    pub register_map: RegisterMap,
+    pub call_method_id: i32, // also used for debugging only?
+    pub src_chunk: i32,
+    pub src_instruction: i32,
+}
+
+impl KV3Serialize for CallInfo {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                m_PortName = \"{}\"
+                m_nEditorNodeID = -1
+                m_RegisterMap = {}
+                m_nCallMethodID = {}
+                m_nSrcChunk = {}
+                m_nSrcInstruction = {}
+            }}
+            ",
+            self.port_name,
+            self.register_map.serialize(),
+            self.call_method_id, self.src_chunk,
+            self.src_instruction
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
+    pub traversed_entrypoints: Vec<(NodeId, i32)>, // used to track which entrypoints have been traversed
     pub cells: Vec<Box<dyn PulseCellTrait>>,
     pub constants: Vec<Box<PulseConstant>>,
     pub bindings: Vec<InvokeBinding>,
@@ -681,6 +711,7 @@ pub struct PulseGraphDef {
     pub domain_values: Vec<DomainValue>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
+    pub call_infos: Vec<CallInfo>,
     pub map_name: String,
     pub xml_name: String,
 }
@@ -748,6 +779,10 @@ impl PulseGraphDef {
             -1
         }
     }
+    pub fn add_call_info(&mut self, call_info: CallInfo) -> i32 {
+        self.call_infos.push(call_info);
+        self.call_infos.len() as i32 - 1
+    }
 }
 
 impl KV3Serialize for PulseGraphDef {
@@ -792,7 +827,10 @@ impl KV3Serialize for PulseGraphDef {
                 [
                     {}
                 ]
-                m_CallInfos = []
+                m_CallInfos = 
+                [
+                    {}
+                ]
             }}
             "
             , self.cells.iter().map(|cell| {
@@ -806,6 +844,7 @@ impl KV3Serialize for PulseGraphDef {
             , self.public_outputs.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
             , self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect::<Vec<_>>().join(",\n\n")
             , self.bindings.iter().map(|binding| binding.serialize()).collect::<Vec<_>>().join(",\n\n")
+            , self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect::<Vec<_>>().join(",\n\n") 
         }
     }
 }

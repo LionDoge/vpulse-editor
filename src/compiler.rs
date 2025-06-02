@@ -2128,7 +2128,6 @@ fn traverse_nodes_and_populate(
         }
         PulseNodeTemplate::CallNode => {
             // CallNode is a special node that is used to call another node, which is defined by the template.
-            // The template is stored in the user_data of the current node.
             let node_id = get_constant_graph_input_value!(
                 graph, current_node, "nodeId", try_node_id
             );

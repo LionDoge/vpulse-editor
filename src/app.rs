@@ -13,7 +13,7 @@ use slotmap::SecondaryMap;
 use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
-use std::ffi::OsString;
+
 // Compare this snippet from src/instruction_templates.rs:
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct CustomOutputInfo {
@@ -229,6 +229,7 @@ pub enum PulseNodeTemplate {
     SoundEventStart,
     Function,
     CallNode,
+    ListenForEntityOutput,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -244,7 +245,7 @@ pub enum PulseGraphResponse {
     ChangeParamType(NodeId, String, PulseValueType),
     ChangeEventBinding(NodeId, EventBinding),
     ChangeFunctionBinding(NodeId, FunctionBinding),
-    //ChangeNodeId(NodeId, String),
+    ChangeRemoteNodeId(NodeId, NodeId),
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -353,6 +354,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::SoundEventStart => "Sound event start",
             PulseNodeTemplate::Function => "Function",
             PulseNodeTemplate::CallNode => "Call node",
+            PulseNodeTemplate::ListenForEntityOutput => "Listen for output",
         })
     }
 
@@ -365,7 +367,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::EntFire
             | PulseNodeTemplate::FindEntByName
             | PulseNodeTemplate::FindEntitiesWithin
-            | PulseNodeTemplate::IsValidEntity => vec!["Entities"],
+            | PulseNodeTemplate::IsValidEntity
+            | PulseNodeTemplate::ListenForEntityOutput => vec!["Entities"],
             PulseNodeTemplate::Compare
             | PulseNodeTemplate::CompareOutput
             | PulseNodeTemplate::CompareIf
@@ -536,8 +539,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Bool);
         };
 
-        // input_action(graph);
-        // output_action(graph);
+        let mut make_referencable = || {
+            _user_state.exposed_nodes.insert(node_id, String::default());
+        };
         match self {
             PulseNodeTemplate::CellPublicMethod => {
                 graph.add_input_param(
@@ -771,7 +775,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
             }
             PulseNodeTemplate::Function => {
-                _user_state.exposed_nodes.insert(node_id, String::default());
+                make_referencable();
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::CallNode => {
@@ -784,6 +788,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     true,
                 );
                 input_action(graph);
+                output_action(graph, "outAction");
+            }
+            PulseNodeTemplate::ListenForEntityOutput => {
+                make_referencable();
+                input_string(graph, "outputName", InputParamKind::ConstantOnly);
+                input_string(graph, "outputParam", InputParamKind::ConstantOnly);
                 output_action(graph, "outAction");
             }
         }
@@ -829,6 +839,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::SoundEventStart,
             PulseNodeTemplate::Function,
             PulseNodeTemplate::CallNode,
+            PulseNodeTemplate::ListenForEntityOutput,
         ]
     }
 }
@@ -1092,6 +1103,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 if ui.selectable_value::<Option<NodeId>>(node,
                                     Some(node_pair.0),
                                      str).clicked() {
+                                    responses.push(PulseGraphResponse::ChangeRemoteNodeId(_node_id, node_pair.0));
                                 }
                             }
                         });
@@ -1563,6 +1575,44 @@ impl PulseGraphEditor {
             }
         }
     }
+    // Update inputs on "Call Node" depending on the type of referenced node.
+    fn update_remote_node_params(&mut self, node_id: &NodeId, node_id_refrence: &NodeId) {
+        let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
+        // remove all inputs
+        let input_ids: Vec<_> = node.input_ids().collect();
+        for input in input_ids {
+            self.state.graph.remove_input_param(input);
+        }
+        // add back the node chooser
+        self.state.graph.add_input_param(
+            *node_id,
+            "nodeId".into(),
+            PulseDataType::NoideChoice,
+            PulseGraphValueType::NodeChoice { node: None },
+            InputParamKind::ConstantOnly,
+            true,
+        );
+
+        let reference_node = self.state.graph.nodes.get(*node_id_refrence).unwrap();
+        let reference_node_template = reference_node.user_data.template;
+        match reference_node_template {
+            PulseNodeTemplate::ListenForEntityOutput => {
+                self.state.graph.add_input_param(*node_id, "hEntity".into(),
+                PulseDataType::EHandle, PulseGraphValueType::EHandle,InputParamKind::ConnectionOnly,true);
+                self.state.graph.add_input_param(*node_id, "Run".into(),
+                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                self.state.graph.add_input_param(*node_id, "Cancel".into(),
+                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+            }
+            PulseNodeTemplate::Function => {
+                self.state.graph.add_input_param(*node_id, "ActionIn".into(),
+                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+            }
+            _ => {
+                panic!("update_remote_node_params() called on unsupported node type: {:?}", reference_node_template);
+            }
+        }
+    }
 }
 
 impl PulseGraphEditor {
@@ -2000,6 +2050,9 @@ impl eframe::App for PulseGraphEditor {
                     PulseGraphResponse::ChangeFunctionBinding(node_id, bindings) => {
                         //let node = self.state.graph.nodes.get_mut(node_id).unwrap();
                         self.update_library_binding_params(&node_id, &bindings);
+                    }
+                    PulseGraphResponse::ChangeRemoteNodeId(node_id, node_id_refrence) => {
+                        self.update_remote_node_params(&node_id, &node_id_refrence);
                     }
                 }
             }

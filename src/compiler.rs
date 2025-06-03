@@ -3,7 +3,6 @@ use crate::app::{
 };
 use crate::typing::get_preffered_inputparamkind_from_type;
 use std::borrow::Cow;
-use std::ffi::OsStr;
 use std::path::PathBuf;
 use crate::instruction_templates;
 use crate::pulsetypes::*;
@@ -11,24 +10,49 @@ use crate::serialization::*;
 use crate::typing::PulseValueType;
 use crate::bindings::LibraryBindingType;
 use egui_node_graph2::*;
-use std::fs;
+use std::{any, fs};
 use std::process::Command;
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $target_chunk:ident) => {
-        let connected_node = get_next_action_node($current_node, $graph, "outAction");
-        if connected_node.is_some() {
-            return traverse_nodes_and_populate(
-                $graph,
-                connected_node.unwrap(),
-                $graph_def,
-                $target_chunk,
-                &None,
-                None,
-            );
+        let connected_nodes = get_next_action_nodes($current_node, $graph, "outAction");
+        if connected_nodes.is_ok() {
+            for (connected_node, input_name) in connected_nodes.unwrap().iter() {
+                return traverse_nodes_and_populate(
+                    $graph,
+                    connected_node,
+                    $graph_def,
+                    $target_chunk,
+                    &None,
+                    &Some(Cow::Borrowed(input_name)),
+                );
+            }
         }
     };
+}
+
+macro_rules! graph_run_next_actions_no_return {
+    ($graph:ident, $current_node:ident, $graph_def:ident, $target_chunk:ident, $action_name:expr) => {{
+        let connected_nodes = get_next_action_nodes($current_node, $graph, $action_name);
+        if let Ok(connected_nodes) = connected_nodes {
+            let mut any = false;
+            for (connected_node, input_name) in connected_nodes.iter() {
+                traverse_nodes_and_populate(
+                    $graph,
+                    connected_node,
+                    $graph_def,
+                    $target_chunk,
+                    &None,
+                    &Some(Cow::Borrowed(input_name))
+                );
+                any = true;
+            }
+            any
+        } else {
+            false
+        }
+    }};
 }
 
 macro_rules! get_constant_graph_input_value {
@@ -46,7 +70,7 @@ macro_rules! get_constant_graph_input_value {
 }
 
 macro_rules! get_connection_only_graph_input_value {
-    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $target_chunk:ident, $context:ident) => {{
+    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $target_chunk:ident) => {{
         let input_id = $node
             .get_input($input)
             .expect(format!("Can't find input {}", $input).as_str());
@@ -64,7 +88,7 @@ macro_rules! get_connection_only_graph_input_value {
                 $graph_def,
                 $target_chunk,
                 &Some(connection),
-                $context,
+                &None,
             )
         } else {
             -1
@@ -104,20 +128,49 @@ fn get_connected_output_node(graph: &PulseGraph, out_action_id: &OutputId) -> Op
     None
 }
 
+// returns list of pairs of nodes and inputs connected to a given output.
+// TODO could be optimized to return a group of node and it's inputs
+fn get_connected_action_nodes_and_inputs(graph: &PulseGraph, out_action_id: &OutputId) -> Vec<(NodeId, InputId)> {
+    let mut node_input_pairs = vec![];
+    for connection in graph.iter_connections() {
+        if connection.1 == *out_action_id {
+            let node_of_input = graph.inputs.get(connection.0).expect("Can't find input value").node();
+            let input_id = connection.0;
+            node_input_pairs.push((node_of_input, input_id));
+        }
+    }
+    node_input_pairs
+}
+
 fn get_next_action_node<'a>(
     origin_node: &'a Node<PulseNodeData>,
     graph: &'a PulseGraph,
     name: &str,
 ) -> Option<&'a Node<PulseNodeData>> {
-    let out_action_id = origin_node.get_output(name);
-    if out_action_id.is_ok() {
-        let out_action_id = out_action_id.unwrap();
-        let connected_node_id = get_connected_output_node(graph, &out_action_id);
-        if connected_node_id.is_some() {
-            return graph.nodes.get(connected_node_id.unwrap());
-        }
+    let out_action_id = origin_node.get_output(name).ok()?;
+    let connected_node_id = get_connected_output_node(graph, &out_action_id)?;
+    graph.nodes.get(connected_node_id)
+}
+
+// return list of pairs of the connected node and corresponding name
+fn get_next_action_nodes<'a>(
+    origin_node: &'a Node<PulseNodeData>,
+    graph: &'a PulseGraph,
+    name: &str,
+) -> anyhow::Result<Vec<(&'a Node<PulseNodeData>, &'a str)>> {
+    let mut res = vec![];
+    let out_action_id = origin_node.get_output(name)?;
+    let connected_nodes_inputs = get_connected_action_nodes_and_inputs(graph, &out_action_id);
+    for conn in connected_nodes_inputs.iter() {
+        let node = graph.nodes.get(conn.0).ok_or_else(|| {
+            anyhow::anyhow!("Node with id {:?} not found in the graph", conn.0).context("get_next_action_nodes found NodeId, but couldn't get node data")
+        })?;
+        let input_name: &'a str = node.inputs.iter().find(|item| item.1 == conn.1).ok_or_else(|| {
+            anyhow::anyhow!("Input with id {:?} not found in the node", conn.1).context("get_next_action_nodes found InputId, but couldn't get input data")
+        }).and_then(|e| Ok(e.0.as_ref()))?;
+        res.push((node, input_name));
     }
-    return None;
+    Ok(res)
 }
 
 // process all inflow nodes and logic chain.
@@ -128,18 +181,19 @@ fn traverse_inflow_nodes(graph: &PulseGraph, graph_def: &mut PulseGraphDef) -> b
         let data: &Node<PulseNodeData> = graph.nodes.get(node).unwrap();
         // start at all possible entry points
 
+        // TODO: propagate errors
         match data.user_data.template {
             PulseNodeTemplate::EventHandler => {
                 processed = true;
-                traverse_event_cell(graph, &data, graph_def)
+                traverse_event_cell(graph, &data, graph_def);
             }
             PulseNodeTemplate::CellPublicMethod => {
                 processed = true;
-                traverse_entry_cell(graph, &data, graph_def)
+                traverse_entry_cell(graph, &data, graph_def);
             }
             PulseNodeTemplate::GraphHook => {
                 processed = true;
-                traverse_graphhook_cell(graph, &data, graph_def)
+                traverse_graphhook_cell(graph, &data, graph_def);
             }
             _ => {}
         }
@@ -210,7 +264,7 @@ fn traverse_event_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-) {
+) -> anyhow::Result<()> {
     let input_id = node
         .get_input("event")
         .expect("Can't find input 'event'");
@@ -237,29 +291,31 @@ fn traverse_event_cell(
     }
 
     graph_def.cells.push(Box::from(cell_event));
-    let connected_node = get_next_action_node(node, graph, "outAction");
-    if connected_node.is_some() {
-        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
+    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    for (connected_node, input_name) in connected_node.iter() {
+        traverse_nodes_and_populate(graph, connected_node, graph_def, chunk_id, &None, &Some(Cow::Borrowed(*input_name)));
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
+    Ok(())
 }
 
 fn traverse_graphhook_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-) {
+) -> anyhow::Result<()> {
     let hook_name = get_constant_graph_input_value!(graph, node, "hookName", try_to_string);
     let chunk_id = graph_def.create_chunk();
     let cell_hook = CPulseCell_Inflow_GraphHook::new(hook_name.into(), RegisterMap::default(), chunk_id);
     graph_def.cells.push(Box::from(cell_hook));
-    let connected_node = get_next_action_node(node, graph, "outAction");
-    if connected_node.is_some() {
-        traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
+    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    for (connected_node, input_name) in connected_node.iter() {
+        traverse_nodes_and_populate(graph, connected_node, graph_def, chunk_id, &None, &Some(Cow::Borrowed(*input_name)));
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
+    Ok(())
 }
 
 // traverse a function node that can be referenced to call remotely.
@@ -267,7 +323,7 @@ fn traverse_function_entry(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-) -> i32 {
+) -> anyhow::Result<i32> {
     let existing_entrypoint = graph_def
         .traversed_entrypoints
         .iter()
@@ -275,16 +331,16 @@ fn traverse_function_entry(
 
     if existing_entrypoint.is_none() {
         let chunk_id = graph_def.create_chunk();
-        let connected_node: Option<&Node<PulseNodeData>> = get_next_action_node(node, graph, "outAction");
-        if connected_node.is_some() {
-            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
+        let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+        for (connected_node, input_name) in connected_node.iter() {
+            traverse_nodes_and_populate(graph, connected_node, graph_def, chunk_id, &None, &Some(Cow::Borrowed(*input_name)));
         }
         // remember that we traversed this already!
         graph_def.traversed_entrypoints.push((node.id, chunk_id));
-        chunk_id
+        Ok(chunk_id)
     } else {
         // we already traversed this entrypoint, so we can just return the chunk id
-        existing_entrypoint.unwrap().1
+        Ok(existing_entrypoint.unwrap().1)
     }
 }
 
@@ -292,7 +348,7 @@ fn traverse_entry_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-) {
+) -> anyhow::Result<()> {
     let mut cell_method = CPulseCell_Inflow_Method::default();
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
@@ -313,21 +369,15 @@ fn traverse_entry_cell(
         reg_id_arg1,
     );
     graph_def.add_register_mapping(output_id_arg1, reg_id_arg1);
-
     graph_def.cells.push(Box::from(cell_method));
-    // get action connection
-    let out_action_id = node
-        .get_output("outAction")
-        .expect("Can't find output 'outAction'");
-    let connected_node_id = get_connected_output_node(graph, &out_action_id);
-    if connected_node_id.is_some() {
-        let connected_node = graph.nodes.get(connected_node_id.unwrap());
-        if connected_node.is_some() {
-            traverse_nodes_and_populate(graph, connected_node.unwrap(), graph_def, chunk_id, &None, None);
-        }
+
+    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    for (connected_node, input_name) in connected_node.iter() {
+        traverse_nodes_and_populate(graph, connected_node, graph_def, chunk_id, &None, &Some(Cow::Borrowed(*input_name)));
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
+    Ok(())
 }
 
 pub fn compile_graph<'a>(graph: &PulseGraph, graph_state: &PulseGraphState, config: &EditorConfig) -> Result<(), String> {
@@ -440,7 +490,7 @@ fn get_input_register_or_create_constant(
                 .get(out_param.node)
                 .expect("Can't find output node");
             target_register =
-                traverse_nodes_and_populate(graph, out_node, graph_def, chunk_id, &Some(out), None);
+                traverse_nodes_and_populate(graph, out_node, graph_def, chunk_id, &Some(out), &None);
         }
         None => {
             if !always_reevaluate {
@@ -572,37 +622,18 @@ fn get_input_register_or_create_constant(
     Some(target_register)
 }
 
-
-// this might be used to get more context information while traversing other nodes
-// for example WhileLoop requires jumping back to the original instruction that
-// reevaluates the condition, so we need to know which instruction that was.
-#[derive(Debug, Clone, Copy)]
-pub enum NodeTraverseOriginContext {
-    WhileLoop(i32), // i32 is instruction id, we want to find the lowest one.
-}
-
 // recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.
 // takes care of referencing already assigned registers or other data (like visisted list in a graph traversal)
 // it operates ONLY on a target chunk - which is basically a set of instructions related to one flow of logic
 // inside the GUI a chunk is one continous flow of logic.
-fn traverse_nodes_and_populate(
+fn traverse_nodes_and_populate<'a>(
     graph: &PulseGraph,
     current_node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     target_chunk: i32,
     output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, (not action)
-    context: Option<NodeTraverseOriginContext>, // if this is Some, then we are in a context of a node that needs to be evaluated
+    source_input_name: &Option<Cow<'a, str>>, // mostly useful for traversing to next actions. It lets know about what action was specified for nodes that have multiple action inputs
 ) -> i32 {
-    let mut new_context = context.clone();
-    if let Some(context) = context {
-        match context {
-            NodeTraverseOriginContext::WhileLoop(instr_id) => {
-                // we are in a while loop, so we need to set the instruction id to the one that will be evaluated
-                // this is the one that will be used for the next iteration of the loop.
-                new_context = Some(NodeTraverseOriginContext::WhileLoop(instr_id));
-            }
-        }
-    }
     match current_node.user_data.template {
         PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
@@ -728,7 +759,7 @@ fn traverse_nodes_and_populate(
                             graph_def,
                             target_chunk,
                             &Some(*out),
-                            new_context,
+                            source_input_name,
                         );
                     }
                     None => {
@@ -824,7 +855,7 @@ fn traverse_nodes_and_populate(
                         graph_def,
                         target_chunk,
                         &Some(out),
-                        new_context
+                        source_input_name,
                     );
                 }
                 None => {
@@ -1287,18 +1318,9 @@ fn traverse_nodes_and_populate(
             chunk.add_instruction(instr_jump_cond);
             let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
             let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
+
             // instruction set for the true condition (if exists)
-            let connected_node = get_next_action_node(current_node, graph, "True");
-            if connected_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "True");
             // have to reborrow the chunk after we did borrow of graph_def.
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
@@ -1306,20 +1328,7 @@ fn traverse_nodes_and_populate(
             let instr_jump_end = instruction_templates::jump(-1);
             let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
-            let connected_node_false = get_next_action_node(current_node, graph, "False");
-            if connected_node_false.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node_false.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            } else {
-                // empty instruction, so we can jump to it. (don't think that's necessary tho)
-                chunk.add_instruction(Instruction::default());
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "False");
             // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
@@ -1350,8 +1359,7 @@ fn traverse_nodes_and_populate(
                 current_node,
                 "condition",
                 graph_def,
-                target_chunk,
-                context
+                target_chunk
             );
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_jump_cond =
@@ -1360,17 +1368,7 @@ fn traverse_nodes_and_populate(
             let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
             let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
             // instruction set for the true condition (if exists)
-            let connected_node = get_next_action_node(current_node, graph, "True");
-            if connected_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "True");
             // have to reborrow the chunk after we did borrow of graph_def.
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
@@ -1378,18 +1376,9 @@ fn traverse_nodes_and_populate(
             let instr_jump_end = instruction_templates::jump(-1);
             let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
-            let connected_node_false = get_next_action_node(current_node, graph, "False");
-            if connected_node_false.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node_false.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            } else {
-                // empty instruction, so we can jump to it. (don't think that's necessary tho)
+            if !graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "False") {
+                // if no actions were run, we still need to add an empty instruction, so we can jump to it.
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 chunk.add_instruction(Instruction::default());
             }
             // aaand borrow yet again lol
@@ -1490,17 +1479,7 @@ fn traverse_nodes_and_populate(
             let instr_jump_end = instruction_templates::jump(-1);
             let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
-            let action_node = get_next_action_node(current_node, graph, "loopAction");
-            if action_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    action_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "loopAction");
             // borrow again (we know that it still is fine)
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // increment the index by step
@@ -1525,28 +1504,9 @@ fn traverse_nodes_and_populate(
                 );
             }
 
-            let end_action_node = get_next_action_node(current_node, graph, "endAction");
-            if end_action_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    end_action_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "endAction");
         }
         PulseNodeTemplate::WhileLoop => {
-            let context = Some(
-                NodeTraverseOriginContext::WhileLoop(
-                    graph_def.chunks
-                        .get_mut(target_chunk as usize)
-                        .unwrap()
-                        .get_last_instruction_id()
-                    )
-                );
-            
             let is_dowhile_loop = get_constant_graph_input_value!(
                 graph, current_node, "do-while", try_to_bool
             );
@@ -1569,8 +1529,7 @@ fn traverse_nodes_and_populate(
                     current_node,
                     "condition",
                     graph_def,
-                    target_chunk,
-                    context
+                    target_chunk
                 );
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond = instruction_templates::jump_cond(
@@ -1579,17 +1538,7 @@ fn traverse_nodes_and_populate(
                 let instr_jump_end = instruction_templates::jump(-1);
                 let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
-                let action_node = get_next_action_node(current_node, graph, "loopAction");
-                if action_node.is_some() {
-                    traverse_nodes_and_populate(
-                        graph,
-                        action_node.unwrap(),
-                        graph_def,
-                        target_chunk,
-                        &None,
-                        new_context 
-                    );
-                }
+                graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "loopAction");
                 // reborrow the chunk after we did borrow of graph_def.
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump = instruction_templates::jump(cond_instr_id);
@@ -1608,25 +1557,14 @@ fn traverse_nodes_and_populate(
                 // remember the instruction id of the first instruction of the loop action to jump to later
                 let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;
                 // first we fill out the instructions to run per iteration (it will always be run first without checking the condition)
-                let action_node = get_next_action_node(current_node, graph, "loopAction");
-                if action_node.is_some() {
-                    traverse_nodes_and_populate(
-                        graph,
-                        action_node.unwrap(),
-                        graph_def,
-                        target_chunk,
-                        &None,
-                        new_context 
-                    );
-                }
+                graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "loopAction");
                 // next do all the condition check instructions
                 let reg_condition = get_connection_only_graph_input_value!(
                     graph,
                     current_node,
                     "condition",
                     graph_def,
-                    target_chunk,
-                    context
+                    target_chunk
                 );
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 // jump back if condition is true
@@ -1636,17 +1574,7 @@ fn traverse_nodes_and_populate(
             }
 
             // after loop is finished (and if something is connected here) proceed.
-            let end_action_node = get_next_action_node(current_node, graph, "endAction");
-            if end_action_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    end_action_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
+            graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "endAction");
         }
         PulseNodeTemplate::StringToEntityName => {
             let reg_input = get_input_register_or_create_constant(
@@ -1816,90 +1744,6 @@ fn traverse_nodes_and_populate(
             add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Eval".into());
             return reg_output;
         }
-        PulseNodeTemplate::IsValidEntity => {
-            let hentity_input_id = current_node
-                .get_input("hEntity")
-                .expect("Can't find input 'value'");
-            let connection_to_hentity = graph.connection(hentity_input_id);
-            if connection_to_hentity.is_none() {
-                println!("No connection found for hEntity input in IsValidEntity node. Node will not be processed, next action won't execute.");
-                return -1;
-            }
-            let connection_to_hentity = connection_to_hentity.unwrap();
-            let hentity_param = graph.get_output(connection_to_hentity);
-            let out_node = graph
-                .nodes
-                .get(hentity_param.node)
-                .expect("Can't find output node");
-            let reg_hentity = traverse_nodes_and_populate(
-                graph,
-                out_node,
-                graph_def,
-                target_chunk,
-                &Some(connection_to_hentity),
-                new_context
-            );
-            // This is literally copy-paste from Condition node. TODO: refactor this. PLEASE!!!!!!
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let instr_jump_cond =
-                instruction_templates::jump_cond(reg_hentity, chunk.get_last_instruction_id() + 3);
-            chunk.add_instruction(instr_jump_cond);
-            let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
-            let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
-            // instruction set for the true condition (if exists)
-            let connected_node = get_next_action_node(current_node, graph, "True");
-            if connected_node.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
-            // have to reborrow the chunk after we did borrow of graph_def.
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
-            // jump over the false condition
-            let instr_jump_end = instruction_templates::jump(-1);
-            let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
-
-            let connected_node_false = get_next_action_node(current_node, graph, "False");
-            if connected_node_false.is_some() {
-                traverse_nodes_and_populate(
-                    graph,
-                    connected_node_false.unwrap(),
-                    graph_def,
-                    target_chunk,
-                    &None,
-                    new_context
-                );
-            }
-            // aaand borrow yet again lol
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
-            chunk.add_instruction(instruction_templates::return_void());
-            let ending_instr_id = chunk.get_last_instruction_id();
-            let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
-            if instr_jump_false.is_some() {
-                instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;
-            } else {
-                panic!(
-                    "IsEntValid node: Failed to find JUMP[false_condition] with id: {}",
-                    jump_false_instr_id
-                );
-            }
-            let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
-            if instr_jump_end.is_some() {
-                instr_jump_end.unwrap().dest_instruction = ending_instr_id;
-            } else {
-                panic!(
-                    "IsEntValid node: Failed to find JUMP[end] with id: {}",
-                    jump_end_instr_id
-                );
-            }
-        }
         PulseNodeTemplate::CompareOutput => {
             let compare_type =
                 get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
@@ -2022,18 +1866,23 @@ fn traverse_nodes_and_populate(
             let mut value_idx = 0; // used for outflow names only
             current_node.outputs.iter().for_each(|out| {
                 if out.0.parse::<i32>().is_ok() {
-                    let next_action_node_id = get_connected_output_node(graph,&out.1);
-                    if let Some(next_action_node_id) = next_action_node_id {
+                    let next_actions = get_connected_action_nodes_and_inputs(graph,&out.1);
+                    if !next_actions.is_empty() {
                         let this_action_instruction_id = graph_def.chunks.get(target_chunk as usize).unwrap().get_last_instruction_id() + 1;
-                        let node = graph.nodes.get(next_action_node_id).unwrap();
-                        traverse_nodes_and_populate(
-                            graph,
-                            node,
-                            graph_def,
-                            target_chunk,
-                            &None,
-                            new_context 
-                        );
+                            // get connected input names TODO: reduce it to a function, this is repeating from a different func.
+                        for conn in next_actions.iter() {
+                            // ! this code is ass, literally nothing can go wrong here.
+                            let node = graph.nodes.get(conn.0).unwrap();
+                            let input_name= node.inputs.iter().find(|item| item.1 == conn.1).unwrap().0.as_str();
+                            traverse_nodes_and_populate(
+                                graph,
+                                node,
+                                graph_def,
+                                target_chunk,
+                                &None,
+                                &Some(input_name.into())
+                            );
+                        }
                         // add a JUMP instruction to the end of all of the cases
                         // we don't really know where that will be so we will have to note down the instruction id and modify it later.
                         let instr_jump = instruction_templates::jump(-1);
@@ -2051,11 +1900,9 @@ fn traverse_nodes_and_populate(
                 }
             });
             // now let's process the default case
-            let default_case_instruction_id = graph_def.chunks.get(target_chunk as usize).unwrap().get_last_instruction_id() + 1;
-            let default_action_node = get_next_action_node(current_node, graph, "defaultcase");
             let mut default_case_outflow = None;
-            if let Some(default_action_node) = default_action_node {
-                traverse_nodes_and_populate(graph, default_action_node, graph_def, target_chunk, output_id, context);
+            if graph_run_next_actions_no_return!(graph, current_node, graph_def, target_chunk, "defaultcase") {
+                let default_case_instruction_id = graph_def.chunks.get(target_chunk as usize).unwrap().get_last_instruction_id() + 1;
                 default_case_outflow = Some(OutflowConnection::new(
                     "default".into(),
                     target_chunk,
@@ -2133,7 +1980,7 @@ fn traverse_nodes_and_populate(
             );
             if let Some(node) = graph.nodes.get(node_id) {
                 let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
-                let func_chunk = traverse_function_entry(graph, node, graph_def);
+                let func_chunk = traverse_function_entry(graph, node, graph_def).unwrap();
                 
                 let instr = instruction_templates::call_sync(
                     add_call_reference(graph_def, target_chunk, call_instr_id),

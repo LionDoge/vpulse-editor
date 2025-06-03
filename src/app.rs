@@ -1593,24 +1593,27 @@ impl PulseGraphEditor {
             true,
         );
 
-        let reference_node = self.state.graph.nodes.get(*node_id_refrence).unwrap();
-        let reference_node_template = reference_node.user_data.template;
-        match reference_node_template {
-            PulseNodeTemplate::ListenForEntityOutput => {
-                self.state.graph.add_input_param(*node_id, "hEntity".into(),
-                PulseDataType::EHandle, PulseGraphValueType::EHandle,InputParamKind::ConnectionOnly,true);
-                self.state.graph.add_input_param(*node_id, "Run".into(),
-                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
-                self.state.graph.add_input_param(*node_id, "Cancel".into(),
-                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+        if let Some(reference_node) = self.state.graph.nodes.get(*node_id_refrence) {
+            let reference_node_template = reference_node.user_data.template;
+            match reference_node_template {
+                PulseNodeTemplate::ListenForEntityOutput => {
+                    self.state.graph.add_input_param(*node_id, "hEntity".into(),
+                    PulseDataType::EHandle, PulseGraphValueType::EHandle,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(*node_id, "Run".into(),
+                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(*node_id, "Cancel".into(),
+                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                }
+                PulseNodeTemplate::Function => {
+                    self.state.graph.add_input_param(*node_id, "ActionIn".into(),
+                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                }
+                _ => {
+                    panic!("update_remote_node_params() called on unsupported node type: {:?}", reference_node_template);
+                }
             }
-            PulseNodeTemplate::Function => {
-                self.state.graph.add_input_param(*node_id, "ActionIn".into(),
-                PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
-            }
-            _ => {
-                panic!("update_remote_node_params() called on unsupported node type: {:?}", reference_node_template);
-            }
+        } else {
+            println!("update_remote_node_params() called on node that does not exist in the graph anymore!");
         }
     }
 }

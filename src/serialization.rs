@@ -720,8 +720,9 @@ impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
                 m_bListenUntilCanceled = {}
             }}
             "
-            , self.entity_output, self.entity_output_param, self.listen_until_canceled,
-            self.outflow_onfired.serialize(), self.outflow_oncanceled.serialize()
+            , self.outflow_onfired.serialize()
+            , self.outflow_oncanceled.serialize()
+            , self.entity_output, self.entity_output_param, self.listen_until_canceled
         }
     }
 }

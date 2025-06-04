@@ -2046,9 +2046,6 @@ fn traverse_nodes_and_populate<'a>(
                             src_chunk: target_chunk,
                             src_instruction: instr,
                         };
-                        let instr = instruction_templates::cell_invoke(binding_id);
-                        let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                        chunk.add_instruction(instr);
                         graph_def.add_invoke_binding(binding);
                     }
                     _ => {

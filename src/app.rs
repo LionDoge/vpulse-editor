@@ -795,6 +795,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_string(graph, "outputName", InputParamKind::ConstantOnly);
                 input_string(graph, "outputParam", InputParamKind::ConstantOnly);
                 input_bool(graph, "bListenUntilCanceled", InputParamKind::ConstantOnly);
+                output_ehandle(graph, "pActivator");
                 output_action(graph, "outAction");
             }
         }
@@ -1581,19 +1582,14 @@ impl PulseGraphEditor {
         let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
         // remove all inputs
         let input_ids: Vec<_> = node.input_ids().collect();
+        let input_node_chooser = node.get_input("nodeId")
+            .expect("Expected 'Call Node' node to have 'nodeId' input param");
         for input in input_ids {
-            self.state.graph.remove_input_param(input);
+            // don't remove the node chooser input
+            if input != input_node_chooser {
+                self.state.graph.remove_input_param(input);
+            }
         }
-        // add back the node chooser
-        self.state.graph.add_input_param(
-            *node_id,
-            "nodeId".into(),
-            PulseDataType::NoideChoice,
-            PulseGraphValueType::NodeChoice { node: None },
-            InputParamKind::ConstantOnly,
-            true,
-        );
-
         if let Some(reference_node) = self.state.graph.nodes.get(*node_id_refrence) {
             let reference_node_template = reference_node.user_data.template;
             match reference_node_template {

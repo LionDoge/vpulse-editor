@@ -2042,7 +2042,7 @@ fn traverse_nodes_and_populate<'a>(
                         let binding = InvokeBinding {
                             register_map,
                             func_name: source_input_name.as_ref().unwrap().to_string().into(), // XD
-                            cell_index: graph_def.cells.len() as i32, // the cell to be added
+                            cell_index: remote_chunk_or_cell,
                             src_chunk: target_chunk,
                             src_instruction: instr,
                         };

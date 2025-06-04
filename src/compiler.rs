@@ -533,7 +533,7 @@ fn get_input_register_or_create_constant(
                 }
             }
             if matches!(get_preffered_inputparamkind_from_type(&value_type), InputParamKind::ConnectionOnly) {
-                println!("[INFO] Connection only input type without a connection, no constant will be created.");
+                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {}, input: {}", value_type, input_name);
                 return None;
             }
             let new_constant_id = graph_def.get_current_constant_id() + 1;
@@ -2059,6 +2059,10 @@ fn traverse_nodes_and_populate<'a>(
                 println!("CallNode: Node not found in the graph.");
             }
             graph_next_action!(graph, current_node, graph_def, target_chunk);
+        }
+        PulseNodeTemplate::ListenForEntityOutput => {
+            // just get the saved register and return it. If we get here it's already cached.
+            return try_find_output_mapping(graph_def, output_id);
         }
         _ => todo!(
             "Implement node template: {:?}",

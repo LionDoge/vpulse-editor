@@ -365,9 +365,9 @@ fn traverse_function_entry(
                 return Err(anyhow::anyhow!("Unsupported node type for function entry: {:?}", node.user_data.template));
             }
         };
-        graph_run_next_actions_no_return!(graph, node, graph_def, chunk_id, "outAction");
         // remember that we traversed this already!
         graph_def.traversed_entrypoints.push((node.id, ret_value));
+        graph_run_next_actions_no_return!(graph, node, graph_def, chunk_id, "outAction");
         Ok(ret_value)
     } else {
         // we already traversed this entrypoint, so we can just return the chunk id

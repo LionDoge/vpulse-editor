@@ -341,7 +341,7 @@ fn traverse_function_entry(
                 graph_def.add_register_mapping(output_id_activator, reg_id_activator);
                 
                 let mut reg_map = RegisterMap::default();
-                reg_map.add_inparam("pActivator".into(), reg_id_activator);
+                reg_map.add_outparam("pActivator".into(), reg_id_activator);
                 let outflow_onfired = OutflowConnection {
                     outflow_name: "OnFired".into(),
                     dest_chunk: chunk_id,

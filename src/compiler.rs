@@ -319,6 +319,7 @@ fn traverse_graphhook_cell(
 }
 
 // traverse a function node that can be referenced to call remotely.
+// currently will either return a chunk id or a cell id to run depending on the context.
 fn traverse_function_entry(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
@@ -328,16 +329,46 @@ fn traverse_function_entry(
         .traversed_entrypoints
         .iter()
         .find(|&x| x.0 == node.id);
-
     if existing_entrypoint.is_none() {
         let chunk_id = graph_def.create_chunk();
-        let connected_node = get_next_action_nodes(node, graph, "outAction")?;
-        for (connected_node, input_name) in connected_node.iter() {
-            traverse_nodes_and_populate(graph, connected_node, graph_def, chunk_id, &None, &Some(Cow::Borrowed(*input_name)));
-        }
+        let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
+        let ret_value;
+        // node specific thingies.
+        match node.user_data.template {
+            PulseNodeTemplate::ListenForEntityOutput => {
+                let reg_id_activator = chunk.add_register(String::from("PVAL_STRING"), 0);
+                let output_id_activator = node.get_output("pActivator")?;
+                graph_def.add_register_mapping(output_id_activator, reg_id_activator);
+                
+                let mut reg_map = RegisterMap::default();
+                reg_map.add_inparam("pActivator".into(), reg_id_activator);
+                let outflow_onfired = OutflowConnection {
+                    outflow_name: "OnFired".into(),
+                    dest_chunk: chunk_id,
+                    dest_instruction: 0,
+                    register_map: reg_map
+                };
+                let cell_listen = CPulseCell_Outflow_ListenForEntityOutput {
+                    outflow_onfired,
+                    outflow_oncanceled: OutflowConnection::default(),
+                    entity_output: get_constant_graph_input_value!(graph, node, "outputName", try_to_string),
+                    entity_output_param: get_constant_graph_input_value!(graph, node, "outputParam", try_to_string),
+                    listen_until_canceled: get_constant_graph_input_value!(graph, node, "bListenUntilCanceled", try_to_bool),
+                };
+                graph_def.cells.push(Box::from(cell_listen));
+                ret_value = graph_def.cells.len() as i32 - 1;
+            }
+            PulseNodeTemplate::Function => {
+                ret_value = chunk_id;
+            }
+            _ => {
+                return Err(anyhow::anyhow!("Unsupported node type for function entry: {:?}", node.user_data.template));
+            }
+        };
+        graph_run_next_actions_no_return!(graph, node, graph_def, chunk_id, "outAction");
         // remember that we traversed this already!
-        graph_def.traversed_entrypoints.push((node.id, chunk_id));
-        Ok(chunk_id)
+        graph_def.traversed_entrypoints.push((node.id, ret_value));
+        Ok(ret_value)
     } else {
         // we already traversed this entrypoint, so we can just return the chunk id
         Ok(existing_entrypoint.unwrap().1)
@@ -1980,15 +2011,53 @@ fn traverse_nodes_and_populate<'a>(
             );
             if let Some(node) = graph.nodes.get(node_id) {
                 let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
-                let func_chunk = traverse_function_entry(graph, node, graph_def).unwrap();
+                let remote_chunk_or_cell = traverse_function_entry(graph, node, graph_def).unwrap();
                 
-                let instr = instruction_templates::call_sync(
-                    add_call_reference(graph_def, target_chunk, call_instr_id),
-                    func_chunk,
-                    0
-                );
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                chunk.add_instruction(instr);
+                match node.user_data.template {
+                    PulseNodeTemplate::Function => {
+                        let instr = instruction_templates::call_sync(
+                            add_call_reference(graph_def, target_chunk, call_instr_id),
+                            remote_chunk_or_cell,
+                            0
+                        );
+                        let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                        chunk.add_instruction(instr);
+                    }
+                    PulseNodeTemplate::ListenForEntityOutput => {
+                        let reg_entity = get_input_register_or_create_constant(
+                            graph,
+                            current_node,
+                            graph_def,
+                            target_chunk,
+                            "hEntity",
+                            PulseValueType::PVAL_EHANDLE(None),
+                            false
+                        );
+                        let register_map = reg_map_setup_inputs!(
+                            "hEntity", reg_entity
+                        );
+                        let binding_id = graph_def.get_current_binding_id() + 1;
+                        let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                        let instr = chunk.add_instruction(instruction_templates::cell_invoke(binding_id));
+                        let binding = InvokeBinding {
+                            register_map,
+                            func_name: source_input_name.as_ref().unwrap().to_string().into(), // XD
+                            cell_index: graph_def.cells.len() as i32, // the cell to be added
+                            src_chunk: target_chunk,
+                            src_instruction: instr,
+                        };
+                        let instr = instruction_templates::cell_invoke(binding_id);
+                        let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                        chunk.add_instruction(instr);
+                        graph_def.add_invoke_binding(binding);
+                    }
+                    _ => {
+                        println!(
+                            "CallNode: Node template remote {:?} is not supported for CallNode.",
+                            node.user_data.template
+                        );
+                    }
+                }
             } else {
                 println!("CallNode: Node not found in the graph.");
             }

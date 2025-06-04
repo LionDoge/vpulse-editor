@@ -794,6 +794,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 make_referencable();
                 input_string(graph, "outputName", InputParamKind::ConstantOnly);
                 input_string(graph, "outputParam", InputParamKind::ConstantOnly);
+                input_bool(graph, "bListenUntilCanceled", InputParamKind::ConstantOnly);
                 output_action(graph, "outAction");
             }
         }

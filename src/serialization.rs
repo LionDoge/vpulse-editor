@@ -698,6 +698,40 @@ impl KV3Serialize for CallInfo {
     }
 }
 
+pub struct CPulseCell_Outflow_ListenForEntityOutput {
+    pub outflow_onfired: OutflowConnection,
+    pub outflow_oncanceled: OutflowConnection,
+    pub entity_output: String,
+    pub entity_output_param: String,
+    pub listen_until_canceled: bool,
+}
+
+impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Outflow_ListenForEntityOutput\"
+                m_nEditorNodeID = -1
+                m_OnFired = {}
+                m_OnCanceled = {}
+                m_strEntityOutput = \"{}\"
+                m_strEntityOutputParam = \"{}\"
+                m_bListenUntilCanceled = {}
+            }}
+            "
+            , self.entity_output, self.entity_output_param, self.listen_until_canceled,
+            self.outflow_onfired.serialize(), self.outflow_oncanceled.serialize()
+        }
+    }
+}
+
+impl PulseCell for CPulseCell_Outflow_ListenForEntityOutput {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Outflow
+    }
+}
+
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,

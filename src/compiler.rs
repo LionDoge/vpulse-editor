@@ -336,7 +336,7 @@ fn traverse_function_entry(
         // node specific thingies.
         match node.user_data.template {
             PulseNodeTemplate::ListenForEntityOutput => {
-                let reg_id_activator = chunk.add_register(String::from("PVAL_STRING"), 0);
+                let reg_id_activator = chunk.add_register(String::from("PVAL_EHANDLE"), 0);
                 let output_id_activator = node.get_output("pActivator")?;
                 graph_def.add_register_mapping(output_id_activator, reg_id_activator);
                 

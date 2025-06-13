@@ -368,6 +368,8 @@ fn traverse_function_entry(
         // remember that we traversed this already!
         graph_def.traversed_entrypoints.push((node.id, ret_value));
         graph_run_next_actions_no_return!(graph, node, graph_def, chunk_id, "outAction");
+        let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
+        chunk.add_instruction(instruction_templates::return_void());
         Ok(ret_value)
     } else {
         // we already traversed this entrypoint, so we can just return the chunk id

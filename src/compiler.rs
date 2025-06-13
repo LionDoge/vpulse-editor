@@ -1417,7 +1417,7 @@ fn traverse_nodes_and_populate<'a>(
             // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
-            let ending_instr_id = chunk.get_last_instruction_id();
+            let ending_instr_id = chunk.get_last_instruction_id() + 1;
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
             if instr_jump_false.is_some() {
                 instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;

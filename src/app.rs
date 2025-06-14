@@ -77,8 +77,8 @@ pub enum PulseGraphValueType {
     InternalOutputName { prevvalue: String, value: String },
     InternalVariableName { prevvalue: String, value: String },
     Typ { value: PulseValueType },
-    EventBindingChoice { value: EventBinding },
-    LibraryBindingChoice { value: FunctionBinding },
+    EventBindingChoice { value: EventBindingIndex },
+    LibraryBindingChoice { value: LibraryBindingIndex },
     NodeChoice {node: Option<NodeId>}
 }
 
@@ -156,7 +156,7 @@ impl PulseGraphValueType {
         }
     }
 
-    pub fn try_event_binding(self) -> anyhow::Result<EventBinding> {
+    pub fn try_event_binding_id(self) -> anyhow::Result<EventBindingIndex> {
         if let PulseGraphValueType::EventBindingChoice { value } = self {
             Ok(value)
         } else {
@@ -164,7 +164,7 @@ impl PulseGraphValueType {
         }
     }
 
-    pub fn try_library_binding(self) -> anyhow::Result<FunctionBinding> {
+    pub fn try_library_binding(self) -> anyhow::Result<LibraryBindingIndex> {
         if let PulseGraphValueType::LibraryBindingChoice { value } = self {
             Ok(value)
         } else {
@@ -619,7 +619,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     String::from("event"),
                     PulseDataType::EventBindingChoice,
                     PulseGraphValueType::EventBindingChoice 
-                    { value: _user_state.bindings.events[0].clone() },
+                    { value: EventBindingIndex(1) },
                     InputParamKind::ConstantOnly,
                     true,
                 );
@@ -712,7 +712,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     String::from("binding"),
                     PulseDataType::LibraryBindingChoice,
                     PulseGraphValueType::LibraryBindingChoice {
-                        value: _user_state.bindings.gamefunctions[0].clone(),
+                        value: LibraryBindingIndex(1),
                     },
                     InputParamKind::ConstantOnly,
                     true,
@@ -1056,12 +1056,12 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| { 
                     ui.label("Event");
                     ComboBox::from_id_salt(_node_id)
-                        .selected_text(value.displayname.clone())
+                        .selected_text(&_user_state.get_event_binding_from_index(value).unwrap().displayname)
                         .show_ui(ui, |ui| {
-                            for event in _user_state.bindings.events.iter() {
+                            for (idx, event) in _user_state.bindings.events.iter().enumerate() {
                                 let str = event.displayname.as_str();
-                                if ui.selectable_value::<EventBinding>(value, 
-                                    event.clone(),
+                                if ui.selectable_value::<EventBindingIndex>(value, 
+                                    EventBindingIndex(idx),
                                      str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeEventBinding(_node_id, event.clone())
@@ -1075,12 +1075,12 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| { 
                     ui.label("Function");
                     ComboBox::from_id_salt(_node_id)
-                        .selected_text(value.displayname.clone())
+                        .selected_text(&_user_state.get_library_binding_from_index(value).unwrap().displayname)
                         .show_ui(ui, |ui| {
                             for func in _user_state.bindings.gamefunctions.iter() {
                                 let str = func.displayname.as_str();
-                                if ui.selectable_value::<FunctionBinding>(value, 
-                                    func.clone(),
+                                if ui.selectable_value::<LibraryBindingIndex>(value, 
+                                    LibraryBindingIndex(1),
                                      str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
@@ -1661,6 +1661,15 @@ impl PulseGraphEditor {
         grph
     }
     
+}
+
+impl PulseGraphState {
+    pub fn get_library_binding_from_index(&self, idx: &LibraryBindingIndex) -> Option<&FunctionBinding> {
+        self.bindings.gamefunctions.get(idx.0)
+    }
+    pub fn get_event_binding_from_index(&self, idx: &EventBindingIndex) -> Option<&EventBinding> {
+        self.bindings.events.get(idx.0)
+    }
 }
 
 // assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)

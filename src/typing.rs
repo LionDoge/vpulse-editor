@@ -1,4 +1,5 @@
 use std::fmt;
+use std::fmt::Display;
 use egui_node_graph2::InputParamKind;
 use serde::{Deserialize, Serialize};
 use crate::app::{PulseDataType, PulseGraphValueType};
@@ -16,6 +17,21 @@ impl fmt::Display for PulseTypeError {
             PulseTypeError::StringToEnumSubtypeParseError(s) => 
                 write!(f, "Could not parse subtype from string: {}", s),
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+pub struct LibraryBindingIndex(pub usize);
+impl Display for LibraryBindingIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "LibraryBindingIndex({})", self.0)
+    }
+}
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+pub struct EventBindingIndex(pub usize);
+impl Display for EventBindingIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "EventBindingIndex({})", self.0)
     }
 }
 

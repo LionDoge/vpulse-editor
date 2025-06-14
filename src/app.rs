@@ -1077,10 +1077,10 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ComboBox::from_id_salt(_node_id)
                         .selected_text(&_user_state.get_library_binding_from_index(value).unwrap().displayname)
                         .show_ui(ui, |ui| {
-                            for func in _user_state.bindings.gamefunctions.iter() {
+                            for (idx, func) in _user_state.bindings.gamefunctions.iter().enumerate() {
                                 let str = func.displayname.as_str();
                                 if ui.selectable_value::<LibraryBindingIndex>(value, 
-                                    LibraryBindingIndex(1),
+                                    LibraryBindingIndex(idx),
                                      str).clicked() {
                                     responses.push(
                                         PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())

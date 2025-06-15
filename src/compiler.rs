@@ -614,9 +614,10 @@ fn get_input_register_or_create_constant(
                         .expect("Failed to unwrap input value");
                     chunk.add_instruction(instruction);
                     graph_def.create_domain_value(
-                        String::from("ENTITY_NAME"),
-                        input_value.clone(),
-                        String::new(),
+                        "ENTITY_NAME".into(),
+                        input_value.into(),
+                        "".into(),
+                        "PVAL_ENTITY_NAME".into(),
                     );
                 }
                 PulseValueType::PVAL_VEC3(_) => {

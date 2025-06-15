@@ -420,9 +420,10 @@ impl KV3Serialize for InvokeBinding {
 
 #[derive(Default)]
 pub struct DomainValue {
-    pub typ: String,
-    pub value: String,
-    pub expected_runtime_type: String,
+    pub typ: Cow<'static, str>,
+    pub value: Cow<'static, str>,
+    pub __deprecated_expected_runtime_type: Cow<'static, str>,
+    pub required_runtime_type: Cow<'static, str>,
 }
 impl KV3Serialize for DomainValue {
     fn serialize(&self) -> String {
@@ -432,9 +433,10 @@ impl KV3Serialize for DomainValue {
                 m_nType = \"{}\"
                 m_Value = \"{}\"
                 m_ExpectedRuntimeType = \"{}\"
+                m_RequiredRuntimeType = \"{}\"
             }}
             "
-            , self.typ, self.value, self.expected_runtime_type
+            , self.typ, self.value, self.__deprecated_expected_runtime_type, self.required_runtime_type
         }
     }
 }
@@ -598,7 +600,9 @@ impl KV3Serialize for PulseVariable {
                 m_Description = \"\"
                 m_Type = \"{}\"
                 m_DefaultValue = {}
+                m_nKeysSource = \"PRIVATE\"
                 m_bIsPublic = true
+                m_bIsPublicBlackboardVariable = false
                 m_bIsObservable = false
                 m_nEditorNodeID = -1
             }}
@@ -756,11 +760,15 @@ impl PulseGraphDef {
         self.chunks.push(chunk);
         self.chunks.len() as i32 - 1
     }
-    pub fn create_domain_value(&mut self, typ: String, value: String, expected_runtime_type: String) -> i32 {
+    pub fn create_domain_value(&mut self, typ: Cow<'static, str>,
+        value: Cow<'static, str>,
+        __deprecated_expected_runtime_type: Cow<'static, str>,
+        required_runtime_type: Cow<'static, str>) -> i32 {
         let domain_value = DomainValue {
             typ,
             value,
-            expected_runtime_type,
+            __deprecated_expected_runtime_type,
+            required_runtime_type,
         };
         self.domain_values.push(domain_value);
         self.domain_values.len() as i32 - 1
@@ -830,6 +838,7 @@ impl KV3Serialize for PulseGraphDef {
                     {}
                 ]
                 m_DomainIdentifier = \"ServerPointEntity\"
+                m_DomainSubType = \"PVAL_INVALID\"
                 m_ParentMapName = \"{}\"
                 m_ParentXmlName = \"{}\"
                 m_vecGameBlackboards = []

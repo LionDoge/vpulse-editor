@@ -266,6 +266,18 @@ pub struct PulseGraphState {
     pub bindings: GraphBindings,
 }
 
+impl PulseGraphState {
+    pub fn add_node_custom_param(&mut self, param_name: String, node_id: NodeId) {
+        if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
+            vec_params.push(param_name);
+        } else {
+            self
+                .added_parameters
+                .insert(node_id, vec![param_name]);
+        }
+    }
+}
+
 // =========== Then, you need to implement some traits ============
 
 // A trait for the data types, to tell the library how to display them
@@ -1175,13 +1187,7 @@ impl NodeDataTrait for PulseNodeData {
                     param_name.clone(),
                     PulseValueType::PVAL_ACT
                 )));
-                if let Some(vec_params) = user_state.added_parameters.get_mut(node_id) {
-                    vec_params.push(param_name);
-                } else {
-                    user_state
-                        .added_parameters
-                        .insert(node_id, vec![param_name]);
-                }
+                user_state.add_node_custom_param(param_name, node_id);
             }
         }
         responses

@@ -1268,7 +1268,9 @@ impl PulseGraphEditor {
             .add_filter("Pulse Graph Editor State", &["ron"])
             .save_file();
         let did_pick = chosen_file.as_ref().is_some(); // if not, the user cancelled so we should note that
-        self.user_state.save_file_path = chosen_file;
+        if did_pick {
+            self.user_state.save_file_path = chosen_file;
+        }
         did_pick
     }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {

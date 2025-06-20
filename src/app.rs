@@ -230,6 +230,7 @@ pub enum PulseNodeTemplate {
     Function,
     CallNode,
     ListenForEntityOutput,
+    Timeline,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -367,6 +368,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Function => "Function",
             PulseNodeTemplate::CallNode => "Call node",
             PulseNodeTemplate::ListenForEntityOutput => "Listen for output",
+            PulseNodeTemplate::Timeline => "Timeline",
         })
     }
 
@@ -389,7 +391,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::Function => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
-            PulseNodeTemplate::CellWait => vec!["Utility"],
+            PulseNodeTemplate::CellWait
+            | PulseNodeTemplate::Timeline => vec!["Timing"],
             PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => vec!["Variables"],
             PulseNodeTemplate::IntToString | PulseNodeTemplate::Convert | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
             PulseNodeTemplate::DebugWorldText | PulseNodeTemplate::DebugLog => vec!["Debug"],
@@ -400,6 +403,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ForLoop
             | PulseNodeTemplate::WhileLoop => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
+            
         }
     }
 
@@ -439,13 +443,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-        let input_scalar = |graph: &mut PulseGraph, name: &str| {
+        let input_scalar = |graph: &mut PulseGraph, name: &str, kind: InputParamKind, default: f32| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
                 PulseDataType::Scalar,
-                PulseGraphValueType::Scalar { value: 0.0 },
-                InputParamKind::ConnectionOrConstant,
+                PulseGraphValueType::Scalar { value: default },
+                kind,
                 true,
             );
         };
@@ -580,8 +584,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_action(graph);
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
                 input_typ(graph, "type");
-                input_scalar(graph, "A");
-                input_scalar(graph, "B");
+                input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
                 output_action(graph, "True");
                 output_action(graph, "False");
             }
@@ -592,7 +596,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::CellWait => {
                 input_action(graph);
-                input_scalar(graph, "time");
+                input_scalar(graph, "time", InputParamKind::ConnectionOrConstant, 0.0);
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::GetVar => {
@@ -638,14 +642,14 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::IntToString => {
-                input_scalar(graph, "value");
+                input_scalar(graph, "value", InputParamKind::ConnectionOrConstant, 0.0);
                 output_string(graph, "out");
             }
             PulseNodeTemplate::Operation => {
                 input_typ(graph, "type");
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
-                input_scalar(graph, "A");
-                input_scalar(graph, "B");
+                input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
                 output_scalar(graph, "out");
             }
             PulseNodeTemplate::FindEntByName => {
@@ -657,13 +661,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_action(graph);
                 input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
                 input_ehandle(graph, "hEntity");
-                input_scalar(graph, "nTextOffset");
-                input_scalar(graph, "flDuration");
-                input_scalar(graph, "flVerticalOffset");
+                input_scalar(graph, "nTextOffset", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "flDuration", InputParamKind::ConnectionOrConstant, 5.0);
+                input_scalar(graph, "flVerticalOffset", InputParamKind::ConnectionOrConstant, 0.0);
                 input_bool(graph, "bAttached", InputParamKind::ConstantOnly);
                 input_vector3(graph, "color");
-                input_scalar(graph, "flAlpha");
-                input_scalar(graph, "flScale");
+                input_scalar(graph, "flAlpha", InputParamKind::ConnectionOrConstant, 1.0);
+                input_scalar(graph, "flScale", InputParamKind::ConnectionOrConstant, 1.0);
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::DebugLog => {
@@ -695,21 +699,21 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::SetNextThink => {
                 input_action(graph);
-                input_scalar(graph, "dt");
+                input_scalar(graph, "dt", InputParamKind::ConnectionOrConstant, 0.0);
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Convert => {
                 input_typ(graph, "typefrom");
                 input_typ(graph, "typeto");
                 input_string(graph, "entityclass", InputParamKind::ConstantOnly);
-                input_scalar(graph, "input");
+                input_scalar(graph, "input", InputParamKind::ConnectionOrConstant, 0.0);
                 output_scalar(graph, "out");
             }
             PulseNodeTemplate::ForLoop => {
                 input_action(graph);
-                input_scalar(graph, "start");
-                input_scalar(graph, "end");
-                input_scalar(graph, "step");
+                input_scalar(graph, "start", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "end", InputParamKind::ConnectionOrConstant, 5.0);
+                input_scalar(graph, "step", InputParamKind::ConnectionOrConstant, 1.0);
                 output_scalar(graph, "index");
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
@@ -733,7 +737,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::FindEntitiesWithin => {
                 input_string(graph, "classname", InputParamKind::ConstantOnly);
                 input_ehandle(graph, "pSearchFromEntity");
-                input_scalar(graph, "flSearchRadius");
+                input_scalar(graph, "flSearchRadius", InputParamKind::ConnectionOrConstant, 0.0);
                 input_ehandle(graph, "pStartEntity");
                 output_ehandle(graph, "out");
             }
@@ -746,8 +750,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CompareOutput => {
                 input_typ(graph, "type");
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
-                input_scalar(graph, "A");
-                input_scalar(graph, "B");
+                input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
                 output_bool(graph, "out");
             }
             PulseNodeTemplate::WhileLoop => {
@@ -766,7 +770,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::IntSwitch => {
                 input_action(graph);
-                input_scalar(graph, "value");
+                input_scalar(graph, "value", InputParamKind::ConnectionOrConstant, 0.0);
                 // cases will be added dynamically by user
                 // this field will be a buffer that will be used to create the cases
                 // once the button to add it is pressed - which is defined in bottom_ui func.
@@ -809,6 +813,21 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_bool(graph, "bListenUntilCanceled", InputParamKind::ConstantOnly);
                 output_ehandle(graph, "pActivator");
                 output_action(graph, "outAction");
+            }
+            PulseNodeTemplate::Timeline => {
+                make_referencable();
+                input_scalar(graph, "timeFromPrevious1", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction1");
+                input_scalar(graph, "timeFromPrevious2", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction2");
+                input_scalar(graph, "timeFromPrevious3", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction3");
+                input_scalar(graph, "timeFromPrevious4", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction4");
+                input_scalar(graph, "timeFromPrevious5", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction5");
+                input_scalar(graph, "timeFromPrevious6", InputParamKind::ConstantOnly, 0.5);
+                output_action(graph, "outAction6");
             }
         }
     }
@@ -854,6 +873,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::Function,
             PulseNodeTemplate::CallNode,
             PulseNodeTemplate::ListenForEntityOutput,
+            PulseNodeTemplate::Timeline,
         ]
     }
 }

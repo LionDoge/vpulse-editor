@@ -855,6 +855,16 @@ impl PulseGraphDef {
         self.call_infos.push(call_info);
         self.call_infos.len() as i32 - 1
     }
+    pub fn add_cell(&mut self, cell: Box<dyn PulseCellTrait>) -> usize {
+        self.cells.push(cell);
+        self.cells.len() - 1
+    }
+    pub fn get_last_cell_id(&self) -> usize {
+        self.cells.len() - 1
+    }
+    pub fn get_invoke_binding_mut(&mut self, index: i32) -> Option<&mut InvokeBinding> {
+        self.bindings.get_mut(index as usize)
+    }
 }
 
 impl KV3Serialize for PulseGraphDef {

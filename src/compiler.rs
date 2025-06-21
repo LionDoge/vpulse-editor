@@ -203,13 +203,13 @@ fn traverse_inflow_nodes(graph: &PulseGraph, graph_def: &mut PulseGraphDef, _gra
     processed
 }
 
-fn add_cell_and_invoking(
+fn add_cell_invoke_binding(
     graph_def: &mut PulseGraphDef,
-    cell: Box<dyn PulseCellTrait>,
     register_map: RegisterMap,
     target_chunk: i32,
-    func_name: Cow<'static, str>
-) {
+    func_name: Cow<'static, str>,
+    cell_id: i32
+) -> i32 {
     let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, it's here because of borrow checker
     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
     let instr = chunk.add_instruction(instruction_templates::cell_invoke(binding_id));
@@ -217,12 +217,22 @@ fn add_cell_and_invoking(
     let binding = InvokeBinding {
         register_map,
         func_name: func_name.into(),
-        cell_index: graph_def.cells.len() as i32, // the cell to be added
+        cell_index: cell_id, // the cell to be added
         src_chunk: target_chunk,
         src_instruction: instr,
     };
-    graph_def.cells.push(cell);
-    graph_def.add_invoke_binding(binding);
+    graph_def.add_invoke_binding(binding)
+}
+
+fn add_cell_and_invoking(
+    graph_def: &mut PulseGraphDef,
+    cell: Box<dyn PulseCellTrait>,
+    register_map: RegisterMap,
+    target_chunk: i32,
+    func_name: Cow<'static, str>
+) {
+    graph_def.add_cell(cell);
+    add_cell_invoke_binding(graph_def, register_map, target_chunk, func_name, graph_def.cells.len() as i32);
 }
 
 fn add_library_invoking(
@@ -2139,10 +2149,13 @@ fn traverse_nodes_and_populate<'a>(
                 -1,
                 None,
             );
+
             let mut timeline_cell = CPulseCell_Timeline::new(outflow_onfinished, true);
+            let cell_id = graph_def.get_last_cell_id() + 1;
+            let binding_id = add_cell_invoke_binding(graph_def, RegisterMap::default(), target_chunk, "Start".into(), cell_id as i32);
             // traverse all connected actions, they will be in the same chunk separated by returns, as it seems to be the way that it's done officially.
             for i in 1..7 {
-                let delay_input = current_node.get_input(format!("delay{}", i).as_str());
+                let delay_input = current_node.get_input(format!("timeFromPrevious{}", i).as_str());
                 let delay_param = graph.get_input(delay_input.unwrap()).value().clone().try_to_scalar().unwrap();
                 let instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
                 if graph_run_next_actions_no_return!(graph, current_node, graph_def, graph_state, target_chunk, format!("outAction{}", i).as_str()) {
@@ -2158,8 +2171,15 @@ fn traverse_nodes_and_populate<'a>(
                     timeline_cell.add_event(delay_param, 0.0, true, outflow);
                 }
             }
-            
-            add_cell_and_invoking(graph_def, Box::from(timeline_cell), RegisterMap::default(), target_chunk, "Start".into());
+            let cell_id = graph_def.get_last_cell_id() + 1;
+            graph_def.add_cell(Box::new(timeline_cell));
+            // fixup the cell invoke binding
+            let binding = graph_def.get_invoke_binding_mut(binding_id);
+            if let Some(binding) = binding {
+                binding.cell_index = cell_id as i32;
+            } else {
+                panic!("Timeline node: Failed to find invoke binding with id: {}", binding_id);
+            }
         }
         _ => todo!(
             "Implement node template: {:?}",

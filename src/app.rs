@@ -1776,13 +1776,12 @@ impl eframe::App for PulseGraphEditor {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
-                    let compile_res = compile_graph(&self.state.graph, &self.user_state, &self.editor_config);
-                    if compile_res.is_err() {
+                    if let Err(e) = compile_graph(&self.state.graph, &self.user_state, &self.editor_config) {
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)
                             .set_title("Compile failed")
                             .set_buttons(rfd::MessageButtons::Ok)
-                            .set_description(compile_res.err().unwrap())
+                            .set_description(e.to_string())
                             .show();
                     }
                 }

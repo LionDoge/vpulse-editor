@@ -232,7 +232,7 @@ fn add_cell_and_invoking(
     func_name: Cow<'static, str>
 ) {
     graph_def.add_cell(cell);
-    add_cell_invoke_binding(graph_def, register_map, target_chunk, func_name, graph_def.cells.len() as i32);
+    add_cell_invoke_binding(graph_def, register_map, target_chunk, func_name, graph_def.cells.len() as i32 - 1);
 }
 
 fn add_library_invoking(
@@ -1729,6 +1729,27 @@ fn traverse_nodes_and_populate<'a>(
                     );
                     // if the input is connection only, and it happens to be unconnected, we don't want to add it to the register map.
                     if let Some(inp) = inp {
+                        // check if we need to reinterpet ehandle instance type
+                        let inp = match &param.pulsetype {
+                            PulseValueType::PVAL_EHANDLE(subtype) => {
+                                let inp = if let Some(entclass) = subtype {
+                                    // TODO: check if we actually need to do it if the source register already has a matching subtype, however redundant conversion shouldn't be an issue
+                                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                                    let reg_reinterpreted = chunk.add_register(
+                                        String::from(format!("PVAL_EHANDLE:{}", entclass)),
+                                        chunk.get_last_instruction_id() + 1,
+                                    );
+                                    let instruction = instruction_templates::reinterpret_instance(
+                                        reg_reinterpreted, inp);
+                                    chunk.add_instruction(instruction);
+                                    reg_reinterpreted
+                                } else {
+                                    inp
+                                };
+                                inp
+                            },
+                            _ => inp,
+                        };
                         register_map.add_inparam(param.name.clone().into(), inp);
                     }
                 }

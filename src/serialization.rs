@@ -620,10 +620,15 @@ impl KV3Serialize for OutflowConnection {
                 m_SourceOutflowName = \"{}\"
                 m_nDestChunk = {}
                 m_nInstruction = {}
-                m_OutflowRegisterMap = {}
+                {}
             }}
             "
-            , self.outflow_name, self.dest_chunk, self.dest_instruction, self.register_map.serialize()
+            , self.outflow_name, self.dest_chunk, self.dest_instruction
+            , if let Some(register_map) = &self.register_map {
+                format!("m_RegisterMap = {}", register_map.serialize())
+            } else {
+                String::default()
+            }
         }
     }
 }
@@ -702,14 +707,6 @@ impl KV3Serialize for CallInfo {
     }
 }
 
-pub struct CPulseCell_Outflow_ListenForEntityOutput {
-    pub outflow_onfired: OutflowConnection,
-    pub outflow_oncanceled: OutflowConnection,
-    pub entity_output: String,
-    pub entity_output_param: String,
-    pub listen_until_canceled: bool,
-}
-
 impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
     fn serialize(&self) -> String {
         formatdoc!{
@@ -731,9 +728,41 @@ impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
     }
 }
 
-impl PulseCell for CPulseCell_Outflow_ListenForEntityOutput {
-    fn get_cell_type(&self) -> CellType {
-        CellType::Outflow
+impl KV3Serialize for TimelineEvent {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                m_flTimeFromPrevious = {:.6}
+                m_bPauseForPreviousEvents = {:.6}
+                m_bCallModeSync = {}
+                m_EventOutflow = {}
+            }}
+            "
+            , self.time_from_previous, self.pause_for_previous_events, self.call_mode_sync, self.event_outflow.serialize()
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Timeline {
+    fn serialize(&self) -> String {
+        formatdoc!{
+            "
+            {{
+                _class = \"CPulseCell_Timeline\"
+                m_nEditorNodeID = -1
+                m_OnFinished = {}
+                m_bWaitForChildOutflows = {}
+                m_TimelineEvents = 
+                [
+                    {}
+                ]
+            }}
+            "
+            , self.outflow_onfinished.serialize()
+            , self.wait_for_child_outflows
+            , self.timeline_events.iter().map(|event| event.serialize()).collect::<Vec<String>>().join(",\n\n")
+        }
     }
 }
 

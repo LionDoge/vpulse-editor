@@ -6,14 +6,16 @@ use crate::serialization::{PulseRuntimeArgument, RegisterMap};
 use std::borrow::Cow;
 
 // Pulse Cells
+#[allow(unused)]
 pub enum CellType {
     Inflow,
     Step,
     Outflow,
     Value,
     Debug,
+    Other,
 }
-
+#[allow(unused)]
 pub trait PulseCell {
     fn get_cell_type(&self) -> CellType;
 }
@@ -163,7 +165,7 @@ pub struct OutflowConnection {
     pub outflow_name: Cow<'static, str>,
     pub dest_chunk: i32,
     pub dest_instruction: i32,
-    pub register_map: RegisterMap,
+    pub register_map: Option<RegisterMap>,
 }
 impl Default for OutflowConnection {
     fn default() -> Self {
@@ -171,12 +173,12 @@ impl Default for OutflowConnection {
             outflow_name: Cow::Borrowed(""),
             dest_chunk: -1,
             dest_instruction: -1,
-            register_map: RegisterMap::default()
+            register_map: None,
         }
     }
 }
 impl OutflowConnection {
-    pub fn new(outflow_name: Cow<'static, str>, dest_chunk: i32, dest_instruction: i32, register_map: RegisterMap) -> Self {
+    pub fn new(outflow_name: Cow<'static, str>, dest_chunk: i32, dest_instruction: i32, register_map: Option<RegisterMap>) -> Self {
         Self {
             outflow_name,
             dest_chunk,
@@ -204,6 +206,7 @@ impl CPulseCell_Outflow_IntSwitch {
 }
 
 // Other
+#[allow(unused)]
 pub enum SoundEventStartType {
     SOUNDEVENT_START_PLAYER,
 	SOUNDEVENT_START_WORLD,
@@ -223,6 +226,56 @@ impl CPulseCell_SoundEventStart {
         Self {
             typ
         }
+    }
+}
+pub struct CPulseCell_Outflow_ListenForEntityOutput {
+    pub outflow_onfired: OutflowConnection,
+    pub outflow_oncanceled: OutflowConnection,
+    pub entity_output: String,
+    pub entity_output_param: String,
+    pub listen_until_canceled: bool,
+}
+
+impl PulseCell for CPulseCell_Outflow_ListenForEntityOutput {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Outflow
+    }
+}
+
+pub struct TimelineEvent {
+    pub(super) time_from_previous: f32,
+    pub(super) pause_for_previous_events: f32,
+    pub(super) call_mode_sync: bool,
+    pub(super) event_outflow: OutflowConnection,
+}
+pub struct CPulseCell_Timeline {
+    pub(super) outflow_onfinished: OutflowConnection,
+    pub(super) wait_for_child_outflows: bool,
+    pub(super) timeline_events: Vec<TimelineEvent>,
+}
+
+impl PulseCell for CPulseCell_Timeline {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Other
+    }
+}
+
+impl CPulseCell_Timeline {
+    pub fn new(outflow_onfinished: OutflowConnection, wait_for_child_outflows: bool) -> Self {
+        Self {
+            outflow_onfinished,
+            wait_for_child_outflows,
+            timeline_events: Vec::new(),
+        }
+    }
+    pub fn add_event(&mut self, time_from_previous: f32, pause_for_previous_events: f32, call_mode_sync: bool, event_outflow: OutflowConnection) {
+        let event = TimelineEvent {
+            time_from_previous,
+            pause_for_previous_events,
+            call_mode_sync,
+            event_outflow,
+        };
+        self.timeline_events.push(event);
     }
 }
 

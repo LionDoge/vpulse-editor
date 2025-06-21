@@ -10,8 +10,7 @@ use crate::serialization::*;
 use crate::typing::PulseValueType;
 use crate::bindings::LibraryBindingType;
 use egui_node_graph2::*;
-use std::{any, fs};
-use std::process::Command;
+use std::{fs, process::Command};
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -356,7 +355,7 @@ fn traverse_function_entry(
                     outflow_name: "OnFired".into(),
                     dest_chunk: chunk_id,
                     dest_instruction: 0,
-                    register_map: reg_map
+                    register_map: Some(reg_map)
                 };
                 let cell_listen = CPulseCell_Outflow_ListenForEntityOutput {
                     outflow_onfired,
@@ -1987,7 +1986,7 @@ fn traverse_nodes_and_populate<'a>(
                             out.0.clone().into(),
                             target_chunk,
                             this_action_instruction_id, 
-                            RegisterMap::default()
+                            Some(RegisterMap::default())
                         ));
                     }
                     value_idx += 1;
@@ -2001,7 +2000,7 @@ fn traverse_nodes_and_populate<'a>(
                     "default".into(),
                     target_chunk,
                     default_case_instruction_id,
-                    RegisterMap::default()
+                    Some(RegisterMap::default())
                 ));
             }
             
@@ -2129,6 +2128,38 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::ListenForEntityOutput => {
             // just get the saved register and return it. If we get here it's already cached.
             return try_find_output_mapping(graph_def, output_id);
+        }
+        PulseNodeTemplate::Timeline => {
+            // Timeline is a special node that is used to run a sequence of actions in a specific order.
+            // It has a list of actions that are run in order.\
+            // TODO: support onfinished outflow in UI
+            let outflow_onfinished = OutflowConnection::new(
+                "".into(),
+                -1,
+                -1,
+                None,
+            );
+            let mut timeline_cell = CPulseCell_Timeline::new(outflow_onfinished, true);
+            // traverse all connected actions, they will be in the same chunk separated by returns, as it seems to be the way that it's done officially.
+            for i in 1..7 {
+                let delay_input = current_node.get_input(format!("delay{}", i).as_str());
+                let delay_param = graph.get_input(delay_input.unwrap()).value().clone().try_to_scalar().unwrap();
+                let instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
+                if graph_run_next_actions_no_return!(graph, current_node, graph_def, graph_state, target_chunk, format!("outAction{}", i).as_str()) {
+                    graph_def.chunks.get_mut(target_chunk as usize).unwrap()
+                        .add_instruction(instruction_templates::return_void());
+
+                    let outflow = OutflowConnection::new(
+                        format!("event_{}", i - 1).into(),
+                        target_chunk,
+                        instr_id,
+                        None,
+                    );
+                    timeline_cell.add_event(delay_param, 0.0, true, outflow);
+                }
+            }
+            
+            add_cell_and_invoking(graph_def, Box::from(timeline_cell), RegisterMap::default(), target_chunk, "Start".into());
         }
         _ => todo!(
             "Implement node template: {:?}",

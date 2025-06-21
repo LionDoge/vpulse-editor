@@ -815,7 +815,14 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Timeline => {
-                make_referencable();
+                graph.add_input_param(
+                    node_id,
+                    "Start".to_string(),
+                    PulseDataType::Action,
+                    PulseGraphValueType::Action,
+                    InputParamKind::ConnectionOnly,
+                    true,
+                );
                 input_scalar(graph, "timeFromPrevious1", InputParamKind::ConstantOnly, 0.5);
                 output_action(graph, "outAction1");
                 input_scalar(graph, "timeFromPrevious2", InputParamKind::ConstantOnly, 0.5);
@@ -1631,6 +1638,12 @@ impl PulseGraphEditor {
                 }
                 PulseNodeTemplate::Function => {
                     self.state.graph.add_input_param(*node_id, "ActionIn".into(),
+                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                }
+                PulseNodeTemplate::Timeline => {
+                    self.state.graph.add_input_param(*node_id, "Start".into(),
+                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(*node_id, "Stop".into(),
                     PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
                 }
                 _ => {

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
-use crate::typing::{PulseValueType, PulseTypeError, try_string_to_pulsevalue};
+use crate::typing::{PulseValueType, try_string_to_pulsevalue};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize))]

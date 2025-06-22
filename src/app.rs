@@ -1,5 +1,6 @@
 use crate::compiler::compile_graph;
 use crate::bindings::*;
+use crate::help;
 use crate::typing::*;
 use crate::pulsetypes::*;
 use core::panic;
@@ -1203,6 +1204,11 @@ impl NodeDataTrait for PulseNodeData {
     where
         Self::Response: UserResponseTrait,
     {
+        let node_template = _graph.nodes.get(_node_id).unwrap().user_data.template;
+        let help_text = help::help_hover_text(node_template);
+        if help_text.len() > 0 {
+            _ui.label("ℹ").on_hover_text(help_text);
+        }
         if let Some(node_name) = _user_state.exposed_nodes.get_mut(_node_id) {
             _ui.text_edit_singleline(node_name);
         }

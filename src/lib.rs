@@ -10,6 +10,8 @@ mod serialization;
 mod compiler;
 mod bindings;
 mod typing;
+// contains help text
+mod help;
 pub use app::PulseGraphEditor;
 // ----------------------------------------------------------------------------
 // When compiling for web:

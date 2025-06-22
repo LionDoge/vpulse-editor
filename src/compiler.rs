@@ -125,6 +125,7 @@ macro_rules! reg_map_setup_inputs {
     }
 }
 
+#[allow(dead_code)]
 fn get_connected_output_node(graph: &PulseGraph, out_action_id: &OutputId) -> anyhow::Result<Option<NodeId>> {
     // dumb way of finding outgoing connection node.
     for group in graph.iter_connection_groups() {
@@ -155,6 +156,7 @@ fn get_connected_action_nodes_and_inputs(graph: &PulseGraph, out_action_id: &Out
     Ok(node_input_pairs)
 }
 
+#[allow(dead_code)]
 fn get_next_action_node<'a>(
     origin_node: &'a Node<PulseNodeData>,
     graph: &'a PulseGraph,

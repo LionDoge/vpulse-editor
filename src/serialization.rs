@@ -363,6 +363,7 @@ impl PulseChunk {
     pub fn get_instruction_from_id_mut(&mut self, id: i32) -> Option<&mut Instruction> {
         self.instructions.get_mut(id as usize)
     }
+    #[allow(dead_code)]
     pub fn get_last_register_id(&self) -> i32 {
         self.registers.len() as i32 - 1
     }

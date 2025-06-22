@@ -433,6 +433,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         }
     }
 
+    #[allow(unused_variables)]
     fn build_node(
         &self,
         graph: &mut Graph<Self::NodeData, Self::DataType, Self::ValueType>,

@@ -626,7 +626,7 @@ impl KV3Serialize for OutflowConnection {
             "
             , self.outflow_name, self.dest_chunk, self.dest_instruction
             , if let Some(register_map) = &self.register_map {
-                format!("m_RegisterMap = {}", register_map.serialize())
+                format!("m_OutflowRegisterMap = {}", register_map.serialize())
             } else {
                 String::default()
             }

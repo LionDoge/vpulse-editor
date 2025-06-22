@@ -3,37 +3,19 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 use pulseedit::PulseGraphEditor;
+use std::sync::Arc;
 
-// struct IconData {
-//     rgba: Vec<u8>,
-//     width: u32,
-//     height: u32,
-// }
-
-// fn load_icon(path: &str) -> IconData {
-//     let (icon_rgba, icon_width, icon_height) = {
-//         let image = image::open(path)
-//             .expect("Failed to open icon path")
-//             .into_rgba8();
-//         let (width, height) = image.dimensions();
-//         let rgba = image.into_raw();
-//         (rgba, width, height)
-//     };
-
-//     IconData {
-//         rgba: icon_rgba,
-//         width: icon_width,
-//         height: icon_height,
-//     }
-// }
 // When compiling natively:
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
+    let d = eframe::icon_data::from_png_bytes(include_bytes!("../icon.png"))
+        .expect("The icon data must be valid");
     use eframe::egui::{ViewportBuilder, Visuals};
-    let options = eframe::NativeOptions {
+    let mut options = eframe::NativeOptions {
         viewport: ViewportBuilder::default(),
         ..Default::default()
     };
+    options.viewport.icon = Some(Arc::new(d));
     eframe::run_native(
         "Pulse Graph Editor",
         options,
@@ -44,5 +26,5 @@ fn main() {
             // Ok(Box::<PulseGraphEditor>::default())
         }),
     )
-    .expect("Failed to run native example");
+    .expect("Failed to run app");
 }

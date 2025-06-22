@@ -510,7 +510,7 @@ pub enum PulseConstant {
     Float(f32),
     Integer(i32),
     Vec3(Vec3),
-    Color_RGB(Vec3),
+    Color_RGB([f32; 4]),
     Bool(bool),
 }
 impl KV3Serialize for PulseConstant {
@@ -538,7 +538,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Float(value) => format!("{:.8}", value),
                 PulseConstant::Integer(value) => value.to_string(),
                 PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
-                PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value.x, value.y, value.z),
+                PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
                 PulseConstant::Bool(value) => value.to_string(),
             }
         }

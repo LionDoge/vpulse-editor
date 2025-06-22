@@ -39,6 +39,7 @@ pub enum PulseDataType {
     Scalar,
     Vec2,
     Vec3,
+    Color,
     String,
     Bool,
     Action,
@@ -69,6 +70,7 @@ pub enum PulseGraphValueType {
     String { value: String },
     Bool { value: bool },
     Vec3 { value: Vec3 },
+    Color { value: [f32; 4] },
     EHandle,
     SndEventHandle,
     SoundEventName { value: String },
@@ -121,6 +123,14 @@ impl PulseGraphValueType {
             Ok(value)
         } else {
             anyhow::bail!("Invalid cast from {:?} to vec3", self)
+        }
+    }
+
+    pub fn try_to_color_rgba(self) -> anyhow::Result<[f32; 4]> {
+        if let PulseGraphValueType::Color { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to color", self)
         }
     }
 
@@ -288,6 +298,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
             PulseDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
+            PulseDataType::Color => egui::Color32::from_rgb(111, 66, 245), // Red for color
             PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
             PulseDataType::EHandle => egui::Color32::from_rgb(11, 200, 31),
@@ -309,6 +320,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Scalar => Cow::Borrowed("scalar"),
             PulseDataType::Vec2 => Cow::Borrowed("2d vector"),
             PulseDataType::Vec3 => Cow::Borrowed("3d vector"),
+            PulseDataType::Color => Cow::Borrowed("color"),
             PulseDataType::String => Cow::Borrowed("string"),
             PulseDataType::Bool => Cow::Borrowed("bool"),
             PulseDataType::Action => Cow::Borrowed("action"),
@@ -501,6 +513,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
+        let input_color = |graph: &mut PulseGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::Color,
+                PulseGraphValueType::Color {
+                    value: [1.0, 1.0, 1.0, 1.0],
+                },
+                InputParamKind::ConnectionOrConstant,
+                true,
+            );
+        };
         let input_action = |graph: &mut PulseGraph| {
             graph.add_input_param(
                 node_id,
@@ -665,7 +689,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_scalar(graph, "flDuration", InputParamKind::ConnectionOrConstant, 5.0);
                 input_scalar(graph, "flVerticalOffset", InputParamKind::ConnectionOrConstant, 0.0);
                 input_bool(graph, "bAttached", InputParamKind::ConstantOnly);
-                input_vector3(graph, "color");
+                input_color(graph, "color");
                 input_scalar(graph, "flAlpha", InputParamKind::ConnectionOrConstant, 1.0);
                 input_scalar(graph, "flScale", InputParamKind::ConnectionOrConstant, 1.0);
                 output_action(graph, "outAction");
@@ -942,9 +966,15 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::Vec3 { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ui.add(DragValue::new(&mut value.x).range(0..=255));
-                    ui.add(DragValue::new(&mut value.y).range(0..=255));
-                    ui.add(DragValue::new(&mut value.z).range(0..=255));
+                    ui.add(DragValue::new(&mut value.x));
+                    ui.add(DragValue::new(&mut value.y));
+                    ui.add(DragValue::new(&mut value.z));
+                });
+            }
+            PulseGraphValueType::Color {value} => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.color_edit_button_rgba_unmultiplied(value);
                 });
             }
             PulseGraphValueType::Action => {

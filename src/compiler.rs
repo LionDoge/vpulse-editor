@@ -659,11 +659,14 @@ fn get_input_register_or_create_constant(
                 PulseValueType::PVAL_COLOR_RGB(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
-                    let input_value = input_param
+                    let mut input_value = input_param
                         .value()
                         .clone()
-                        .try_to_vec3()?;
+                        .try_to_color_rgba()?;
                     chunk.add_instruction(instruction);
+                    input_value[0] *= 255.0;
+                    input_value[1] *= 255.0;
+                    input_value[2] *= 255.0;
                     graph_def.add_constant(PulseConstant::Color_RGB(input_value));
                 }
                 PulseValueType::PVAL_BOOL => {

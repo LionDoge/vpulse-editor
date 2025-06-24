@@ -28,6 +28,7 @@ pub struct FunctionBinding {
     pub typ: LibraryBindingType,
     pub displayname: String,
     pub libname: String,
+    pub description: Option<String>,
     pub inparams: Option<Vec<ParamInfo>>,
     pub outparams: Option<Vec<ParamInfo>>
 }

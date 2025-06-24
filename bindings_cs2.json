@@ -38,6 +38,7 @@
         "type": "action",
         "displayname": "Con Command",
         "libname": "CPulseServerFuncs!ConCommand",
+        "description": "Executes a con command",
         "inparams": [
             {
                 "name": "pCommand",
@@ -49,6 +50,7 @@
         "type": "value",
         "displayname": "Get Graph Entity",
         "libname": "CPulseServerFuncs!GetGraphEntity",
+        "description": "Get the entity that this graph is running on.",
         "outparams": [
             {
                 "name": "retval",
@@ -60,6 +62,7 @@
         "type": "value",
         "displayname": "Get Entity Origin",
         "libname": "CPulseServerFuncs!GetEntityOrigin",
+        "description": "Get the position of an entity.",
         "inparams": [
             {
                 "name": "hEnt",
@@ -77,6 +80,7 @@
         "type": "value",
         "displayname": "Get Entity Height Above Nav Mesh",
         "libname": "CPulseServerFuncs!GetEntityHeightAboveNavMesh",
+        "description": "Get the height of the entity off the navmesh.",
         "inparams": [
             {
                 "name": "hEnt",
@@ -94,6 +98,7 @@
         "type": "value",
         "displayname": "Get Entity Nav Mesh Position",
         "libname": "CPulseServerFuncs!GetEntityNavMeshPosition",
+        "description": "Get the height of the entity off the world geo.",
         "inparams": [
             {
                 "name": "hEnt",
@@ -111,6 +116,7 @@
         "type": "value",
         "displayname": "Get Entity Height Above World Collision",
         "libname": "CPulseServerFuncs!GetEntityHeightAboveWorldCollision",
+        "description": "Get the nearest navmesh position for the entity.",
         "inparams": [
             {
                 "name": "hEnt",
@@ -128,6 +134,7 @@
         "type": "value",
         "displayname": "Get Entity Facing Yaw Angle Delta",
         "libname": "CPulseServerFuncs!GetEntityFacingYawAngleDelta",
+        "description": "Get angle delta between the first entity's facing vector and direction vector to the second entity.",
         "inparams": [
             {
                 "name": "hEnt1",
@@ -149,6 +156,7 @@
         "type": "value",
         "displayname": "Get Distance Between Points",
         "libname": "CPulseServerFuncs!GetDistanceBetweenPoints",
+        "description": "Get the distance between two points as a float number.",
         "inparams": [
             {
                 "name": "vPoint1",
@@ -170,6 +178,7 @@
         "type": "value",
         "displayname": "Get Entity Name",
         "libname": "CPulseServerFuncs!GetEntityName",
+        "description": "Get the name of the entity.",
         "inparams": [
             {
                 "name": "hEnt",
@@ -187,6 +196,7 @@
         "type": "value",
         "displayname": "Count Entities With Name",
         "libname": "CPulseServerFuncs!CountEntitiesWithName",
+        "description": "Count the number of entities whose name matches a pattern.",
         "inparams": [
             {
                 "name": "pNamePattern",
@@ -204,6 +214,7 @@
         "type": "action",
         "displayname": "Teleport Entity",
         "libname": "CPulseServerFuncs!TeleportEntity",
+        "description": "Teleport the given entity to the target entity's position and orientation",
         "inparams": [
             {
                 "name": "hEntity",
@@ -219,6 +230,7 @@
         "type": "action",
         "displayname": "Remove Entity",
         "libname": "CPulseServerFuncs!RemoveEntity",
+        "description": "Permanently removes the entity from the world.",
         "inparams": [
             {
                 "name": "hEntity",
@@ -230,6 +242,7 @@
         "type": "value",
         "displayname": "Can Character See Entity",
         "libname": "CPulseServerFuncs!CanCharacterSeeEntity",
+        "description": "Return true if the character (player or NPC) can see the target entity (i.e. within FOV and has LOS)",
         "inparams": [
             {
                 "name": "hEntityCharacter",
@@ -252,6 +265,7 @@
         "type": "value",
         "displayname": "Does Entity Have LOS",
         "libname": "CPulseServerFuncs!DoesEntityHaveLOS",
+        "description": "Return true if the entity has LOS to the target entity",
         "inparams": [
             {
                 "name": "hEntity",
@@ -273,6 +287,7 @@
         "type": "action",
         "displayname": "Deal Damage",
         "libname": "CPulseServerFuncs!DealDamage",
+        "description": "Deals damage to an entity",
         "inparams": [
             {
                 "name": "hTarget",
@@ -296,6 +311,7 @@
         "type": "action",
         "displayname": "Remove All Ammo",
         "libname": "CPulseServerFuncs!RemoveAllAmmo",
+        "description": "Removes all ammo from an entity",
         "inparams": [
             {
                 "name": "hTarget",
@@ -986,7 +1002,7 @@
         "inparams": [
             {
                 "name": "_Target",
-                "type": "PVAL_EHANDLE:baseplayercontroller"
+                "type": "PVAL_EHANDLE:player_controller"
             }
         ],
         "outparams": [
@@ -1001,11 +1017,11 @@
         "type": "value",
         "displayname": "Is Fake Client",
         "libname": "CBasePlayerControllerAPI!IsFakeClient",
-        "description": "",
+        "description": "Fake client, simulated server side; don't send network messages to them",
         "inparams": [
             {
                 "name": "_Target",
-                "type": "PVAL_EHANDLE:baseplayercontroller"
+                "type": "PVAL_EHANDLE:player_controller"
             }
         ],
         "outparams": [

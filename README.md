@@ -5,7 +5,7 @@ There's no official tooling for creating these files, so this tool is supposed t
 This tool is intended to work for Counter-Strike 2, as it's only really useful in this game currently.
 
 ## A few bits of important story...
-The name in-development system suggets that it could still undergo changes wasting the effort of writing this app. The release of an official editor would also make this useless, so why bother spending time on it? Well, I like challenge and reverse engineering components of software, not only that, but I noticed that Pulse could do much more than any other possible scripting/map making methods. Granted, it still doesn't open up that much possibilities, but at least some more than was possible before, so this project is not totally useless! This project was also started as part of my Rust programming course at university, the only other ideas I had were one and done, so I decided to pick something not entirely useless, that I could also continue. So here we are! All of this was possible due to my weird obsessions.
+The name in-development system suggets that it could still undergo changes wasting the effort of writing this app. The release of an official editor would also make this useless, so why bother spending time on it? Well, I like challenge and reverse engineering components of software, not only that, but I noticed that Pulse could do much more than any other possible scripting/map making methods. Granted, it still doesn't open up that much possibilities, but at least some more than was possible before, so this project is not totally useless! This project was also started as part of my Rust programming course at university, the only other ideas I had were ones that would be one and done, so I decided to pick something that I could also continue. So here we are! All of this was possible due to my weird obsessions.
 
 ## Game setup
 Some initial setup inside the game files is required to make working with Pulse graphs way easier.
@@ -55,14 +55,14 @@ If building yourself, you will also need to acquire [Source 2 asset assembler](h
 You may possibly need to setup a venv with all the required dependencies. Lastly you need to adjust the `config.json` file approperiately
 set `python_interpreter` to the python in the venv for asset assembler (or leave in the system-wide path). Set `assetassembler_path` to point to to the script file.
 
-The release includes self-contained asset assembler script as a [pex](https://github.com/pex-tool/pex) file. If downloading from releases the only thing you need is python installed on the system, the default config should work fine.
+The release includes self-contained asset assembler script as a [pex](https://github.com/pex-tool/pex) file. **If downloading from releases the only thing you need is python installed on the system, the default config should work fine.**
 
 Any yeah I know the setup is quite bad, but this may get changed. As I mentionted before, I didn't want to put too much effort in, it's supposed to work, not to be exactly the most optimal setup.
 
 Once done you can just run the pulseedit executable. It is recommended to run it from the terminal in case any issues appear.
 
 # Basic Usage
-> ![NOTE]
+> [!NOTE]
 > This section will see more additions as time goes on, and as possibly more questions appear.
 
 <img src="reference_img/img1.png" alt="drawing" width="600"/>

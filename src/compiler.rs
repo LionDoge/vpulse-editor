@@ -208,8 +208,7 @@ fn get_next_action_nodes<'a>(
             .ok_or_else(|| {
                 anyhow::anyhow!("Input with id {:?} not found in the node", conn.1)
                     .context("get_next_action_nodes found InputId, but couldn't get input data")
-            })
-            .and_then(|e| Ok(e.0.as_ref()))?;
+            }).map(|e| e.0.as_ref())?;
         res.push((node, input_name));
     }
     Ok(res)
@@ -229,15 +228,15 @@ fn traverse_inflow_nodes(
         match data.user_data.template {
             PulseNodeTemplate::EventHandler => {
                 processed = true;
-                traverse_event_cell(graph, &data, graph_def, _graph_state)?;
+                traverse_event_cell(graph, data, graph_def, _graph_state)?;
             }
             PulseNodeTemplate::CellPublicMethod => {
                 processed = true;
-                traverse_entry_cell(graph, &data, graph_def, _graph_state)?;
+                traverse_entry_cell(graph, data, graph_def, _graph_state)?;
             }
             PulseNodeTemplate::GraphHook => {
                 processed = true;
-                traverse_graphhook_cell(graph, &data, graph_def, _graph_state)?;
+                traverse_graphhook_cell(graph, data, graph_def, _graph_state)?;
             }
             _ => {}
         }
@@ -258,7 +257,7 @@ fn add_cell_invoke_binding(
     // NOTE: Cell invokes require information about where they're been called from
     let binding = InvokeBinding {
         register_map,
-        func_name: func_name.into(),
+        func_name,
         cell_index: cell_id, // the cell to be added
         src_chunk: target_chunk,
         src_instruction: instr,
@@ -614,15 +613,15 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
             match graph_def.get_mapped_reigster(*output_id) {
                 Some(reg) => {
                     // we found a mapping! So we know which register to use for this
-                    return *reg;
+                    *reg
                 }
                 None => {
-                    return -1;
+                    -1
                 }
             }
         }
         None => {
-            return -1;
+            -1
         }
     }
 }
@@ -1139,7 +1138,7 @@ fn traverse_nodes_and_populate<'a>(
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let register_output = chunk.add_register(
-                String::from(operation_typ.to_string()),
+                operation_typ.to_string(),
                 chunk.get_last_instruction_id() + 1,
             );
             let mut instr = Instruction::default();
@@ -1349,7 +1348,7 @@ fn traverse_nodes_and_populate<'a>(
             )?;
             graph_def
                 .cells
-                .push(Box::from(CPulseCell_Step_DebugLog::default()));
+                .push(Box::from(CPulseCell_Step_DebugLog));
             let mut register_map = RegisterMap::default();
             if let Some(reg_message) = reg_message {
                 register_map.add_inparam("pMessage".into(), reg_message);
@@ -1517,7 +1516,7 @@ fn traverse_nodes_and_populate<'a>(
             // TODO: only EQ for now
             let mut instr_compare = Instruction::default();
             instr_compare.code =
-                String::from(format!("EQ{}", compare_type.get_operation_suffix_name()));
+                format!("EQ{}", compare_type.get_operation_suffix_name());
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let reg_cond = chunk.add_register(
                 String::from("PVAL_BOOL"),
@@ -1962,7 +1961,7 @@ fn traverse_nodes_and_populate<'a>(
                                     let chunk =
                                         graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                                     let reg_reinterpreted = chunk.add_register(
-                                        String::from(format!("PVAL_EHANDLE:{}", entclass)),
+                                        format!("PVAL_EHANDLE:{}", entclass),
                                         chunk.get_last_instruction_id() + 1,
                                     );
                                     let instruction = instruction_templates::reinterpret_instance(
@@ -2128,8 +2127,8 @@ fn traverse_nodes_and_populate<'a>(
                     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                     let mut instr_compare = Instruction::default();
                     instr_compare.code = String::from(code);
-                    let reg_cond;
-                    reg_cond = chunk.add_register(
+                    
+                    let reg_cond = chunk.add_register(
                         String::from("PVAL_BOOL"),
                         chunk.get_last_instruction_id() + 1,
                     );
@@ -2208,7 +2207,7 @@ fn traverse_nodes_and_populate<'a>(
                 add_cell_invoke_binding(graph_def, register_map, target_chunk, "Run".into(), -1);
             let mut instructions_jump_end = vec![];
             for out in current_node.outputs.iter() {
-                if !out.0.parse::<i32>().is_ok() {
+                if out.0.parse::<i32>().is_err() {
                     continue;
                 }
 
@@ -2486,5 +2485,5 @@ fn traverse_nodes_and_populate<'a>(
             current_node.user_data.template
         ),
     }
-    return Ok(-1);
+    Ok(-1)
 }

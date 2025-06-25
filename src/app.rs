@@ -1005,13 +1005,11 @@ impl WidgetValueTrait for PulseGraphValueType {
                     // if this is a custom added parameter...
                     let vec_params = _user_state.added_parameters.get(_node_id);
                     if let Some(params) = vec_params {
-                        if params.iter().find(|&x| x == param_name).is_some() {
-                            if ui.button("X").on_hover_text("Remove parameter").clicked() {
-                                responses.push(PulseGraphResponse::RemoveOutputParam(
-                                    _node_id,
-                                    param_name.to_string(),
-                                ));
-                            }
+                        if params.iter().any(|x| x == param_name) && ui.button("X").on_hover_text("Remove parameter").clicked() {
+                            responses.push(PulseGraphResponse::RemoveOutputParam(
+                                _node_id,
+                                param_name.to_string(),
+                            ));
                         }
                     }
                     ui.label(param_name);
@@ -1302,7 +1300,7 @@ impl NodeDataTrait for PulseNodeData {
     {
         let node_template = _graph.nodes.get(_node_id).unwrap().user_data.template;
         let help_text = help::help_hover_text(node_template);
-        if help_text.len() > 0 {
+        if !help_text.is_empty() {
             _ui.label("ℹ").on_hover_text(help_text);
         }
         if let Some(node_name) = _user_state.exposed_nodes.get_mut(_node_id) {
@@ -1395,7 +1393,7 @@ pub struct PulseGraphEditor {
 
 impl PulseGraphEditor {
     fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
-        let res = ron::to_string::<PulseGraphEditor>(&self)?;
+        let res = ron::to_string::<PulseGraphEditor>(self)?;
         fs::write(filepath, res)?;
         Ok(())
     }
@@ -1596,7 +1594,7 @@ impl PulseGraphEditor {
                 let param_a = node.get_input("A");
                 let param_b = node.get_input("B");
                 let param_out = node.get_output("out");
-                if !param_a.is_ok() || !param_b.is_ok() || !param_out.is_ok() {
+                if param_a.is_err() || param_b.is_err() || param_out.is_err() {
                     panic!("node that requires inputs 'A', 'B' and output 'out', but one of them was not found");
                 }
                 self.state.graph.remove_input_param(param_a.unwrap());
@@ -1650,7 +1648,7 @@ impl PulseGraphEditor {
                 let new_type = new_type.unwrap();
                 let param_a = node.get_input("A");
                 let param_b = node.get_input("B");
-                if !param_a.is_ok() || !param_b.is_ok() {
+                if param_a.is_err() || param_b.is_err() {
                     panic!("node that requires inputs 'A' and 'B', but one of them was not found");
                 }
                 self.state.graph.remove_input_param(param_a.unwrap());
@@ -1868,7 +1866,7 @@ impl PulseGraphEditor {
             .set_level(rfd::MessageLevel::Error)
             .set_title("Failed to load config file")
             .set_buttons(rfd::MessageButtons::Ok)
-            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {}", e.to_string()))
+            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {}", e))
             .show();
         };
         grph.editor_config = cfg_res.unwrap_or_default();
@@ -1998,21 +1996,17 @@ impl eframe::App for PulseGraphEditor {
                     }
                     // else it was most likely cancelled.
                 }
-                if ui.button("Save as...").clicked()
-                    || ctx.input(|i| {
+                if (ui.button("Save as...").clicked() || ctx.input(|i| {
                         i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::S)
-                    })
-                {
-                    if self.dialog_change_save_file() {
-                        // TODO: DRY
-                        if let Err(e) = self.perform_save(None) {
-                            MessageDialog::new()
-                                .set_level(rfd::MessageLevel::Error)
-                                .set_title("Save failed")
-                                .set_buttons(rfd::MessageButtons::Ok)
-                                .set_description(e.to_string())
-                                .show();
-                        }
+                    })) && self.dialog_change_save_file() {
+                    // TODO: DRY
+                    if let Err(e) = self.perform_save(None) {
+                        MessageDialog::new()
+                            .set_level(rfd::MessageLevel::Error)
+                            .set_title("Save failed")
+                            .set_buttons(rfd::MessageButtons::Ok)
+                            .set_description(e.to_string())
+                            .show();
                     }
                 }
                 if ui.button("Open").clicked() {
@@ -2099,22 +2093,19 @@ impl eframe::App for PulseGraphEditor {
                         let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
                         for nodeid in node_ids {
                             let node = self.state.graph.nodes.get(nodeid).unwrap();
-                            match node.user_data.template {
-                                PulseNodeTemplate::FireOutput => {
-                                    let inp = node.get_input("outputName");
-                                    let val = self
-                                        .state
-                                        .graph
-                                        .get_input(inp.unwrap())
-                                        .value()
-                                        .clone()
-                                        .try_output_name()
-                                        .unwrap();
-                                    if outputdef.name == val {
-                                        output_node_updates.push((nodeid, outputdef.name.clone()));
-                                    }
+                            if node.user_data.template == PulseNodeTemplate::FireOutput {
+                                let inp = node.get_input("outputName");
+                                let val = self
+                                    .state
+                                    .graph
+                                    .get_input(inp.unwrap())
+                                    .value()
+                                    .clone()
+                                    .try_output_name()
+                                    .unwrap();
+                                if outputdef.name == val {
+                                    output_node_updates.push((nodeid, outputdef.name.clone()));
                                 }
-                                _ => {}
                             }
                         }
                         outputdef.typ_old = outputdef.typ.clone();
@@ -2217,13 +2208,13 @@ impl eframe::App for PulseGraphEditor {
         }
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
-                let graph_response = self.state.draw_graph_editor(
+                
+                self.state.draw_graph_editor(
                     ui,
                     AllMyNodeTemplates,
                     &mut self.user_state,
                     Vec::default(),
-                );
-                graph_response
+                )
             })
             .inner;
 

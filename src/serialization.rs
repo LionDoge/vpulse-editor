@@ -251,7 +251,7 @@ impl RegisterMap {
 
 impl KV3Serialize for RegisterMap {
     fn serialize(&self) -> String {
-        let inparams_str: String = if self.inparams.len() > 0 {
+        let inparams_str: String = if !self.inparams.is_empty() {
             formatdoc!(
                 "{{
                     {}
@@ -265,7 +265,7 @@ impl KV3Serialize for RegisterMap {
         } else {
             String::from("null")
         };
-        let outparams_str: String = if self.outparams.len() > 0 {
+        let outparams_str: String = if !self.outparams.is_empty() {
             formatdoc!(
                 "{{
                     {}
@@ -601,7 +601,7 @@ impl KV3Serialize for PulseVariable {
                 format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
             }
             PulseValueType::PVAL_COLOR_RGB(value) => {
-                let val = value.clone().unwrap_or_default();
+                let val = (*value).unwrap_or_default();
                 format!("[{}, {}, {}]", val.x, val.y, val.z)
             }
             PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle

@@ -96,7 +96,7 @@ impl PulseCell for CPulseCell_Step_EntFire {
 }
 impl CPulseCell_Step_EntFire {
     pub fn new(input: Cow<'static, str>) -> CPulseCell_Step_EntFire {
-        CPulseCell_Step_EntFire { input: input }
+        CPulseCell_Step_EntFire { input }
     }
 }
 

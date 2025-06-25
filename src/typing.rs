@@ -106,14 +106,14 @@ impl fmt::Display for PulseValueType {
 }
 impl PulseValueType {
     pub fn get_operation_suffix_name(&self) -> &'static str {
-        return match self {
+        match self {
             PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
             PulseValueType::PVAL_INT(_) => "_INT",
             PulseValueType::PVAL_VEC3(_) => "", // Vec3 uses generic comparison (I think)
             PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
             PulseValueType::PVAL_STRING(_) => "_STRING",
             _ => "",
-        };
+        }
     }
 }
 
@@ -141,7 +141,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
 }
 
 pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
-    return match typ {
+    match typ {
         PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0f32 },
         PulseDataType::String => PulseGraphValueType::String {
             value: String::default(),
@@ -164,7 +164,7 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
             value: String::default(),
         },
         _ => PulseGraphValueType::Scalar { value: 0f32 },
-    };
+    }
 }
 
 pub fn pulse_value_type_to_node_types(

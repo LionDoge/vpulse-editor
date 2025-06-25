@@ -2010,6 +2010,8 @@ fn traverse_nodes_and_populate<'a>(
             );
             // now comes the processing of the outflows
             let mut outflow_connections = vec![];
+            // the cell id will need to be adjusted later after we process all the cases and construct the cell itself.
+            let cell_binding_id = add_cell_invoke_binding(graph_def, register_map, target_chunk, "Run".into(), -1);
             let mut instructions_jump_end = vec![];
             for out in current_node.outputs.iter() {
                 if !out.0.parse::<i32>().is_ok() {
@@ -2024,7 +2026,7 @@ fn traverse_nodes_and_populate<'a>(
                         // ! this code is ass, literally nothing can go wrong here.
                         let node = graph.nodes.get(conn.0).unwrap();
                         let input_name= node.inputs.iter().find(|item| item.1 == conn.1).unwrap().0.as_str();
-                        if let Err(e) = traverse_nodes_and_populate(
+                        traverse_nodes_and_populate(
                             graph,
                             node,
                             graph_def,
@@ -2032,9 +2034,7 @@ fn traverse_nodes_and_populate<'a>(
                             target_chunk,
                             &None,
                             &Some(input_name.into())
-                        ) {
-                            return Err(e);
-                        }
+                        )?;
                     }
                     // add a JUMP instruction to the end of all of the cases
                     // we don't really know where that will be so we will have to note down the instruction id and modify it later.
@@ -2081,7 +2081,10 @@ fn traverse_nodes_and_populate<'a>(
                 default_case_outflow.unwrap_or_default(),
                 outflow_connections,
             );
-            add_cell_and_invoking(graph_def, Box::from(cell), register_map, target_chunk, "Run".into());
+            graph_def.add_cell(Box::from(cell));
+            // correct the cell invoke binding to point to the new cell id
+            graph_def.get_invoke_binding_mut(cell_binding_id)
+                .unwrap().cell_index = graph_def.get_last_cell_id() as i32;
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::SoundEventStart => {

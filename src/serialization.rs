@@ -790,7 +790,7 @@ pub struct PulseGraphDef {
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
     pub traversed_entrypoints: Vec<(NodeId, i32)>, // used to track which entrypoints have been traversed
     pub cells: Vec<Box<dyn PulseCellTrait>>,
-    pub constants: Vec<Box<PulseConstant>>,
+    pub constants: Vec<PulseConstant>,
     pub bindings: Vec<InvokeBinding>,
     pub chunks: Vec<PulseChunk>,
     pub output_connections: Vec<OutputConnection>,
@@ -832,7 +832,7 @@ impl PulseGraphDef {
         // if self.constants.iter().any(|c| **c == constant) {
         //     return self.constants.iter().position(|c| **c == constant).unwrap() as i32;
         // }
-        self.constants.push(Box::from(constant));
+        self.constants.push(constant);
         self.constants.len() as i32 - 1
     }
     pub fn add_output_connection(&mut self, output_connection: OutputConnection) {

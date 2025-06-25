@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
 use std::fs;
 use std::path::PathBuf;
-use std::usize;
 use std::{borrow::Cow, collections::HashMap};
 
 // Compare this snippet from src/instruction_templates.rs:
@@ -1455,8 +1454,8 @@ impl PulseGraphEditor {
             .get_mut(node_id)
             .unwrap()
             .get_input(input_name);
-        if param.is_ok() {
-            self.state.graph.remove_input_param(param.unwrap());
+        if let Ok(param) = param {
+            self.state.graph.remove_input_param(param);
         }
         for output in self.user_state.public_outputs.iter() {
             if output.name == *name {
@@ -1551,8 +1550,8 @@ impl PulseGraphEditor {
         match node.user_data.template {
             PulseNodeTemplate::GetVar => {
                 let param = node.get_output("value");
-                if param.is_ok() {
-                    self.state.graph.remove_output_param(param.unwrap());
+                if let Ok(param) = param {
+                    self.state.graph.remove_output_param(param);
                 }
                 let var = self
                     .user_state
@@ -1566,8 +1565,8 @@ impl PulseGraphEditor {
             }
             PulseNodeTemplate::SetVar => {
                 let param = node.get_input("value");
-                if param.is_ok() {
-                    self.state.graph.remove_input_param(param.unwrap());
+                if let Ok(param) = param {
+                    self.state.graph.remove_input_param(param);
                 }
                 let var = self
                     .user_state

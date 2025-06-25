@@ -413,7 +413,7 @@ fn traverse_function_entry(
     if existing_entrypoint.is_none() {
         let chunk_id = graph_def.create_chunk();
         let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
-        let ret_value;
+        let mut ret_value = chunk_id;
         // node specific thingies.
         match node.user_data.template {
             PulseNodeTemplate::ListenForEntityOutput => {
@@ -527,7 +527,7 @@ fn traverse_entry_cell(
     Ok(())
 }
 
-pub fn compile_graph<'a>(
+pub fn compile_graph(
     graph: &PulseGraph,
     graph_state: &PulseGraphState,
     config: &EditorConfig,
@@ -628,8 +628,8 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
 
 fn get_variable(graph_def: &mut PulseGraphDef, name: &str) -> Option<i32> {
     let var = graph_def.get_variable_index(name);
-    if var.is_some() {
-        return Some(var.unwrap() as i32);
+    if let Some(var) = var {
+        return Some(var as i32);
     }
     None
 }
@@ -641,6 +641,7 @@ fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: Option<&InputId>)
 // traverse to the neihbors of the current node, connected to inputs, and gather their information
 // can choose if the generated value from the input will be reused, or if it should always be evaluated as new
 // as a new input (depends on the task of the node really)
+#[allow(clippy::too_many_arguments)]
 fn get_input_register_or_create_constant(
     graph: &PulseGraph,
     current_node: &Node<PulseNodeData>,
@@ -827,8 +828,10 @@ fn traverse_nodes_and_populate<'a>(
                 "Wait".into(),
             );
             // early return.
-            let mut instr_ret_void = Instruction::default();
-            instr_ret_void.code = String::from("RETURN_VOID");
+            let instr_ret_void = Instruction {
+                code: String::from("RETURN_VOID"),
+                .. Default::default()
+            };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instr_ret_void);
 
@@ -1141,11 +1144,13 @@ fn traverse_nodes_and_populate<'a>(
                 operation_typ.to_string(),
                 chunk.get_last_instruction_id() + 1,
             );
-            let mut instr = Instruction::default();
-            instr.code = operation_instr_name;
-            instr.reg0 = register_output;
-            instr.reg1 = reg_a.unwrap_or(-1);
-            instr.reg2 = reg_b.unwrap_or(-1);
+            let instr = Instruction {
+                code: operation_instr_name,
+                reg0: register_output,
+                reg1: reg_a.unwrap_or(-1),
+                reg2: reg_b.unwrap_or(-1),
+                ..Default::default()
+            };
             chunk.add_instruction(instr);
             if let Some(output) = output_id {
                 graph_def.add_register_mapping(*output, register_output);
@@ -1379,11 +1384,11 @@ fn traverse_nodes_and_populate<'a>(
                 .try_output_name()
                 .map_err(|e| anyhow!(e).context("FireOutput node"))?;
             let pub_output = graph_def.get_public_output_index(input_val.as_str());
-            if pub_output.is_some() {
+            if let Some(pub_output) = pub_output {
                 graph_def
                     .cells
                     .push(Box::from(CPulseCell_Step_PublicOutput::new(
-                        pub_output.unwrap() as i32,
+                        pub_output as i32,
                     )));
             }
             let new_binding_id = graph_def.get_current_binding_id() + 1;
@@ -2125,8 +2130,10 @@ fn traverse_nodes_and_populate<'a>(
             let mut create_comp_instructions =
                 |code: Cow<'_, str>, reg_a: Option<i32>, reg_b: Option<i32>| -> i32 {
                     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                    let mut instr_compare = Instruction::default();
-                    instr_compare.code = String::from(code);
+                    let mut instr_compare = Instruction {
+                        code: String::from(code),
+                        .. Default::default()
+                    };
                     
                     let reg_cond = chunk.add_register(
                         String::from("PVAL_BOOL"),

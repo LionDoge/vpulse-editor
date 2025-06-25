@@ -60,10 +60,10 @@ pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::i
     match json {
         Ok(json) => {
             let bindings = from_str::<GraphBindings>(&json);
-            if bindings.is_err() {
+            if let Err(err) = bindings {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
-                    bindings.unwrap_err(),
+                    err,
                 ));
             }
             let mut bindings = bindings.unwrap();

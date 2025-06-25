@@ -1,4 +1,3 @@
-// Default configuration for releases
 {
     "python_interpreter": "python",
     "assetassembler_path": "./assetbuilder.pex",

@@ -1,0 +1,6 @@
+// Default configuration for releases
+{
+    "python_interpreter": "python",
+    "assetassembler_path": "./assetbuilder.pex",
+    "red2_template_path": "./graph_red2_template.kv3"
+}

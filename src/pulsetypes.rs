@@ -1,8 +1,8 @@
 #![allow(nonstandard_style)]
-use serde::{Deserialize, Serialize};
-use crate::typing::PulseValueType;
 use crate::app::PulseDataType;
 use crate::serialization::{PulseRuntimeArgument, RegisterMap};
+use crate::typing::PulseValueType;
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 // Pulse Cells
@@ -56,7 +56,7 @@ impl PulseCell for CPulseCell_Inflow_EventHandler {
 #[allow(non_camel_case_types)]
 pub struct CPulseCell_Inflow_Wait {
     pub(super) dest_chunk: i32,
-    pub(super) instruction: i32
+    pub(super) instruction: i32,
 }
 impl PulseCell for CPulseCell_Inflow_Wait {
     fn get_cell_type(&self) -> CellType {
@@ -79,7 +79,7 @@ impl CPulseCell_Inflow_GraphHook {
         Self {
             hook_name,
             register_map,
-            entry_chunk
+            entry_chunk,
         }
     }
 }
@@ -96,9 +96,7 @@ impl PulseCell for CPulseCell_Step_EntFire {
 }
 impl CPulseCell_Step_EntFire {
     pub fn new(input: Cow<'static, str>) -> CPulseCell_Step_EntFire {
-        CPulseCell_Step_EntFire {
-            input: input,
-        }
+        CPulseCell_Step_EntFire { input: input }
     }
 }
 
@@ -119,9 +117,7 @@ impl PulseCell for CPulseCell_Step_PublicOutput {
 }
 impl CPulseCell_Step_PublicOutput {
     pub fn new(output_idx: i32) -> Self {
-        Self {
-            output_idx
-        }
+        Self { output_idx }
     }
 }
 
@@ -138,20 +134,16 @@ impl PulseCell for CPulseCell_Value_FindEntByName {
 }
 impl CPulseCell_Value_FindEntByName {
     pub fn new(entity_type: Cow<'static, str>) -> CPulseCell_Value_FindEntByName {
-        CPulseCell_Value_FindEntByName {
-            entity_type,
-        }
+        CPulseCell_Value_FindEntByName { entity_type }
     }
 }
 
 pub struct CPulseCell_Value_FindEntByClassNameWithin {
-    pub (super) entity_type: Cow<'static, str>,
+    pub(super) entity_type: Cow<'static, str>,
 }
 impl CPulseCell_Value_FindEntByClassNameWithin {
     pub fn new(entity_type: Cow<'static, str>) -> Self {
-        Self {
-            entity_type
-        }
+        Self { entity_type }
     }
 }
 impl PulseCell for CPulseCell_Value_FindEntByClassNameWithin {
@@ -178,18 +170,23 @@ impl Default for OutflowConnection {
     }
 }
 impl OutflowConnection {
-    pub fn new(outflow_name: Cow<'static, str>, dest_chunk: i32, dest_instruction: i32, register_map: Option<RegisterMap>) -> Self {
+    pub fn new(
+        outflow_name: Cow<'static, str>,
+        dest_chunk: i32,
+        dest_instruction: i32,
+        register_map: Option<RegisterMap>,
+    ) -> Self {
         Self {
             outflow_name,
             dest_chunk,
             dest_instruction,
-            register_map
+            register_map,
         }
     }
 }
 pub struct CPulseCell_Outflow_IntSwitch {
     pub(super) default_outflow: OutflowConnection,
-    pub(super) ouflows: Vec<OutflowConnection>
+    pub(super) ouflows: Vec<OutflowConnection>,
 }
 impl PulseCell for CPulseCell_Outflow_IntSwitch {
     fn get_cell_type(&self) -> CellType {
@@ -200,7 +197,7 @@ impl CPulseCell_Outflow_IntSwitch {
     pub fn new(default_outflow: OutflowConnection, ouflows: Vec<OutflowConnection>) -> Self {
         Self {
             default_outflow,
-            ouflows
+            ouflows,
         }
     }
 }
@@ -209,8 +206,8 @@ impl CPulseCell_Outflow_IntSwitch {
 #[allow(unused)]
 pub enum SoundEventStartType {
     SOUNDEVENT_START_PLAYER,
-	SOUNDEVENT_START_WORLD,
-	SOUNDEVENT_START_ENTITY
+    SOUNDEVENT_START_WORLD,
+    SOUNDEVENT_START_ENTITY,
 }
 
 pub struct CPulseCell_SoundEventStart {
@@ -223,9 +220,7 @@ impl PulseCell for CPulseCell_SoundEventStart {
 }
 impl CPulseCell_SoundEventStart {
     pub fn new(typ: SoundEventStartType) -> Self {
-        Self {
-            typ
-        }
+        Self { typ }
     }
 }
 pub struct CPulseCell_Outflow_ListenForEntityOutput {
@@ -268,7 +263,13 @@ impl CPulseCell_Timeline {
             timeline_events: Vec::new(),
         }
     }
-    pub fn add_event(&mut self, time_from_previous: f32, pause_for_previous_events: f32, call_mode_sync: bool, event_outflow: OutflowConnection) {
+    pub fn add_event(
+        &mut self,
+        time_from_previous: f32,
+        pause_for_previous_events: f32,
+        call_mode_sync: bool,
+        event_outflow: OutflowConnection,
+    ) {
         let event = TimelineEvent {
             time_from_previous,
             pause_for_previous_events,
@@ -295,5 +296,5 @@ pub struct PulseVariable {
 pub struct OutputDefinition {
     pub name: String,
     pub typ: PulseValueType,
-    pub typ_old: PulseValueType // used for detecting change in combobox, eugh.
+    pub typ_old: PulseValueType, // used for detecting change in combobox, eugh.
 }

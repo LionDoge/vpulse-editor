@@ -4,11 +4,11 @@
 #![warn(clippy::all, rust_2018_idioms)]
 
 mod app;
+mod bindings;
+mod compiler;
 mod instruction_templates;
 mod pulsetypes;
 mod serialization;
-mod compiler;
-mod bindings;
 mod typing;
 // contains help text
 mod help;

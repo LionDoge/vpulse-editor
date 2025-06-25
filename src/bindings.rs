@@ -1,7 +1,7 @@
 #![allow(dead_code)]
+use crate::typing::{try_string_to_pulsevalue, PulseValueType};
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
-use crate::typing::{PulseValueType, try_string_to_pulsevalue};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize))]
@@ -30,7 +30,7 @@ pub struct FunctionBinding {
     pub libname: String,
     pub description: Option<String>,
     pub inparams: Option<Vec<ParamInfo>>,
-    pub outparams: Option<Vec<ParamInfo>>
+    pub outparams: Option<Vec<ParamInfo>>,
 }
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
 pub struct EventBinding {
@@ -42,7 +42,7 @@ pub struct EventBinding {
 #[derive(Deserialize, Debug, Default)]
 pub struct GraphBindings {
     pub gamefunctions: Vec<FunctionBinding>,
-    pub events: Vec<EventBinding>
+    pub events: Vec<EventBinding>,
 }
 
 fn process_params(params: &mut Option<Vec<ParamInfo>>) {
@@ -61,7 +61,10 @@ pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::i
         Ok(json) => {
             let bindings = from_str::<GraphBindings>(&json);
             if bindings.is_err() {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, bindings.unwrap_err()));
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    bindings.unwrap_err(),
+                ));
             }
             let mut bindings = bindings.unwrap();
             for binding in bindings.gamefunctions.iter_mut() {
@@ -73,6 +76,6 @@ pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::i
             }
             Ok(bindings)
         }
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }

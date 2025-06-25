@@ -1,12 +1,15 @@
 #![allow(non_camel_case_types)]
 #![allow(nonstandard_style)]
 
-use egui_node_graph2::{InputId, OutputId, NodeId};
+use crate::pulsetypes::PulseCellTrait;
+use crate::{
+    pulsetypes::*,
+    typing::{PulseValueType, Vec3},
+};
+use egui_node_graph2::{InputId, NodeId, OutputId};
 use indoc::formatdoc;
 use slotmap::SecondaryMap;
-use crate::{pulsetypes::*, typing::{PulseValueType, Vec3}};
 use std::borrow::Cow;
-use crate::pulsetypes::PulseCellTrait;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -18,7 +21,7 @@ pub struct PulseRuntimeArgument {
 
 impl KV3Serialize for PulseRuntimeArgument {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Name = \"{}\"
@@ -33,7 +36,7 @@ impl KV3Serialize for PulseRuntimeArgument {
 
 impl KV3Serialize for CPulseCell_Inflow_Method {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Inflow_Method\"
@@ -70,7 +73,7 @@ impl CPulseCell_Inflow_Method {
 
 impl KV3Serialize for CPulseCell_Inflow_EventHandler {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Inflow_EventHandler\"
@@ -99,7 +102,7 @@ impl CPulseCell_Inflow_EventHandler {
 
 impl KV3Serialize for CPulseCell_Inflow_Wait {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Inflow_Wait\"
@@ -125,10 +128,9 @@ impl CPulseCell_Inflow_Wait {
     }
 }
 
-
 impl KV3Serialize for CPulseCell_Step_EntFire {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Step_EntFire\"
@@ -143,7 +145,7 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
 
 impl KV3Serialize for CPulseCell_Value_FindEntByName {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Value_FindEntByName\"
@@ -158,7 +160,7 @@ impl KV3Serialize for CPulseCell_Value_FindEntByName {
 
 impl KV3Serialize for CPulseCell_Step_DebugLog {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Step_DebugLog\"
@@ -171,7 +173,7 @@ impl KV3Serialize for CPulseCell_Step_DebugLog {
 
 impl KV3Serialize for CPulseCell_Step_PublicOutput {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Step_PublicOutput\"
@@ -186,7 +188,7 @@ impl KV3Serialize for CPulseCell_Step_PublicOutput {
 
 impl KV3Serialize for CPulseCell_Value_FindEntByClassNameWithin {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Value_FindEntByClassNameWithin\"
@@ -201,7 +203,7 @@ impl KV3Serialize for CPulseCell_Value_FindEntByClassNameWithin {
 
 impl KV3Serialize for CPulseCell_Inflow_GraphHook {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Inflow_GraphHook\"
@@ -216,10 +218,9 @@ impl KV3Serialize for CPulseCell_Inflow_GraphHook {
     }
 }
 
-
 impl KV3Serialize for Register {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_nReg = {}
@@ -255,7 +256,12 @@ impl KV3Serialize for RegisterMap {
                 "{{
                     {}
                 }}",
-                self.inparams.iter().map(|(name, num)| format!("{} = {}", name, num)).collect::<Vec<String>>().join("\n"))
+                self.inparams
+                    .iter()
+                    .map(|(name, num)| format!("{} = {}", name, num))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            )
         } else {
             String::from("null")
         };
@@ -264,11 +270,16 @@ impl KV3Serialize for RegisterMap {
                 "{{
                     {}
                 }}",
-                self.outparams.iter().map(|(name, num)| format!("{} = {}", name, num)).collect::<Vec<String>>().join("\n"))
+                self.outparams
+                    .iter()
+                    .map(|(name, num)| format!("{} = {}", name, num))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            )
         } else {
             String::from("null")
         };
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Inparams = {}
@@ -310,12 +321,11 @@ impl Default for Instruction {
             domain_value_idx: -1,
             blackboard_reference_idx: -1,
         }
-
     }
 }
 impl KV3Serialize for Instruction {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_nCode = \"{}\"
@@ -370,7 +380,7 @@ impl PulseChunk {
 }
 impl KV3Serialize for PulseChunk {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Instructions = 
@@ -390,7 +400,7 @@ impl KV3Serialize for PulseChunk {
             , self.instructions.iter().map(|instruction| instruction.serialize()).collect::<Vec<String>>().join(",\n\n")
             , self.registers.iter().map(|register| register.serialize()).collect::<Vec<String>>().join(",\n\n")
             , self.instruction_editor_ids.iter().map(|id| id.to_string()).collect::<Vec<String>>().join(",\n\n")
-        } 
+        }
     }
 }
 
@@ -399,12 +409,12 @@ pub struct InvokeBinding {
     pub func_name: Cow<'static, str>,
     pub cell_index: i32,
     pub src_chunk: i32,
-    pub src_instruction: i32
+    pub src_instruction: i32,
 }
 
 impl KV3Serialize for InvokeBinding {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_RegisterMap = {}
@@ -428,7 +438,7 @@ pub struct DomainValue {
 }
 impl KV3Serialize for DomainValue {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_nType = \"{}\"
@@ -449,7 +459,12 @@ pub struct OutputConnection {
     pub param: String,
 }
 impl OutputConnection {
-    pub fn new(source_output: String, target_entity: String, target_input: String, param: String) -> OutputConnection {
+    pub fn new(
+        source_output: String,
+        target_entity: String,
+        target_input: String,
+        param: String,
+    ) -> OutputConnection {
         OutputConnection {
             source_output,
             target_entity,
@@ -460,7 +475,7 @@ impl OutputConnection {
 }
 impl KV3Serialize for OutputConnection {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_SourceOutput = \"{}\"
@@ -476,7 +491,7 @@ impl KV3Serialize for OutputConnection {
 
 impl KV3Serialize for OutputDefinition {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Name = \"{}\"
@@ -516,14 +531,14 @@ pub enum PulseConstant {
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Type = \"{}\"
                 m_Value = {}
             }}
             "
-            , 
+            ,
             match self {
                 PulseConstant::String(_) => "PVAL_STRING",
                 PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME",
@@ -573,10 +588,14 @@ impl KV3Serialize for PulseVariable {
     fn serialize(&self) -> String {
         // convert default values to KV3 literal string.
         let literal = match &self.typ_and_default_value {
-            PulseValueType::PVAL_STRING(value) => format!("\"{}\"", value.clone().unwrap_or_default()),
+            PulseValueType::PVAL_STRING(value) => {
+                format!("\"{}\"", value.clone().unwrap_or_default())
+            }
             PulseValueType::PVAL_FLOAT(value) => format!("{:.6}", value.unwrap_or_default()),
             PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
-            PulseValueType::PVAL_TYPESAFE_INT(_, value) => format!("{:?}", value.unwrap_or_default()),
+            PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
+                format!("{:?}", value.unwrap_or_default())
+            }
             PulseValueType::PVAL_VEC3(value) => {
                 let val = value.unwrap_or_default();
                 format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
@@ -590,12 +609,10 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_INVALID => String::from("null"),
             PulseValueType::PVAL_BOOL => String::from("false"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
-            PulseValueType::PVAL_SNDEVT_NAME(val) => {
-                val.clone().unwrap_or_default()
-            }
+            PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
             PulseValueType::PVAL_ACT => String::from("null"),
         };
-        formatdoc!{"
+        formatdoc! {"
             {{
                 m_Name = \"{}\"
                 m_Description = \"\"
@@ -615,7 +632,7 @@ impl KV3Serialize for PulseVariable {
 
 impl KV3Serialize for OutflowConnection {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_SourceOutflowName = \"{}\"
@@ -636,7 +653,7 @@ impl KV3Serialize for OutflowConnection {
 
 impl KV3Serialize for CPulseCell_Outflow_IntSwitch {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Outflow_IntSwitch\"
@@ -666,7 +683,7 @@ impl KV3Serialize for SoundEventStartType {
 
 impl KV3Serialize for CPulseCell_SoundEventStart {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_SoundEventStart\"
@@ -689,7 +706,7 @@ pub struct CallInfo {
 
 impl KV3Serialize for CallInfo {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_PortName = \"{}\"
@@ -710,7 +727,7 @@ impl KV3Serialize for CallInfo {
 
 impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Outflow_ListenForEntityOutput\"
@@ -731,7 +748,7 @@ impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
 
 impl KV3Serialize for TimelineEvent {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_flTimeFromPrevious = {:.6}
@@ -747,7 +764,7 @@ impl KV3Serialize for TimelineEvent {
 
 impl KV3Serialize for CPulseCell_Timeline {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 _class = \"CPulseCell_Timeline\"
@@ -790,10 +807,13 @@ impl PulseGraphDef {
         self.chunks.push(chunk);
         self.chunks.len() as i32 - 1
     }
-    pub fn create_domain_value(&mut self, typ: Cow<'static, str>,
+    pub fn create_domain_value(
+        &mut self,
+        typ: Cow<'static, str>,
         value: Cow<'static, str>,
         __deprecated_expected_runtime_type: Cow<'static, str>,
-        required_runtime_type: Cow<'static, str>) -> i32 {
+        required_runtime_type: Cow<'static, str>,
+    ) -> i32 {
         let domain_value = DomainValue {
             typ,
             value,
@@ -840,10 +860,14 @@ impl PulseGraphDef {
         self.bindings.len() as i32 - 1
     }
     pub fn get_variable_index(&self, name: &str) -> Option<usize> {
-        self.variables.iter().position(|variable| variable.name == name)
+        self.variables
+            .iter()
+            .position(|variable| variable.name == name)
     }
     pub fn get_public_output_index(&self, name: &str) -> Option<usize> {
-        self.public_outputs.iter().position(|output| output.name == name)
+        self.public_outputs
+            .iter()
+            .position(|output| output.name == name)
     }
     pub fn get_chunk_last_instruction_id(&self, chunk_id: i32) -> i32 {
         if let Some(chunk) = self.chunks.get(chunk_id as usize) {
@@ -870,7 +894,7 @@ impl PulseGraphDef {
 
 impl KV3Serialize for PulseGraphDef {
     fn serialize(&self) -> String {
-        formatdoc!{
+        formatdoc! {
             "
             {{
                 m_Cells = 
@@ -928,8 +952,7 @@ impl KV3Serialize for PulseGraphDef {
             , self.public_outputs.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
             , self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect::<Vec<_>>().join(",\n\n")
             , self.bindings.iter().map(|binding| binding.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect::<Vec<_>>().join(",\n\n") 
+            , self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect::<Vec<_>>().join(",\n\n")
         }
     }
 }
-

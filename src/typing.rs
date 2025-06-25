@@ -1,8 +1,8 @@
-use std::fmt;
-use std::fmt::Display;
+use crate::app::{PulseDataType, PulseGraphValueType};
 use egui_node_graph2::InputParamKind;
 use serde::{Deserialize, Serialize};
-use crate::app::{PulseDataType, PulseGraphValueType};
+use std::fmt;
+use std::fmt::Display;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum PulseTypeError {
@@ -12,10 +12,12 @@ pub enum PulseTypeError {
 impl fmt::Display for PulseTypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PulseTypeError::StringToEnumConversionMissing(s) => 
-                write!(f, "Could not convert string to enum: {}", s),
-            PulseTypeError::StringToEnumSubtypeParseError(s) => 
-                write!(f, "Could not parse subtype from string: {}", s),
+            PulseTypeError::StringToEnumConversionMissing(s) => {
+                write!(f, "Could not convert string to enum: {}", s)
+            }
+            PulseTypeError::StringToEnumSubtypeParseError(s) => {
+                write!(f, "Could not parse subtype from string: {}", s)
+            }
         }
     }
 }
@@ -77,7 +79,11 @@ impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => write!(f, "PVAL_TYPESAFE_INT:{}", int_type.clone().unwrap_or_default()),
+            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => write!(
+                f,
+                "PVAL_TYPESAFE_INT:{}",
+                int_type.clone().unwrap_or_default()
+            ),
             PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
@@ -88,7 +94,7 @@ impl fmt::Display for PulseValueType {
                 } else {
                     write!(f, "PVAL_EHANDLE")
                 }
-            },
+            }
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
@@ -106,8 +112,8 @@ impl PulseValueType {
             PulseValueType::PVAL_VEC3(_) => "", // Vec3 uses generic comparison (I think)
             PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
             PulseValueType::PVAL_STRING(_) => "_STRING",
-            _ => ""
-        }
+            _ => "",
+        };
     }
 }
 
@@ -161,9 +167,13 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
     };
 }
 
-pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, PulseGraphValueType) {
+pub fn pulse_value_type_to_node_types(
+    typ: &PulseValueType,
+) -> (PulseDataType, PulseGraphValueType) {
     match typ {
-        PulseValueType::PVAL_INT(_) | PulseValueType::PVAL_FLOAT(_) | PulseValueType::PVAL_TYPESAFE_INT(_, _) => (
+        PulseValueType::PVAL_INT(_)
+        | PulseValueType::PVAL_FLOAT(_)
+        | PulseValueType::PVAL_TYPESAFE_INT(_, _) => (
             PulseDataType::Scalar,
             PulseGraphValueType::Scalar { value: 0f32 },
         ),
@@ -179,7 +189,10 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
                 value: String::default(),
             },
         ),
-        PulseValueType::PVAL_BOOL => (PulseDataType::Bool, PulseGraphValueType::Bool { value: false }),
+        PulseValueType::PVAL_BOOL => (
+            PulseDataType::Bool,
+            PulseGraphValueType::Bool { value: false },
+        ),
         PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
         PulseValueType::PVAL_COLOR_RGB(_) => (
             PulseDataType::Vec3,
@@ -187,16 +200,29 @@ pub fn pulse_value_type_to_node_types(typ: &PulseValueType) -> (PulseDataType, P
                 value: Vec3::default(),
             },
         ),
-        PulseValueType::PVAL_SNDEVT_GUID(_) => (PulseDataType::SndEventHandle, PulseGraphValueType::SndEventHandle),
-        PulseValueType::PVAL_SNDEVT_NAME(_) => (PulseDataType::SoundEventName, PulseGraphValueType::SoundEventName { value: String::default() }),
-        PulseValueType::DOMAIN_ENTITY_NAME => (PulseDataType::EntityName, PulseGraphValueType::EntityName { value: String::default() }),
+        PulseValueType::PVAL_SNDEVT_GUID(_) => (
+            PulseDataType::SndEventHandle,
+            PulseGraphValueType::SndEventHandle,
+        ),
+        PulseValueType::PVAL_SNDEVT_NAME(_) => (
+            PulseDataType::SoundEventName,
+            PulseGraphValueType::SoundEventName {
+                value: String::default(),
+            },
+        ),
+        PulseValueType::DOMAIN_ENTITY_NAME => (
+            PulseDataType::EntityName,
+            PulseGraphValueType::EntityName {
+                value: String::default(),
+            },
+        ),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
         _ => todo!("Implement more type conversions"),
     }
 }
 
 pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputParamKind {
-   match typ { 
+    match typ {
         PulseValueType::PVAL_INT(_)
         | PulseValueType::PVAL_TYPESAFE_INT(_, _)
         | PulseValueType::PVAL_FLOAT(_)
@@ -212,5 +238,5 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_ACT => InputParamKind::ConnectionOnly,
 
         PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
-   }
+    }
 }

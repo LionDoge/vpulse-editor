@@ -1,16 +1,16 @@
-use crate::compiler::compile_graph;
 use crate::bindings::*;
+use crate::compiler::compile_graph;
 use crate::help;
-use crate::typing::*;
 use crate::pulsetypes::*;
-use core::panic;
-use std::fs;
+use crate::typing::*;
 use anyhow::anyhow;
+use core::panic;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
+use std::fs;
 use std::path::PathBuf;
 use std::usize;
 use std::{borrow::Cow, collections::HashMap};
@@ -82,7 +82,7 @@ pub enum PulseGraphValueType {
     Typ { value: PulseValueType },
     EventBindingChoice { value: EventBindingIndex },
     LibraryBindingChoice { value: LibraryBindingIndex },
-    NodeChoice {node: Option<NodeId>}
+    NodeChoice { node: Option<NodeId> },
 }
 
 impl Default for PulseGraphValueType {
@@ -283,12 +283,10 @@ impl PulseGraphState {
         if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
             vec_params.push(param_name);
         } else {
-            self
-                .added_parameters
-                .insert(node_id, vec![param_name]);
+            self.added_parameters.insert(node_id, vec![param_name]);
         }
     }
-    
+
     pub fn load_from(&mut self, other: PulseGraphState) {
         self.added_parameters = other.added_parameters;
         self.public_outputs = other.public_outputs;
@@ -413,19 +411,20 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::Function => vec!["Logic"],
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
-            PulseNodeTemplate::CellWait
-            | PulseNodeTemplate::Timeline => vec!["Timing"],
+            PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => vec!["Timing"],
             PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => vec!["Variables"],
-            PulseNodeTemplate::IntToString | PulseNodeTemplate::Convert | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
+            PulseNodeTemplate::IntToString
+            | PulseNodeTemplate::Convert
+            | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
             PulseNodeTemplate::DebugWorldText | PulseNodeTemplate::DebugLog => vec!["Debug"],
             PulseNodeTemplate::FireOutput => vec!["Outflow"],
-            PulseNodeTemplate::GetGameTime | PulseNodeTemplate::SetNextThink | PulseNodeTemplate::InvokeLibraryBinding => {
+            PulseNodeTemplate::GetGameTime
+            | PulseNodeTemplate::SetNextThink
+            | PulseNodeTemplate::InvokeLibraryBinding => {
                 vec!["Game functions"]
             }
-            PulseNodeTemplate::ForLoop
-            | PulseNodeTemplate::WhileLoop => vec!["Loops"],
+            PulseNodeTemplate::ForLoop | PulseNodeTemplate::WhileLoop => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
-            
         }
     }
 
@@ -466,16 +465,17 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-        let input_scalar = |graph: &mut PulseGraph, name: &str, kind: InputParamKind, default: f32| {
-            graph.add_input_param(
-                node_id,
-                name.to_string(),
-                PulseDataType::Scalar,
-                PulseGraphValueType::Scalar { value: default },
-                kind,
-                true,
-            );
-        };
+        let input_scalar =
+            |graph: &mut PulseGraph, name: &str, kind: InputParamKind, default: f32| {
+                graph.add_input_param(
+                    node_id,
+                    name.to_string(),
+                    PulseDataType::Scalar,
+                    PulseGraphValueType::Scalar { value: default },
+                    kind,
+                    true,
+                );
+            };
         let input_bool = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
             graph.add_input_param(
                 node_id,
@@ -669,8 +669,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     node_id,
                     String::from("event"),
                     PulseDataType::EventBindingChoice,
-                    PulseGraphValueType::EventBindingChoice 
-                    { value: EventBindingIndex(1) },
+                    PulseGraphValueType::EventBindingChoice {
+                        value: EventBindingIndex(1),
+                    },
                     InputParamKind::ConstantOnly,
                     true,
                 );
@@ -696,9 +697,24 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_action(graph);
                 input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
                 input_ehandle(graph, "hEntity");
-                input_scalar(graph, "nTextOffset", InputParamKind::ConnectionOrConstant, 0.0);
-                input_scalar(graph, "flDuration", InputParamKind::ConnectionOrConstant, 5.0);
-                input_scalar(graph, "flVerticalOffset", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(
+                    graph,
+                    "nTextOffset",
+                    InputParamKind::ConnectionOrConstant,
+                    0.0,
+                );
+                input_scalar(
+                    graph,
+                    "flDuration",
+                    InputParamKind::ConnectionOrConstant,
+                    5.0,
+                );
+                input_scalar(
+                    graph,
+                    "flVerticalOffset",
+                    InputParamKind::ConnectionOrConstant,
+                    0.0,
+                );
                 input_bool(graph, "bAttached", InputParamKind::ConstantOnly);
                 input_color(graph, "color");
                 input_scalar(graph, "flAlpha", InputParamKind::ConnectionOrConstant, 1.0);
@@ -772,7 +788,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::FindEntitiesWithin => {
                 input_string(graph, "classname", InputParamKind::ConstantOnly);
                 input_ehandle(graph, "pSearchFromEntity");
-                input_scalar(graph, "flSearchRadius", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(
+                    graph,
+                    "flSearchRadius",
+                    InputParamKind::ConnectionOrConstant,
+                    0.0,
+                );
                 input_ehandle(graph, "pStartEntity");
                 output_ehandle(graph, "out");
             }
@@ -821,7 +842,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::SoundEventStart => {
-                input_sndevt_name(graph, "strSoundEventName", InputParamKind::ConnectionOrConstant);
+                input_sndevt_name(
+                    graph,
+                    "strSoundEventName",
+                    InputParamKind::ConnectionOrConstant,
+                );
                 input_ehandle(graph, "hTargetEntity");
                 graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
             }
@@ -858,17 +883,47 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     InputParamKind::ConnectionOnly,
                     true,
                 );
-                input_scalar(graph, "timeFromPrevious1", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious1",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction1");
-                input_scalar(graph, "timeFromPrevious2", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious2",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction2");
-                input_scalar(graph, "timeFromPrevious3", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious3",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction3");
-                input_scalar(graph, "timeFromPrevious4", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious4",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction4");
-                input_scalar(graph, "timeFromPrevious5", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious5",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction5");
-                input_scalar(graph, "timeFromPrevious6", InputParamKind::ConstantOnly, 0.5);
+                input_scalar(
+                    graph,
+                    "timeFromPrevious6",
+                    InputParamKind::ConstantOnly,
+                    0.5,
+                );
                 output_action(graph, "outAction6");
             }
         }
@@ -982,7 +1037,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ui.add(DragValue::new(&mut value.z));
                 });
             }
-            PulseGraphValueType::Color {value} => {
+            PulseGraphValueType::Color { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ui.color_edit_button_rgba_unmultiplied(value);
@@ -1116,11 +1171,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 ));
                             };
                             if ui
-                                .selectable_value(
-                                    value,
-                                    PulseValueType::PVAL_BOOL,
-                                    "Boolean",
-                                )
+                                .selectable_value(value, PulseValueType::PVAL_BOOL, "Boolean")
                                 .clicked()
                             {
                                 responses.push(PulseGraphResponse::ChangeParamType(
@@ -1133,44 +1184,60 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::EventBindingChoice { value } => {
-                ui.horizontal(|ui| { 
+                ui.horizontal(|ui| {
                     ui.label("Event");
                     ComboBox::from_id_salt(_node_id)
-                        .selected_text(&_user_state.get_event_binding_from_index(value).unwrap().displayname)
+                        .selected_text(
+                            &_user_state
+                                .get_event_binding_from_index(value)
+                                .unwrap()
+                                .displayname,
+                        )
                         .show_ui(ui, |ui| {
                             for (idx, event) in _user_state.bindings.events.iter().enumerate() {
                                 let str = event.displayname.as_str();
-                                if ui.selectable_value::<EventBindingIndex>(value, 
-                                    EventBindingIndex(idx),
-                                     str).clicked() {
-                                    responses.push(
-                                        PulseGraphResponse::ChangeEventBinding(_node_id, event.clone())
-                                    );
+                                if ui
+                                    .selectable_value::<EventBindingIndex>(
+                                        value,
+                                        EventBindingIndex(idx),
+                                        str,
+                                    )
+                                    .clicked()
+                                {
+                                    responses.push(PulseGraphResponse::ChangeEventBinding(
+                                        _node_id,
+                                        event.clone(),
+                                    ));
                                 }
                             }
                         });
                 });
             }
             PulseGraphValueType::LibraryBindingChoice { value } => {
-                ui.horizontal(|ui| { 
+                ui.horizontal(|ui| {
                     ui.label("Function");
                     if let Some(binding) = _user_state.get_library_binding_from_index(value) {
                         ComboBox::from_id_salt(_node_id)
                             .selected_text(&binding.displayname)
                             .show_ui(ui, |ui| {
-                                for (idx, func) in _user_state.bindings.gamefunctions.iter().enumerate() {
+                                for (idx, func) in
+                                    _user_state.bindings.gamefunctions.iter().enumerate()
+                                {
                                     let str = func.displayname.as_str();
-                                    let mut selectable_value = 
-                                        ui.selectable_value::<LibraryBindingIndex>(value, 
-                                        LibraryBindingIndex(idx),
-                                        str);
+                                    let mut selectable_value = ui
+                                        .selectable_value::<LibraryBindingIndex>(
+                                            value,
+                                            LibraryBindingIndex(idx),
+                                            str,
+                                        );
                                     if let Some(desc) = func.description.as_ref() {
                                         selectable_value = selectable_value.on_hover_text(desc);
                                     }
                                     if selectable_value.clicked() {
-                                        responses.push(
-                                            PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
-                                        );
+                                        responses.push(PulseGraphResponse::ChangeFunctionBinding(
+                                            _node_id,
+                                            func.clone(),
+                                        ));
                                     }
                                 }
                             });
@@ -1178,10 +1245,14 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::NodeChoice { node } => {
-                ui.horizontal(|ui| { 
+                ui.horizontal(|ui| {
                     ui.label("Node");
                     let node_name = match node {
-                        Some(n) => _user_state.exposed_nodes.get(*n).map(|s| s.as_str()).unwrap_or("-- CHOOSE --"),
+                        Some(n) => _user_state
+                            .exposed_nodes
+                            .get(*n)
+                            .map(|s| s.as_str())
+                            .unwrap_or("-- CHOOSE --"),
                         None => "-- CHOOSE --",
                     };
                     ComboBox::from_id_salt(_node_id)
@@ -1189,10 +1260,18 @@ impl WidgetValueTrait for PulseGraphValueType {
                         .show_ui(ui, |ui| {
                             for node_pair in _user_state.exposed_nodes.iter() {
                                 let str: &str = node_pair.1.as_str();
-                                if ui.selectable_value::<Option<NodeId>>(node,
-                                    Some(node_pair.0),
-                                     str).clicked() {
-                                    responses.push(PulseGraphResponse::ChangeRemoteNodeId(_node_id, node_pair.0));
+                                if ui
+                                    .selectable_value::<Option<NodeId>>(
+                                        node,
+                                        Some(node_pair.0),
+                                        str,
+                                    )
+                                    .clicked()
+                                {
+                                    responses.push(PulseGraphResponse::ChangeRemoteNodeId(
+                                        _node_id,
+                                        node_pair.0,
+                                    ));
                                 }
                             }
                         });
@@ -1255,17 +1334,23 @@ impl NodeDataTrait for PulseNodeData {
         let mut responses = vec![];
         // add param to event handler node.
         let node = _graph.nodes.get(node_id).unwrap();
-        if node.user_data.template == PulseNodeTemplate::IntSwitch
-        {
-            let param = node.get_input("caselabel")
-                .expect("caselabel is not defined for IntSwitch node, this is a programming error!");
-            let param_value = _graph.get_input(param).value().clone().try_to_scalar().unwrap().round() as i32;
+        if node.user_data.template == PulseNodeTemplate::IntSwitch {
+            let param = node.get_input("caselabel").expect(
+                "caselabel is not defined for IntSwitch node, this is a programming error!",
+            );
+            let param_value = _graph
+                .get_input(param)
+                .value()
+                .clone()
+                .try_to_scalar()
+                .unwrap()
+                .round() as i32;
             if ui.button("Add parameter").clicked() {
                 let param_name = format!("{}", param_value);
                 responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
                     node_id,
                     param_name.clone(),
-                    PulseValueType::PVAL_ACT
+                    PulseValueType::PVAL_ACT,
                 )));
                 user_state.add_node_custom_param(param_name, node_id);
             }
@@ -1336,7 +1421,9 @@ impl PulseGraphEditor {
             if let Some(filepath) = &self.user_state.save_file_path {
                 dest_path = filepath;
             } else {
-                return Err(anyhow!("No file path provided for saving the graph. This should not happen"));
+                return Err(anyhow!(
+                    "No file path provided for saving the graph. This should not happen"
+                ));
             }
         }
         self.save_graph(dest_path)?;
@@ -1556,8 +1643,7 @@ impl PulseGraphEditor {
                     }
                 }
             }
-            PulseNodeTemplate::Compare
-            | PulseNodeTemplate::CompareOutput => {
+            PulseNodeTemplate::Compare | PulseNodeTemplate::CompareOutput => {
                 if new_type.is_none() {
                     panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
                 }
@@ -1603,8 +1689,9 @@ impl PulseGraphEditor {
             node.input_ids().collect()
         };
         let node = self.state.graph.nodes.get(*node_id).unwrap();
-        let binding_chooser_input_id = node.get_input("binding")
-        .expect("Expected 'Invoke library binding' node to have 'binding' input param");
+        let binding_chooser_input_id = node
+            .get_input("binding")
+            .expect("Expected 'Invoke library binding' node to have 'binding' input param");
         for input in input_ids {
             if input != binding_chooser_input_id {
                 self.state.graph.remove_input_param(input);
@@ -1612,12 +1699,19 @@ impl PulseGraphEditor {
         }
         // If it's action type (nodes that usually don't provide a value) make it have in and out actions.
         if binding.typ == LibraryBindingType::Action {
-            self.state.graph.add_output_param(*node_id, "outAction".to_string(), PulseDataType::Action);
-            self.state.graph.add_input_param(*node_id, "ActionIn".to_string(),
-            PulseDataType::Action,
-            PulseGraphValueType::Action,
-            InputParamKind::ConnectionOrConstant,
-            true);
+            self.state.graph.add_output_param(
+                *node_id,
+                "outAction".to_string(),
+                PulseDataType::Action,
+            );
+            self.state.graph.add_input_param(
+                *node_id,
+                "ActionIn".to_string(),
+                PulseDataType::Action,
+                PulseGraphValueType::Action,
+                InputParamKind::ConnectionOrConstant,
+                true,
+            );
         }
         if let Some(inparams) = &binding.inparams {
             for param in inparams {
@@ -1654,7 +1748,9 @@ impl PulseGraphEditor {
         }
         // TODO: maybe instead of adding this back instead check in the upper loop, altho is seems a bit involved
         // so maybe this is just more efficient?
-        self.state.graph.add_output_param(*node_id, "outAction".to_string(), PulseDataType::Action);
+        self.state
+            .graph
+            .add_output_param(*node_id, "outAction".to_string(), PulseDataType::Action);
         if let Some(inparams) = &binding.inparams {
             for param in inparams {
                 self.state.graph.add_output_param(
@@ -1670,7 +1766,8 @@ impl PulseGraphEditor {
         let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
         // remove all inputs
         let input_ids: Vec<_> = node.input_ids().collect();
-        let input_node_chooser = node.get_input("nodeId")
+        let input_node_chooser = node
+            .get_input("nodeId")
             .expect("Expected 'Call Node' node to have 'nodeId' input param");
         for input in input_ids {
             // don't remove the node chooser input
@@ -1682,25 +1779,64 @@ impl PulseGraphEditor {
             let reference_node_template = reference_node.user_data.template;
             match reference_node_template {
                 PulseNodeTemplate::ListenForEntityOutput => {
-                    self.state.graph.add_input_param(*node_id, "hEntity".into(),
-                    PulseDataType::EHandle, PulseGraphValueType::EHandle,InputParamKind::ConnectionOnly,true);
-                    self.state.graph.add_input_param(*node_id, "Run".into(),
-                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
-                    self.state.graph.add_input_param(*node_id, "Cancel".into(),
-                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "hEntity".into(),
+                        PulseDataType::EHandle,
+                        PulseGraphValueType::EHandle,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "Run".into(),
+                        PulseDataType::Action,
+                        PulseGraphValueType::Action,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "Cancel".into(),
+                        PulseDataType::Action,
+                        PulseGraphValueType::Action,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
                 }
                 PulseNodeTemplate::Function => {
-                    self.state.graph.add_input_param(*node_id, "ActionIn".into(),
-                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "ActionIn".into(),
+                        PulseDataType::Action,
+                        PulseGraphValueType::Action,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
                 }
                 PulseNodeTemplate::Timeline => {
-                    self.state.graph.add_input_param(*node_id, "Start".into(),
-                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
-                    self.state.graph.add_input_param(*node_id, "Stop".into(),
-                    PulseDataType::Action, PulseGraphValueType::Action,InputParamKind::ConnectionOnly,true);
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "Start".into(),
+                        PulseDataType::Action,
+                        PulseGraphValueType::Action,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
+                    self.state.graph.add_input_param(
+                        *node_id,
+                        "Stop".into(),
+                        PulseDataType::Action,
+                        PulseGraphValueType::Action,
+                        InputParamKind::ConnectionOnly,
+                        true,
+                    );
                 }
                 _ => {
-                    panic!("update_remote_node_params() called on unsupported node type: {:?}", reference_node_template);
+                    panic!(
+                        "update_remote_node_params() called on unsupported node type: {:?}",
+                        reference_node_template
+                    );
                 }
             }
         } else {
@@ -1722,9 +1858,8 @@ impl PulseGraphEditor {
         let cfg_res: anyhow::Result<EditorConfig> = {
             let cfg_str = std::fs::read_to_string("config.json");
             match cfg_str {
-                Ok(cfg_str) => serde_json::from_str(&cfg_str).map_err(|e| {
-                    anyhow::anyhow!("Failed to parse config.json: {}", e)
-                }),
+                Ok(cfg_str) => serde_json::from_str(&cfg_str)
+                    .map_err(|e| anyhow::anyhow!("Failed to parse config.json: {}", e)),
                 Err(e) => Err(anyhow::anyhow!("Failed to read config.json: {}", e)),
             }
         };
@@ -1754,11 +1889,13 @@ impl PulseGraphEditor {
         };
         grph
     }
-    
 }
 
 impl PulseGraphState {
-    pub fn get_library_binding_from_index(&self, idx: &LibraryBindingIndex) -> Option<&FunctionBinding> {
+    pub fn get_library_binding_from_index(
+        &self,
+        idx: &LibraryBindingIndex,
+    ) -> Option<&FunctionBinding> {
         self.bindings.gamefunctions.get(idx.0)
     }
     pub fn get_event_binding_from_index(&self, idx: &EventBindingIndex) -> Option<&EventBinding> {
@@ -1829,7 +1966,9 @@ impl eframe::App for PulseGraphEditor {
             egui::menu::bar(ui, |ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
-                    if let Err(e) = compile_graph(&self.state.graph, &self.user_state, &self.editor_config) {
+                    if let Err(e) =
+                        compile_graph(&self.state.graph, &self.user_state, &self.editor_config)
+                    {
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)
                             .set_title("Compile failed")
@@ -1838,9 +1977,10 @@ impl eframe::App for PulseGraphEditor {
                             .show();
                     }
                 }
-                // User pressed the "Save" button or 
-                if ui.button("Save").clicked() ||
-                ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S)) {
+                // User pressed the "Save" button or
+                if ui.button("Save").clicked()
+                    || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S))
+                {
                     // is path set? if yes then save, if not promt the user first
                     let mut perform_save: bool = true;
                     if self.user_state.save_file_path.is_none() {
@@ -1858,8 +1998,11 @@ impl eframe::App for PulseGraphEditor {
                     }
                     // else it was most likely cancelled.
                 }
-                if ui.button("Save as...").clicked() ||
-                ctx.input(|i| i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::S)) {
+                if ui.button("Save as...").clicked()
+                    || ctx.input(|i| {
+                        i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::S)
+                    })
+                {
                     if self.dialog_change_save_file() {
                         // TODO: DRY
                         if let Err(e) = self.perform_save(None) {
@@ -1874,8 +2017,8 @@ impl eframe::App for PulseGraphEditor {
                 }
                 if ui.button("Open").clicked() {
                     let chosen_file = FileDialog::new()
-                            .add_filter("Pulse Graph Editor State", &["ron"])
-                            .pick_file();
+                        .add_filter("Pulse Graph Editor State", &["ron"])
+                        .pick_file();
                     if let Some(filepath) = chosen_file {
                         if let Err(e) = self.load_graph(filepath) {
                             MessageDialog::new()
@@ -1896,7 +2039,8 @@ impl eframe::App for PulseGraphEditor {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.label("Outputs:");
                 if ui.button("Add output").clicked() {
-                    self.user_state.outputs_dropdown_choices
+                    self.user_state
+                        .outputs_dropdown_choices
                         .push(PulseValueType::PVAL_INT(None));
                     self.user_state.public_outputs.push(OutputDefinition {
                         name: String::default(),
@@ -1981,7 +2125,8 @@ impl eframe::App for PulseGraphEditor {
                 ui.separator();
                 ui.label("Variables:");
                 if ui.button("Add variable").clicked() {
-                    self.user_state.outputs_dropdown_choices
+                    self.user_state
+                        .outputs_dropdown_choices
                         .push(PulseValueType::PVAL_INT(None));
                     self.user_state.variables.push(PulseVariable {
                         name: String::default(),
@@ -2001,7 +2146,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                     ui.horizontal(|ui| {
                         // change the label text if we're working on an EHandle type, as it can't have a default value.
-                        // the internal value will be used and updated approperiately as the ehandle type instead of the default value. 
+                        // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
                         if matches!(var.typ_and_default_value, PulseValueType::PVAL_EHANDLE(_)) {
                             ui.label("EHandle class");
                         } else {
@@ -2087,7 +2232,7 @@ impl eframe::App for PulseGraphEditor {
             if let NodeResponse::User(user_event) = node_response {
                 match user_event {
                     // node that supports adding parameters is trying to add one
-                    PulseGraphResponse::AddOutputParam(node_id, name,data) => {
+                    PulseGraphResponse::AddOutputParam(node_id, name, data) => {
                         {
                             let node = self.state.graph.nodes.get(node_id).unwrap();
                             // check if the output of the name exists already...
@@ -2106,12 +2251,11 @@ impl eframe::App for PulseGraphEditor {
                             pulse_value_type_to_node_types(&data).0,
                         );
                         let node = self.state.graph.nodes.get_mut(node_id).unwrap();
-                        let output_info = CustomOutputInfo {
-                            name,
-                            data,
-                        };
+                        let output_info = CustomOutputInfo { name, data };
                         // remember the custom output
-                        node.user_data.custom_named_outputs.insert(output_id, output_info);
+                        node.user_data
+                            .custom_named_outputs
+                            .insert(output_id, output_info);
                     }
                     PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                         // node that supports adding parameters is removing one

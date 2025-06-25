@@ -413,7 +413,7 @@ fn traverse_function_entry(
     if existing_entrypoint.is_none() {
         let chunk_id = graph_def.create_chunk();
         let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
-        let mut ret_value = chunk_id;
+        let ret_value;
         // node specific thingies.
         match node.user_data.template {
             PulseNodeTemplate::ListenForEntityOutput => {

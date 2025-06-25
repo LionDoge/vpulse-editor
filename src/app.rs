@@ -288,6 +288,15 @@ impl PulseGraphState {
                 .insert(node_id, vec![param_name]);
         }
     }
+    
+    pub fn load_from(&mut self, other: PulseGraphState) {
+        self.added_parameters = other.added_parameters;
+        self.public_outputs = other.public_outputs;
+        self.variables = other.variables;
+        self.exposed_nodes = other.exposed_nodes;
+        self.outputs_dropdown_choices = other.outputs_dropdown_choices;
+        // rewrite everything but the save file path and bindings
+    }
 }
 
 // =========== Then, you need to implement some traits ============
@@ -1145,25 +1154,27 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::LibraryBindingChoice { value } => {
                 ui.horizontal(|ui| { 
                     ui.label("Function");
-                    ComboBox::from_id_salt(_node_id)
-                        .selected_text(&_user_state.get_library_binding_from_index(value).unwrap().displayname)
-                        .show_ui(ui, |ui| {
-                            for (idx, func) in _user_state.bindings.gamefunctions.iter().enumerate() {
-                                let str = func.displayname.as_str();
-                                let mut selectable_value = 
-                                    ui.selectable_value::<LibraryBindingIndex>(value, 
-                                    LibraryBindingIndex(idx),
-                                     str);
-                                if let Some(desc) = func.description.as_ref() {
-                                    selectable_value = selectable_value.on_hover_text(desc);
+                    if let Some(binding) = _user_state.get_library_binding_from_index(value) {
+                        ComboBox::from_id_salt(_node_id)
+                            .selected_text(&binding.displayname)
+                            .show_ui(ui, |ui| {
+                                for (idx, func) in _user_state.bindings.gamefunctions.iter().enumerate() {
+                                    let str = func.displayname.as_str();
+                                    let mut selectable_value = 
+                                        ui.selectable_value::<LibraryBindingIndex>(value, 
+                                        LibraryBindingIndex(idx),
+                                        str);
+                                    if let Some(desc) = func.description.as_ref() {
+                                        selectable_value = selectable_value.on_hover_text(desc);
+                                    }
+                                    if selectable_value.clicked() {
+                                        responses.push(
+                                            PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
+                                        );
+                                    }
                                 }
-                                if selectable_value.clicked() {
-                                    responses.push(
-                                        PulseGraphResponse::ChangeFunctionBinding(_node_id, func.clone())
-                                    );
-                                }
-                            }
-                        });
+                            });
+                    }
                 });
             }
             PulseGraphValueType::NodeChoice { node } => {
@@ -1346,7 +1357,7 @@ impl PulseGraphEditor {
         let contents = fs::read_to_string(&filepath)?;
         let loaded_graph: PulseGraphEditor = ron::from_str(&contents)?;
         self.state = loaded_graph.state;
-        self.user_state = loaded_graph.user_state;
+        self.user_state.load_from(loaded_graph.user_state);
         // we don't serialize file path since the file could be moved between save/open.
         self.user_state.save_file_path = Some(filepath);
         Ok(())

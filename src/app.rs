@@ -232,7 +232,6 @@ pub enum PulseNodeTemplate {
     StringToEntityName,
     InvokeLibraryBinding,
     FindEntitiesWithin,
-    IsValidEntity,
     CompareOutput,
     CompareIf,
     IntSwitch,

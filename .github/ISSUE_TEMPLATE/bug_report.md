@@ -20,6 +20,8 @@ What is the expected behavior?
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Other information**
-*I verified that I'm using the latest release from GitHub [YES/NO]:* 
-*OS Version and information if applicable to the issue*:
+**I verified that I'm using the latest release from GitHub**
+YES/NO
+
+**OS Version and information if applicable to the issue**
+If you think this issue is related to your specific configuration, then include the details here.

@@ -4,15 +4,18 @@ There's no official tooling for creating these files, so this tool is supposed t
 
 This tool is intended to work for Counter-Strike 2, as it's only really useful in this game currently.
 
-## A few bits of important story...
+> [!NOTE]
+> The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Counter-Strike 2 or other Source 2 games, as well as some *basic* problem solving skills. Not everything is documented to the full extent, since things will change too much for me to keep updating the documentation. There are some things you will have to figure out by experimenting with yourself, or use examples for.
+
+## Why make this?
 The name in-development system suggets that it could still undergo changes wasting the effort of writing this app. The release of an official editor would also make this useless, so why bother spending time on it? Well, I like challenge and reverse engineering components of software, not only that, but I noticed that Pulse could do much more than any other possible scripting/map making methods. Granted, it still doesn't open up that much possibilities, but at least some more than was possible before, so this project is not totally useless! This project was also started as part of my Rust programming course at university, the only other ideas I had were ones that would be one and done, so I decided to pick something that I could also continue. So here we are! All of this was possible due to my weird obsessions.
 
-## Game setup
+# Game setup
 Some initial setup inside the game files is required to make working with Pulse graphs way easier.
 
 **NOTE:** These files don't interfer with VAC, it's possible to play normally with these modifications. Also, these modifications might disappear after game updates, and certainly will disappear when verifying game files!
 
-### FGD setup
+## FGD setup
 Go to `game/csgo/csgo.fgd` and add these lines, somewhere after all the imports and exports and all that..
 ```
 @PointClass base(Targetname) tags( Logic ) iconsprite("editor/point_pulse.vmat") = point_pulse : "An entity that acts as a container for pulse graphs"
@@ -20,7 +23,7 @@ Go to `game/csgo/csgo.fgd` and add these lines, somewhere after all the imports 
     graph_def(string) : "Graph path" : "" :
 ]
 ```
-### assettypes setup
+## assettypes setup
 Go to `game/bin/assettypes_common.txt` and add these lines in between other asset definitons.
 ```
 pulse_graph = 
@@ -45,17 +48,20 @@ pulse_graph =
     ]
 }
 ```
-This allows for Pulse graphs to be hot reloaded.
+This allows for Pulse graphs to be hot reloaded, and also be displayed in the asset browser.
 
-## App setup
-Because of how this app is written, and my laziness, you will need python installed on your system in order to be able to compile graphs.
+# App setup
+Because of how this app is written, and my laziness, you will need python installed on your system in order to be able to compile graphs. This app also only currently supports Windows OS.
 
-First download the build from releases, or build it yourself (rust, and cargo required)
-If building yourself, you will also need to acquire [Source 2 asset assembler](https://github.com/LionDoge/source2-asset-assembler#Installation) python file.
-You may possibly need to setup a venv with all the required dependencies. Lastly you need to adjust the `config.json` file approperiately
-set `python_interpreter` to the python in the venv for asset assembler (or leave in the system-wide path). Set `assetassembler_path` to point to to the script file.
+## Manual compile
+- You will need Rust tooling installed first. Use cargo to build the tool with `cargo build --release`. Once finished it should be output to 'target/release/pulseedit.exe' directory, you'll only need the executable. 
+- Next, you will also need to acquire [Source 2 asset assembler](https://github.com/LionDoge/source2-asset-assembler#Installation) Python script. You may possibly need to setup a venv with all the required dependencies (more information on the linked page). 
+- Lastly you need to adjust the `config.json` file approperiately:
+    - set `python_interpreter` to the Python executable in the venv for asset assembler (or leave in the system-wide path, if you installed dependencies globally). 
+    - set `assetassembler_path` to point to to the assetassembler Python script file.
 
-The release includes self-contained asset assembler script as a [pex](https://github.com/pex-tool/pex) file. **If downloading from releases the only thing you need is python installed on the system, the default config should work fine.**
+## Pre-built release
+Download the newest version from [releases](https://github.com/LionDoge/vpulse-editor/releases). It includes almost everything needed to run the tool, including a self-contained asset assembler script as a [pex](https://github.com/pex-tool/pex) file. **The only thing you need is python installed on the system, the default config should work fine.**
 
 Any yeah I know the setup is quite bad, but this may get changed. As I mentionted before, I didn't want to put too much effort in, it's supposed to work, not to be exactly the most optimal setup.
 
@@ -67,8 +73,10 @@ Once done you can just run the pulseedit executable. It is recommended to run it
 
 <img src="reference_img/img1.png" alt="drawing" width="600"/>
 
-On the right side there's the main viewport, right click to open the menu for adding new nodes. On the left side you can see list of variables you can add, while
-the top bar allows you to open, save, and compile graphs. In order to compile a graph it needs to be saved first. Point it to the `game/csgo_addons/addonname/scripts` directory, or somewhere within your addon, that's where the compiled graphs will be saved.
+- On the right side there's the main viewport, right click to open the menu for adding new nodes. 
+- On the left side you can see list of variables you can add, while
+- The top bar allows you to open, save, and compile graphs. 
+- In order to compile a graph it needs to be saved first. Point it to the `game/csgo_addons/addonname/scripts` directory, or somewhere within your addon, that's where the compiled graphs will be saved.
 
 ## Basic logic flow
 In order for graphs to be compilable it must have an entry point, which is a way of exposing the graph's functions to the game. You can find entry points in the 'Inflow' category. For example the 'Public Method' adds a custom entity input on the graph's entity, which can be triggered from a map.
@@ -117,6 +125,6 @@ Examples can be found in the 'examples' directory.
 
 - `timing` shows some examples of delaying exeuction
 
-- `remote_nodes_listen_entity_output` Shows examples of so called 'remote nodes' that can be reused. Think like a function in a programming language. It also shows an example of listening to an output from an entity and using the activator handle. In this scenario pressing a *func_button* named `btn` will deal 10 damage to the activator.
+- `remote_nodes_listen_entity_output` Shows examples of so called 'remote nodes' that can be reused. Think like a function in a programming language. It also shows an example of listening to an output from an entity and using the activator handle. In this scenario pressing a *func_button* named `btn` will deal 10 damage to the activator once the listening starts after firing 'StartButtonListen'.
 
 - `radio` Is an example of a 'radio' that can switch between different music with the 'NextSong' method, it also demonstrates how to play sounds, and change their parameters while they're playing. In this 'VolumeUp' and 'VolumeDown' inputs can be used to adjust the volume of a playing song. This is also a good demonstration of how to use operations and conditional checks.

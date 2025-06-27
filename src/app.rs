@@ -4,6 +4,7 @@ use crate::help;
 use crate::pulsetypes::*;
 use crate::typing::*;
 use anyhow::anyhow;
+use eframe::egui::Color32;
 use core::panic;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
@@ -974,6 +975,20 @@ impl NodeTemplateIter for AllMyNodeTemplates {
     }
 }
 
+fn get_supported_types() -> Vec<PulseValueType> {
+    vec![
+        PulseValueType::PVAL_INT(None),
+        PulseValueType::PVAL_FLOAT(None),
+        PulseValueType::PVAL_STRING(None),
+        PulseValueType::PVAL_BOOL,
+        PulseValueType::PVAL_VEC3(None),
+        PulseValueType::PVAL_COLOR_RGB(None),
+        PulseValueType::PVAL_EHANDLE(None),
+        PulseValueType::DOMAIN_ENTITY_NAME,
+        PulseValueType::PVAL_SNDEVT_GUID(None),
+    ]
+}
+
 impl WidgetValueTrait for PulseGraphValueType {
     type Response = PulseGraphResponse;
     type UserState = PulseGraphState;
@@ -1353,6 +1368,46 @@ impl NodeDataTrait for PulseNodeData {
             }
         }
         responses
+    }
+
+    fn titlebar_color(
+        &self,
+        _ui: &egui::Ui,
+        _node_id: NodeId,
+        _graph: &Graph<Self, Self::DataType, Self::ValueType>,
+        _user_state: &mut Self::UserState,
+    ) -> Option<Color32>{
+        match self.template {
+            PulseNodeTemplate::CellPublicMethod
+            | PulseNodeTemplate::EventHandler
+            | PulseNodeTemplate::GraphHook => Some(Color32::from_rgb(186, 52, 146)),
+            PulseNodeTemplate::EntFire
+            | PulseNodeTemplate::FindEntByName
+            | PulseNodeTemplate::FindEntitiesWithin
+            | PulseNodeTemplate::IsValidEntity
+            | PulseNodeTemplate::ListenForEntityOutput => Some(Color32::from_rgb(46, 191, 80)),
+            PulseNodeTemplate::Compare
+            | PulseNodeTemplate::CompareOutput
+            | PulseNodeTemplate::CompareIf
+            | PulseNodeTemplate::IntSwitch
+            | PulseNodeTemplate::ForLoop
+            | PulseNodeTemplate::WhileLoop => Some(Color32::from_rgb(166, 99, 41)),
+            PulseNodeTemplate::CallNode
+            | PulseNodeTemplate::Function => Some(Color32::from_rgb(28, 67, 150)),
+            PulseNodeTemplate::Operation => Some(Color32::from_rgb(29, 181, 184)),
+            PulseNodeTemplate::ConcatString => None,
+            PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => Some(Color32::from_rgb(184, 64, 28)),
+            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => Some(Color32::from_rgb(41, 166, 77)),
+            PulseNodeTemplate::IntToString
+            | PulseNodeTemplate::Convert
+            | PulseNodeTemplate::StringToEntityName => Some(Color32::from_rgb(98, 41, 196)),
+            PulseNodeTemplate::DebugWorldText | PulseNodeTemplate::DebugLog => None,
+            PulseNodeTemplate::FireOutput => None,
+            PulseNodeTemplate::GetGameTime
+            | PulseNodeTemplate::SetNextThink
+            | PulseNodeTemplate::InvokeLibraryBinding
+            | PulseNodeTemplate::SoundEventStart => Some(Color32::from_rgb(41, 139, 196)),
+        }
     }
 }
 
@@ -2053,7 +2108,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Param type");
-                        ComboBox::from_label(format!("outputpick{}", idx))
+                        ComboBox::from_id_salt(format!("output{}", idx))
                             .selected_text(outputdef.typ.to_string())
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(
@@ -2149,7 +2204,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Param type");
-                        ComboBox::from_label(format!("varpick{}", idx))
+                        ComboBox::from_id_salt(format!("var{}", idx))
                             .selected_text(var.typ_and_default_value.to_string())
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(
@@ -2205,6 +2260,7 @@ impl eframe::App for PulseGraphEditor {
                 .variables
                 .remove(variable_scheduled_for_deletion);
         }
+        
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
                 

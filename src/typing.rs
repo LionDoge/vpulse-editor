@@ -115,6 +115,23 @@ impl PulseValueType {
             _ => "",
         }
     }
+    pub fn get_ui_name(&self) -> &'static str {
+        match self {
+            PulseValueType::PVAL_INT(_) => "Integer",
+            PulseValueType::PVAL_TYPESAFE_INT(_, _) => "Typesafe Integer",
+            PulseValueType::PVAL_FLOAT(_) => "Float",
+            PulseValueType::PVAL_STRING(_) => "String",
+            PulseValueType::PVAL_INVALID => "Invalid",
+            PulseValueType::DOMAIN_ENTITY_NAME => "Entity Name",
+            PulseValueType::PVAL_EHANDLE(_) => "EHandle",
+            PulseValueType::PVAL_VEC3(_) => "Vector 3D",
+            PulseValueType::PVAL_COLOR_RGB(_) => "Color RGB",
+            PulseValueType::PVAL_BOOL => "Boolean",
+            PulseValueType::PVAL_SNDEVT_GUID(_) => "Sound Event",
+            PulseValueType::PVAL_SNDEVT_NAME(_) => "Sound Event Name",
+            PulseValueType::PVAL_ACT => "Action",
+        }
+    }
 }
 
 pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeError> {

@@ -195,9 +195,9 @@ pub fn pulse_value_type_to_node_types(
         ),
         PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
         PulseValueType::PVAL_COLOR_RGB(_) => (
-            PulseDataType::Vec3,
-            PulseGraphValueType::Vec3 {
-                value: Vec3::default(),
+            PulseDataType::Color,
+            PulseGraphValueType::Color {
+                value: [0.0, 0.0, 0.0, 0.0]
             },
         ),
         PulseValueType::PVAL_SNDEVT_GUID(_) => (

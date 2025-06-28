@@ -226,7 +226,7 @@ pub fn pulse_value_type_to_node_types(
         PulseValueType::PVAL_COLOR_RGB(_) => (
             PulseDataType::Color,
             PulseGraphValueType::Color {
-                value: [0.0, 0.0, 0.0, 0.0]
+                value: [0.0, 0.0, 0.0, 0.0],
             },
         ),
         PulseValueType::PVAL_SNDEVT_GUID(_) => (
@@ -246,10 +246,7 @@ pub fn pulse_value_type_to_node_types(
             },
         ),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
-        PulseValueType::PVAL_ANY => (
-            PulseDataType::Any,
-            PulseGraphValueType::Any,
-        ),
+        PulseValueType::PVAL_ANY => (PulseDataType::Any, PulseGraphValueType::Any),
         _ => todo!("Implement more type conversions"),
     }
 }

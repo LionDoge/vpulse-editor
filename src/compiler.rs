@@ -208,7 +208,8 @@ fn get_next_action_nodes<'a>(
             .ok_or_else(|| {
                 anyhow::anyhow!("Input with id {:?} not found in the node", conn.1)
                     .context("get_next_action_nodes found InputId, but couldn't get input data")
-            }).map(|e| e.0.as_ref())?;
+            })
+            .map(|e| e.0.as_ref())?;
         res.push((node, input_name));
     }
     Ok(res)
@@ -615,14 +616,10 @@ fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputI
                     // we found a mapping! So we know which register to use for this
                     *reg
                 }
-                None => {
-                    -1
-                }
+                None => -1,
             }
         }
-        None => {
-            -1
-        }
+        None => -1,
     }
 }
 
@@ -830,7 +827,7 @@ fn traverse_nodes_and_populate<'a>(
             // early return.
             let instr_ret_void = Instruction {
                 code: String::from("RETURN_VOID"),
-                .. Default::default()
+                ..Default::default()
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instr_ret_void);
@@ -1351,9 +1348,7 @@ fn traverse_nodes_and_populate<'a>(
                 PulseValueType::PVAL_STRING(None),
                 false,
             )?;
-            graph_def
-                .cells
-                .push(Box::from(CPulseCell_Step_DebugLog));
+            graph_def.cells.push(Box::from(CPulseCell_Step_DebugLog));
             let mut register_map = RegisterMap::default();
             if let Some(reg_message) = reg_message {
                 register_map.add_inparam("pMessage".into(), reg_message);
@@ -1520,8 +1515,7 @@ fn traverse_nodes_and_populate<'a>(
             )?;
             // TODO: only EQ for now
             let mut instr_compare = Instruction::default();
-            instr_compare.code =
-                format!("EQ{}", compare_type.get_operation_suffix_name());
+            instr_compare.code = format!("EQ{}", compare_type.get_operation_suffix_name());
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let reg_cond = chunk.add_register(
                 String::from("PVAL_BOOL"),
@@ -2132,9 +2126,9 @@ fn traverse_nodes_and_populate<'a>(
                     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                     let mut instr_compare = Instruction {
                         code: String::from(code),
-                        .. Default::default()
+                        ..Default::default()
                     };
-                    
+
                     let reg_cond = chunk.add_register(
                         String::from("PVAL_BOOL"),
                         chunk.get_last_instruction_id() + 1,

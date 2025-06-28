@@ -2,11 +2,11 @@
 use crate::app::PulseDataType;
 use crate::serialization::{PulseRuntimeArgument, RegisterMap};
 use crate::typing::PulseValueType;
-use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::any::Any;
-use std::fmt::Debug;
 use dyn_clone::DynClone;
+use serde::{Deserialize, Serialize};
+use std::any::Any;
+use std::borrow::Cow;
+use std::fmt::Debug;
 use typetag;
 
 // Pulse Cells
@@ -303,19 +303,9 @@ pub struct OutputDefinition {
     pub typ_old: PulseValueType, // used for detecting change in combobox, eugh.
 }
 
-#[typetag::serde(tag = "type")]
-pub trait SchemaEnumTrait: Any + DynClone + Debug {
+pub trait SchemaEnumTrait {
     fn get_ui_name(&self) -> &'static str;
     fn get_self_kv_name(&self) -> &'static str;
-    fn eq_dyn(&self, other: &dyn SchemaEnumTrait) -> bool;
-    fn as_any(&self) -> &dyn Any;
-}
-dyn_clone::clone_trait_object!(SchemaEnumTrait);
-
-impl PartialEq for Box<dyn SchemaEnumTrait> {
-    fn eq(&self, other: &Self) -> bool {
-        self.eq_dyn(other.as_ref())
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -326,7 +316,6 @@ pub enum PulseCursorCancelPriority {
     HardCancel,
 }
 
-#[typetag::serde]
 impl SchemaEnumTrait for PulseCursorCancelPriority {
     fn get_ui_name(&self) -> &'static str {
         match self {
@@ -339,38 +328,41 @@ impl SchemaEnumTrait for PulseCursorCancelPriority {
     fn get_self_kv_name(&self) -> &'static str {
         "PulseCursorCancelPriority_t"
     }
-    fn eq_dyn(&self, other: &dyn SchemaEnumTrait) -> bool {
-        if let Some(other_enum) = other.as_any().downcast_ref::<PulseCursorCancelPriority>() {
-            self == other_enum
-        } else {
-            false
-        }
-    }
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 }
-
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SchemaEnumType {
     PulseCursorCancelPriority,
 }
 
-impl SchemaEnumType {
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum SchemaEnumValue {
+    PulseCursorCancelPriority(PulseCursorCancelPriority),
+}
+
+impl SchemaEnumValue {
     pub fn get_ui_name(&self) -> &'static str {
         match self {
-            SchemaEnumType::PulseCursorCancelPriority => "Pulse Cursor Cancel Priority",
+            SchemaEnumValue::PulseCursorCancelPriority(value) => value.get_ui_name(),
         }
     }
-    pub fn get_all_types(&self) -> Vec<Box<dyn SchemaEnumTrait>> {
+}
+
+impl SchemaEnumType {
+    pub fn get_all_types_as_enums(&self) -> Vec<SchemaEnumValue> {
         match self {
             SchemaEnumType::PulseCursorCancelPriority => {
                 vec![
-                    Box::new(PulseCursorCancelPriority::None),
-                    Box::new(PulseCursorCancelPriority::CancelOnSucceeded),
-                    Box::new(PulseCursorCancelPriority::SoftCancel),
-                    Box::new(PulseCursorCancelPriority::HardCancel),
+                    SchemaEnumValue::PulseCursorCancelPriority(PulseCursorCancelPriority::None),
+                    SchemaEnumValue::PulseCursorCancelPriority(
+                        PulseCursorCancelPriority::CancelOnSucceeded,
+                    ),
+                    SchemaEnumValue::PulseCursorCancelPriority(
+                        PulseCursorCancelPriority::SoftCancel,
+                    ),
+                    SchemaEnumValue::PulseCursorCancelPriority(
+                        PulseCursorCancelPriority::HardCancel,
+                    ),
                 ]
             }
         }

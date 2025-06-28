@@ -61,10 +61,7 @@ pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::i
         Ok(json) => {
             let bindings = from_str::<GraphBindings>(&json);
             if let Err(err) = bindings {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    err,
-                ));
+                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err));
             }
             let mut bindings = bindings.unwrap();
             for binding in bindings.gamefunctions.iter_mut() {

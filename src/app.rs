@@ -4,8 +4,8 @@ use crate::help;
 use crate::pulsetypes::*;
 use crate::typing::*;
 use anyhow::anyhow;
-use eframe::egui::Color32;
 use core::panic;
+use eframe::egui::Color32;
 use eframe::egui::{self, ComboBox, DragValue};
 use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
@@ -55,7 +55,7 @@ pub enum PulseDataType {
     SoundEventName,
     NoideChoice,
     Any,
-    SchemaEnum
+    SchemaEnum,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -68,25 +68,58 @@ pub enum PulseDataType {
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseGraphValueType {
-    Vec2 { value: egui::Vec2 },
-    Scalar { value: f32 },
-    String { value: String },
-    Bool { value: bool },
-    Vec3 { value: Vec3 },
-    Color { value: [f32; 4] },
+    Vec2 {
+        value: egui::Vec2,
+    },
+    Scalar {
+        value: f32,
+    },
+    String {
+        value: String,
+    },
+    Bool {
+        value: bool,
+    },
+    Vec3 {
+        value: Vec3,
+    },
+    Color {
+        value: [f32; 4],
+    },
     EHandle,
     SndEventHandle,
-    SoundEventName { value: String },
-    EntityName { value: String },
+    SoundEventName {
+        value: String,
+    },
+    EntityName {
+        value: String,
+    },
     Action,
-    InternalOutputName { prevvalue: String, value: String },
-    InternalVariableName { prevvalue: String, value: String },
-    Typ { value: PulseValueType },
-    EventBindingChoice { value: EventBindingIndex },
-    LibraryBindingChoice { value: LibraryBindingIndex },
-    NodeChoice { node: Option<NodeId> },
+    InternalOutputName {
+        prevvalue: String,
+        value: String,
+    },
+    InternalVariableName {
+        prevvalue: String,
+        value: String,
+    },
+    Typ {
+        value: PulseValueType,
+    },
+    EventBindingChoice {
+        value: EventBindingIndex,
+    },
+    LibraryBindingChoice {
+        value: LibraryBindingIndex,
+    },
+    NodeChoice {
+        node: Option<NodeId>,
+    },
     Any,
-    SchemaEnum { enum_type: SchemaEnumType, value: Box<dyn SchemaEnumTrait> },
+    SchemaEnum {
+        enum_type: SchemaEnumType,
+        value: SchemaEnumValue,
+    },
 }
 
 impl Default for PulseGraphValueType {
@@ -625,15 +658,6 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_entityname(graph, "entity");
                 input_string(graph, "input", InputParamKind::ConstantOnly);
                 input_string(graph, "value", InputParamKind::ConnectionOrConstant);
-                graph.add_input_param(
-                    node_id,
-                    "test".to_string(),
-                    PulseDataType::SchemaEnum,
-                    PulseGraphValueType::SchemaEnum { 
-                        enum_type: SchemaEnumType::PulseCursorCancelPriority, value: Box::from(PulseCursorCancelPriority::None) },
-                    InputParamKind::ConstantOnly,
-                true,
-            );
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Compare => {
@@ -1040,7 +1064,9 @@ impl WidgetValueTrait for PulseGraphValueType {
                     // if this is a custom added parameter...
                     let vec_params = _user_state.added_parameters.get(_node_id);
                     if let Some(params) = vec_params {
-                        if params.iter().any(|x| x == param_name) && ui.button("X").on_hover_text("Remove parameter").clicked() {
+                        if params.iter().any(|x| x == param_name)
+                            && ui.button("X").on_hover_text("Remove parameter").clicked()
+                        {
                             responses.push(PulseGraphResponse::RemoveOutputParam(
                                 _node_id,
                                 param_name.to_string(),
@@ -1316,20 +1342,13 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::SchemaEnum { enum_type, value } => {
                 ui.label("Enum");
                 ComboBox::from_id_salt(_node_id)
-                    .selected_text(
-                        value.get_ui_name()
-                    )
+                    .selected_text(value.get_ui_name())
                     .show_ui(ui, |ui| {
-                        for choice in enum_type.get_all_types().iter() {
+                        for choice in enum_type.get_all_types_as_enums().iter() {
                             let str = choice.get_ui_name();
-                            ui.selectable_value::<Box<dyn SchemaEnumTrait>>(
-                                value,
-                                choice.clone(),
-                                str,
-                            );
+                            ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
                         }
-                    }
-                );
+                    });
             }
         }
         // This allows you to return your responses from the inline widgets.
@@ -1418,7 +1437,7 @@ impl NodeDataTrait for PulseNodeData {
         _node_id: NodeId,
         _graph: &Graph<Self, Self::DataType, Self::ValueType>,
         _user_state: &mut Self::UserState,
-    ) -> Option<Color32>{
+    ) -> Option<Color32> {
         match self.template {
             PulseNodeTemplate::CellPublicMethod
             | PulseNodeTemplate::EventHandler
@@ -1434,12 +1453,17 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::IntSwitch
             | PulseNodeTemplate::ForLoop
             | PulseNodeTemplate::WhileLoop => Some(Color32::from_rgb(166, 99, 41)),
-            PulseNodeTemplate::CallNode
-            | PulseNodeTemplate::Function => Some(Color32::from_rgb(28, 67, 150)),
+            PulseNodeTemplate::CallNode | PulseNodeTemplate::Function => {
+                Some(Color32::from_rgb(28, 67, 150))
+            }
             PulseNodeTemplate::Operation => Some(Color32::from_rgb(29, 181, 184)),
             PulseNodeTemplate::ConcatString => None,
-            PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => Some(Color32::from_rgb(184, 64, 28)),
-            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => Some(Color32::from_rgb(41, 166, 77)),
+            PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => {
+                Some(Color32::from_rgb(184, 64, 28))
+            }
+            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => {
+                Some(Color32::from_rgb(41, 166, 77))
+            }
             PulseNodeTemplate::IntToString
             | PulseNodeTemplate::Convert
             | PulseNodeTemplate::StringToEntityName => Some(Color32::from_rgb(98, 41, 196)),
@@ -1489,7 +1513,10 @@ pub struct PulseGraphEditor {
 
 impl PulseGraphEditor {
     fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
-        let res = ron::to_string::<PulseGraphEditor>(self)?;
+        let res = ron::ser::to_string_pretty::<PulseGraphEditor>(
+            self,
+            ron::ser::PrettyConfig::default(),
+        )?;
         fs::write(filepath, res)?;
         Ok(())
     }
@@ -2092,9 +2119,12 @@ impl eframe::App for PulseGraphEditor {
                     }
                     // else it was most likely cancelled.
                 }
-                if (ui.button("Save as...").clicked() || ctx.input(|i| {
+                if (ui.button("Save as...").clicked()
+                    || ctx.input(|i| {
                         i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::S)
-                    })) && self.dialog_change_save_file() {
+                    }))
+                    && self.dialog_change_save_file()
+                {
                     // TODO: DRY
                     if let Err(e) = self.perform_save(None) {
                         MessageDialog::new()
@@ -2302,10 +2332,9 @@ impl eframe::App for PulseGraphEditor {
                 .variables
                 .remove(variable_scheduled_for_deletion);
         }
-        
+
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
-                
                 self.state.draw_graph_editor(
                     ui,
                     AllMyNodeTemplates,

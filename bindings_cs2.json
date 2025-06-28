@@ -1043,6 +1043,138 @@
                 "type": "PVAL_FLOAT"
             }
         ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Tag Cursor",
+        "libname": "CPulseCursorFuncs!TagCursor",
+        "description": "Save a named value of any type on the cursor.",
+        "inparams": [
+            {
+                "name": "pTagName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "tagValue",
+                "type": "PVAL_ANY"
+            },
+            {
+                "name": "bInherit",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+
+    {
+        "type": "value",
+        "displayname": "Cursor Has Tag",
+        "libname": "CPulseCursorFuncs!CursorHasTag",
+        "description": "Check if the cursor already has the given tag.",
+        "inparams": [
+            {
+                "name": "pTagName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "tagValue",
+                "type": "PVAL_ANY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+
+    {
+        "type": "value",
+        "displayname": "Any Other Cursors Have Tag",
+        "libname": "CPulseCursorFuncs!AnyOtherCursorsHaveTag",
+        "description": "Check if any yielded cursors on the graph already have the given tag.",
+        "inparams": [
+            {
+                "name": "pTagName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "tagValue",
+                "type": "PVAL_ANY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Kill Cursors With Tag",
+        "libname": "CPulseCursorFuncs!KillCursorsWithTag",
+        "description": "Find all the yielded cursors on this graph with the matching tag and cancel them.",
+        "inparams": [
+            {
+                "name": "pTagName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "tagValue",
+                "type": "PVAL_ANY"
+            },
+            {
+                "name": "nKillPriority",
+                "type": "PVAL_SCHEMA_ENUM:PulseCursorCancelPriority_t"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Kill All Other Cursors",
+        "libname": "CPulseCursorFuncs!KillAllOtherCursors",
+        "description": "Find all the yielded cursors on this graph and cancel them.",
+        "inparams": [
+            {
+                "name": "nKillPriority",
+                "type": "PVAL_SCHEMA_ENUM:PulseCursorCancelPriority_t"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Remove Tag From Cursor",
+        "libname": "CPulseCursorFuncs!RemoveTagFromCursor",
+        "description": "Remove the given tag from this cursor. If other cursors are waiting on us, they will resume.",
+        "inparams": [
+            {
+                "name": "pTagName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "tagValue",
+                "type": "PVAL_ANY"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Kill This Cursor And Cancel",
+        "libname": "CPulseCursorFuncs!KillThisCursorAndCancel",
+        "description": "Optional. After taking an OnCanceled outflow, signal to any observers that this cursor is now canceled. Equivalent to not handling the original cancel outflow. If you don't use this, handling OnCanceled will be treated as success."
+    },
+
+    {
+        "type": "action",
+        "displayname": "Kill This Cursor And Fail",
+        "libname": "CPulseCursorFuncs!KillThisCursorAndFail",
+        "description": "Optional. After taking an OnFailed outflow, signal to any observers that this cursor is now failed. Equivalent to not handling the original fail outflow. If you don't use this, handling OnFailed will be treated as success."
     }
 
     ]

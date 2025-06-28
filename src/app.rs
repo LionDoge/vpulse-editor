@@ -55,6 +55,7 @@ pub enum PulseDataType {
     SoundEventName,
     NoideChoice,
     Any,
+    SchemaEnum
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -85,6 +86,7 @@ pub enum PulseGraphValueType {
     LibraryBindingChoice { value: LibraryBindingIndex },
     NodeChoice { node: Option<NodeId> },
     Any,
+    SchemaEnum { enum_type: SchemaEnumType, value: Box<dyn SchemaEnumTrait> },
 }
 
 impl Default for PulseGraphValueType {
@@ -322,7 +324,8 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
             PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200)
+            PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
+            PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -346,6 +349,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
             PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
             PulseDataType::Any => Cow::Borrowed("Any type"),
+            PulseDataType::SchemaEnum => Cow::Borrowed("Schema enum"),
         }
     }
 
@@ -621,6 +625,15 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_entityname(graph, "entity");
                 input_string(graph, "input", InputParamKind::ConstantOnly);
                 input_string(graph, "value", InputParamKind::ConnectionOrConstant);
+                graph.add_input_param(
+                    node_id,
+                    "test".to_string(),
+                    PulseDataType::SchemaEnum,
+                    PulseGraphValueType::SchemaEnum { 
+                        enum_type: SchemaEnumType::PulseCursorCancelPriority, value: Box::from(PulseCursorCancelPriority::None) },
+                    InputParamKind::ConstantOnly,
+                true,
+            );
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Compare => {
@@ -1299,6 +1312,24 @@ impl WidgetValueTrait for PulseGraphValueType {
             }
             PulseGraphValueType::Any => {
                 ui.label(format!("Any {}", param_name));
+            }
+            PulseGraphValueType::SchemaEnum { enum_type, value } => {
+                ui.label("Enum");
+                ComboBox::from_id_salt(_node_id)
+                    .selected_text(
+                        value.get_ui_name()
+                    )
+                    .show_ui(ui, |ui| {
+                        for choice in enum_type.get_all_types().iter() {
+                            let str = choice.get_ui_name();
+                            ui.selectable_value::<Box<dyn SchemaEnumTrait>>(
+                                value,
+                                choice.clone(),
+                                str,
+                            );
+                        }
+                    }
+                );
             }
         }
         // This allows you to return your responses from the inline widgets.

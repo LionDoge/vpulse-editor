@@ -239,6 +239,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to node id", self)
         }
     }
+
+    pub fn try_enum(self) -> anyhow::Result<(SchemaEnumType, SchemaEnumValue)> {
+        if let PulseGraphValueType::SchemaEnum { enum_type, value } = self {
+            Ok((enum_type, value))
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to schema enum", self)
+        }
+    }
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
@@ -1340,15 +1348,17 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.label(format!("Any {}", param_name));
             }
             PulseGraphValueType::SchemaEnum { enum_type, value } => {
-                ui.label("Enum");
-                ComboBox::from_id_salt(_node_id)
-                    .selected_text(value.get_ui_name())
-                    .show_ui(ui, |ui| {
-                        for choice in enum_type.get_all_types_as_enums().iter() {
-                            let str = choice.get_ui_name();
-                            ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
-                        }
-                    });
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ComboBox::from_id_salt((_node_id, param_name))
+                        .selected_text(value.get_ui_name())
+                        .show_ui(ui, |ui| {
+                            for choice in enum_type.get_all_types_as_enums().iter() {
+                                let str = choice.get_ui_name();
+                                ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
+                            }
+                        });
+                });
             }
         }
         // This allows you to return your responses from the inline widgets.

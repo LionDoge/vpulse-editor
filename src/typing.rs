@@ -1,8 +1,10 @@
 use crate::app::{PulseDataType, PulseGraphValueType};
+use crate::pulsetypes::{SchemaEnumType, SchemaEnumValue};
 use egui_node_graph2::InputParamKind;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::Display;
+use std::str::FromStr;
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum PulseTypeError {
@@ -53,13 +55,14 @@ impl Default for Vec3 {
         }
     }
 }
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
 #[allow(non_camel_case_types)]
 pub enum PulseValueType {
     PVAL_INT(Option<i32>),
     PVAL_TYPESAFE_INT(Option<String>, Option<i32>),
     PVAL_FLOAT(Option<f32>),
     PVAL_STRING(Option<String>),
+    #[default]
     PVAL_INVALID,
     PVAL_EHANDLE(Option<String>),
     PVAL_VEC3(Option<Vec3>),
@@ -70,12 +73,9 @@ pub enum PulseValueType {
     DOMAIN_ENTITY_NAME,
     PVAL_ACT, // only used in the editor, not in the engine
     PVAL_ANY,
+    PVAL_SCHEMA_ENUM(SchemaEnumType)
 }
-impl Default for PulseValueType {
-    fn default() -> Self {
-        PulseValueType::PVAL_INVALID
-    }
-}
+
 impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -105,6 +105,9 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
             PulseValueType::PVAL_ANY => write!(f, "PVAL_ANY"),
+            PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
+                write!(f, "PVAL_SCHEMA_ENUM:{}", enum_type.to_str())
+            }
         }
     }
 }
@@ -135,6 +138,7 @@ impl PulseValueType {
             PulseValueType::PVAL_SNDEVT_NAME(_) => "Sound Event Name",
             PulseValueType::PVAL_ACT => "Action",
             PulseValueType::PVAL_ANY => "Any Type",
+            PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => enum_type.to_str_ui(),
         }
     }
 }
@@ -158,6 +162,11 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
                 Ok(PulseValueType::PVAL_EHANDLE(Some(ent_type.to_string())))
+            } else if s.starts_with("PVAL_SCHEMA_ENUM:") {
+                let enum_type = s.split_at(17).1;
+                let en = SchemaEnumType::from_str(enum_type)
+                    .map_err(|_| PulseTypeError::StringToEnumConversionMissing(enum_type.to_string()))?;
+                Ok(PulseValueType::PVAL_SCHEMA_ENUM(en))
             } else {
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }
@@ -247,6 +256,16 @@ pub fn pulse_value_type_to_node_types(
         ),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
         PulseValueType::PVAL_ANY => (PulseDataType::Any, PulseGraphValueType::Any),
+        PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
+            let val = SchemaEnumValue::default_from_type(enum_type);
+            (
+                PulseDataType::SchemaEnum,
+                PulseGraphValueType::SchemaEnum {
+                    enum_type: *enum_type,
+                    value: val,
+                }
+            )
+        }
         _ => todo!("Implement more type conversions"),
     }
 }
@@ -268,6 +287,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_ACT
         | PulseValueType::PVAL_ANY => InputParamKind::ConnectionOnly,
 
-        PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
+        PulseValueType::PVAL_BOOL
+        | PulseValueType::PVAL_SCHEMA_ENUM(_) => InputParamKind::ConstantOnly,
     }
 }

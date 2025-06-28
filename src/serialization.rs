@@ -528,6 +528,7 @@ pub enum PulseConstant {
     Vec3(Vec3),
     Color_RGB([f32; 4]),
     Bool(bool),
+    SchemaEnum(SchemaEnumType, SchemaEnumValue),
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> String {
@@ -540,13 +541,14 @@ impl KV3Serialize for PulseConstant {
             "
             ,
             match self {
-                PulseConstant::String(_) => "PVAL_STRING",
-                PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME",
-                PulseConstant::Float(_) => "PVAL_FLOAT",
-                PulseConstant::Integer(_) => "PVAL_INT",
-                PulseConstant::Vec3(_) => "PVAL_VEC3",
-                PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB",
-                PulseConstant::Bool(_) => "PVAL_BOOL",
+                PulseConstant::String(_) => "PVAL_STRING".to_string(),
+                PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
+                PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
+                PulseConstant::Integer(_) => "PVAL_INT".to_string(),
+                PulseConstant::Vec3(_) => "PVAL_VEC3".to_string(),
+                PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
+                PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
+                PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
             },
             match self {
                 PulseConstant::String(value)
@@ -556,6 +558,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
                 PulseConstant::Bool(value) => value.to_string(),
+                PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
             }
         }
     }
@@ -612,6 +615,9 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
             PulseValueType::PVAL_ACT => String::from("null"),
             PulseValueType::PVAL_ANY => String::from("null"), // Any type doesn't have a default value
+            PulseValueType::PVAL_SCHEMA_ENUM(en) => {
+                format!("\"{}\"", en.to_str())
+            }
         };
         formatdoc! {"
             {{

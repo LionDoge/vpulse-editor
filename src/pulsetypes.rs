@@ -5,6 +5,7 @@ use crate::typing::PulseValueType;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::fmt::Debug;
+use std::str::FromStr;
 
 // Pulse Cells
 #[allow(unused)]
@@ -301,8 +302,8 @@ pub struct OutputDefinition {
 }
 
 pub trait SchemaEnumTrait {
-    fn get_ui_name(&self) -> &'static str;
-    fn get_self_kv_name(&self) -> &'static str;
+    fn to_str(self) -> &'static str;
+    fn to_str_ui(&self) -> &'static str;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -314,16 +315,21 @@ pub enum PulseCursorCancelPriority {
 }
 
 impl SchemaEnumTrait for PulseCursorCancelPriority {
-    fn get_ui_name(&self) -> &'static str {
+    fn to_str(self) -> &'static str {
+        match self {
+            PulseCursorCancelPriority::None => "None",
+            PulseCursorCancelPriority::CancelOnSucceeded => "CancelOnSucceeded",
+            PulseCursorCancelPriority::SoftCancel => "SoftCancel",
+            PulseCursorCancelPriority::HardCancel => "HardCancel",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
         match self {
             PulseCursorCancelPriority::None => "Keep running normally.",
             PulseCursorCancelPriority::CancelOnSucceeded => "Kill after current node.",
             PulseCursorCancelPriority::SoftCancel => "Kill elegantly.",
             PulseCursorCancelPriority::HardCancel => "Kill immediately.",
         }
-    }
-    fn get_self_kv_name(&self) -> &'static str {
-        "PulseCursorCancelPriority_t"
     }
 }
 
@@ -337,10 +343,15 @@ pub enum SchemaEnumValue {
     PulseCursorCancelPriority(PulseCursorCancelPriority),
 }
 
-impl SchemaEnumValue {
-    pub fn get_ui_name(&self) -> &'static str {
-        match self {
-            SchemaEnumValue::PulseCursorCancelPriority(value) => value.get_ui_name(),
+impl FromStr for SchemaEnumType {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Self, anyhow::Error> {
+        match s {
+            "PulseCursorCancelPriority_t" => Ok(SchemaEnumType::PulseCursorCancelPriority),
+            _ => Err(anyhow::anyhow!(
+                "Unknown SchemaEnumType: {}",
+                s
+            )),
         }
     }
 }
@@ -361,6 +372,36 @@ impl SchemaEnumType {
                         PulseCursorCancelPriority::HardCancel,
                     ),
                 ]
+            }
+        }
+    }
+    pub fn to_str(self) -> &'static str {
+        match self {
+            SchemaEnumType::PulseCursorCancelPriority => "PulseCursorCancelPriority_t"
+        }
+    }
+    pub fn to_str_ui(self) -> &'static str {
+        match self {
+            SchemaEnumType::PulseCursorCancelPriority => "Cursor Cancel Priority",
+        }
+    }
+}
+
+impl SchemaEnumValue {
+    pub fn get_ui_name(&self) -> &'static str {
+        match self {
+            SchemaEnumValue::PulseCursorCancelPriority(value) => value.to_str_ui(),
+        }
+    }
+    pub fn to_str(&self) -> &'static str {
+        match self {
+            SchemaEnumValue::PulseCursorCancelPriority(value) => value.to_str(),
+        }
+    }
+    pub fn default_from_type(typ: &SchemaEnumType) -> Self {
+        match typ {
+            SchemaEnumType::PulseCursorCancelPriority => {
+                SchemaEnumValue::PulseCursorCancelPriority(PulseCursorCancelPriority::None)
             }
         }
     }

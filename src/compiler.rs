@@ -762,6 +762,13 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Bool(input_value));
                 }
+                PulseValueType::PVAL_SCHEMA_ENUM(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_typ_and_value = input_param.value().clone().try_enum()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::SchemaEnum(input_typ_and_value.0, input_typ_and_value.1));
+                }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
                     return Ok(None);

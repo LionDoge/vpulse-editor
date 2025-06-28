@@ -611,6 +611,7 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
             PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
             PulseValueType::PVAL_ACT => String::from("null"),
+            PulseValueType::PVAL_ANY => String::from("null"), // Any type doesn't have a default value
         };
         formatdoc! {"
             {{

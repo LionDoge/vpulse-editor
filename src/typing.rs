@@ -69,6 +69,7 @@ pub enum PulseValueType {
     PVAL_BOOL,
     DOMAIN_ENTITY_NAME,
     PVAL_ACT, // only used in the editor, not in the engine
+    PVAL_ANY,
 }
 impl Default for PulseValueType {
     fn default() -> Self {
@@ -79,11 +80,13 @@ impl fmt::Display for PulseValueType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => write!(
-                f,
-                "PVAL_TYPESAFE_INT:{}",
-                int_type.clone().unwrap_or_default()
-            ),
+            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => {
+                if let Some(int_type) = int_type {
+                    write!(f, "PVAL_TYPESAFE_INT:{}", int_type)
+                } else {
+                    write!(f, "PVAL_TYPESAFE_INT")
+                }
+            }
             PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
@@ -101,6 +104,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
             PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
+            PulseValueType::PVAL_ANY => write!(f, "PVAL_ANY"),
         }
     }
 }
@@ -130,6 +134,7 @@ impl PulseValueType {
             PulseValueType::PVAL_SNDEVT_GUID(_) => "Sound Event",
             PulseValueType::PVAL_SNDEVT_NAME(_) => "Sound Event Name",
             PulseValueType::PVAL_ACT => "Action",
+            PulseValueType::PVAL_ANY => "Any Type",
         }
     }
 }
@@ -146,6 +151,9 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_INVALID" => Ok(PulseValueType::PVAL_INVALID),
         "PVAL_SNDEVT_GUID" => Ok(PulseValueType::PVAL_SNDEVT_GUID(None)),
         "PVAL_ENTITY_NAME" => Ok(PulseValueType::DOMAIN_ENTITY_NAME),
+        "PVAL_SNDEVT_NAME" => Ok(PulseValueType::PVAL_SNDEVT_NAME(None)),
+        "PVAL_ACT" => Ok(PulseValueType::PVAL_ACT),
+        "PVAL_ANY" => Ok(PulseValueType::PVAL_ANY),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
@@ -180,6 +188,10 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
         PulseDataType::SoundEventName => PulseGraphValueType::SoundEventName {
             value: String::default(),
         },
+        PulseDataType::Color => PulseGraphValueType::Color {
+            value: [0.0, 0.0, 0.0, 0.0],
+        },
+        PulseDataType::Any => PulseGraphValueType::Any,
         _ => PulseGraphValueType::Scalar { value: 0f32 },
     }
 }
@@ -234,6 +246,10 @@ pub fn pulse_value_type_to_node_types(
             },
         ),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
+        PulseValueType::PVAL_ANY => (
+            PulseDataType::Any,
+            PulseGraphValueType::Any,
+        ),
         _ => todo!("Implement more type conversions"),
     }
 }
@@ -252,7 +268,8 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)
         | PulseValueType::PVAL_INVALID
-        | PulseValueType::PVAL_ACT => InputParamKind::ConnectionOnly,
+        | PulseValueType::PVAL_ACT
+        | PulseValueType::PVAL_ANY => InputParamKind::ConnectionOnly,
 
         PulseValueType::PVAL_BOOL => InputParamKind::ConstantOnly,
     }

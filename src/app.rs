@@ -54,6 +54,7 @@ pub enum PulseDataType {
     LibraryBindingChoice,
     SoundEventName,
     NoideChoice,
+    Any,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -83,6 +84,7 @@ pub enum PulseGraphValueType {
     EventBindingChoice { value: EventBindingIndex },
     LibraryBindingChoice { value: LibraryBindingIndex },
     NodeChoice { node: Option<NodeId> },
+    Any,
 }
 
 impl Default for PulseGraphValueType {
@@ -320,6 +322,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
             PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200)
         }
     }
 
@@ -342,7 +345,12 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
             PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
             PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
+            PulseDataType::Any => Cow::Borrowed("Any type"),
         }
+    }
+
+    fn allow_any_type(&self) -> bool {
+        matches!(self, PulseDataType::Any)
     }
 }
 
@@ -1288,6 +1296,9 @@ impl WidgetValueTrait for PulseGraphValueType {
                             }
                         });
                 });
+            }
+            PulseGraphValueType::Any => {
+                ui.label(format!("Any {}", param_name));
             }
         }
         // This allows you to return your responses from the inline widgets.

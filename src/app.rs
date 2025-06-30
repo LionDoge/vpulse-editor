@@ -11,9 +11,7 @@ use egui_node_graph2::*;
 use rfd::{FileDialog, MessageDialog};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
-use std::fs;
-use std::path::PathBuf;
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, path::PathBuf, fs, thread};
 
 // Compare this snippet from src/instruction_templates.rs:
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
@@ -1974,6 +1972,37 @@ impl PulseGraphEditor {
             println!("update_remote_node_params() called on node that does not exist in the graph anymore!");
         }
     }
+    async fn check_for_updates() -> anyhow::Result<()> {
+        let releases = self_update::backends::github::ReleaseList::configure()
+            .repo_owner("liondoge")
+            .repo_name("vpulse-editor")
+            .build()?
+            .fetch()?;
+        let rel = releases.first().ok_or(anyhow::anyhow!(
+            "No releases present after fetching from GitHub"
+        ))?;
+        let mut msg_box = rfd::AsyncMessageDialog::new()
+            .set_level(rfd::MessageLevel::Info);
+        if self_update::version::bump_is_greater(env!("CARGO_PKG_VERSION"), &rel.version)? {
+            msg_box = msg_box
+                .set_title("Update Available")
+                .set_buttons(rfd::MessageButtons::YesNo)
+                .set_description(format!(
+                    "A new version of Pulse Graph Editor is available: {}.\nDo you want to update?",
+                    rel.version
+                ));
+        } else {
+            msg_box = msg_box
+                .set_title("Up to date")
+                .set_buttons(rfd::MessageButtons::Ok)
+                .set_description("Pulse Graph Editor is up to date.");
+        }
+        let response = msg_box.show().await;
+        if response == rfd::MessageDialogResult::Yes {
+            open::that("https://github.com/LionDoge/vpulse-editor/releases/latest")?;
+        }
+        Ok(())
+    }
 }
 
 impl PulseGraphEditor {
@@ -2094,7 +2123,7 @@ impl eframe::App for PulseGraphEditor {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+            egui::menu::bar(ui, |ui: &mut egui::Ui| {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
                     if let Err(e) =
@@ -2160,6 +2189,21 @@ impl eframe::App for PulseGraphEditor {
                         }
                     }
                 }
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
+                    if ui.button("Check for updates").clicked() {
+                        thread::spawn(move || {
+                            if let Err(e) = smol::block_on(PulseGraphEditor::check_for_updates()) {
+                                MessageDialog::new()
+                                    .set_level(rfd::MessageLevel::Error)
+                                    .set_title("Update check failed")
+                                    .set_buttons(rfd::MessageButtons::Ok)
+                                    .set_description(e.to_string())
+                                    .show();
+                            }
+                        });
+                    }
+                    ui.label(env!("CARGO_PKG_VERSION"));
+                });
             });
         });
         let mut output_scheduled_for_deletion: usize = usize::MAX; // we can get away with just one reference (it's not like the user can click more than one at once)

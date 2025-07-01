@@ -1382,9 +1382,15 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::CommentBox { value } => {
-                ui.horizontal(|ui| {
-                    ui.text_edit_multiline(value);
-                });
+                let available_width = ui.available_width().max(100.0);
+                // same background as node, for less busy look.
+                ui.style_mut().visuals.extreme_bg_color = Color32::from_black_alpha(0);
+                ui.add_sized(
+                    [available_width, 80.0], // width, height
+                    egui::TextEdit::multiline(value)
+                        .desired_rows(4)
+                        .desired_width(available_width)
+                );
             }
         }
         // This allows you to return your responses from the inline widgets.

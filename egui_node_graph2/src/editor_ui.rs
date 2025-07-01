@@ -488,13 +488,10 @@ where
                 NodeResponse::ResizeNode { node, resize_delta } => {
                     // Resize the node by the delta
                     self.node_sizes[*node] += resize_delta;
-                    // Ensure the size does not go below zero
                     self.node_sizes[*node] = self
                         .node_sizes[*node]
                         .max(0.0f32)
-                        .min(800.0f32);
-                    // Update the position to keep it centered
-                    //self.node_positions[node] -= Vec2::splat(*resize_delta / 2.0);
+                        .min(400.0f32);
                 }
                 NodeResponse::User(_) => {
                     // These are handled by the user code.
@@ -626,7 +623,6 @@ where
         WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
     DataType: DataTypeTrait<UserState>,
 {
-    pub const MAX_NODE_WIDTH: f32 = 800.0;
     pub const BASE_NODE_SIZE: [f32; 2] = [200.0, 200.0];
     
     pub fn show(
@@ -636,7 +632,6 @@ where
         user_state: &mut UserState,
         width: f32,
     ) -> Vec<NodeResponse<UserResponse, NodeData>> {
-        //let width = width.clamp(0.0, Self::MAX_NODE_WIDTH - Self::BASE_NODE_SIZE[0]);
         let size = Vec2::new(Self::BASE_NODE_SIZE[0] + width, Self::BASE_NODE_SIZE[1]);
         let mut child_ui = ui.new_child(
             UiBuilder::new()
@@ -706,38 +701,6 @@ where
             Id::new((self.node_id, "window")),
             Sense::click_and_drag(),
         );
-        // Add a small draggable interaction rect to the right of the node
-        let drag_box_width = 12.0 * pan_zoom.zoom;
-        let drag_box_rect = Rect::from_min_max(
-            pos2(interaction_rect.right() - drag_box_width, interaction_rect.top()),
-            pos2(interaction_rect.right(), interaction_rect.bottom()),
-        );
-        let drag_box_resp = ui.allocate_rect(drag_box_rect, Sense::click_and_drag());
-
-        // Optionally, draw the drag box for visual feedback
-        let drag_box_color = if drag_box_resp.dragged() {
-            Color32::from_gray(180)
-        } else if drag_box_resp.hovered() {
-            Color32::from_gray(140)
-        } else {
-            Color32::from_gray(100)
-        };
-        ui.painter().rect_filled(drag_box_rect, 3.0 * pan_zoom.zoom, drag_box_color);
-
-        // If the drag box is dragged, move the node
-        if drag_box_resp.dragged() {
-            let drag_delta = drag_box_resp.drag_delta();
-            if drag_delta.length_sq() > 0.0 {
-                // Convert screen space drag delta to zoom-adjusted space
-                let zoom_adjusted_delta = drag_delta.x / pan_zoom.zoom;
-                responses.push(NodeResponse::ResizeNode {
-                    node: self.node_id,
-                    resize_delta: zoom_adjusted_delta
-                });
-                responses.push(NodeResponse::RaiseNode(self.node_id));
-            }
-        }
-
         let mut title_height = 0.0;
 
         let mut input_port_heights = vec![];
@@ -866,6 +829,29 @@ where
                 user_state,
             ));
         });
+
+        // Add a small draggable interaction rect to the right of the node
+        let drag_box_width = 6.0 * pan_zoom.zoom;
+        let drag_box_rect = Rect::from_min_max(
+            pos2(interaction_rect.right() - drag_box_width, interaction_rect.top() + title_height),
+            pos2(interaction_rect.right(), interaction_rect.bottom() + title_height),
+        );
+        let drag_box_resp = ui.allocate_rect(drag_box_rect, Sense::click_and_drag())
+            .on_hover_cursor(
+                egui::CursorIcon::ResizeHorizontal,
+            );
+
+        if drag_box_resp.dragged() {
+            let drag_delta = drag_box_resp.drag_delta();
+            if drag_delta.length_sq() > 0.0 {
+                // Convert screen space drag delta to zoom-adjusted space
+                let zoom_adjusted_delta = drag_delta.x / pan_zoom.zoom;
+                responses.push(NodeResponse::ResizeNode {
+                    node: self.node_id,
+                    resize_delta: zoom_adjusted_delta
+                });
+            }
+        }
 
         // Second pass, iterate again to draw the ports. This happens outside
         // the child_ui because we want ports to overflow the node background.

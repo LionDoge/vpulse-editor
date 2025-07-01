@@ -54,6 +54,7 @@ pub enum PulseDataType {
     NoideChoice,
     Any,
     SchemaEnum,
+    CommentBox,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -118,6 +119,7 @@ pub enum PulseGraphValueType {
         enum_type: SchemaEnumType,
         value: SchemaEnumValue,
     },
+    CommentBox {value: String},
 }
 
 impl Default for PulseGraphValueType {
@@ -285,6 +287,7 @@ pub enum PulseNodeTemplate {
     CallNode,
     ListenForEntityOutput,
     Timeline,
+    Comment,
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -365,6 +368,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
             PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::CommentBox => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -389,6 +393,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
             PulseDataType::Any => Cow::Borrowed("Any type"),
             PulseDataType::SchemaEnum => Cow::Borrowed("Schema enum"),
+            PulseDataType::CommentBox => Cow::Borrowed("Comment box"),
         }
     }
 
@@ -440,6 +445,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CallNode => "Call node",
             PulseNodeTemplate::ListenForEntityOutput => "Listen for output",
             PulseNodeTemplate::Timeline => "Timeline",
+            PulseNodeTemplate::Comment => "Comment",
         })
     }
 
@@ -476,6 +482,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ForLoop | PulseNodeTemplate::WhileLoop => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
+            PulseNodeTemplate::Comment => vec!["Editor"],
         }
     }
 
@@ -977,6 +984,21 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 );
                 output_action(graph, "outAction6");
             }
+            PulseNodeTemplate::Comment => {
+                // This is a special node that is used to display comments in the graph.
+                // It does not have any inputs or outputs, but it can be used to display
+                // text in the graph.
+                graph.add_input_param(
+                    node_id,
+                    "text".into(),
+                    PulseDataType::CommentBox,
+                    PulseGraphValueType::CommentBox {
+                        value: String::default(),
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+            }
         }
     }
 }
@@ -1022,6 +1044,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::CallNode,
             PulseNodeTemplate::ListenForEntityOutput,
             PulseNodeTemplate::Timeline,
+            PulseNodeTemplate::Comment,
         ]
     }
 }
@@ -1358,6 +1381,11 @@ impl WidgetValueTrait for PulseGraphValueType {
                         });
                 });
             }
+            PulseGraphValueType::CommentBox { value } => {
+                ui.horizontal(|ui| {
+                    ui.text_edit_multiline(value);
+                });
+            }
         }
         // This allows you to return your responses from the inline widgets.
         responses
@@ -1465,7 +1493,6 @@ impl NodeDataTrait for PulseNodeData {
                 Some(Color32::from_rgb(28, 67, 150))
             }
             PulseNodeTemplate::Operation => Some(Color32::from_rgb(29, 181, 184)),
-            PulseNodeTemplate::ConcatString => None,
             PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => {
                 Some(Color32::from_rgb(184, 64, 28))
             }
@@ -1481,6 +1508,8 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::SetNextThink
             | PulseNodeTemplate::InvokeLibraryBinding
             | PulseNodeTemplate::SoundEventStart => Some(Color32::from_rgb(41, 139, 196)),
+            PulseNodeTemplate::ConcatString
+            | PulseNodeTemplate::Comment => None,
         }
     }
 }

@@ -27,6 +27,7 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub ongoing_box_selection: Option<egui::Pos2>,
     /// The position of each node.
     pub node_positions: SecondaryMap<NodeId, egui::Pos2>,
+    pub node_sizes: SecondaryMap<NodeId, f32>,
     /// The node finder is used to create new nodes.
     pub node_finder: Option<NodeFinder<NodeTemplate>>,
     /// The panning of the graph viewport.
@@ -55,6 +56,7 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
             selected_nodes: Default::default(),
             ongoing_box_selection: Default::default(),
             node_positions: Default::default(),
+            node_sizes: Default::default(),
             node_finder: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),

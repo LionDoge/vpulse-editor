@@ -62,6 +62,10 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
         node: NodeId,
         drag_delta: Vec2,
     },
+    ResizeNode {
+        node: NodeId,
+        resize_delta: f32,
+    },
     User(UserResponse),
 }
 
@@ -261,7 +265,7 @@ where
                     .any(|selected| *selected == node_id),
                 pan: self.pan_zoom.pan + editor_rect.min.to_vec2(),
             }
-            .show(&self.pan_zoom, ui, user_state);
+            .show(&self.pan_zoom, ui, user_state, self.node_sizes[node_id]);
 
             // Actions executed later
             delayed_responses.extend(responses);
@@ -287,6 +291,7 @@ where
                             - self.pan_zoom.pan
                             - editor_rect.min.to_vec2(),
                     );
+                    self.node_sizes.insert(new_node, 0.0f32);
                     self.node_order.push(new_node);
 
                     should_close_node_finder = true;
@@ -449,6 +454,7 @@ where
                         node,
                     });
                     self.node_positions.remove(*node_id);
+                    self.node_sizes.remove(*node_id);
                     // Make sure to not leave references to old nodes hanging
                     self.selected_nodes.retain(|id| *id != *node_id);
                     self.node_order.retain(|id| *id != *node_id);
@@ -478,6 +484,17 @@ where
                             }
                         }
                     }
+                }
+                NodeResponse::ResizeNode { node, resize_delta } => {
+                    // Resize the node by the delta
+                    self.node_sizes[*node] += resize_delta;
+                    // Ensure the size does not go below zero
+                    self.node_sizes[*node] = self
+                        .node_sizes[*node]
+                        .max(0.0f32)
+                        .min(800.0f32);
+                    // Update the position to keep it centered
+                    //self.node_positions[node] -= Vec2::splat(*resize_delta / 2.0);
                 }
                 NodeResponse::User(_) => {
                     // These are handled by the user code.
@@ -609,21 +626,26 @@ where
         WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
     DataType: DataTypeTrait<UserState>,
 {
-    pub const MAX_NODE_SIZE: [f32; 2] = [200.0, 200.0];
-
+    pub const MAX_NODE_WIDTH: f32 = 800.0;
+    pub const BASE_NODE_SIZE: [f32; 2] = [200.0, 200.0];
+    
     pub fn show(
         self,
         pan_zoom: &PanZoom,
         ui: &mut Ui,
         user_state: &mut UserState,
+        width: f32,
     ) -> Vec<NodeResponse<UserResponse, NodeData>> {
-        let mut child_ui = ui.child_ui_with_id_source(
-            Rect::from_min_size(*self.position + self.pan, Self::MAX_NODE_SIZE.into()),
-            Layout::default(),
-            self.node_id,
-            None,
+        //let width = width.clamp(0.0, Self::MAX_NODE_WIDTH - Self::BASE_NODE_SIZE[0]);
+        let size = Vec2::new(Self::BASE_NODE_SIZE[0] + width, Self::BASE_NODE_SIZE[1]);
+        let mut child_ui = ui.new_child(
+            UiBuilder::new()
+                .id_salt(self.node_id)
+                .max_rect(
+                    Rect::from_min_size(*self.position + self.pan, size),
+                )
+                .layout(*ui.layout())
         );
-
         Self::show_graph_node(self, pan_zoom, &mut child_ui, user_state)
     }
 
@@ -684,6 +706,37 @@ where
             Id::new((self.node_id, "window")),
             Sense::click_and_drag(),
         );
+        // Add a small draggable interaction rect to the right of the node
+        let drag_box_width = 12.0 * pan_zoom.zoom;
+        let drag_box_rect = Rect::from_min_max(
+            pos2(interaction_rect.right() - drag_box_width, interaction_rect.top()),
+            pos2(interaction_rect.right(), interaction_rect.bottom()),
+        );
+        let drag_box_resp = ui.allocate_rect(drag_box_rect, Sense::click_and_drag());
+
+        // Optionally, draw the drag box for visual feedback
+        let drag_box_color = if drag_box_resp.dragged() {
+            Color32::from_gray(180)
+        } else if drag_box_resp.hovered() {
+            Color32::from_gray(140)
+        } else {
+            Color32::from_gray(100)
+        };
+        ui.painter().rect_filled(drag_box_rect, 3.0 * pan_zoom.zoom, drag_box_color);
+
+        // If the drag box is dragged, move the node
+        if drag_box_resp.dragged() {
+            let drag_delta = drag_box_resp.drag_delta();
+            if drag_delta.length_sq() > 0.0 {
+                // Convert screen space drag delta to zoom-adjusted space
+                let zoom_adjusted_delta = drag_delta.x / pan_zoom.zoom;
+                responses.push(NodeResponse::ResizeNode {
+                    node: self.node_id,
+                    resize_delta: zoom_adjusted_delta
+                });
+                responses.push(NodeResponse::RaiseNode(self.node_id));
+            }
+        }
 
         let mut title_height = 0.0;
 

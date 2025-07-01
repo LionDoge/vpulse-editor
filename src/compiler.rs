@@ -686,7 +686,7 @@ fn get_input_register_or_create_constant(
                 get_preffered_inputparamkind_from_type(&value_type),
                 InputParamKind::ConnectionOnly
             ) {
-                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {}, input: {}", value_type, input_name);
+                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {input_name}");
                 return Ok(None);
             }
             let new_constant_id = graph_def.get_current_constant_id() + 1;
@@ -774,7 +774,7 @@ fn get_input_register_or_create_constant(
                     return Ok(None);
                 }
                 _ => {
-                    println!("Warning: Unsupported constant value type for input - None will be returned {}: {}", input_name, value_type);
+                    println!("Warning: Unsupported constant value type for input - None will be returned {input_name}: {value_type}");
                     return Ok(None);
                     // if we don't know the type, we can't create a constant for it.
                 }
@@ -1136,12 +1136,12 @@ fn traverse_nodes_and_populate<'a>(
                 get_constant_graph_input_value!(graph, current_node, "operation", try_to_string);
             let operation_suffix = operation_typ.get_operation_suffix_name();
             let operation_instr_name: String = match operation_input_param.as_str() {
-                "+" => format!("ADD{}", operation_suffix),
-                "-" => format!("SUB{}", operation_suffix),
-                "*" => format!("MUL{}", operation_suffix),
-                "/" => format!("DIV{}", operation_suffix),
-                "%" => format!("MOD{}", operation_suffix),
-                _ => format!("ADD{}", operation_suffix),
+                "+" => format!("ADD{operation_suffix}"),
+                "-" => format!("SUB{operation_suffix}"),
+                "*" => format!("MUL{operation_suffix}"),
+                "/" => format!("DIV{operation_suffix}"),
+                "%" => format!("MOD{operation_suffix}"),
+                _ => format!("ADD{operation_suffix}"),
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let register_output = chunk.add_register(
@@ -1967,7 +1967,7 @@ fn traverse_nodes_and_populate<'a>(
                                     let chunk =
                                         graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                                     let reg_reinterpreted = chunk.add_register(
-                                        format!("PVAL_EHANDLE:{}", entclass),
+                                        format!("PVAL_EHANDLE:{entclass}"),
                                         chunk.get_last_instruction_id() + 1,
                                     );
                                     let instruction = instruction_templates::reinterpret_instance(
@@ -2444,7 +2444,7 @@ fn traverse_nodes_and_populate<'a>(
             );
             // traverse all connected actions, they will be in the same chunk separated by returns, as it seems to be the way that it's done officially.
             for i in 1..7 {
-                let delay_input = current_node.get_input(format!("timeFromPrevious{}", i).as_str());
+                let delay_input = current_node.get_input(format!("timeFromPrevious{i}").as_str());
                 let delay_param = graph
                     .get_input(delay_input.unwrap())
                     .value()
@@ -2458,7 +2458,7 @@ fn traverse_nodes_and_populate<'a>(
                     graph_def,
                     graph_state,
                     target_chunk,
-                    format!("outAction{}", i).as_str()
+                    format!("outAction{i}").as_str()
                 ) {
                     graph_def
                         .chunks

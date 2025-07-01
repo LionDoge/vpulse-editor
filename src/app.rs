@@ -1132,17 +1132,17 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::Action => {
-                ui.label(format!("Action {}", param_name));
+                ui.label(format!("Action {param_name}"));
             }
             PulseGraphValueType::EHandle => {
-                ui.label(format!("EHandle {}", param_name));
+                ui.label(format!("EHandle {param_name}"));
             }
             PulseGraphValueType::SndEventHandle => {
-                ui.label(format!("SNDEVT {}", param_name));
+                ui.label(format!("SNDEVT {param_name}"));
             }
             PulseGraphValueType::SoundEventName { value } => {
                 ui.horizontal(|ui| {
-                    ui.label(format!("SNDEVT {}", param_name));
+                    ui.label(format!("SNDEVT {param_name}"));
                     ui.text_edit_singleline(value);
                 });
             }
@@ -1366,7 +1366,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 });
             }
             PulseGraphValueType::Any => {
-                ui.label(format!("Any {}", param_name));
+                ui.label(format!("Any {param_name}"));
             }
             PulseGraphValueType::SchemaEnum { enum_type, value } => {
                 ui.horizontal(|ui| {
@@ -1461,7 +1461,7 @@ impl NodeDataTrait for PulseNodeData {
                 .unwrap()
                 .round() as i32;
             if ui.button("Add parameter").clicked() {
-                let param_name = format!("{}", param_value);
+                let param_name = format!("{param_value}");
                 responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
                     node_id,
                     param_name.clone(),
@@ -2075,7 +2075,7 @@ impl PulseGraphEditor {
             .set_level(rfd::MessageLevel::Error)
             .set_title("Failed to load config file")
             .set_buttons(rfd::MessageButtons::Ok)
-            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {}", e))
+            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {e}"))
             .show();
         };
         grph.editor_config = cfg_res.unwrap_or_default();
@@ -2281,7 +2281,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Param type");
-                        ComboBox::from_id_salt(format!("output{}", idx))
+                        ComboBox::from_id_salt(format!("output{idx}"))
                             .selected_text(outputdef.typ.to_string())
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(
@@ -2377,7 +2377,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                     ui.horizontal(|ui| {
                         ui.label("Param type");
-                        ComboBox::from_id_salt(format!("var{}", idx))
+                        ComboBox::from_id_salt(format!("var{idx}"))
                             .selected_text(var.typ_and_default_value.to_string())
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(

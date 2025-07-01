@@ -258,7 +258,7 @@ impl KV3Serialize for RegisterMap {
                 }}",
                 self.inparams
                     .iter()
-                    .map(|(name, num)| format!("{} = {}", name, num))
+                    .map(|(name, num)| format!("{name} = {num}"))
                     .collect::<Vec<String>>()
                     .join("\n")
             )
@@ -272,7 +272,7 @@ impl KV3Serialize for RegisterMap {
                 }}",
                 self.outparams
                     .iter()
-                    .map(|(name, num)| format!("{} = {}", name, num))
+                    .map(|(name, num)| format!("{name} = {num}"))
                     .collect::<Vec<String>>()
                     .join("\n")
             )
@@ -552,8 +552,8 @@ impl KV3Serialize for PulseConstant {
             },
             match self {
                 PulseConstant::String(value)
-                | PulseConstant::SoundEventName(value) => format!("\"{}\"", value),
-                PulseConstant::Float(value) => format!("{:.8}", value),
+                | PulseConstant::SoundEventName(value) => format!("\"{value}\""),
+                PulseConstant::Float(value) => format!("{value:.8}"),
                 PulseConstant::Integer(value) => value.to_string(),
                 PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),

@@ -15,10 +15,10 @@ impl fmt::Display for PulseTypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PulseTypeError::StringToEnumConversionMissing(s) => {
-                write!(f, "Could not convert string to enum: {}", s)
+                write!(f, "Could not convert string to enum: {s}")
             }
             PulseTypeError::StringToEnumSubtypeParseError(s) => {
-                write!(f, "Could not parse subtype from string: {}", s)
+                write!(f, "Could not parse subtype from string: {s}")
             }
         }
     }
@@ -82,7 +82,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
             PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => {
                 if let Some(int_type) = int_type {
-                    write!(f, "PVAL_TYPESAFE_INT:{}", int_type)
+                    write!(f, "PVAL_TYPESAFE_INT:{int_type}")
                 } else {
                     write!(f, "PVAL_TYPESAFE_INT")
                 }
@@ -93,7 +93,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
             PulseValueType::PVAL_EHANDLE(ent_type) => {
                 if let Some(ent_type) = ent_type {
-                    write!(f, "PVAL_EHANDLE:{}", ent_type)
+                    write!(f, "PVAL_EHANDLE:{ent_type}")
                 } else {
                     write!(f, "PVAL_EHANDLE")
                 }

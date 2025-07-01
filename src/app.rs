@@ -1604,10 +1604,22 @@ impl PulseGraphEditor {
         }
         did_pick
     }
+    // loads MyGraphState, and applies some corrections if some data is missing for files saved in older versions
+    fn load_state_with_backwards_compat(&mut self, new_state: MyEditorState) {
+        self.state = new_state;
+        // v0.1.2 introduces a SecondaryMap node_sizes in GraphEditorState
+        // make sure that it is populated with every existing node.
+        let node_sizes = &mut self.state.node_sizes;
+        if node_sizes.is_empty() {
+            for node in self.state.graph.nodes.keys() {
+                node_sizes.insert(node, 0.0f32);
+            }
+        }
+    }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(&filepath)?;
         let loaded_graph: PulseGraphEditor = ron::from_str(&contents)?;
-        self.state = loaded_graph.state;
+        self.load_state_with_backwards_compat(loaded_graph.state);
         self.user_state.load_from(loaded_graph.user_state);
         // we don't serialize file path since the file could be moved between save/open.
         self.user_state.save_file_path = Some(filepath);

@@ -265,7 +265,7 @@ where
                     .any(|selected| *selected == node_id),
                 pan: self.pan_zoom.pan + editor_rect.min.to_vec2(),
             }
-            .show(&self.pan_zoom, ui, user_state, self.node_sizes[node_id]);
+            .show(&self.pan_zoom, ui, user_state, *self.node_sizes.get(node_id).unwrap_or(&0.0));
 
             // Actions executed later
             delayed_responses.extend(responses);

@@ -27,6 +27,8 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub ongoing_box_selection: Option<egui::Pos2>,
     /// The position of each node.
     pub node_positions: SecondaryMap<NodeId, egui::Pos2>,
+    // Additional width of each node from the base size.
+    #[cfg_attr(feature = "persistence", serde(default))]
     pub node_sizes: SecondaryMap<NodeId, f32>,
     /// The node finder is used to create new nodes.
     pub node_finder: Option<NodeFinder<NodeTemplate>>,

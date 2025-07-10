@@ -12,7 +12,6 @@ use anyhow::anyhow;
 use egui_node_graph2::*;
 use rand::Rng;
 use std::borrow::Cow;
-use std::ffi::OsStr;
 use std::{path::PathBuf, path};
 use std::{fs, process::Command,};
 use rand::{distributions::Alphanumeric};
@@ -645,8 +644,8 @@ fn run_asset_builder(config: &EditorConfig, path_src: &path::Path, path_editor_f
     })?;
     // get rid of file name for the output path
     let mut out_file = get_output_path(path_editor_file.parent().unwrap())?.join(file_name);
-    println!("Determined full output path: {}", out_file.display());
     out_file.set_extension("vpulse_c");
+    println!("Determined full output path: {}", out_file.display());
     let mut process = Command::new(config.python_interpreter.as_str())
         .arg(assetbuilder_path)
         .arg("-p")

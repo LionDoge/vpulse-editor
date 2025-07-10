@@ -10,9 +10,12 @@ use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
 use anyhow::anyhow;
 use egui_node_graph2::*;
+use rand::Rng;
 use std::borrow::Cow;
-use std::path::PathBuf;
-use std::{fs, process::Command};
+use std::ffi::OsStr;
+use std::{path::PathBuf, path};
+use std::{fs, process::Command,};
+use rand::{distributions::Alphanumeric};
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -556,23 +559,70 @@ pub fn compile_graph(
     }
     let mut data = String::from(PULSE_KV3_HEADER);
     data.push_str(graph_def.serialize().as_str());
-
+    
     let _ = fs::create_dir_all(file_dir).map_err(|e| {
         anyhow!(
             "Graph compile failed: Failed to create output directory: {}",
             e
         )
     });
-    // change extension to .vpulse for saving
-    let mut file_path = file_dir.clone();
-    file_path.set_extension("vpulse");
-    fs::write(&file_path, data)
+    let file_name = file_dir.file_name().ok_or_else(|| {
+        anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
+    })?;
+    // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
+    let temp_dir_file = std::env::temp_dir().join(
+        format!("{}_{}.vpulse", file_name.display(), 
+        rand::thread_rng()
+            .sample_iter(&Alphanumeric)
+            .take(6)
+            .map(char::from)
+            .collect::<String>()
+    ));
+    fs::write(&temp_dir_file, data)
         .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?;
-    run_asset_builder(config, &file_path)
+    run_asset_builder(config, &temp_dir_file, file_dir)
         .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))
 }
 
-fn run_asset_builder(config: &EditorConfig, path_src: &PathBuf) -> anyhow::Result<()> {
+fn get_output_path(original_path: &path::Path) -> anyhow::Result<PathBuf> {
+    let mut out_path = original_path;
+    let mut addon_dir: Option<path::Component<'_>> = None;
+    let mut components = out_path.components();
+    // this will be used to reconstruct the inner file directory after the game directory is determined (if it will be).
+    let mut popped_components = vec![];
+    components.next(); // skip root directory
+    for curr_dir in components.rev() {
+        if curr_dir.as_os_str() == "content" {
+            // found the content directory, see if we have corresponding addon directory in the game path.
+            let new_path = out_path.parent().unwrap();
+            if addon_dir.is_some() {
+                let addon_game_path = new_path.join("game");
+                if fs::exists(&addon_game_path)? {
+                    // Reconstruct the path (after game/addon/...)
+                    let mut full_path = addon_game_path;
+                    let reconstructed: PathBuf = popped_components.iter().rev().collect();
+                    full_path.push(reconstructed);
+                    fs::create_dir_all(&full_path)?;
+                    return Ok(full_path);
+                }
+            }
+        }
+        // next iteration it will be the previous directory from back.
+        addon_dir = Some(curr_dir);
+        // should be ok, since the root path is removed, thus the parent result should never go beyond that.
+        popped_components.push(out_path.iter().next_back().unwrap());
+        // If parent() returns None, then we can't go further
+        match out_path.parent() {
+            Some(parent) => out_path = parent,
+            None => break,
+        }
+    }
+    // we reached root directory without finding 'content', or a valid existing addon directory.
+    Ok(original_path.into())
+}
+
+fn run_asset_builder(config: &EditorConfig, path_src: &path::Path, path_editor_file: &path::Path) -> anyhow::Result<()> {
+    println!("Running asset assembler for file: {}", path_src.display());
     let assetbuilder_path = config.assetassembler_path.as_path();
     let red2_path = config.red2_template_path.as_path();
     if !assetbuilder_path.exists() || !assetbuilder_path.is_file() {
@@ -587,10 +637,15 @@ fn run_asset_builder(config: &EditorConfig, path_src: &PathBuf) -> anyhow::Resul
             red2_path.display()
         ));
     }
-    if !path_src.exists() || !path_src.is_file() {
+    if !path_editor_file.exists() || !path_editor_file.is_file() {
         return Err(anyhow::anyhow!("File needs to be saved before compilation"));
     }
-    let mut out_file = path_src.clone();
+    let file_name = path_editor_file.file_name().ok_or_else(|| {
+        anyhow::anyhow!("Can't get file name from the path: {}", path_src.display())
+    })?;
+    // get rid of file name for the output path
+    let mut out_file = get_output_path(path_editor_file.parent().unwrap())?.join(file_name);
+    println!("Determined full output path: {}", out_file.display());
     out_file.set_extension("vpulse_c");
     let mut process = Command::new(config.python_interpreter.as_str())
         .arg(assetbuilder_path)
@@ -600,7 +655,7 @@ fn run_asset_builder(config: &EditorConfig, path_src: &PathBuf) -> anyhow::Resul
         .arg(red2_path)
         .arg(path_src)
         .arg("-o")
-        .arg(out_file)
+        .arg(out_file.as_os_str())
         .spawn()?;
     // it's fine to freeze the UI here, because recompiling while loading could lead to issues.
     // this process should usually be fast enough to not be very noticable.

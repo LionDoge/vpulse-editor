@@ -1386,9 +1386,9 @@ impl WidgetValueTrait for PulseGraphValueType {
                 // same background as node, for less busy look.
                 ui.style_mut().visuals.extreme_bg_color = Color32::from_black_alpha(0);
                 ui.add_sized(
-                    [available_width, 80.0], // width, height
+                    [available_width, 20.0], // width, height
                     egui::TextEdit::multiline(value)
-                        .desired_rows(4)
+                        .desired_rows(2)
                         .desired_width(available_width)
                 );
             }

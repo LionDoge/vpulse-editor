@@ -580,7 +580,9 @@ pub fn compile_graph(
     fs::write(&temp_dir_file, data)
         .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?;
     run_asset_builder(config, &temp_dir_file, file_dir)
-        .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))
+        .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))?;
+    let _ = fs::remove_file(&temp_dir_file); // ok to ignore
+    Ok(())
 }
 
 fn get_output_path(original_path: &path::Path) -> anyhow::Result<PathBuf> {

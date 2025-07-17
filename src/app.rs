@@ -1199,7 +1199,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ComboBox::from_id_salt((_node_id, param_name))
-                        .selected_text(value.to_string())
+                        .selected_text(value.get_ui_name())
                         .show_ui(ui, |ui| {
                             if ui
                                 .selectable_value(value, PulseValueType::PVAL_INT(None), "Integer")

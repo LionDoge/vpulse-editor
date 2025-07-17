@@ -811,7 +811,7 @@ fn get_input_register_or_create_constant(
                     input_value[2] *= 255.0;
                     graph_def.add_constant(PulseConstant::Color_RGB(input_value));
                 }
-                PulseValueType::PVAL_BOOL => {
+                PulseValueType::PVAL_BOOL(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
                     let input_value = input_param.value().clone().try_to_bool()?;

@@ -1049,12 +1049,13 @@ impl NodeTemplateIter for AllMyNodeTemplates {
     }
 }
 
-fn get_supported_types() -> Vec<PulseValueType> {
+// this includes default values inside enums if applicable.
+fn get_supported_ui_types() -> Vec<PulseValueType> {
     vec![
         PulseValueType::PVAL_INT(None),
         PulseValueType::PVAL_FLOAT(None),
         PulseValueType::PVAL_STRING(None),
-        PulseValueType::PVAL_BOOL,
+        PulseValueType::PVAL_BOOL(Some(false)),
         PulseValueType::PVAL_VEC3(None),
         PulseValueType::PVAL_COLOR_RGB(None),
         PulseValueType::PVAL_EHANDLE(None),
@@ -1259,13 +1260,13 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 ));
                             };
                             if ui
-                                .selectable_value(value, PulseValueType::PVAL_BOOL, "Boolean")
+                                .selectable_value(value, PulseValueType::PVAL_BOOL(None), "Boolean")
                                 .clicked()
                             {
                                 responses.push(PulseGraphResponse::ChangeParamType(
                                     _node_id,
                                     param_name.to_string(),
-                                    PulseValueType::PVAL_BOOL,
+                                    PulseValueType::PVAL_BOOL(None),
                                 ));
                             };
                         });
@@ -1612,7 +1613,7 @@ impl PulseGraphEditor {
         let node_sizes = &mut self.state.node_sizes;
         if node_sizes.is_empty() {
             for node in self.state.graph.nodes.keys() {
-                node_sizes.insert(node, 0.0f32);
+                node_sizes.insert(node, egui::vec2(200.0, 200.0));
             }
         }
     }
@@ -2149,6 +2150,18 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.data_type = PulseDataType::SndEventHandle;
             PulseValueType::PVAL_SNDEVT_GUID(None)
         }
+        PulseValueType::PVAL_BOOL(_) => {
+            var.data_type = PulseDataType::Bool;
+            var.typ_and_default_value.to_owned()
+        }
+        PulseValueType::PVAL_COLOR_RGB(_) => {
+            var.data_type = PulseDataType::Color;
+            var.typ_and_default_value.to_owned()
+        }
+        PulseValueType::DOMAIN_ENTITY_NAME => {
+            var.data_type = PulseDataType::EntityName;
+            var.typ_and_default_value.to_owned()
+        }
         _ => {
             var.data_type = PulseDataType::Scalar;
             var.typ_and_default_value.to_owned()
@@ -2282,38 +2295,15 @@ impl eframe::App for PulseGraphEditor {
                     ui.horizontal(|ui| {
                         ui.label("Param type");
                         ComboBox::from_id_salt(format!("output{idx}"))
-                            .selected_text(outputdef.typ.to_string())
+                            .selected_text(outputdef.typ.get_ui_name())
                             .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_INT(None),
-                                    "Integer",
-                                );
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_STRING(None),
-                                    "String",
-                                );
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_FLOAT(None),
-                                    "Float",
-                                );
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_VEC3(None),
-                                    "Vec3",
-                                );
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_EHANDLE(None),
-                                    "Entity Handle",
-                                );
-                                ui.selectable_value(
-                                    &mut outputdef.typ,
-                                    PulseValueType::PVAL_SNDEVT_GUID(None),
-                                    "Sound Event",
-                                );
+                                for typ in get_supported_ui_types() {
+                                    let name = typ.get_ui_name();
+                                    ui.selectable_value(&mut outputdef.typ,
+                                         typ,
+                                         name
+                                    );
+                                }
                             });
                     });
                     if outputdef.typ != outputdef.typ_old {
@@ -2350,7 +2340,6 @@ impl eframe::App for PulseGraphEditor {
                         name: String::default(),
                         typ_and_default_value: PulseValueType::PVAL_INT(None),
                         data_type: PulseDataType::Scalar,
-                        old_typ: PulseValueType::PVAL_INT(None),
                         default_value_buffer: String::default(),
                     });
                 }
@@ -2370,55 +2359,37 @@ impl eframe::App for PulseGraphEditor {
                         } else {
                             ui.label("Default value");
                         }
-                        let response = ui.text_edit_singleline(&mut var.default_value_buffer);
-                        if response.changed() {
-                            update_variable_data(var);
+
+                        match &mut var.typ_and_default_value {
+                            PulseValueType::PVAL_BOOL(value) => {
+                                ui.checkbox(
+                                    value.get_or_insert(false), ""
+                                );
+                            }
+                            _ => {
+                                if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
+                                    update_variable_data(var);
+                                }
+                            }
                         }
+                            
                     });
                     ui.horizontal(|ui| {
                         ui.label("Param type");
                         ComboBox::from_id_salt(format!("var{idx}"))
-                            .selected_text(var.typ_and_default_value.to_string())
+                            .selected_text(var.typ_and_default_value.get_ui_name())
                             .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_INT(None),
-                                    "Integer",
-                                );
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_STRING(None),
-                                    "String",
-                                );
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_FLOAT(None),
-                                    "Float",
-                                );
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_VEC3(None),
-                                    "Vec3",
-                                );
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_EHANDLE(None),
-                                    "EHandle",
-                                );
-                                ui.selectable_value(
-                                    &mut var.typ_and_default_value,
-                                    PulseValueType::PVAL_SNDEVT_GUID(None),
-                                    "Sound Event",
-                                );
+                                for typ in get_supported_ui_types() {
+                                    let name = typ.get_ui_name();
+                                    if ui.selectable_value(&mut var.typ_and_default_value,
+                                         typ,
+                                         name
+                                    ).clicked() {
+                                        // if the type is changed, update the variable data.
+                                        update_variable_data(var);
+                                    }
+                                }
                             });
-                        // add the default value.
-                        // compare only the variant of the enums, if they differ assign default value and data type.
-                        if std::mem::discriminant(&var.typ_and_default_value)
-                            != std::mem::discriminant(&var.old_typ)
-                        {
-                            update_variable_data(var);
-                            var.old_typ = var.typ_and_default_value.clone();
-                        }
                     });
                 }
             });

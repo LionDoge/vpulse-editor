@@ -69,7 +69,7 @@ pub enum PulseValueType {
     PVAL_COLOR_RGB(Option<Vec3>),
     PVAL_SNDEVT_GUID(Option<String>),
     PVAL_SNDEVT_NAME(Option<String>),
-    PVAL_BOOL,
+    PVAL_BOOL(Option<bool>),
     DOMAIN_ENTITY_NAME,
     PVAL_ACT, // only used in the editor, not in the engine
     PVAL_ANY,
@@ -100,7 +100,7 @@ impl fmt::Display for PulseValueType {
             }
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
-            PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
+            PulseValueType::PVAL_BOOL(_) => write!(f, "PVAL_BOOL"),
             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
             PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
@@ -130,10 +130,10 @@ impl PulseValueType {
             PulseValueType::PVAL_STRING(_) => "String",
             PulseValueType::PVAL_INVALID => "Invalid",
             PulseValueType::DOMAIN_ENTITY_NAME => "Entity Name",
-            PulseValueType::PVAL_EHANDLE(_) => "EHandle",
+            PulseValueType::PVAL_EHANDLE(_) => "Entity",
             PulseValueType::PVAL_VEC3(_) => "Vector 3D",
             PulseValueType::PVAL_COLOR_RGB(_) => "Color RGB",
-            PulseValueType::PVAL_BOOL => "Boolean",
+            PulseValueType::PVAL_BOOL(_) => "Boolean",
             PulseValueType::PVAL_SNDEVT_GUID(_) => "Sound Event",
             PulseValueType::PVAL_SNDEVT_NAME(_) => "Sound Event Name",
             PulseValueType::PVAL_ACT => "Action",
@@ -147,7 +147,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
     match s {
         "PVAL_INT" | "PVAL_TYPESAFE_INT" => Ok(PulseValueType::PVAL_INT(None)),
         "PVAL_FLOAT" => Ok(PulseValueType::PVAL_FLOAT(None)),
-        "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL),
+        "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL(None)),
         "PVAL_STRING" => Ok(PulseValueType::PVAL_STRING(None)),
         "PVAL_EHANDLE" => Ok(PulseValueType::PVAL_EHANDLE(None)),
         "PVAL_VEC3" => Ok(PulseValueType::PVAL_VEC3(None)),
@@ -227,7 +227,7 @@ pub fn pulse_value_type_to_node_types(
                 value: String::default(),
             },
         ),
-        PulseValueType::PVAL_BOOL => (
+        PulseValueType::PVAL_BOOL(_) => (
             PulseDataType::Bool,
             PulseGraphValueType::Bool { value: false },
         ),
@@ -287,7 +287,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_ACT
         | PulseValueType::PVAL_ANY => InputParamKind::ConnectionOnly,
 
-        PulseValueType::PVAL_BOOL
+        PulseValueType::PVAL_BOOL(_)
         | PulseValueType::PVAL_SCHEMA_ENUM(_) => InputParamKind::ConstantOnly,
     }
 }

@@ -290,7 +290,6 @@ pub struct PulseVariable {
     pub typ_and_default_value: PulseValueType,
     // ui related
     pub data_type: PulseDataType,
-    pub old_typ: PulseValueType,
     pub default_value_buffer: String,
 }
 

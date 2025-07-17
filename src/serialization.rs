@@ -610,7 +610,7 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle
             PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
             PulseValueType::PVAL_INVALID => String::from("null"),
-            PulseValueType::PVAL_BOOL => String::from("false"),
+            PulseValueType::PVAL_BOOL(value) => value.unwrap_or_default().to_string(),
             PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
             PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
             PulseValueType::PVAL_ACT => String::from("null"),

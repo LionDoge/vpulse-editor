@@ -29,7 +29,7 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub node_positions: SecondaryMap<NodeId, egui::Pos2>,
     // Additional width of each node from the base size.
     #[cfg_attr(feature = "persistence", serde(default))]
-    pub node_sizes: SecondaryMap<NodeId, f32>,
+    pub node_sizes: SecondaryMap<NodeId, Vec2>,
     /// The node finder is used to create new nodes.
     pub node_finder: Option<NodeFinder<NodeTemplate>>,
     /// The panning of the graph viewport.

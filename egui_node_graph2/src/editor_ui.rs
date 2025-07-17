@@ -25,6 +25,8 @@ pub type ConnLocations = std::collections::HashMap<InputId, Vec<Pos2>>;
 pub type NodeRects = std::collections::HashMap<NodeId, Rect>;
 
 const DISTANCE_TO_CONNECT: f32 = 10.0;
+const NODE_INITIAL_SIZE: Vec2 = Vec2::new(200.0, 200.0);
+const NODE_MAX_SIZE: Vec2 = Vec2::new(800.0, 800.0);
 
 /// Nodes communicate certain events to the parent graph when drawn. There is
 /// one special `User` variant which can be used by users as the return value
@@ -64,7 +66,7 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
     },
     ResizeNode {
         node: NodeId,
-        resize_delta: f32,
+        resize_delta: Vec2,
     },
     User(UserResponse),
 }
@@ -265,7 +267,7 @@ where
                     .any(|selected| *selected == node_id),
                 pan: self.pan_zoom.pan + editor_rect.min.to_vec2(),
             }
-            .show(&self.pan_zoom, ui, user_state, *self.node_sizes.get(node_id).unwrap_or(&0.0));
+            .show(&self.pan_zoom, ui, user_state, *self.node_sizes.get(node_id).unwrap_or(&NODE_INITIAL_SIZE));
 
             // Actions executed later
             delayed_responses.extend(responses);
@@ -291,7 +293,7 @@ where
                             - self.pan_zoom.pan
                             - editor_rect.min.to_vec2(),
                     );
-                    self.node_sizes.insert(new_node, 0.0f32);
+                    self.node_sizes.insert(new_node, NODE_INITIAL_SIZE);
                     self.node_order.push(new_node);
 
                     should_close_node_finder = true;
@@ -487,11 +489,10 @@ where
                 }
                 NodeResponse::ResizeNode { node, resize_delta } => {
                     // Resize the node by the delta
-                    self.node_sizes[*node] += resize_delta;
-                    self.node_sizes[*node] = self
-                        .node_sizes[*node]
-                        .max(0.0f32)
-                        .min(400.0f32);
+                    self.node_sizes[*node] = (self.node_sizes[*node] + *resize_delta).clamp(
+                        NODE_INITIAL_SIZE,
+                        NODE_MAX_SIZE,
+                    );
                 }
                 NodeResponse::User(_) => {
                     // These are handled by the user code.
@@ -623,16 +624,13 @@ where
         WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
     DataType: DataTypeTrait<UserState>,
 {
-    pub const BASE_NODE_SIZE: [f32; 2] = [200.0, 200.0];
-    
     pub fn show(
         self,
         pan_zoom: &PanZoom,
         ui: &mut Ui,
         user_state: &mut UserState,
-        width: f32,
+        size: Vec2,
     ) -> Vec<NodeResponse<UserResponse, NodeData>> {
-        let size = Vec2::new(Self::BASE_NODE_SIZE[0] + width, Self::BASE_NODE_SIZE[1]);
         let mut child_ui = ui.new_child(
             UiBuilder::new()
                 .id_salt(self.node_id)
@@ -848,7 +846,7 @@ where
                 let zoom_adjusted_delta = drag_delta.x / pan_zoom.zoom;
                 responses.push(NodeResponse::ResizeNode {
                     node: self.node_id,
-                    resize_delta: zoom_adjusted_delta
+                    resize_delta: Vec2::new(zoom_adjusted_delta, 0.0),
                 });
             }
         }

@@ -55,6 +55,12 @@ impl Default for Vec3 {
         }
     }
 }
+
+impl Vec3 {
+    pub fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
+    }
+}
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
 #[allow(non_camel_case_types)]
 pub enum PulseValueType {

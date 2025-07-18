@@ -2366,6 +2366,22 @@ impl eframe::App for PulseGraphEditor {
                                     value.get_or_insert(false), ""
                                 );
                             }
+                            PulseValueType::PVAL_VEC3(value) => {
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
+                            }
+                            PulseValueType::PVAL_COLOR_RGB(value) => {
+                                let color = value.get_or_insert_default();
+                                // there's probably a better way, but our type system is a mess right now, I can't be bothered.
+                                let mut arr = [color.x / 255.0, color.y / 255.0, color.z / 255.0];
+                                if ui.color_edit_button_rgb(&mut arr).changed() {
+                                    color.x = arr[0] * 255.0;
+                                    color.y = arr[1] * 255.0;
+                                    color.z = arr[2] * 255.0;
+                                }
+                            }
+                            PulseValueType::DOMAIN_ENTITY_NAME | PulseValueType::PVAL_SNDEVT_NAME(_) => {}
                             _ => {
                                 if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
                                     update_variable_data(var);

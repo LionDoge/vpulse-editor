@@ -2135,11 +2135,7 @@ pub fn update_variable_data(var: &mut PulseVariable) {
         }
         PulseValueType::PVAL_VEC3(_) => {
             var.data_type = PulseDataType::Vec3;
-            PulseValueType::PVAL_VEC3(Some(Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            }))
+            var.typ_and_default_value.to_owned()
         }
         // horrible stuff, this will likely be refactored.
         PulseValueType::PVAL_EHANDLE(_) => {

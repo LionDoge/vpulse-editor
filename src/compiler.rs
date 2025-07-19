@@ -1,6 +1,7 @@
 mod instruction_templates;
 pub mod serialization;
 
+use std::ffi::OsStr;
 use std::{path::PathBuf, path, fs, process::Command, borrow::Cow};
 use anyhow::anyhow;
 use egui_node_graph2::*;
@@ -528,6 +529,7 @@ fn traverse_entry_cell(
     Ok(())
 }
 
+#[allow(unused_variables)]
 pub fn compile_graph(
     graph: &PulseGraph,
     graph_state: &PulseGraphState,
@@ -566,24 +568,35 @@ pub fn compile_graph(
     let file_name = file_dir.file_name().ok_or_else(|| {
         anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
     })?;
-    // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
-    use rand::{Rng, distributions::Alphanumeric};
-    let temp_dir_file = std::env::temp_dir().join(
-        format!("{}_{}.vpulse", file_name.display(), 
-        rand::thread_rng()
-            .sample_iter(&Alphanumeric)
-            .take(6)
-            .map(char::from)
-            .collect::<String>()
-    ));
-    fs::write(&temp_dir_file, data)
-        .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?;
-    run_asset_builder(config, &temp_dir_file, file_dir)
-        .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))?;
-    let _ = fs::remove_file(&temp_dir_file); // ok to ignore
+
+    #[cfg(not(feature = "nongame_asset_build"))] {
+        let mut file_path = file_dir.clone();
+        file_path.set_extension("vpulse");
+        fs::write(file_path, data)
+            .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?
+    }
+
+    #[cfg(feature = "nongame_asset_build")] {
+        // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
+        use rand::{Rng, distributions::Alphanumeric};
+        let temp_dir_file = std::env::temp_dir().join(
+            format!("{}_{}.vpulse", file_name.display(), 
+            rand::thread_rng()
+                .sample_iter(&Alphanumeric)
+                .take(6)
+                .map(char::from)
+                .collect::<String>()
+        ));
+        fs::write(&temp_dir_file, data)
+            .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?;
+        run_asset_builder(config, &temp_dir_file, file_dir)
+            .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))?;
+        let _ = fs::remove_file(&temp_dir_file); // ok to ignore
+    }
     Ok(())
 }
 
+#[cfg(feature = "nongame_asset_build")]
 fn get_output_path(original_path: &path::Path) -> anyhow::Result<PathBuf> {
     let mut out_path = original_path;
     let mut addon_dir: Option<path::Component<'_>> = None;
@@ -621,6 +634,7 @@ fn get_output_path(original_path: &path::Path) -> anyhow::Result<PathBuf> {
     Ok(original_path.into())
 }
 
+#[cfg(feature = "nongame_asset_build")]
 fn run_asset_builder(config: &EditorConfig, path_src: &path::Path, path_editor_file: &path::Path) -> anyhow::Result<()> {
     println!("Running asset assembler for file: {}", path_src.display());
     let assetbuilder_path = config.assetassembler_path.as_path();

@@ -27,4 +27,5 @@ smol = "2.0.2"
 [features]
 default = ["persistence"]
 persistence = ["egui_node_graph2/persistence", "eframe/persistence"]
+nongame_asset_build = []
 

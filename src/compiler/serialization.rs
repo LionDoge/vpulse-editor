@@ -1,15 +1,14 @@
 #![allow(non_camel_case_types)]
 #![allow(nonstandard_style)]
 
-use crate::pulsetypes::PulseCellTrait;
+use std::borrow::Cow;
+use egui_node_graph2::{InputId, NodeId, OutputId};
+use indoc::formatdoc;
+use slotmap::SecondaryMap;
 use crate::{
     pulsetypes::*,
     typing::{PulseValueType, Vec3},
 };
-use egui_node_graph2::{InputId, NodeId, OutputId};
-use indoc::formatdoc;
-use slotmap::SecondaryMap;
-use std::borrow::Cow;
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }

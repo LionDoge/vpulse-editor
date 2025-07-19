@@ -1,4 +1,4 @@
-use crate::serialization::*;
+use super::serialization::*;
 
 pub fn get_domain_value(register_id: i32, domain_val_id: i32) -> Instruction {
     Instruction {

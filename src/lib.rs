@@ -6,9 +6,7 @@
 mod app;
 mod bindings;
 mod compiler;
-mod instruction_templates;
 mod pulsetypes;
-mod serialization;
 mod typing;
 pub use app::PulseGraphEditor;
 // ----------------------------------------------------------------------------

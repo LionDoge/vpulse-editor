@@ -1,11 +1,9 @@
 #![allow(nonstandard_style)]
-use crate::app::types::PulseDataType;
-use crate::serialization::{PulseRuntimeArgument, RegisterMap};
-use crate::typing::PulseValueType;
+use std::{fmt::Debug, borrow::Cow, str::FromStr};
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::fmt::Debug;
-use std::str::FromStr;
+use crate::app::types::PulseDataType;
+use crate::compiler::serialization::{KV3Serialize, PulseRuntimeArgument, RegisterMap};
+use crate::typing::PulseValueType;
 
 // Pulse Cells
 #[allow(unused)]
@@ -21,9 +19,9 @@ pub enum CellType {
 pub trait PulseCell {
     fn get_cell_type(&self) -> CellType;
 }
-pub trait PulseCellTrait: PulseCell + crate::serialization::KV3Serialize {}
+pub trait PulseCellTrait: PulseCell + KV3Serialize {}
 // blanket impl to make sure all cells implement the trait
-impl<T> PulseCellTrait for T where T: PulseCell + crate::serialization::KV3Serialize {}
+impl<T> PulseCellTrait for T where T: PulseCell + KV3Serialize {}
 
 // Inflow Cells
 #[derive(Default)]

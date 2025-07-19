@@ -1,20 +1,18 @@
+mod instruction_templates;
+pub mod serialization;
+
+use std::{path::PathBuf, path, fs, process::Command, borrow::Cow};
+use anyhow::anyhow;
+use egui_node_graph2::*;
 use crate::app::types::{
     EditorConfig, PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
     PulseNodeTemplate,
 };
 use crate::bindings::LibraryBindingType;
-use crate::instruction_templates;
 use crate::pulsetypes::*;
-use crate::serialization::*;
 use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
-use anyhow::anyhow;
-use egui_node_graph2::*;
-use rand::Rng;
-use std::borrow::Cow;
-use std::{path::PathBuf, path};
-use std::{fs, process::Command,};
-use rand::{distributions::Alphanumeric};
+use serialization::*;
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -569,6 +567,7 @@ pub fn compile_graph(
         anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
     })?;
     // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
+    use rand::{Rng, distributions::Alphanumeric};
     let temp_dir_file = std::env::temp_dir().join(
         format!("{}_{}.vpulse", file_name.display(), 
         rand::thread_rng()

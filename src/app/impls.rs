@@ -172,7 +172,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::EventBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::LibraryBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
-            PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 171, 235),
+            PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 100, 120),
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
             PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
@@ -1059,6 +1059,16 @@ impl WidgetValueTrait for PulseGraphValueType {
                                     _node_id,
                                     param_name.to_string(),
                                     PulseValueType::PVAL_BOOL(None),
+                                ));
+                            };
+                            if ui
+                                .selectable_value(value, PulseValueType::PVAL_SNDEVT_NAME(None), "Sound Event Name")
+                                .clicked()
+                            {
+                                responses.push(PulseGraphResponse::ChangeParamType(
+                                    _node_id,
+                                    param_name.to_string(),
+                                    PulseValueType::PVAL_SNDEVT_NAME(None),
                                 ));
                             };
                         });

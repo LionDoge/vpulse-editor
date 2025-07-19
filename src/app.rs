@@ -854,7 +854,7 @@ impl eframe::App for PulseGraphEditor {
                                     color.z = arr[2] * 255.0;
                                 }
                             }
-                            PulseValueType::DOMAIN_ENTITY_NAME | PulseValueType::PVAL_SNDEVT_NAME(_) => {}
+                            PulseValueType::DOMAIN_ENTITY_NAME | PulseValueType::PVAL_SNDEVT_GUID(_) => {}
                             _ => {
                                 if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
                                     update_variable_data(var);

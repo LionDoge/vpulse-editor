@@ -894,13 +894,22 @@ impl eframe::App for PulseGraphEditor {
                 .remove(variable_scheduled_for_deletion);
         }
 
+        let mut prepended_responses: Vec<NodeResponse<PulseGraphResponse, PulseNodeData>> = vec![];
+        if ctx.input(|i| i.key_released(egui::Key::Delete))
+        || ctx.input(|i| i.key_released(egui::Key::X)) {
+            // delete selected nodes
+            for node_id in self.state.selected_nodes.iter() {
+                prepended_responses.push(NodeResponse::DeleteNodeUi(*node_id));
+            }
+        }
+
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
                 self.state.draw_graph_editor(
                     ui,
                     AllMyNodeTemplates,
                     &mut self.user_state,
-                    Vec::default(),
+                    prepended_responses,
                 )
             })
             .inner;

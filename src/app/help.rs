@@ -1,4 +1,4 @@
-use crate::app::PulseNodeTemplate;
+use super::types::PulseNodeTemplate;
 
 pub fn help_hover_text(template: PulseNodeTemplate) -> &'static str {
     match template {

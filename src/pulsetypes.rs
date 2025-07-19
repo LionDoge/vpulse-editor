@@ -1,5 +1,5 @@
 #![allow(nonstandard_style)]
-use crate::app::PulseDataType;
+use crate::app::types::PulseDataType;
 use crate::serialization::{PulseRuntimeArgument, RegisterMap};
 use crate::typing::PulseValueType;
 use serde::{Deserialize, Serialize};

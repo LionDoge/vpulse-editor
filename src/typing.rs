@@ -1,10 +1,8 @@
-use crate::app::{PulseDataType, PulseGraphValueType};
-use crate::pulsetypes::{SchemaEnumType, SchemaEnumValue};
-use egui_node_graph2::InputParamKind;
+use std::{fmt, fmt::Display, str::FromStr};
 use serde::{Deserialize, Serialize};
-use std::fmt;
-use std::fmt::Display;
-use std::str::FromStr;
+use egui_node_graph2::InputParamKind;
+use crate::pulsetypes::{SchemaEnumType, SchemaEnumValue};
+use crate::app::types::{PulseDataType, PulseGraphValueType};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum PulseTypeError {

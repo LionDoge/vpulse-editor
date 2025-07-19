@@ -1,4 +1,4 @@
-use crate::app::{
+use crate::app::types::{
     EditorConfig, PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
     PulseNodeTemplate,
 };

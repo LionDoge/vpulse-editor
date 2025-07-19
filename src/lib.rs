@@ -10,8 +10,6 @@ mod instruction_templates;
 mod pulsetypes;
 mod serialization;
 mod typing;
-// contains help text
-mod help;
 pub use app::PulseGraphEditor;
 // ----------------------------------------------------------------------------
 // When compiling for web:

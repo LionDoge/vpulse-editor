@@ -1326,6 +1326,7 @@ impl PulseGraphState {
     }
 }
 
+#[cfg(feature = "nongame_asset_build")]
 impl Default for EditorConfig {
     fn default() -> Self {
         EditorConfig {

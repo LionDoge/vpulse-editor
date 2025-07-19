@@ -36,6 +36,7 @@ fn get_supported_ui_types() -> Vec<PulseValueType> {
 pub struct PulseGraphEditor {
     state: MyEditorState,
     user_state: PulseGraphState,
+    #[cfg(feature = "nongame_asset_build")]
     #[serde(skip)]
     editor_config: EditorConfig,
 }
@@ -548,23 +549,25 @@ impl PulseGraphEditor {
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
 
-        let cfg_res: anyhow::Result<EditorConfig> = {
-            let cfg_str = std::fs::read_to_string("config.json");
-            match cfg_str {
-                Ok(cfg_str) => serde_json::from_str(&cfg_str)
-                    .map_err(|e| anyhow::anyhow!("Failed to parse config.json: {}", e)),
-                Err(e) => Err(anyhow::anyhow!("Failed to read config.json: {}", e)),
-            }
-        };
-        if let Err(e) = &cfg_res {
-            MessageDialog::new()
-            .set_level(rfd::MessageLevel::Error)
-            .set_title("Failed to load config file")
-            .set_buttons(rfd::MessageButtons::Ok)
-            .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {e}"))
-            .show();
-        };
-        grph.editor_config = cfg_res.unwrap_or_default();
+        #[cfg(feature = "nongame_asset_build")] {
+            let cfg_res: anyhow::Result<EditorConfig> = {
+                let cfg_str = std::fs::read_to_string("config.json");
+                match cfg_str {
+                    Ok(cfg_str) => serde_json::from_str(&cfg_str)
+                        .map_err(|e| anyhow::anyhow!("Failed to parse config.json: {}", e)),
+                    Err(e) => Err(anyhow::anyhow!("Failed to read config.json: {}", e)),
+                }
+            };
+            if let Err(e) = &cfg_res {
+                MessageDialog::new()
+                .set_level(rfd::MessageLevel::Error)
+                .set_title("Failed to load config file")
+                .set_buttons(rfd::MessageButtons::Ok)
+                .set_description(format!("Failed to load config.json, compiling will not work fully. Refer to the documentation on how to set up valid configuration.\n {e}"))
+                .show();
+            };
+            grph.editor_config = cfg_res.unwrap_or_default();
+        }
 
         let bindings = load_bindings(std::path::Path::new("bindings_cs2.json"));
         match bindings {
@@ -656,7 +659,8 @@ impl eframe::App for PulseGraphEditor {
                 egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
                     if let Err(e) =
-                        compile_graph(&self.state.graph, &self.user_state, &self.editor_config)
+                        compile_graph(&self.state.graph, &self.user_state, 
+                            #[cfg(feature = "nongame_asset_build")]&self.editor_config)
                     {
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)

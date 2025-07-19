@@ -1,12 +1,11 @@
 mod instruction_templates;
 pub mod serialization;
 
-use std::ffi::OsStr;
-use std::{path::PathBuf, path, fs, process::Command, borrow::Cow};
+use std::{fs, borrow::Cow};
 use anyhow::anyhow;
 use egui_node_graph2::*;
 use crate::app::types::{
-    EditorConfig, PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
+    PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
     PulseNodeTemplate,
 };
 use crate::bindings::LibraryBindingType;
@@ -14,6 +13,11 @@ use crate::pulsetypes::*;
 use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
 use serialization::*;
+
+#[cfg(feature = "nongame_asset_build")]
+use std::{path::PathBuf, path, process::Command};
+#[cfg(feature = "nongame_asset_build")]
+use crate::app::types::EditorConfig;
 
 const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
@@ -529,10 +533,10 @@ fn traverse_entry_cell(
     Ok(())
 }
 
-#[allow(unused_variables)]
 pub fn compile_graph(
     graph: &PulseGraph,
     graph_state: &PulseGraphState,
+    #[cfg(feature = "nongame_asset_build")]
     config: &EditorConfig,
 ) -> anyhow::Result<()> {
     let mut graph_def = PulseGraphDef::default();
@@ -565,9 +569,6 @@ pub fn compile_graph(
             e
         )
     });
-    let file_name = file_dir.file_name().ok_or_else(|| {
-        anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
-    })?;
 
     #[cfg(not(feature = "nongame_asset_build"))] {
         let mut file_path = file_dir.clone();
@@ -577,6 +578,9 @@ pub fn compile_graph(
     }
 
     #[cfg(feature = "nongame_asset_build")] {
+        let file_name = file_dir.file_name().ok_or_else(|| {
+            anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
+        })?;
         // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
         use rand::{Rng, distributions::Alphanumeric};
         let temp_dir_file = std::env::temp_dir().join(

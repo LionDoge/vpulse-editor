@@ -191,6 +191,7 @@ pub struct CustomOutputInfo {
 }
 pub struct AllMyNodeTemplates;
 
+#[cfg(feature = "nongame_asset_build")]
 #[derive(Deserialize)]
 pub struct EditorConfig {
     pub python_interpreter: String,

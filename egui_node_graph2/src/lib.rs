@@ -23,6 +23,10 @@ pub mod graph_impls;
 pub mod error;
 pub use error::*;
 
+// Independent structs
+pub mod structs;
+pub use structs::*;
+
 /// The main struct in the library, contains all the necessary state to draw the
 /// UI graph
 pub mod ui_state;

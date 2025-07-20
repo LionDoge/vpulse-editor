@@ -10,6 +10,23 @@ use serde::{Deserialize, Serialize};
 const MIN_ZOOM: f32 = 0.2;
 const MAX_ZOOM: f32 = 2.0;
 
+#[derive(Clone, Debug)]
+pub struct GraphUndoState<NodeData, DataType, ValueType> {
+    pub graph: Graph<NodeData, DataType, ValueType>,
+    pub node_positions: SecondaryMap<NodeId, egui::Pos2>,
+    pub node_sizes: SecondaryMap<NodeId, Vec2>,
+}
+
+impl<NodeData, DataType, ValueType> Default for GraphUndoState<NodeData, DataType, ValueType> {
+    fn default() -> Self {
+        Self {
+            graph: Default::default(),
+            node_positions: SecondaryMap::default(),
+            node_sizes: SecondaryMap::default(),
+        }
+    }
+}
+
 #[derive(Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserState> {
@@ -35,6 +52,8 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     /// The panning of the graph viewport.
     pub pan_zoom: PanZoom,
     pub _user_state: PhantomData<fn() -> UserState>,
+    #[serde(skip)]
+    pub undo_memory: CircularStack<Graph<NodeData, DataType, ValueType>>,
 }
 
 impl<NodeData, DataType, ValueType, NodeKind, UserState>
@@ -62,6 +81,7 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
             node_finder: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),
+            undo_memory: Default::default(),
         }
     }
 }

@@ -10,6 +10,7 @@ use crate::bindings::{GraphBindings, FunctionBinding, EventBinding};
 /// The NodeData holds a custom data struct inside each node. It's useful to
 /// store additional information that doesn't live in parameters. For this
 /// example, the node data stores the template (i.e. the "type") of the node.
+#[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
@@ -19,8 +20,9 @@ pub struct PulseNodeData {
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
-#[derive(PartialEq, Eq, Clone, Serialize, Deserialize, Debug)]
+#[derive(Default, PartialEq, Eq, Clone, Serialize, Deserialize, Debug)]
 pub enum PulseDataType {
+    #[default]
     Scalar,
     Vec2,
     Vec3,
@@ -111,7 +113,7 @@ pub enum PulseGraphValueType {
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Default, Clone, Copy, PartialEq, Debug)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseNodeTemplate {
     CellPublicMethod,
@@ -146,6 +148,7 @@ pub enum PulseNodeTemplate {
     CallNode,
     ListenForEntityOutput,
     Timeline,
+    #[default]
     Comment,
 }
 

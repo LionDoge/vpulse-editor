@@ -550,11 +550,13 @@ impl PulseGraphEditor {
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        
         #[cfg(feature = "persistence")]
         let mut grph: PulseGraphEditor = cc
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
+        cc.egui_ctx.set_visuals(egui::Visuals::dark());
 
         #[cfg(feature = "nongame_asset_build")] {
             let cfg_res: anyhow::Result<EditorConfig> = {
@@ -663,7 +665,6 @@ impl eframe::App for PulseGraphEditor {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui: &mut egui::Ui| {
-                egui::widgets::global_theme_preference_switch(ui);
                 if ui.button("Compile").clicked() {
                     if let Err(e) =
                         compile_graph(&self.state.graph, &self.user_state, 

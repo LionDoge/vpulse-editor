@@ -2,6 +2,7 @@ mod impls;
 // contains help text
 mod help;
 pub mod types;
+mod migrations;
 
 use std::{path::PathBuf, fs, thread};
 use core::panic;
@@ -22,7 +23,7 @@ fn get_supported_ui_types() -> Vec<PulseValueType> {
         PulseValueType::PVAL_INT(None),
         PulseValueType::PVAL_FLOAT(None),
         PulseValueType::PVAL_STRING(None),
-        PulseValueType::PVAL_BOOL(Some(false)),
+        PulseValueType::PVAL_BOOL_VALUE(Some(false)),
         PulseValueType::PVAL_VEC3(None),
         PulseValueType::PVAL_COLOR_RGB(None),
         PulseValueType::PVAL_EHANDLE(None),
@@ -34,6 +35,8 @@ fn get_supported_ui_types() -> Vec<PulseValueType> {
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
+    #[cfg_attr(feature = "persistence", serde(default))]
+    version: FileVersion,
     state: MyEditorState,
     user_state: PulseGraphState,
     #[cfg(feature = "nongame_asset_build")]
@@ -94,18 +97,22 @@ impl PulseGraphEditor {
     // loads MyGraphState, and applies some corrections if some data is missing for files saved in older versions
     fn load_state_with_backwards_compat(&mut self, new_state: MyEditorState) {
         self.state = new_state;
-        // v0.1.2 introduces a SecondaryMap node_sizes in GraphEditorState
+        // v0.1.1 introduces a SecondaryMap node_sizes in GraphEditorState
         // make sure that it is populated with every existing node.
-        let node_sizes = &mut self.state.node_sizes;
-        if node_sizes.is_empty() {
-            for node in self.state.graph.nodes.keys() {
-                node_sizes.insert(node, egui::vec2(200.0, 200.0));
+        if self.state.node_sizes.is_empty() {
+            for node in self.state.graph.nodes.iter() {
+                self.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
             }
         }
     }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(&filepath)?;
-        let loaded_graph: PulseGraphEditor = ron::from_str(&contents)?;
+        let loaded_graph: PulseGraphEditor = ron::from_str(&contents).map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse file: {}",
+                e.to_string()
+            )
+        })?;
         self.load_state_with_backwards_compat(loaded_graph.state);
         self.user_state.load_from(loaded_graph.user_state);
         // we don't serialize file path since the file could be moved between save/open.
@@ -622,7 +629,7 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.data_type = PulseDataType::SndEventHandle;
             PulseValueType::PVAL_SNDEVT_GUID(None)
         }
-        PulseValueType::PVAL_BOOL(_) => {
+        PulseValueType::PVAL_BOOL_VALUE(_) => {
             var.data_type = PulseDataType::Bool;
             var.typ_and_default_value.to_owned()
         }
@@ -834,7 +841,7 @@ impl eframe::App for PulseGraphEditor {
                         }
 
                         match &mut var.typ_and_default_value {
-                            PulseValueType::PVAL_BOOL(value) => {
+                            PulseValueType::PVAL_BOOL_VALUE(value) => {
                                 ui.checkbox(
                                     value.get_or_insert(false), ""
                                 );

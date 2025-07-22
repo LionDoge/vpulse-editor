@@ -202,6 +202,17 @@ pub struct EditorConfig {
     pub red2_template_path: PathBuf,
 }
 
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "persistence", serde(tag = "version"))]
+pub enum FileVersion {
+    #[default]
+    #[cfg_attr(feature = "persistence", serde(rename = "v1"))]
+    V1,
+    #[cfg_attr(feature = "persistence", serde(rename = "v2"))]
+    V2,
+}
+
 pub type PulseGraph = Graph<PulseNodeData, PulseDataType, PulseGraphValueType>;
 pub type MyEditorState = GraphEditorState<
     PulseNodeData,

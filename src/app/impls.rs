@@ -1052,13 +1052,13 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 ));
                             };
                             if ui
-                                .selectable_value(value, PulseValueType::PVAL_BOOL(None), "Boolean")
+                                .selectable_value(value, PulseValueType::PVAL_BOOL, "Boolean")
                                 .clicked()
                             {
                                 responses.push(PulseGraphResponse::ChangeParamType(
                                     _node_id,
                                     param_name.to_string(),
-                                    PulseValueType::PVAL_BOOL(None),
+                                    PulseValueType::PVAL_BOOL,
                                 ));
                             };
                             if ui

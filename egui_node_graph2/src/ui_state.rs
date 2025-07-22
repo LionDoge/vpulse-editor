@@ -44,7 +44,7 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub ongoing_box_selection: Option<egui::Pos2>,
     /// The position of each node.
     pub node_positions: SecondaryMap<NodeId, egui::Pos2>,
-    // Additional width of each node from the base size.
+    /// The size of each node.
     #[cfg_attr(feature = "persistence", serde(default))]
     pub node_sizes: SecondaryMap<NodeId, Vec2>,
     /// The node finder is used to create new nodes.
@@ -52,8 +52,8 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     /// The panning of the graph viewport.
     pub pan_zoom: PanZoom,
     pub _user_state: PhantomData<fn() -> UserState>,
-    #[serde(skip)]
-    pub undo_memory: CircularStack<Graph<NodeData, DataType, ValueType>>,
+    // #[serde(skip)]
+    // pub undo_memory: CircularStack<Graph<NodeData, DataType, ValueType>>,
 }
 
 impl<NodeData, DataType, ValueType, NodeKind, UserState>
@@ -81,7 +81,7 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
             node_finder: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),
-            undo_memory: Default::default(),
+            //undo_memory: Default::default(),
         }
     }
 }

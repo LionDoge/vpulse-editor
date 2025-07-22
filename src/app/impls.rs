@@ -1306,7 +1306,7 @@ impl NodeDataTrait for PulseNodeData {
                 Some(Color32::from_rgb(184, 64, 28))
             }
             PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => {
-                Some(Color32::from_rgb(41, 166, 77))
+                Some(Color32::from_rgb(50, 125, 168))
             }
             PulseNodeTemplate::IntToString
             | PulseNodeTemplate::Convert

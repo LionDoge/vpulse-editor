@@ -9,6 +9,7 @@ use crate::{
     pulsetypes::*,
     typing::{PulseValueType, Vec3},
 };
+
 pub trait KV3Serialize {
     fn serialize(&self) -> String;
 }
@@ -914,11 +915,17 @@ impl PulseGraphDef {
     }
 }
 
+#[cfg(feature = "nongame_asset_build")]
+const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
+#[cfg(not(feature = "nongame_asset_build"))]
+const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->\n";
 impl KV3Serialize for PulseGraphDef {
     fn serialize(&self) -> String {
         formatdoc! {
             "
+            {PULSE_KV3_HEADER}
             {{
+                generic_data_type = \"Vpulse\"
                 m_Cells = 
                 [
                     {}

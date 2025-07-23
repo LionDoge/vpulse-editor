@@ -19,7 +19,6 @@ use std::{path::PathBuf, path, process::Command};
 #[cfg(feature = "nongame_asset_build")]
 use crate::app::types::EditorConfig;
 
-const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {
         let connected_nodes = get_next_action_nodes($current_node, $graph, "outAction");
@@ -560,9 +559,7 @@ pub fn compile_graph(
             anyhow::bail!("Graph compile failed: {}", e);
         }
     }
-    let mut data = String::from(PULSE_KV3_HEADER);
-    data.push_str(graph_def.serialize().as_str());
-    
+    let data = graph_def.serialize();
     let _ = fs::create_dir_all(file_dir).map_err(|e| {
         anyhow!(
             "Graph compile failed: Failed to create output directory: {}",

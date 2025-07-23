@@ -150,6 +150,7 @@ pub enum PulseNodeTemplate {
     Timeline,
     #[default]
     Comment,
+    SetAnimGraphParam,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

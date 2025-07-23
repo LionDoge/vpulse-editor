@@ -275,3 +275,19 @@ impl CPulseCell_Timeline {
         self.timeline_events.push(event);
     }
 }
+
+pub struct CPulseCell_Step_SetAnimGraphParam {
+    pub(crate) param_name: Cow<'static, str>,
+}
+
+impl PulseCell for CPulseCell_Step_SetAnimGraphParam {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Step
+    }
+}
+
+impl CPulseCell_Step_SetAnimGraphParam {
+    pub fn new(param_name: Cow<'static, str>) -> Self {
+        Self { param_name }
+    }
+}

@@ -2562,6 +2562,41 @@ fn traverse_nodes_and_populate<'a>(
                 );
             }
         }
+        PulseNodeTemplate::SetAnimGraphParam => {
+            let reg_param_name = get_constant_graph_input_value!(graph, current_node, "paramName", try_to_string);
+            let reg_entity = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "hEntity",
+                PulseValueType::PVAL_EHANDLE(None),
+                false,
+            )?;
+            let reg_param_value = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "pParamValue",
+                PulseValueType::PVAL_ANY,
+                false,
+            )?;
+
+            let cell = CPulseCell_Step_SetAnimGraphParam::new(
+                reg_param_name.into(),
+            );
+            let reg_map = reg_map_setup_inputs!(
+                "hEntity",
+                reg_entity,
+                "pParamValue",
+                reg_param_value
+            );
+            add_cell_and_invoking(graph_def, Box::new(cell), reg_map, target_chunk, "Run".into());
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

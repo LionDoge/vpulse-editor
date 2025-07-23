@@ -791,6 +791,21 @@ impl KV3Serialize for CPulseCell_Timeline {
     }
 }
 
+impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
+    fn serialize(&self) -> String {
+        formatdoc! {
+            "
+            {{
+                _class = \"CPulseCell_Step_SetAnimGraphParam\"
+                m_nEditorNodeID = -1
+                m_ParamName = \"{}\"
+            }}
+            "
+            , self.param_name
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,

@@ -254,6 +254,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ListenForEntityOutput => "Listen for output",
             PulseNodeTemplate::Timeline => "Timeline",
             PulseNodeTemplate::Comment => "Comment",
+            PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param",
         })
     }
 
@@ -291,6 +292,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ForLoop | PulseNodeTemplate::WhileLoop => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
             PulseNodeTemplate::Comment => vec!["Editor"],
+            PulseNodeTemplate::SetAnimGraphParam => vec!["Animation"],
         }
     }
 
@@ -433,6 +435,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     value: String::default(),
                 },
                 kind,
+                true,
+            );
+        };
+        let input_any = |graph: &mut PulseGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::Any,
+                PulseGraphValueType::Any,
+                InputParamKind::ConnectionOnly,
                 true,
             );
         };
@@ -807,6 +819,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     true,
                 );
             }
+            PulseNodeTemplate::SetAnimGraphParam => {
+                input_action(graph);
+                input_ehandle(graph, "hEntity");
+                input_string(graph, "paramName", InputParamKind::ConstantOnly);
+                input_any(graph, "pParamValue");
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -852,6 +871,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ListenForEntityOutput,
             PulseNodeTemplate::Timeline,
             PulseNodeTemplate::Comment,
+            PulseNodeTemplate::SetAnimGraphParam,
         ]
     }
 }
@@ -1318,7 +1338,8 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::InvokeLibraryBinding
             | PulseNodeTemplate::SoundEventStart => Some(Color32::from_rgb(41, 139, 196)),
             PulseNodeTemplate::ConcatString
-            | PulseNodeTemplate::Comment => None,
+            | PulseNodeTemplate::Comment
+            | PulseNodeTemplate::SetAnimGraphParam => None,
         }
     }
 }

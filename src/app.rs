@@ -556,7 +556,6 @@ impl PulseGraphEditor {
             .storage
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
-        cc.egui_ctx.set_visuals(egui::Visuals::dark());
 
         #[cfg(feature = "nongame_asset_build")] {
             let cfg_res: anyhow::Result<EditorConfig> = {
@@ -663,6 +662,7 @@ impl eframe::App for PulseGraphEditor {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_visuals(egui::Visuals::dark());
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui: &mut egui::Ui| {
                 if ui.button("Compile").clicked() {

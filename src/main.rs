@@ -11,7 +11,7 @@ use std::sync::Arc;
 fn main() {
     let d = eframe::icon_data::from_png_bytes(include_bytes!("../icon.png"))
         .expect("The icon data must be valid");
-    use eframe::egui::{ViewportBuilder, Visuals};
+    use eframe::egui::ViewportBuilder;
     let mut options = eframe::NativeOptions {
         viewport: ViewportBuilder::default(),
         ..Default::default()
@@ -21,7 +21,6 @@ fn main() {
         "Pulse Graph Editor",
         options,
         Box::new(|cc| {
-            cc.egui_ctx.set_visuals(Visuals::dark());
             Ok(Box::new(PulseGraphEditor::new(cc)))
             // #[cfg(not(feature = "persistence"))]
             // Ok(Box::<PulseGraphEditor>::default())

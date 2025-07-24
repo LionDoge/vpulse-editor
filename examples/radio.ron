@@ -1,1 +1,4350 @@
-(state:(graph:(nodes:[(value:None,version:0),(value:Some((id:(idx:1,version:13),label:"Public Method",inputs:[("name",(idx:7,version:3))],outputs:[("argument1",(idx:6,version:3)),("outAction",(idx:5,version:3))],user_data:(template:CellPublicMethod,custom_named_outputs:{}))),version:13),(value:Some((id:(idx:2,version:1),label:"Load variable",inputs:[("variableName",(idx:6,version:3))],outputs:[("value",(idx:4,version:3))],user_data:(template:GetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:3,version:1),label:"Operation",inputs:[("type",(idx:5,version:3)),("operation",(idx:1,version:5)),("A",(idx:2,version:9)),("B",(idx:4,version:11))],outputs:[("out",(idx:3,version:3))],user_data:(template:Operation,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:4,version:1),label:"Operation",inputs:[("type",(idx:3,version:13)),("operation",(idx:8,version:1)),("A",(idx:9,version:1)),("B",(idx:10,version:1))],outputs:[("out",(idx:2,version:7))],user_data:(template:Operation,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:5,version:1),label:"Save variable",inputs:[("ActionIn",(idx:11,version:1)),("variableName",(idx:12,version:1)),("value",(idx:13,version:1))],outputs:[("outAction",(idx:1,version:13))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:6,version:3),label:"Int Switch",inputs:[("ActionIn",(idx:15,version:3)),("value",(idx:14,version:3)),("caselabel",(idx:19,version:1))],outputs:[("defaultcase",(idx:7,version:3)),("outAction",(idx:9,version:1)),("0",(idx:10,version:1)),("1",(idx:11,version:1)),("2",(idx:12,version:1))],user_data:(template:IntSwitch,custom_named_outputs:{(idx:12,version:1):(name:"2",data:PVAL_ACT),(idx:11,version:1):(name:"1",data:PVAL_ACT),(idx:10,version:1):(name:"0",data:PVAL_ACT)}))),version:3),(value:Some((id:(idx:7,version:1),label:"Save variable",inputs:[("ActionIn",(idx:16,version:1)),("variableName",(idx:17,version:1)),("value",(idx:18,version:1))],outputs:[("outAction",(idx:8,version:1))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:8,version:1),label:"Sound event start",inputs:[("strSoundEventName",(idx:20,version:1)),("hTargetEntity",(idx:21,version:1))],outputs:[("retval",(idx:13,version:1))],user_data:(template:SoundEventStart,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:9,version:3),label:"Call node",inputs:[("nodeId",(idx:22,version:3)),("ActionIn",(idx:27,version:3))],outputs:[("outAction",(idx:17,version:1))],user_data:(template:CallNode,custom_named_outputs:{}))),version:3),(value:Some((id:(idx:10,version:1),label:"Function",inputs:[],outputs:[("outAction",(idx:14,version:1))],user_data:(template:Function,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:11,version:1),label:"Invoke library binding",inputs:[("binding",(idx:23,version:1)),("ActionIn",(idx:24,version:1)),("nSoundEventGuid",(idx:25,version:1))],outputs:[("outAction",(idx:15,version:1))],user_data:(template:InvokeLibraryBinding,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:12,version:1),label:"Load variable",inputs:[("variableName",(idx:26,version:1))],outputs:[("value",(idx:16,version:1))],user_data:(template:GetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:13,version:1),label:"Save variable",inputs:[("ActionIn",(idx:28,version:1)),("variableName",(idx:29,version:1)),("value",(idx:30,version:1))],outputs:[("outAction",(idx:18,version:1))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:14,version:1),label:"Sound event start",inputs:[("strSoundEventName",(idx:31,version:1)),("hTargetEntity",(idx:32,version:1))],outputs:[("retval",(idx:19,version:1))],user_data:(template:SoundEventStart,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:15,version:1),label:"Sound event start",inputs:[("strSoundEventName",(idx:33,version:1)),("hTargetEntity",(idx:34,version:1))],outputs:[("retval",(idx:20,version:1))],user_data:(template:SoundEventStart,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:16,version:1),label:"Save variable",inputs:[("ActionIn",(idx:35,version:1)),("variableName",(idx:36,version:1)),("value",(idx:37,version:1))],outputs:[("outAction",(idx:21,version:1))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:17,version:5),label:"Public Method",inputs:[("name",(idx:38,version:5))],outputs:[("argument1",(idx:22,version:5)),("outAction",(idx:23,version:3))],user_data:(template:CellPublicMethod,custom_named_outputs:{}))),version:5),(value:Some((id:(idx:18,version:5),label:"Load variable",inputs:[("variableName",(idx:39,version:5))],outputs:[("value",(idx:24,version:5))],user_data:(template:GetVar,custom_named_outputs:{}))),version:5),(value:Some((id:(idx:19,version:3),label:"Operation",inputs:[("type",(idx:40,version:5)),("operation",(idx:44,version:3)),("A",(idx:42,version:5)),("B",(idx:43,version:5))],outputs:[("out",(idx:28,version:3))],user_data:(template:Operation,custom_named_outputs:{}))),version:3),(value:Some((id:(idx:20,version:3),label:"Debug log",inputs:[("ActionIn",(idx:54,version:3)),("pMessage",(idx:53,version:3))],outputs:[("outAction",(idx:25,version:3))],user_data:(template:DebugLog,custom_named_outputs:{}))),version:3),(value:Some((id:(idx:21,version:1),label:"Debug log",inputs:[("ActionIn",(idx:52,version:3)),("pMessage",(idx:51,version:3))],outputs:[("outAction",(idx:26,version:1))],user_data:(template:DebugLog,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:22,version:1),label:"Debug log",inputs:[("ActionIn",(idx:50,version:3)),("pMessage",(idx:49,version:3))],outputs:[("outAction",(idx:27,version:1))],user_data:(template:DebugLog,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:23,version:1),label:"Invoke library binding",inputs:[("binding",(idx:41,version:3)),("ActionIn",(idx:48,version:3)),("nSoundEventGuid",(idx:47,version:3)),("pParameterName",(idx:46,version:3)),("flValue",(idx:45,version:3))],outputs:[("outAction",(idx:29,version:1))],user_data:(template:InvokeLibraryBinding,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:24,version:1),label:"Load variable",inputs:[("variableName",(idx:55,version:1))],outputs:[("value",(idx:31,version:1))],user_data:(template:GetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:25,version:1),label:"Save variable",inputs:[("ActionIn",(idx:56,version:1)),("variableName",(idx:57,version:1)),("value",(idx:58,version:1))],outputs:[("outAction",(idx:30,version:1))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:26,version:1),label:"Public Method",inputs:[("name",(idx:59,version:1))],outputs:[("argument1",(idx:32,version:1)),("outAction",(idx:33,version:1))],user_data:(template:CellPublicMethod,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:27,version:1),label:"Load variable",inputs:[("variableName",(idx:60,version:1))],outputs:[("value",(idx:34,version:1))],user_data:(template:GetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:28,version:1),label:"Operation",inputs:[("type",(idx:61,version:1)),("operation",(idx:62,version:1)),("A",(idx:64,version:3)),("B",(idx:63,version:3))],outputs:[("out",(idx:35,version:3))],user_data:(template:Operation,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:29,version:1),label:"Invoke library binding",inputs:[("binding",(idx:65,version:1)),("ActionIn",(idx:66,version:1)),("nSoundEventGuid",(idx:67,version:1)),("pParameterName",(idx:68,version:1)),("flValue",(idx:69,version:1))],outputs:[("outAction",(idx:36,version:1))],user_data:(template:InvokeLibraryBinding,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:30,version:1),label:"Invoke library binding",inputs:[("binding",(idx:70,version:1)),("x",(idx:73,version:3)),("y",(idx:72,version:3))],outputs:[("retval",(idx:37,version:3))],user_data:(template:InvokeLibraryBinding,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:31,version:1),label:"Save variable",inputs:[("ActionIn",(idx:71,version:3)),("variableName",(idx:74,version:1)),("value",(idx:75,version:1))],outputs:[("outAction",(idx:38,version:1))],user_data:(template:SetVar,custom_named_outputs:{}))),version:1),(value:Some((id:(idx:32,version:1),label:"Load variable",inputs:[("variableName",(idx:76,version:1))],outputs:[("value",(idx:39,version:1))],user_data:(template:GetVar,custom_named_outputs:{}))),version:1)],inputs:[(value:None,version:0),(value:Some((id:(idx:1,version:5),typ:String,value:String(value:"+"),kind:ConstantOnly,node:(idx:3,version:1),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:2,version:9),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:3,version:1),max_connections:Some(1),shown_inline:true)),version:9),(value:Some((id:(idx:3,version:13),typ:Typ,value:Typ(value:PVAL_INT(None)),kind:ConstantOnly,node:(idx:4,version:1),max_connections:Some(1),shown_inline:true)),version:13),(value:Some((id:(idx:4,version:11),typ:Scalar,value:Scalar(value:1.0),kind:ConnectionOrConstant,node:(idx:3,version:1),max_connections:Some(1),shown_inline:true)),version:11),(value:Some((id:(idx:5,version:3),typ:Typ,value:Typ(value:PVAL_INT(None)),kind:ConstantOnly,node:(idx:3,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:6,version:3),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song_id",value:"current_song_id"),kind:ConstantOnly,node:(idx:2,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:7,version:3),typ:String,value:String(value:"NextSong"),kind:ConnectionOrConstant,node:(idx:1,version:13),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:8,version:1),typ:String,value:String(value:"%"),kind:ConstantOnly,node:(idx:4,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:9,version:1),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:4,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:10,version:1),typ:Scalar,value:Scalar(value:3.0),kind:ConnectionOrConstant,node:(idx:4,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:11,version:1),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:5,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:12,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song_id",value:"current_song_id"),kind:ConstantOnly,node:(idx:5,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:13,version:1),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:5,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:14,version:3),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:6,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:15,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:6,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:16,version:1),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:7,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:17,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:7,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:18,version:1),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOrConstant,node:(idx:7,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:19,version:1),typ:Scalar,value:Scalar(value:2.0),kind:ConstantOnly,node:(idx:6,version:3),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:20,version:1),typ:SoundEventName,value:SoundEventName(value:"Music.Background.darude_01"),kind:ConnectionOrConstant,node:(idx:8,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:21,version:1),typ:EHandle,value:EHandle,kind:ConnectionOnly,node:(idx:8,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:22,version:3),typ:NoideChoice,value:NodeChoice(node:Some((idx:10,version:1))),kind:ConstantOnly,node:(idx:9,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:23,version:1),typ:LibraryBindingChoice,value:LibraryBindingChoice(value:(21)),kind:ConstantOnly,node:(idx:11,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:24,version:1),typ:Action,value:Action,kind:ConnectionOrConstant,node:(idx:11,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:25,version:1),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOnly,node:(idx:11,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:26,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:12,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:27,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:9,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:28,version:1),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:13,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:29,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:13,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:30,version:1),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOrConstant,node:(idx:13,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:31,version:1),typ:SoundEventName,value:SoundEventName(value:"Music.Background.denzelcurry_01"),kind:ConnectionOrConstant,node:(idx:14,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:32,version:1),typ:EHandle,value:EHandle,kind:ConnectionOnly,node:(idx:14,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:33,version:1),typ:SoundEventName,value:SoundEventName(value:"Music.Background.hotlinemiami_01"),kind:ConnectionOrConstant,node:(idx:15,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:34,version:1),typ:EHandle,value:EHandle,kind:ConnectionOnly,node:(idx:15,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:35,version:1),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:16,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:36,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:16,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:37,version:1),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOrConstant,node:(idx:16,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:38,version:5),typ:String,value:String(value:"VolumeUp"),kind:ConnectionOrConstant,node:(idx:17,version:5),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:39,version:5),typ:InternalVariableName,value:InternalVariableName(prevvalue:"radio_vol",value:"radio_vol"),kind:ConstantOnly,node:(idx:18,version:5),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:40,version:5),typ:Typ,value:Typ(value:PVAL_FLOAT(None)),kind:ConstantOnly,node:(idx:19,version:3),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:41,version:3),typ:LibraryBindingChoice,value:LibraryBindingChoice(value:(22)),kind:ConstantOnly,node:(idx:23,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:42,version:5),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:19,version:3),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:43,version:5),typ:Scalar,value:Scalar(value:0.25),kind:ConnectionOrConstant,node:(idx:19,version:3),max_connections:Some(1),shown_inline:true)),version:5),(value:Some((id:(idx:44,version:3),typ:String,value:String(value:"+"),kind:ConstantOnly,node:(idx:19,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:45,version:3),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:23,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:46,version:3),typ:String,value:String(value:"volume"),kind:ConnectionOrConstant,node:(idx:23,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:47,version:3),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOnly,node:(idx:23,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:48,version:3),typ:Action,value:Action,kind:ConnectionOrConstant,node:(idx:23,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:49,version:3),typ:String,value:String(value:"start song 2"),kind:ConnectionOrConstant,node:(idx:22,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:50,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:22,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:51,version:3),typ:String,value:String(value:"start song 1"),kind:ConnectionOrConstant,node:(idx:21,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:52,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:21,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:53,version:3),typ:String,value:String(value:"start song 0"),kind:ConnectionOrConstant,node:(idx:20,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:54,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:20,version:3),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:55,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:24,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:56,version:1),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:25,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:57,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"radio_vol",value:"radio_vol"),kind:ConstantOnly,node:(idx:25,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:58,version:1),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:25,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:59,version:1),typ:String,value:String(value:"VolumeDown"),kind:ConnectionOrConstant,node:(idx:26,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:60,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"current_song",value:"current_song"),kind:ConstantOnly,node:(idx:27,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:61,version:1),typ:Typ,value:Typ(value:PVAL_FLOAT(None)),kind:ConstantOnly,node:(idx:28,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:62,version:1),typ:String,value:String(value:"-"),kind:ConstantOnly,node:(idx:28,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:63,version:3),typ:Scalar,value:Scalar(value:0.25),kind:ConnectionOrConstant,node:(idx:28,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:64,version:3),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:28,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:65,version:1),typ:LibraryBindingChoice,value:LibraryBindingChoice(value:(22)),kind:ConstantOnly,node:(idx:29,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:66,version:1),typ:Action,value:Action,kind:ConnectionOrConstant,node:(idx:29,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:67,version:1),typ:SndEventHandle,value:SndEventHandle,kind:ConnectionOnly,node:(idx:29,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:68,version:1),typ:String,value:String(value:"volume"),kind:ConnectionOrConstant,node:(idx:29,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:69,version:1),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:29,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:70,version:1),typ:LibraryBindingChoice,value:LibraryBindingChoice(value:(28)),kind:ConstantOnly,node:(idx:30,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:71,version:3),typ:Action,value:Action,kind:ConnectionOnly,node:(idx:31,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:72,version:3),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:30,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:73,version:3),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:30,version:1),max_connections:Some(1),shown_inline:true)),version:3),(value:Some((id:(idx:74,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"radio_vol",value:"radio_vol"),kind:ConstantOnly,node:(idx:31,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:75,version:1),typ:Scalar,value:Scalar(value:0.0),kind:ConnectionOrConstant,node:(idx:31,version:1),max_connections:Some(1),shown_inline:true)),version:1),(value:Some((id:(idx:76,version:1),typ:InternalVariableName,value:InternalVariableName(prevvalue:"radio_vol",value:"radio_vol"),kind:ConstantOnly,node:(idx:32,version:1),max_connections:Some(1),shown_inline:true)),version:1)],outputs:[(value:None,version:0),(value:Some((id:(idx:1,version:13),node:(idx:5,version:1),typ:Action)),version:13),(value:Some((id:(idx:2,version:7),node:(idx:4,version:1),typ:Scalar)),version:7),(value:Some((id:(idx:3,version:3),node:(idx:3,version:1),typ:Scalar)),version:3),(value:Some((id:(idx:4,version:3),node:(idx:2,version:1),typ:Scalar)),version:3),(value:Some((id:(idx:5,version:3),node:(idx:1,version:13),typ:Action)),version:3),(value:Some((id:(idx:6,version:3),node:(idx:1,version:13),typ:String)),version:3),(value:Some((id:(idx:7,version:3),node:(idx:6,version:3),typ:Action)),version:3),(value:Some((id:(idx:8,version:1),node:(idx:7,version:1),typ:Action)),version:1),(value:Some((id:(idx:9,version:1),node:(idx:6,version:3),typ:Action)),version:1),(value:Some((id:(idx:10,version:1),node:(idx:6,version:3),typ:Action)),version:1),(value:Some((id:(idx:11,version:1),node:(idx:6,version:3),typ:Action)),version:1),(value:Some((id:(idx:12,version:1),node:(idx:6,version:3),typ:Action)),version:1),(value:Some((id:(idx:13,version:1),node:(idx:8,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:14,version:1),node:(idx:10,version:1),typ:Action)),version:1),(value:Some((id:(idx:15,version:1),node:(idx:11,version:1),typ:Action)),version:1),(value:Some((id:(idx:16,version:1),node:(idx:12,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:17,version:1),node:(idx:9,version:3),typ:Action)),version:1),(value:Some((id:(idx:18,version:1),node:(idx:13,version:1),typ:Action)),version:1),(value:Some((id:(idx:19,version:1),node:(idx:14,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:20,version:1),node:(idx:15,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:21,version:1),node:(idx:16,version:1),typ:Action)),version:1),(value:Some((id:(idx:22,version:5),node:(idx:17,version:5),typ:String)),version:5),(value:Some((id:(idx:23,version:3),node:(idx:17,version:5),typ:Action)),version:3),(value:Some((id:(idx:24,version:5),node:(idx:18,version:5),typ:Scalar)),version:5),(value:Some((id:(idx:25,version:3),node:(idx:20,version:3),typ:Action)),version:3),(value:Some((id:(idx:26,version:1),node:(idx:21,version:1),typ:Action)),version:1),(value:Some((id:(idx:27,version:1),node:(idx:22,version:1),typ:Action)),version:1),(value:Some((id:(idx:28,version:3),node:(idx:19,version:3),typ:Scalar)),version:3),(value:Some((id:(idx:29,version:1),node:(idx:23,version:1),typ:Action)),version:1),(value:Some((id:(idx:30,version:1),node:(idx:25,version:1),typ:Action)),version:1),(value:Some((id:(idx:31,version:1),node:(idx:24,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:32,version:1),node:(idx:26,version:1),typ:String)),version:1),(value:Some((id:(idx:33,version:1),node:(idx:26,version:1),typ:Action)),version:1),(value:Some((id:(idx:34,version:1),node:(idx:27,version:1),typ:SndEventHandle)),version:1),(value:Some((id:(idx:35,version:3),node:(idx:28,version:1),typ:Scalar)),version:3),(value:Some((id:(idx:36,version:1),node:(idx:29,version:1),typ:Action)),version:1),(value:Some((id:(idx:37,version:3),node:(idx:30,version:1),typ:Scalar)),version:3),(value:Some((id:(idx:38,version:1),node:(idx:31,version:1),typ:Action)),version:1),(value:Some((id:(idx:39,version:1),node:(idx:32,version:1),typ:Scalar)),version:1)],connections:[(value:None,version:0),(value:None,version:0),(value:Some([(idx:4,version:3)]),version:9),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some([(idx:3,version:3)]),version:1),(value:None,version:0),(value:Some([(idx:5,version:3)]),version:1),(value:None,version:0),(value:Some([(idx:2,version:7)]),version:1),(value:Some([(idx:2,version:7)]),version:3),(value:Some([(idx:17,version:1)]),version:3),(value:Some([(idx:10,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:13,version:1)]),version:1),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some([(idx:14,version:1)]),version:1),(value:Some([(idx:16,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:1,version:13)]),version:3),(value:Some([(idx:11,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:19,version:1)]),version:1),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some([(idx:12,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:20,version:1)]),version:1),(value:Some([]),version:3),(value:Some([]),version:3),(value:None,version:0),(value:None,version:0),(value:Some([(idx:24,version:5)]),version:5),(value:None,version:0),(value:Some([]),version:1),(value:Some([(idx:28,version:3)]),version:3),(value:None,version:0),(value:Some([(idx:31,version:1)]),version:3),(value:Some([(idx:23,version:3)]),version:3),(value:None,version:0),(value:Some([(idx:21,version:1)]),version:3),(value:None,version:0),(value:Some([(idx:18,version:1)]),version:3),(value:None,version:0),(value:Some([(idx:8,version:1)]),version:3),(value:None,version:0),(value:Some([(idx:29,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:28,version:3)]),version:1),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some([(idx:39,version:1)]),version:3),(value:None,version:0),(value:Some([(idx:33,version:1)]),version:1),(value:Some([(idx:34,version:1)]),version:1),(value:None,version:0),(value:Some([(idx:37,version:3)]),version:1),(value:None,version:0),(value:Some([(idx:36,version:1)]),version:3),(value:None,version:0),(value:Some([(idx:35,version:3)]),version:3),(value:None,version:0),(value:Some([(idx:37,version:3)]),version:1)]),node_order:[(idx:2,version:1),(idx:3,version:1),(idx:4,version:1),(idx:1,version:13),(idx:5,version:1),(idx:10,version:1),(idx:11,version:1),(idx:12,version:1),(idx:7,version:1),(idx:13,version:1),(idx:14,version:1),(idx:15,version:1),(idx:16,version:1),(idx:9,version:3),(idx:20,version:3),(idx:21,version:1),(idx:22,version:1),(idx:8,version:1),(idx:6,version:3),(idx:17,version:5),(idx:23,version:1),(idx:19,version:3),(idx:18,version:5),(idx:24,version:1),(idx:25,version:1),(idx:29,version:1),(idx:28,version:1),(idx:30,version:1),(idx:31,version:1),(idx:27,version:1),(idx:26,version:1),(idx:32,version:1)],connection_in_progress:None,selected_nodes:[],ongoing_box_selection:None,node_positions:[(value:None,version:0),(value:Some((x:471.32043,y:-28.142487)),version:13),(value:Some((x:508.344,y:276.48288)),version:1),(value:Some((x:736.152,y:144.95963)),version:1),(value:Some((x:943.46204,y:96.23776)),version:1),(value:Some((x:1151.3844,y:61.47061)),version:1),(value:Some((x:1555.6996,y:100.645905)),version:3),(value:Some((x:2042.0938,y:-149.06992)),version:1),(value:Some((x:1672.894,y:-128.70883)),version:1),(value:Some((x:1369.4417,y:12.146515)),version:3),(value:Some((x:1087.4001,y:-226.75754)),version:1),(value:Some((x:1415.2168,y:-256.9133)),version:1),(value:Some((x:1138.6287,y:-153.94882)),version:1),(value:Some((x:2071.2517,y:-32.29532)),version:1),(value:Some((x:1844.5295,y:54.108368)),version:1),(value:Some((x:1783.2397,y:200.32944)),version:1),(value:Some((x:2082.3267,y:135.34244)),version:1),(value:Some((x:687.20544,y:438.13943)),version:5),(value:Some((x:745.9806,y:561.44666)),version:5),(value:Some((x:1004.144,y:581.5718)),version:3),(value:Some((x:2356.804,y:-135.70596)),version:3),(value:Some((x:2383.207,y:7.4930115)),version:1),(value:Some((x:2445.6006,y:152.29282)),version:1),(value:Some((x:1254.2073,y:421.39343)),version:1),(value:Some((x:981.9665,y:500.77542)),version:1),(value:Some((x:1544.5631,y:476.86188)),version:1),(value:Some((x:781.76996,y:728.91205)),version:1),(value:Some((x:980.9696,y:820.1124)),version:1),(value:Some((x:960.1692,y:912.1127)),version:1),(value:Some((x:1400.6013,y:763.5995)),version:1),(value:Some((x:1178.2012,y:885.1993)),version:1),(value:Some((x:1679.0013,y:837.1994)),version:1),(value:Some((x:735.80133,y:933.99945)),version:1)],node_finder:None,pan_zoom:(pan:(x:-672.8013,y:-394.39944),zoom:0.7866269),_user_state:()),user_state:(added_parameters:[(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some(["0","1","2"]),version:3)],public_outputs:[],variables:[(name:"radio_vol",typ_and_default_value:PVAL_FLOAT(Some(1.0)),data_type:Scalar,old_typ:PVAL_FLOAT(None),default_value_buffer:"1"),(name:"current_song",typ_and_default_value:PVAL_SNDEVT_GUID(None),data_type:SndEventHandle,old_typ:PVAL_SNDEVT_GUID(None),default_value_buffer:""),(name:"current_song_id",typ_and_default_value:PVAL_INT(Some(0)),data_type:Scalar,old_typ:PVAL_INT(None),default_value_buffer:"0")],exposed_nodes:[(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:None,version:0),(value:Some("StopSong"),version:1)],outputs_dropdown_choices:[PVAL_INT(None),PVAL_INT(None),PVAL_INT(None),PVAL_INT(None)]))
+(
+    version: (
+        version: "v1",
+    ),
+    state: (
+        graph: (
+            nodes: [
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 1,
+                            version: 13,
+                        ),
+                        label: "Public Method",
+                        inputs: [
+                            ("name", (
+                                idx: 7,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("argument1", (
+                                idx: 6,
+                                version: 3,
+                            )),
+                            ("outAction", (
+                                idx: 5,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: CellPublicMethod,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 13,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 2,
+                            version: 1,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 6,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 4,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        label: "Operation",
+                        inputs: [
+                            ("type", (
+                                idx: 5,
+                                version: 3,
+                            )),
+                            ("operation", (
+                                idx: 1,
+                                version: 5,
+                            )),
+                            ("A", (
+                                idx: 2,
+                                version: 9,
+                            )),
+                            ("B", (
+                                idx: 4,
+                                version: 11,
+                            )),
+                        ],
+                        outputs: [
+                            ("out", (
+                                idx: 3,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: Operation,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        label: "Operation",
+                        inputs: [
+                            ("type", (
+                                idx: 3,
+                                version: 13,
+                            )),
+                            ("operation", (
+                                idx: 8,
+                                version: 1,
+                            )),
+                            ("A", (
+                                idx: 9,
+                                version: 1,
+                            )),
+                            ("B", (
+                                idx: 10,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("out", (
+                                idx: 2,
+                                version: 7,
+                            )),
+                        ],
+                        user_data: (
+                            template: Operation,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 5,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 11,
+                                version: 1,
+                            )),
+                            ("variableName", (
+                                idx: 12,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 13,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 1,
+                                version: 13,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        label: "Int Switch",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 15,
+                                version: 3,
+                            )),
+                            ("value", (
+                                idx: 14,
+                                version: 3,
+                            )),
+                            ("caselabel", (
+                                idx: 19,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("defaultcase", (
+                                idx: 7,
+                                version: 3,
+                            )),
+                            ("outAction", (
+                                idx: 9,
+                                version: 1,
+                            )),
+                            ("0", (
+                                idx: 10,
+                                version: 1,
+                            )),
+                            ("1", (
+                                idx: 11,
+                                version: 1,
+                            )),
+                            ("2", (
+                                idx: 12,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: IntSwitch,
+                            custom_named_outputs: {
+                                (
+                                    idx: 12,
+                                    version: 1,
+                                ): (
+                                    name: "2",
+                                    data: PVAL_ACT,
+                                ),
+                                (
+                                    idx: 11,
+                                    version: 1,
+                                ): (
+                                    name: "1",
+                                    data: PVAL_ACT,
+                                ),
+                                (
+                                    idx: 10,
+                                    version: 1,
+                                ): (
+                                    name: "0",
+                                    data: PVAL_ACT,
+                                ),
+                            },
+                        ),
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 7,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 16,
+                                version: 1,
+                            )),
+                            ("variableName", (
+                                idx: 17,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 18,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 8,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        label: "Sound event start",
+                        inputs: [
+                            ("strSoundEventName", (
+                                idx: 20,
+                                version: 1,
+                            )),
+                            ("hTargetEntity", (
+                                idx: 21,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("retval", (
+                                idx: 13,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SoundEventStart,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 9,
+                            version: 3,
+                        ),
+                        label: "Call node",
+                        inputs: [
+                            ("nodeId", (
+                                idx: 22,
+                                version: 3,
+                            )),
+                            ("ActionIn", (
+                                idx: 27,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 17,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: CallNode,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 10,
+                            version: 1,
+                        ),
+                        label: "Function",
+                        inputs: [],
+                        outputs: [
+                            ("outAction", (
+                                idx: 14,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: Function,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        label: "Invoke library binding",
+                        inputs: [
+                            ("binding", (
+                                idx: 23,
+                                version: 1,
+                            )),
+                            ("ActionIn", (
+                                idx: 24,
+                                version: 1,
+                            )),
+                            ("nSoundEventGuid", (
+                                idx: 25,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 15,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: InvokeLibraryBinding,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 12,
+                            version: 1,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 26,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 16,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 28,
+                                version: 1,
+                            )),
+                            ("variableName", (
+                                idx: 29,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 30,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 18,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        label: "Sound event start",
+                        inputs: [
+                            ("strSoundEventName", (
+                                idx: 31,
+                                version: 1,
+                            )),
+                            ("hTargetEntity", (
+                                idx: 32,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("retval", (
+                                idx: 19,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SoundEventStart,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        label: "Sound event start",
+                        inputs: [
+                            ("strSoundEventName", (
+                                idx: 33,
+                                version: 1,
+                            )),
+                            ("hTargetEntity", (
+                                idx: 34,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("retval", (
+                                idx: 20,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SoundEventStart,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 35,
+                                version: 1,
+                            )),
+                            ("variableName", (
+                                idx: 36,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 37,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 21,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 17,
+                            version: 5,
+                        ),
+                        label: "Public Method",
+                        inputs: [
+                            ("name", (
+                                idx: 38,
+                                version: 5,
+                            )),
+                        ],
+                        outputs: [
+                            ("argument1", (
+                                idx: 22,
+                                version: 5,
+                            )),
+                            ("outAction", (
+                                idx: 23,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: CellPublicMethod,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 18,
+                            version: 5,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 39,
+                                version: 5,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 24,
+                                version: 5,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        label: "Operation",
+                        inputs: [
+                            ("type", (
+                                idx: 40,
+                                version: 5,
+                            )),
+                            ("operation", (
+                                idx: 44,
+                                version: 3,
+                            )),
+                            ("A", (
+                                idx: 42,
+                                version: 5,
+                            )),
+                            ("B", (
+                                idx: 43,
+                                version: 5,
+                            )),
+                        ],
+                        outputs: [
+                            ("out", (
+                                idx: 28,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: Operation,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 20,
+                            version: 3,
+                        ),
+                        label: "Debug log",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 54,
+                                version: 3,
+                            )),
+                            ("pMessage", (
+                                idx: 53,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 25,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: DebugLog,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        label: "Debug log",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 52,
+                                version: 3,
+                            )),
+                            ("pMessage", (
+                                idx: 51,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 26,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: DebugLog,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 22,
+                            version: 1,
+                        ),
+                        label: "Debug log",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 50,
+                                version: 3,
+                            )),
+                            ("pMessage", (
+                                idx: 49,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 27,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: DebugLog,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        label: "Invoke library binding",
+                        inputs: [
+                            ("binding", (
+                                idx: 41,
+                                version: 3,
+                            )),
+                            ("ActionIn", (
+                                idx: 48,
+                                version: 3,
+                            )),
+                            ("nSoundEventGuid", (
+                                idx: 47,
+                                version: 3,
+                            )),
+                            ("pParameterName", (
+                                idx: 46,
+                                version: 3,
+                            )),
+                            ("flValue", (
+                                idx: 45,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 29,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: InvokeLibraryBinding,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 24,
+                            version: 1,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 55,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 31,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 56,
+                                version: 1,
+                            )),
+                            ("variableName", (
+                                idx: 57,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 58,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 30,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        label: "Public Method",
+                        inputs: [
+                            ("name", (
+                                idx: 59,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("argument1", (
+                                idx: 32,
+                                version: 1,
+                            )),
+                            ("outAction", (
+                                idx: 33,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: CellPublicMethod,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 27,
+                            version: 1,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 60,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 34,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        label: "Operation",
+                        inputs: [
+                            ("type", (
+                                idx: 61,
+                                version: 1,
+                            )),
+                            ("operation", (
+                                idx: 62,
+                                version: 1,
+                            )),
+                            ("A", (
+                                idx: 64,
+                                version: 3,
+                            )),
+                            ("B", (
+                                idx: 63,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("out", (
+                                idx: 35,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: Operation,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        label: "Invoke library binding",
+                        inputs: [
+                            ("binding", (
+                                idx: 65,
+                                version: 1,
+                            )),
+                            ("ActionIn", (
+                                idx: 66,
+                                version: 1,
+                            )),
+                            ("nSoundEventGuid", (
+                                idx: 67,
+                                version: 1,
+                            )),
+                            ("pParameterName", (
+                                idx: 68,
+                                version: 1,
+                            )),
+                            ("flValue", (
+                                idx: 69,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 36,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: InvokeLibraryBinding,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        label: "Invoke library binding",
+                        inputs: [
+                            ("binding", (
+                                idx: 70,
+                                version: 1,
+                            )),
+                            ("x", (
+                                idx: 73,
+                                version: 3,
+                            )),
+                            ("y", (
+                                idx: 72,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("retval", (
+                                idx: 37,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: InvokeLibraryBinding,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        label: "Save variable",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 71,
+                                version: 3,
+                            )),
+                            ("variableName", (
+                                idx: 74,
+                                version: 1,
+                            )),
+                            ("value", (
+                                idx: 75,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 38,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: SetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 32,
+                            version: 1,
+                        ),
+                        label: "Load variable",
+                        inputs: [
+                            ("variableName", (
+                                idx: 76,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [
+                            ("value", (
+                                idx: 39,
+                                version: 1,
+                            )),
+                        ],
+                        user_data: (
+                            template: GetVar,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 33,
+                            version: 1,
+                        ),
+                        label: "Comment",
+                        inputs: [
+                            ("text", (
+                                idx: 77,
+                                version: 1,
+                            )),
+                        ],
+                        outputs: [],
+                        user_data: (
+                            template: Comment,
+                            custom_named_outputs: {},
+                        ),
+                    )),
+                    version: 1,
+                ),
+            ],
+            inputs: [
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 1,
+                            version: 5,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "+",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 2,
+                            version: 9,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 9,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 3,
+                            version: 13,
+                        ),
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_INT(None),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 13,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 4,
+                            version: 11,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 1.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 11,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 5,
+                            version: 3,
+                        ),
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_INT(None),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song_id",
+                            value: "current_song_id",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 2,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 7,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "NextSong",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 1,
+                            version: 13,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "%",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 9,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 10,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 3.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 5,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 12,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song_id",
+                            value: "current_song_id",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 5,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 5,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 14,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 15,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 7,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 17,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 7,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 18,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 7,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 19,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 2.0,
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 20,
+                            version: 1,
+                        ),
+                        typ: SoundEventName,
+                        value: SoundEventName(
+                            value: "Music.Background.darude_01",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        typ: EHandle,
+                        value: EHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 22,
+                            version: 3,
+                        ),
+                        typ: NoideChoice,
+                        value: NodeChoice(
+                            node: Some((
+                                idx: 10,
+                                version: 1,
+                            )),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 9,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (21),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 24,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 12,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 27,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 9,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        typ: SoundEventName,
+                        value: SoundEventName(
+                            value: "Music.Background.denzelcurry_01",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 32,
+                            version: 1,
+                        ),
+                        typ: EHandle,
+                        value: EHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 33,
+                            version: 1,
+                        ),
+                        typ: SoundEventName,
+                        value: SoundEventName(
+                            value: "Music.Background.hotlinemiami_01",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 34,
+                            version: 1,
+                        ),
+                        typ: EHandle,
+                        value: EHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 35,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 37,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 38,
+                            version: 5,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "VolumeUp",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 17,
+                            version: 5,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 39,
+                            version: 5,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "radio_vol",
+                            value: "radio_vol",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 18,
+                            version: 5,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 40,
+                            version: 5,
+                        ),
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_FLOAT(None),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 41,
+                            version: 3,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (22),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 42,
+                            version: 5,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 43,
+                            version: 5,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.25,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 44,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "+",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 45,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 46,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "volume",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 47,
+                            version: 3,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 48,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 49,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "start song 2",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 22,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 50,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 22,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 51,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "start song 1",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 52,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 53,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "start song 0",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 20,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 54,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 20,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 55,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 24,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 56,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 57,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "radio_vol",
+                            value: "radio_vol",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 58,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 59,
+                            version: 1,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "VolumeDown",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 60,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "current_song",
+                            value: "current_song",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 27,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 61,
+                            version: 1,
+                        ),
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_FLOAT(None),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 62,
+                            version: 1,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "-",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 63,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.25,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 64,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 65,
+                            version: 1,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (22),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 66,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 67,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 68,
+                            version: 1,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "volume",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 69,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 70,
+                            version: 1,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (28),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 71,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 72,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 73,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 74,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "radio_vol",
+                            value: "radio_vol",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 75,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 76,
+                            version: 1,
+                        ),
+                        typ: InternalVariableName,
+                        value: InternalVariableName(
+                            prevvalue: "radio_vol",
+                            value: "radio_vol",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 32,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 77,
+                            version: 1,
+                        ),
+                        typ: CommentBox,
+                        value: CommentBox(
+                            value: "A radio with switchable songs and adjustable volume, to demonstrate capabilities of interacting with audio. You need to enable \'Main Menu Music\' inside the game\'s settings to hear these songs.",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 33,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+            ],
+            outputs: [
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 1,
+                            version: 13,
+                        ),
+                        node: (
+                            idx: 5,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 13,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 2,
+                            version: 7,
+                        ),
+                        node: (
+                            idx: 4,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 7,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 3,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 3,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 4,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 2,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 5,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 1,
+                            version: 13,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 1,
+                            version: 13,
+                        ),
+                        typ: String,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 7,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 7,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 9,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 10,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 12,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 6,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 10,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 11,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 12,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 17,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 9,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 18,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 13,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 19,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 20,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 16,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 22,
+                            version: 5,
+                        ),
+                        node: (
+                            idx: 17,
+                            version: 5,
+                        ),
+                        typ: String,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 23,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 17,
+                            version: 5,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 24,
+                            version: 5,
+                        ),
+                        node: (
+                            idx: 18,
+                            version: 5,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 25,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 20,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 21,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 27,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 22,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 28,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 19,
+                            version: 3,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 24,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 32,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        typ: String,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 33,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 26,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 34,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 27,
+                            version: 1,
+                        ),
+                        typ: SndEventHandle,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 35,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 28,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 29,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 37,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 30,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 38,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 31,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 39,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 32,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                    )),
+                    version: 1,
+                ),
+            ],
+            connections: [
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 4,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 9,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 3,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 5,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 2,
+                            version: 7,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 2,
+                            version: 7,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 17,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 10,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 13,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 14,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 16,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 1,
+                            version: 13,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 11,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 19,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 12,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 20,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: Some([]),
+                    version: 3,
+                ),
+                (
+                    value: Some([]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 24,
+                            version: 5,
+                        ),
+                    ]),
+                    version: 5,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([]),
+                    version: 1,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 28,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 31,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 23,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 21,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 18,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 8,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 29,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 28,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 39,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 33,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 34,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 37,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 36,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 35,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 37,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+            ],
+        ),
+        node_order: [
+            (
+                idx: 2,
+                version: 1,
+            ),
+            (
+                idx: 3,
+                version: 1,
+            ),
+            (
+                idx: 4,
+                version: 1,
+            ),
+            (
+                idx: 1,
+                version: 13,
+            ),
+            (
+                idx: 5,
+                version: 1,
+            ),
+            (
+                idx: 10,
+                version: 1,
+            ),
+            (
+                idx: 11,
+                version: 1,
+            ),
+            (
+                idx: 12,
+                version: 1,
+            ),
+            (
+                idx: 7,
+                version: 1,
+            ),
+            (
+                idx: 13,
+                version: 1,
+            ),
+            (
+                idx: 16,
+                version: 1,
+            ),
+            (
+                idx: 9,
+                version: 3,
+            ),
+            (
+                idx: 20,
+                version: 3,
+            ),
+            (
+                idx: 21,
+                version: 1,
+            ),
+            (
+                idx: 22,
+                version: 1,
+            ),
+            (
+                idx: 6,
+                version: 3,
+            ),
+            (
+                idx: 17,
+                version: 5,
+            ),
+            (
+                idx: 23,
+                version: 1,
+            ),
+            (
+                idx: 19,
+                version: 3,
+            ),
+            (
+                idx: 18,
+                version: 5,
+            ),
+            (
+                idx: 24,
+                version: 1,
+            ),
+            (
+                idx: 25,
+                version: 1,
+            ),
+            (
+                idx: 29,
+                version: 1,
+            ),
+            (
+                idx: 28,
+                version: 1,
+            ),
+            (
+                idx: 30,
+                version: 1,
+            ),
+            (
+                idx: 31,
+                version: 1,
+            ),
+            (
+                idx: 27,
+                version: 1,
+            ),
+            (
+                idx: 26,
+                version: 1,
+            ),
+            (
+                idx: 32,
+                version: 1,
+            ),
+            (
+                idx: 15,
+                version: 1,
+            ),
+            (
+                idx: 14,
+                version: 1,
+            ),
+            (
+                idx: 8,
+                version: 1,
+            ),
+            (
+                idx: 33,
+                version: 1,
+            ),
+        ],
+        connection_in_progress: None,
+        selected_nodes: [],
+        ongoing_box_selection: None,
+        node_positions: [
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: Some((
+                    x: 531.23566,
+                    y: -213.25595,
+                )),
+                version: 13,
+            ),
+            (
+                value: Some((
+                    x: 577.86304,
+                    y: 170.3628,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 864.7401,
+                    y: 4.734558,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1125.8103,
+                    y: -56.622498,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1387.6494,
+                    y: -100.4046,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1896.802,
+                    y: -51.069824,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 2509.3225,
+                    y: -365.54047,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1908.3804,
+                    y: -340.90533,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1662.2432,
+                    y: -162.51892,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1307.0767,
+                    y: -463.3728,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1719.8955,
+                    y: -501.3453,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1371.5835,
+                    y: -371.68243,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2546.0476,
+                    y: -218.48486,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1916.9885,
+                    y: -226.53839,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2058.4224,
+                    y: 159.08643,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2559.9988,
+                    y: -7.376709,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 803.1023,
+                    y: 373.93475,
+                )),
+                version: 5,
+            ),
+            (
+                value: Some((
+                    x: 877.11523,
+                    y: 529.2155,
+                )),
+                version: 5,
+            ),
+            (
+                value: Some((
+                    x: 1202.2245,
+                    y: 554.5601,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 2905.659,
+                    y: -348.7104,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 2938.9167,
+                    y: -168.37909,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 3017.4885,
+                    y: 13.969177,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1517.136,
+                    y: 352.84882,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1174.3,
+                    y: 452.8128,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1882.7817,
+                    y: 422.69855,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 922.18787,
+                    y: 740.1048,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1173.0413,
+                    y: 854.95294,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1146.8435,
+                    y: 970.8072,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1701.4851,
+                    y: 783.7874,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1421.4229,
+                    y: 936.91583,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2052.0813,
+                    y: 876.46954,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 864.2993,
+                    y: 998.37115,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 598.736,
+                    y: -551.3071,
+                )),
+                version: 1,
+            ),
+        ],
+        node_sizes: [
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 13,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 416.62143,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 426.79163,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 423.74042,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 5,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 5,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 498.3657,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+        ],
+        node_finder: None,
+        pan_zoom: (
+            pan: (
+                x: -311.20184,
+                y: 704.0004,
+            ),
+            zoom: 0.99060655,
+        ),
+        _user_state: (),
+    ),
+    user_state: (
+        added_parameters: [
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: Some([
+                    "0",
+                    "1",
+                    "2",
+                ]),
+                version: 3,
+            ),
+        ],
+        public_outputs: [],
+        variables: [
+            (
+                name: "radio_vol",
+                typ_and_default_value: PVAL_FLOAT(Some(1.0)),
+                data_type: Scalar,
+                default_value_buffer: "1",
+            ),
+            (
+                name: "current_song",
+                typ_and_default_value: PVAL_SNDEVT_GUID(None),
+                data_type: SndEventHandle,
+                default_value_buffer: "",
+            ),
+            (
+                name: "current_song_id",
+                typ_and_default_value: PVAL_INT(Some(0)),
+                data_type: Scalar,
+                default_value_buffer: "0",
+            ),
+        ],
+        exposed_nodes: [
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: None,
+                version: 0,
+            ),
+            (
+                value: Some("StopSong"),
+                version: 1,
+            ),
+        ],
+        outputs_dropdown_choices: [
+            PVAL_INT(None),
+            PVAL_INT(None),
+            PVAL_INT(None),
+            PVAL_INT(None),
+        ],
+    ),
+)

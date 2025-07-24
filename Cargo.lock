@@ -1153,7 +1153,7 @@ dependencies = [
  "parking_lot",
  "percent-encoding",
  "raw-window-handle",
- "ron",
+ "ron 0.8.1",
  "serde",
  "static_assertions",
  "wasm-bindgen",
@@ -1177,7 +1177,7 @@ dependencies = [
  "epaint 0.29.1",
  "log",
  "nohash-hasher",
- "ron",
+ "ron 0.8.1",
  "serde",
 ]
 
@@ -3115,7 +3115,7 @@ dependencies = [
  "open",
  "rand 0.8.5",
  "rfd",
- "ron",
+ "ron 0.10.1",
  "self_update",
  "serde",
  "serde_json",
@@ -3459,6 +3459,19 @@ dependencies = [
  "bitflags 2.9.1",
  "serde",
  "serde_derive",
+]
+
+[[package]]
+name = "ron"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "beceb6f7bf81c73e73aeef6dd1356d9a1b2b4909e1f0fc3e59b034f9572d7b7f"
+dependencies = [
+ "base64 0.22.1",
+ "bitflags 2.9.1",
+ "serde",
+ "serde_derive",
+ "unicode-ident",
 ]
 
 [[package]]

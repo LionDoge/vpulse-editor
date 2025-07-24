@@ -903,8 +903,7 @@ impl eframe::App for PulseGraphEditor {
         }
 
         let mut prepended_responses: Vec<NodeResponse<PulseGraphResponse, PulseNodeData>> = vec![];
-        if ctx.input(|i| i.key_released(egui::Key::Delete))
-        || ctx.input(|i| i.key_released(egui::Key::X)) {
+        if ctx.input(|i| i.key_released(egui::Key::Delete)) {
             // delete selected nodes
             for node_id in self.state.selected_nodes.iter() {
                 prepended_responses.push(NodeResponse::DeleteNodeUi(*node_id));

@@ -5,7 +5,8 @@ edition = "2021"
 rust-version = "1.87"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+name = "libpulseedit"
+crate-type = ["rlib"]
 
 [dependencies]
 eframe = "0.29"

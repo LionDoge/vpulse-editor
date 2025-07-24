@@ -3,7 +3,7 @@
 #![warn(clippy::all, rust_2018_idioms)]
 #![cfg_attr(all(not(debug_assertions), target_os = "windows"), windows_subsystem = "windows")]
 
-use pulseedit::PulseGraphEditor;
+use libpulseedit::PulseGraphEditor;
 use std::sync::Arc;
 
 // When compiling natively:

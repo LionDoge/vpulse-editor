@@ -151,6 +151,11 @@ pub enum PulseNodeTemplate {
     #[default]
     Comment,
     SetAnimGraphParam,
+    ConstantBool,
+    ConstantFloat,
+    ConstantString,
+    ConstantVec3,
+    ConstantInt,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

@@ -2594,6 +2594,71 @@ fn traverse_nodes_and_populate<'a>(
             add_cell_and_invoking(graph_def, Box::new(cell), reg_map, target_chunk, "Run".into());
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
+        PulseNodeTemplate::ConstantBool => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
+        PulseNodeTemplate::ConstantFloat => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
+        PulseNodeTemplate::ConstantInt => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_INT(None),
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
+        PulseNodeTemplate::ConstantVec3 => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_VEC3(None),
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
+        PulseNodeTemplate::ConstantString => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_STRING(None),
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

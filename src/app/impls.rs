@@ -255,6 +255,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Timeline => "Timeline",
             PulseNodeTemplate::Comment => "Comment",
             PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param",
+            PulseNodeTemplate::ConstantBool => "Constant Bool",
+            PulseNodeTemplate::ConstantFloat => "Constant Float",
+            PulseNodeTemplate::ConstantString => "Constant String",
+            PulseNodeTemplate::ConstantVec3 => "Constant Vec3",
+            PulseNodeTemplate::ConstantInt => "Constant Int",
         })
     }
 
@@ -293,6 +298,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
             PulseNodeTemplate::Comment => vec!["Editor"],
             PulseNodeTemplate::SetAnimGraphParam => vec!["Animation"],
+            PulseNodeTemplate::ConstantBool
+            | PulseNodeTemplate::ConstantFloat
+            | PulseNodeTemplate::ConstantString
+            | PulseNodeTemplate::ConstantVec3
+            | PulseNodeTemplate::ConstantInt => vec!["Constants"],
         }
     }
 
@@ -376,7 +386,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-        let input_vector3 = |graph: &mut PulseGraph, name: &str| {
+        let input_vector3 = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
@@ -466,6 +476,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         };
         let output_bool = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Bool);
+        };
+        let output_vector3 = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Vec3);
         };
 
         let mut make_referencable = || {
@@ -826,6 +839,28 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_any(graph, "pParamValue");
                 output_action(graph, "outAction");
             }
+            PulseNodeTemplate::ConstantBool => {
+                input_bool(graph, "value", InputParamKind::ConstantOnly);
+                output_bool(graph, "out");
+            }
+            PulseNodeTemplate::ConstantFloat 
+            | PulseNodeTemplate::ConstantInt => {
+                input_scalar(
+                    graph,
+                    "value",
+                    InputParamKind::ConstantOnly,
+                    0.0,
+                );
+                output_scalar(graph, "out");
+            }
+            PulseNodeTemplate::ConstantString => {
+                input_string(graph, "value", InputParamKind::ConstantOnly);
+                output_string(graph, "out");
+            }
+            PulseNodeTemplate::ConstantVec3 => {
+                input_vector3(graph, "value", InputParamKind::ConstantOnly);
+                output_vector3(graph, "out");
+            }
         }
     }
 }
@@ -872,6 +907,11 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::Timeline,
             PulseNodeTemplate::Comment,
             PulseNodeTemplate::SetAnimGraphParam,
+            PulseNodeTemplate::ConstantBool,
+            PulseNodeTemplate::ConstantFloat,
+            PulseNodeTemplate::ConstantString,
+            PulseNodeTemplate::ConstantVec3,
+            PulseNodeTemplate::ConstantInt,
         ]
     }
 }
@@ -1337,6 +1377,11 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::SetNextThink
             | PulseNodeTemplate::InvokeLibraryBinding
             | PulseNodeTemplate::SoundEventStart => Some(Color32::from_rgb(41, 139, 196)),
+            PulseNodeTemplate::ConstantBool
+            | PulseNodeTemplate::ConstantFloat
+            | PulseNodeTemplate::ConstantString
+            | PulseNodeTemplate::ConstantInt
+            | PulseNodeTemplate::ConstantVec3 => Some(Color32::from_rgb(77, 100, 105)),
             PulseNodeTemplate::ConcatString
             | PulseNodeTemplate::Comment
             | PulseNodeTemplate::SetAnimGraphParam => None,

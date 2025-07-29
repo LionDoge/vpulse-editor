@@ -3,7 +3,7 @@
 
     {
         "displayname": "Event_OnRoundStart",
-        "libname": "CCSPointPulseAPI!Event_OnRoundStart",
+        "libname": "CCSPointPulseAPI::Event_OnRoundStart",
         "inparams": [
             {
                 "name": "nRoundNumber",
@@ -13,11 +13,11 @@
     },
     {
         "displayname": "Event_OnRoundFreezeEnd",
-        "libname": "CCSPointPulseAPI!Event_OnRoundFreezeEnd"
+        "libname": "CCSPointPulseAPI::Event_OnRoundFreezeEnd"
     },
     {
         "displayname": "Event_OnRoundEnd",
-        "libname": "CCSPointPulseAPI!Event_OnRoundEnd",
+        "libname": "CCSPointPulseAPI::Event_OnRoundEnd",
         "inparams": [
             {
                 "name": "nWinner",
@@ -37,7 +37,7 @@
     {
         "type": "action",
         "displayname": "Con Command",
-        "libname": "CPulseServerFuncs!ConCommand",
+        "libname": "CPulseServerFuncs::ConCommand",
         "description": "Executes a con command",
         "inparams": [
             {
@@ -49,7 +49,7 @@
     {
         "type": "value",
         "displayname": "Get Graph Entity",
-        "libname": "CPulseServerFuncs!GetGraphEntity",
+        "libname": "CPulseServerFuncs::GetGraphEntity",
         "description": "Get the entity that this graph is running on.",
         "outparams": [
             {
@@ -61,7 +61,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Origin",
-        "libname": "CPulseServerFuncs!GetEntityOrigin",
+        "libname": "CPulseServerFuncs::GetEntityOrigin",
         "description": "Get the position of an entity.",
         "inparams": [
             {
@@ -79,7 +79,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Height Above Nav Mesh",
-        "libname": "CPulseServerFuncs!GetEntityHeightAboveNavMesh",
+        "libname": "CPulseServerFuncs::GetEntityHeightAboveNavMesh",
         "description": "Get the height of the entity off the navmesh.",
         "inparams": [
             {
@@ -97,7 +97,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Nav Mesh Position",
-        "libname": "CPulseServerFuncs!GetEntityNavMeshPosition",
+        "libname": "CPulseServerFuncs::GetEntityNavMeshPosition",
         "description": "Get the height of the entity off the world geo.",
         "inparams": [
             {
@@ -115,7 +115,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Height Above World Collision",
-        "libname": "CPulseServerFuncs!GetEntityHeightAboveWorldCollision",
+        "libname": "CPulseServerFuncs::GetEntityHeightAboveWorldCollision",
         "description": "Get the nearest navmesh position for the entity.",
         "inparams": [
             {
@@ -133,7 +133,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Facing Yaw Angle Delta",
-        "libname": "CPulseServerFuncs!GetEntityFacingYawAngleDelta",
+        "libname": "CPulseServerFuncs::GetEntityFacingYawAngleDelta",
         "description": "Get angle delta between the first entity's facing vector and direction vector to the second entity.",
         "inparams": [
             {
@@ -155,7 +155,7 @@
     {
         "type": "value",
         "displayname": "Get Distance Between Points",
-        "libname": "CPulseServerFuncs!GetDistanceBetweenPoints",
+        "libname": "CPulseServerFuncs::GetDistanceBetweenPoints",
         "description": "Get the distance between two points as a float number.",
         "inparams": [
             {
@@ -177,7 +177,7 @@
     {
         "type": "value",
         "displayname": "Get Entity Name",
-        "libname": "CPulseServerFuncs!GetEntityName",
+        "libname": "CPulseServerFuncs::GetEntityName",
         "description": "Get the name of the entity.",
         "inparams": [
             {
@@ -195,7 +195,7 @@
     {
         "type": "value",
         "displayname": "Count Entities With Name",
-        "libname": "CPulseServerFuncs!CountEntitiesWithName",
+        "libname": "CPulseServerFuncs::CountEntitiesWithName",
         "description": "Count the number of entities whose name matches a pattern.",
         "inparams": [
             {
@@ -213,7 +213,7 @@
     {
         "type": "action",
         "displayname": "Teleport Entity",
-        "libname": "CPulseServerFuncs!TeleportEntity",
+        "libname": "CPulseServerFuncs::TeleportEntity",
         "description": "Teleport the given entity to the target entity's position and orientation",
         "inparams": [
             {
@@ -229,7 +229,7 @@
     {
         "type": "action",
         "displayname": "Remove Entity",
-        "libname": "CPulseServerFuncs!RemoveEntity",
+        "libname": "CPulseServerFuncs::RemoveEntity",
         "description": "Permanently removes the entity from the world.",
         "inparams": [
             {
@@ -241,7 +241,7 @@
     {
         "type": "value",
         "displayname": "Can Character See Entity",
-        "libname": "CPulseServerFuncs!CanCharacterSeeEntity",
+        "libname": "CPulseServerFuncs::CanCharacterSeeEntity",
         "description": "Return true if the character (player or NPC) can see the target entity (i.e. within FOV and has LOS)",
         "inparams": [
             {
@@ -264,7 +264,7 @@
     {
         "type": "value",
         "displayname": "Does Entity Have LOS",
-        "libname": "CPulseServerFuncs!DoesEntityHaveLOS",
+        "libname": "CPulseServerFuncs::DoesEntityHaveLOS",
         "description": "Return true if the entity has LOS to the target entity",
         "inparams": [
             {
@@ -286,7 +286,7 @@
     {
         "type": "action",
         "displayname": "Deal Damage",
-        "libname": "CPulseServerFuncs!DealDamage",
+        "libname": "CPulseServerFuncs::DealDamage",
         "description": "Deals damage to an entity",
         "inparams": [
             {
@@ -310,7 +310,7 @@
     {
         "type": "action",
         "displayname": "Remove All Ammo",
-        "libname": "CPulseServerFuncs!RemoveAllAmmo",
+        "libname": "CPulseServerFuncs::RemoveAllAmmo",
         "description": "Removes all ammo from an entity",
         "inparams": [
             {
@@ -322,7 +322,7 @@
     {
         "type": "action",
         "displayname": "Create Physics Proxy",
-        "libname": "CPulseServerFuncs!CreatePhysicsProxy",
+        "libname": "CPulseServerFuncs::CreatePhysicsProxy",
         "description": "Creates a physics proxy at the entity's attachment point.",
         "inparams": [
             {
@@ -348,7 +348,7 @@
     {
         "type": "action",
         "displayname": "Create Physics Constraint",
-        "libname": "CPulseServerFuncs!CreatePhysicsConstraint",
+        "libname": "CPulseServerFuncs::CreatePhysicsConstraint",
         "description": "Constrain an entity to the world or another entity at a fixed relative position.",
         "inparams": [
             {
@@ -406,7 +406,7 @@
     {
         "type": "action",
         "displayname": "Create Physics Ball Socket Constraint",
-        "libname": "CPulseServerFuncs!CreatePhysicsBallSocketConstraint",
+        "libname": "CPulseServerFuncs::CreatePhysicsBallSocketConstraint",
         "description": "Create a constraint that keeps the position of two objects fixed, relative to the constraint's origin. You can optionally specify limits for the relative twist and swing rotation.",
         "inparams": [
             {
@@ -464,7 +464,7 @@
     {
         "type": "action",
         "displayname": "Create Physics Hinge Constraint",
-        "libname": "CPulseServerFuncs!CreatePhysicsHingeConstraint",
+        "libname": "CPulseServerFuncs::CreatePhysicsHingeConstraint",
         "description": "Create a physically simulated hinge between two entities.",
         "inparams": [
             {
@@ -518,7 +518,7 @@
     {
         "type": "action",
         "displayname": "Play Sequence",
-        "libname": "CPulseAnimFuncs!PlaySequence",
+        "libname": "CPulseAnimFuncs::PlaySequence",
         "description": "Play the specified animation sequence on a NON-ANIMGRAPH entity",
         "inparams": [
             {
@@ -534,7 +534,7 @@
     {
         "type": "action",
         "displayname": "Sound Event Stop",
-        "libname": "CPulseServerFuncs_Sounds!SoundEventStop",
+        "libname": "CPulseServerFuncs_Sounds::SoundEventStop",
         "description": "Stop a sound event.",
         "inparams": [
             {
@@ -546,7 +546,7 @@
     {
         "type": "action",
         "displayname": "Sound Event Set Param Float",
-        "libname": "CPulseServerFuncs_Sounds!SoundEventSetParamFloat",
+        "libname": "CPulseServerFuncs_Sounds::SoundEventSetParamFloat",
         "description": "Set a sound event parameter to a float value.",
         "inparams": [
             {
@@ -566,7 +566,7 @@
     {
         "type": "value",
         "displayname": "Sin",
-        "libname": "CPulseMathlib!Sin",
+        "libname": "CPulseMathlib::Sin",
         "description": "Sine of angle, in degrees (0 -> 0, 90 -> 1)",
         "inparams": [
             {
@@ -584,7 +584,7 @@
     {
         "type": "value",
         "displayname": "Cos",
-        "libname": "CPulseMathlib!Cos",
+        "libname": "CPulseMathlib::Cos",
         "description": "Cosine of angle, in degrees (0 -> 1, 90 -> 0)",
         "inparams": [
             {
@@ -602,7 +602,7 @@
     {
         "type": "value",
         "displayname": "Pow",
-        "libname": "CPulseMathlib!Pow",
+        "libname": "CPulseMathlib::Pow",
         "description": "X to the Y power",
         "inparams": [
             {
@@ -624,7 +624,7 @@
     {
         "type": "value",
         "displayname": "Min Float",
-        "libname": "CPulseMathlib!MinFloat",
+        "libname": "CPulseMathlib::MinFloat",
         "description": "Minimum of two values (float)",
         "inparams": [
             {
@@ -646,7 +646,7 @@
     {
         "type": "value",
         "displayname": "Min Int",
-        "libname": "CPulseMathlib!MinInt",
+        "libname": "CPulseMathlib::MinInt",
         "description": "Minimum of two values (int)",
         "inparams": [
             {
@@ -668,7 +668,7 @@
     {
         "type": "value",
         "displayname": "Max Float",
-        "libname": "CPulseMathlib!MaxFloat",
+        "libname": "CPulseMathlib::MaxFloat",
         "description": "Maximum of two values (float)",
         "inparams": [
             {
@@ -690,7 +690,7 @@
     {
         "type": "value",
         "displayname": "Max Int",
-        "libname": "CPulseMathlib!MaxInt",
+        "libname": "CPulseMathlib::MaxInt",
         "description": "Maximum of two values (int)",
         "inparams": [
             {
@@ -712,7 +712,7 @@
     {
         "type": "value",
         "displayname": "Clamp Float",
-        "libname": "CPulseMathlib!ClampFloat",
+        "libname": "CPulseMathlib::ClampFloat",
         "description": "Clamp value to range (float)",
         "inparams": [
             {
@@ -738,7 +738,7 @@
     {
         "type": "value",
         "displayname": "Clamp Int",
-        "libname": "CPulseMathlib!ClampInt",
+        "libname": "CPulseMathlib::ClampInt",
         "description": "Clamp value to range (int)",
         "inparams": [
             {
@@ -764,7 +764,7 @@
     {
         "type": "value",
         "displayname": "Abs Float",
-        "libname": "CPulseMathlib!AbsFloat",
+        "libname": "CPulseMathlib::AbsFloat",
         "description": "Absolute value (float)",
         "inparams": [
             {
@@ -782,7 +782,7 @@
     {
         "type": "value",
         "displayname": "Abs Int",
-        "libname": "CPulseMathlib!AbsInt",
+        "libname": "CPulseMathlib::AbsInt",
         "description": "Absolute value (int)",
         "inparams": [
             {
@@ -800,7 +800,7 @@
     {
         "type": "value",
         "displayname": "Get Rounds Played This Phase",
-        "libname": "CCSPointPulseAPI!GetRoundsPlayedThisPhase",
+        "libname": "CCSPointPulseAPI::GetRoundsPlayedThisPhase",
         "description": "Get the round number of the current half. Starts at 0.",
         "outparams": [
             {
@@ -812,7 +812,7 @@
     {
         "type": "value",
         "displayname": "Get CT Score",
-        "libname": "CCSPointPulseAPI!GetCTScore",
+        "libname": "CCSPointPulseAPI::GetCTScore",
         "description": "Get the number of rounds won by CTs.",
         "outparams": [
             {
@@ -824,7 +824,7 @@
     {
         "type": "value",
         "displayname": "Get T Score",
-        "libname": "CCSPointPulseAPI!GetTScore",
+        "libname": "CCSPointPulseAPI::GetTScore",
         "description": "Get the number of rounds won by Ts.",
         "outparams": [
             {
@@ -836,7 +836,7 @@
     {
         "type": "value",
         "displayname": "Get Score To End Match",
-        "libname": "CCSPointPulseAPI!GetScoreToEndMatch",
+        "libname": "CCSPointPulseAPI::GetScoreToEndMatch",
         "description": "Get the number of round wins needed to win the match. This number goes up each time a match enters overtime.",
         "outparams": [
             {
@@ -848,7 +848,7 @@
     {
         "type": "value",
         "displayname": "Get Abs Origin",
-        "libname": "CBaseEntityAPI!GetAbsOrigin",
+        "libname": "CBaseEntityAPI::GetAbsOrigin",
         "description": "The entity origin (absolute).",
         "inparams": [
             {
@@ -866,7 +866,7 @@
     {
         "type": "value",
         "displayname": "Get Attachment Origin",
-        "libname": "CBaseEntityAPI!GetAttachmentOrigin",
+        "libname": "CBaseEntityAPI::GetAttachmentOrigin",
         "description": "Return the absolute position of the entity's attachment.",
         "inparams": [
             {
@@ -888,7 +888,7 @@
     {
         "type": "value",
         "displayname": "Get Origin",
-        "libname": "CBaseEntityAPI!GetOrigin",
+        "libname": "CBaseEntityAPI::GetOrigin",
         "description": "The entity origin (local)",
         "inparams": [
             {
@@ -906,7 +906,7 @@
     {
         "type": "value",
         "displayname": "Get Team Number",
-        "libname": "CBaseEntityAPI!GetTeamNumber",
+        "libname": "CBaseEntityAPI::GetTeamNumber",
         "description": "The entity team number",
         "inparams": [
             {
@@ -924,7 +924,7 @@
     {
         "type": "action",
         "displayname": "Change Team",
-        "libname": "CBaseEntityAPI!ChangeTeam",
+        "libname": "CBaseEntityAPI::ChangeTeam",
         "description": "Set the entity team number",
         "inparams": [
             {
@@ -940,7 +940,7 @@
     {
         "type": "value",
         "displayname": "Get Class Name",
-        "libname": "CBaseEntityAPI!GetClassName",
+        "libname": "CBaseEntityAPI::GetClassName",
         "description": "The entity class name",
         "inparams": [
             {
@@ -958,7 +958,7 @@
     {
         "type": "value",
         "displayname": "Find Model Config Entity",
-        "libname": "CBaseEntityAPI!FindModelConfigEntity",
+        "libname": "CBaseEntityAPI::FindModelConfigEntity",
         "description": "Returns the model config entity attached to this entity by the specified name",
         "inparams": [
             {
@@ -981,7 +981,7 @@
     {
         "type": "action",
         "displayname": "Point Template: Force Spawn",
-        "libname": "CPointTemplateAPI!ForceSpawn",
+        "libname": "CPointTemplateAPI::ForceSpawn",
         "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
         "inparams": [
             {
@@ -997,7 +997,7 @@
     {
         "type": "value",
         "displayname": "Get Player Slot",
-        "libname": "CBasePlayerControllerAPI!GetPlayerSlot",
+        "libname": "CBasePlayerControllerAPI::GetPlayerSlot",
         "description": "",
         "inparams": [
             {
@@ -1016,7 +1016,7 @@
     {
         "type": "value",
         "displayname": "Is Fake Client",
-        "libname": "CBasePlayerControllerAPI!IsFakeClient",
+        "libname": "CBasePlayerControllerAPI::IsFakeClient",
         "description": "Fake client, simulated server side; don't send network messages to them",
         "inparams": [
             {
@@ -1035,8 +1035,8 @@
     {
         "type": "action",
         "displayname": "Set Next Think",
-        "libname": "CPulseGraphInstance_ServerEntity!SetNextThink",
-        "description": "Schedule the next think for the entity that this graph is running on. ( EXPERIMENTAL - may be removed in the future! )",
+        "libname": "CPulseGraphInstance_ServerEntity::SetNextThink",
+        "description": "Schedule the next think for the entity that this graph is running on. ( EXPERIMENTAL - may be removed in the future:: )",
         "inparams": [
             {
                 "name": "flTime",
@@ -1048,7 +1048,7 @@
     {
         "type": "action",
         "displayname": "Tag Cursor",
-        "libname": "CPulseCursorFuncs!TagCursor",
+        "libname": "CPulseCursorFuncs::TagCursor",
         "description": "Save a named value of any type on the cursor.",
         "inparams": [
             {
@@ -1069,7 +1069,7 @@
     {
         "type": "value",
         "displayname": "Cursor Has Tag",
-        "libname": "CPulseCursorFuncs!CursorHasTag",
+        "libname": "CPulseCursorFuncs::CursorHasTag",
         "description": "Check if the cursor already has the given tag.",
         "inparams": [
             {
@@ -1092,7 +1092,7 @@
     {
         "type": "value",
         "displayname": "Any Other Cursors Have Tag",
-        "libname": "CPulseCursorFuncs!AnyOtherCursorsHaveTag",
+        "libname": "CPulseCursorFuncs::AnyOtherCursorsHaveTag",
         "description": "Check if any yielded cursors on the graph already have the given tag.",
         "inparams": [
             {
@@ -1115,7 +1115,7 @@
     {
         "type": "action",
         "displayname": "Kill Cursors With Tag",
-        "libname": "CPulseCursorFuncs!KillCursorsWithTag",
+        "libname": "CPulseCursorFuncs::KillCursorsWithTag",
         "description": "Find all the yielded cursors on this graph with the matching tag and cancel them.",
         "inparams": [
             {
@@ -1136,7 +1136,7 @@
     {
         "type": "action",
         "displayname": "Kill All Other Cursors",
-        "libname": "CPulseCursorFuncs!KillAllOtherCursors",
+        "libname": "CPulseCursorFuncs::KillAllOtherCursors",
         "description": "Find all the yielded cursors on this graph and cancel them.",
         "inparams": [
             {
@@ -1149,7 +1149,7 @@
     {
         "type": "action",
         "displayname": "Remove Tag From Cursor",
-        "libname": "CPulseCursorFuncs!RemoveTagFromCursor",
+        "libname": "CPulseCursorFuncs::RemoveTagFromCursor",
         "description": "Remove the given tag from this cursor. If other cursors are waiting on us, they will resume.",
         "inparams": [
             {
@@ -1166,14 +1166,14 @@
     {
         "type": "action",
         "displayname": "Kill This Cursor And Cancel",
-        "libname": "CPulseCursorFuncs!KillThisCursorAndCancel",
+        "libname": "CPulseCursorFuncs::KillThisCursorAndCancel",
         "description": "Optional. After taking an OnCanceled outflow, signal to any observers that this cursor is now canceled. Equivalent to not handling the original cancel outflow. If you don't use this, handling OnCanceled will be treated as success."
     },
 
     {
         "type": "action",
         "displayname": "Kill This Cursor And Fail",
-        "libname": "CPulseCursorFuncs!KillThisCursorAndFail",
+        "libname": "CPulseCursorFuncs::KillThisCursorAndFail",
         "description": "Optional. After taking an OnFailed outflow, signal to any observers that this cursor is now failed. Equivalent to not handling the original fail outflow. If you don't use this, handling OnFailed will be treated as success."
     }
 

@@ -46,7 +46,7 @@ impl KV3Serialize for CPulseCell_Inflow_Method {
                 m_MethodName = \"{}\"
                 m_Description = \"{}\"
                 m_bIsPublic = true
-                m_ReturnType = \"PVAL_INVALID\"
+                m_ReturnType = \"PVAL_VOID\"
                 m_Args =
                 [
                     {}
@@ -283,6 +283,7 @@ impl KV3Serialize for RegisterMap {
             "
             {{
                 m_Inparams = {}
+                m_InparamsWhichCanBeMoved = null
                 m_Outparams = {}
             }}
             "
@@ -930,8 +931,8 @@ impl KV3Serialize for PulseGraphDef {
                 [
                     {}
                 ]
-                m_DomainIdentifier = \"ServerPointEntity\"
-                m_DomainSubType = \"PVAL_INVALID\"
+                m_DomainIdentifier = \"ServerEntity\"
+                m_DomainSubType = \"PVAL_EHANDLE:point_pulse\"
                 m_ParentMapName = \"{}\"
                 m_ParentXmlName = \"{}\"
                 m_vecGameBlackboards = []

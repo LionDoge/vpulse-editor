@@ -120,7 +120,7 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
             PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
-            PulseValueType::PVAL_ANY => write!(f, "PVAL_ANY"),
+            PulseValueType::PVAL_ANY => write!(f, "PVAL_VARIANT"),
             PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
                 write!(f, "PVAL_SCHEMA_ENUM:{}", enum_type.to_str())
             }
@@ -174,7 +174,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_ENTITY_NAME" => Ok(PulseValueType::DOMAIN_ENTITY_NAME),
         "PVAL_SNDEVT_NAME" => Ok(PulseValueType::PVAL_SNDEVT_NAME(None)),
         "PVAL_ACT" => Ok(PulseValueType::PVAL_ACT),
-        "PVAL_ANY" => Ok(PulseValueType::PVAL_ANY),
+        "PVAL_ANY" | "PVAL_VARIANT" => Ok(PulseValueType::PVAL_ANY),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;

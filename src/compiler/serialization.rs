@@ -514,7 +514,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
                 PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
                 PulseConstant::Integer(_) => "PVAL_INT".to_string(),
-                PulseConstant::Vec3(_) => "PVAL_VEC3".to_string(),
+                PulseConstant::Vec3(_) => "PVAL_VEC3_WORLDSPACE".to_string(),
                 PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
                 PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
                 PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),

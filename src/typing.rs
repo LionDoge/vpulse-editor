@@ -113,7 +113,7 @@ impl fmt::Display for PulseValueType {
                     write!(f, "PVAL_EHANDLE")
                 }
             }
-            PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3"),
+            PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3_WORLDSPACE"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
             PulseValueType::PVAL_BOOL_VALUE(_) => write!(f, "PVAL_BOOL"),
@@ -148,7 +148,7 @@ impl PulseValueType {
             PulseValueType::PVAL_INVALID => "Invalid",
             PulseValueType::DOMAIN_ENTITY_NAME => "Entity Name",
             PulseValueType::PVAL_EHANDLE(_) => "Entity",
-            PulseValueType::PVAL_VEC3(_) => "Vector 3D",
+            PulseValueType::PVAL_VEC3(_) => "World Vector",
             PulseValueType::PVAL_COLOR_RGB(_) => "Color RGB",
             PulseValueType::PVAL_BOOL | PulseValueType::PVAL_BOOL_VALUE(_) => "Boolean",
             PulseValueType::PVAL_SNDEVT_GUID(_) => "Sound Event",
@@ -167,7 +167,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL),
         "PVAL_STRING" => Ok(PulseValueType::PVAL_STRING(None)),
         "PVAL_EHANDLE" => Ok(PulseValueType::PVAL_EHANDLE(None)),
-        "PVAL_VEC3" => Ok(PulseValueType::PVAL_VEC3(None)),
+        "PVAL_VEC3" | "PVAL_VEC3_WORLDSPACE" => Ok(PulseValueType::PVAL_VEC3(None)), // TODO: make bindings match the actual types.
         "PVAL_COLOR_RGB" => Ok(PulseValueType::PVAL_COLOR_RGB(None)),
         "PVAL_INVALID" => Ok(PulseValueType::PVAL_INVALID),
         "PVAL_SNDEVT_GUID" => Ok(PulseValueType::PVAL_SNDEVT_GUID(None)),

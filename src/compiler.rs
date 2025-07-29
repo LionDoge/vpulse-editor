@@ -1233,53 +1233,57 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(register_output);
         }
         PulseNodeTemplate::FindEntByName => {
-            let entclass_input_id = current_node
-                .get_input("entClass")
-                .map_err(|e| anyhow!(e).context("FindEntByName node"))?;
-            let entclass_input_param = graph
-                .get_input(entclass_input_id)
-                .value()
-                .clone()
-                .try_to_string()
-                .map_err(|e| anyhow!(e).context("FindEntByName node"))?;
-            let mut reg_output = try_find_output_mapping(graph_def, output_id);
-            let reg_entname = if reg_output == -1 {
-                get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "entName",
-                    PulseValueType::DOMAIN_ENTITY_NAME,
-                    false,
-                )?
-            } else {
-                None
-            };
-            if reg_output == -1 {
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                reg_output = chunk.add_register(
-                    PulseValueType::PVAL_EHANDLE(Some(entclass_input_param.clone())).to_string(),
-                    chunk.get_last_instruction_id() + 1,
-                );
-                if let Some(out) = output_id {
-                    graph_def.add_register_mapping(*out, reg_output);
-                }
-            } else {
-                return Ok(reg_output);
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
             }
-            let mut register_map = reg_map_setup_inputs!("pName", reg_entname);
-            register_map.add_outparam("retval".into(), reg_output);
-            let cell = CPulseCell_Value_FindEntByName::new(entclass_input_param.into());
-            add_cell_and_invoking(
+            let reg_entity_class = get_input_register_or_create_constant(
+                graph,
+                current_node,
                 graph_def,
-                Box::from(cell),
-                register_map,
+                graph_state,
                 target_chunk,
-                "Eval".into(),
+                "entClass",
+                PulseValueType::PVAL_STRING(None),
+                false,
+            )?;
+            let reg_entity_name = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "entName",
+                PulseValueType::DOMAIN_ENTITY_NAME,
+                false,
+            )?;
+            
+            let new_binding_id = graph_def.get_current_binding_id() + 1;
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
+            let instr = chunk.get_last_instruction_id() + 1;
+            //? Is non-specific entity handle fine? Since now entity class can be determined at runtime.
+            let reg_out =
+                chunk.add_register(PulseValueType::PVAL_EHANDLE(None).to_string(), instr);
+            if let Some(out) = output_id {
+                graph_def.add_register_mapping(*out, reg_out);
+            }
+            let mut reg_map = reg_map_setup_inputs!(
+                "entityType",
+                reg_entity_class,
+                "entityName",
+                reg_entity_name
             );
-            return Ok(reg_output);
+            reg_map.add_outparam("retval".into(), reg_out);
+            let binding = InvokeBinding {
+                register_map: reg_map,
+                func_name: "CPulseServerFuncs::FindEntity".into(),
+                cell_index: -1,
+                src_chunk: -1,
+                src_instruction: -1,
+            };
+            graph_def.add_invoke_binding(binding);
+            return Ok(reg_out);
         }
         PulseNodeTemplate::DebugWorldText => {
             let reg_message = get_input_register_or_create_constant(
@@ -1409,7 +1413,7 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 register_map,
                 target_chunk,
-                "CPulseServerFuncs!DebugWorldText".into(),
+                "CPulseServerFuncs::DebugWorldText".into(),
             );
 
             // go to next action.
@@ -1482,17 +1486,17 @@ fn traverse_nodes_and_populate<'a>(
             let new_binding_id = graph_def.get_current_binding_id() + 1;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let reg_output = chunk.add_register(
-                String::from("PVAL_FLOAT"),
+                String::from("PVAL_GAMETIME"),
                 chunk.get_last_instruction_id() + 1,
             );
             let mut register_map = RegisterMap::default();
             register_map.add_outparam("retval".into(), reg_output);
             let binding = InvokeBinding {
                 register_map,
-                func_name: "CPulseServerFuncs!GetGameTime".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: chunk.get_last_instruction_id() + 1,
+                func_name: "CPulseServerFuncs::GetGameTime".into(),
+                cell_index: -1,
+                src_chunk: -1,
+                src_instruction: -1,
             };
             chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
             graph_def.add_invoke_binding(binding);
@@ -1517,10 +1521,10 @@ fn traverse_nodes_and_populate<'a>(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
                 register_map,
-                func_name: "CPulseServerFuncs!SetNextThink".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: chunk.get_last_instruction_id() + 1,
+                func_name: "CPulseServerFuncs::SetNextThink".into(),
+                cell_index: -1,
+                src_chunk: -1,
+                src_instruction: -1,
             };
             chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
             graph_def.add_invoke_binding(binding);
@@ -1989,7 +1993,7 @@ fn traverse_nodes_and_populate<'a>(
                 reg_map.add_outparam("retval".into(), reg_out);
                 let invoke_binding = InvokeBinding {
                     register_map: reg_map,
-                    func_name: "CPulseServerFuncs!StringToEntityName".into(),
+                    func_name: "CPulseServerFuncs::StringToEntityName".into(),
                     cell_index: -1,
                     src_chunk: -1,
                     src_instruction: -1,
@@ -2105,23 +2109,22 @@ fn traverse_nodes_and_populate<'a>(
             }
         }
         PulseNodeTemplate::FindEntitiesWithin => {
-            let classname =
-                get_constant_graph_input_value!(graph, current_node, "classname", try_to_string);
-            // Has this been already evaulated?
-            let mut reg_output = try_find_output_mapping(graph_def, output_id);
-            if reg_output == -1 {
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                reg_output = chunk.add_register(
-                    PulseValueType::PVAL_EHANDLE(Some(classname.clone())).to_string(),
-                    chunk.get_last_instruction_id() + 1,
-                );
-                if let Some(out) = output_id {
-                    graph_def.add_register_mapping(*out, reg_output);
-                }
-            } else {
-                return Ok(reg_output);
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
             }
-            // connection only
+            let classname_static =
+                get_constant_graph_input_value!(graph, current_node, "classname", try_to_string);
+            let reg_classname = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "classname",
+                PulseValueType::PVAL_STRING(None),
+                false,
+            )?;
             let reg_searchfroment = get_input_register_or_create_constant(
                 graph,
                 current_node,
@@ -2153,7 +2156,9 @@ fn traverse_nodes_and_populate<'a>(
                 PulseValueType::PVAL_EHANDLE(None),
                 false,
             )?;
-            let mut register_map = reg_map_setup_inputs!(
+            let mut reg_map = reg_map_setup_inputs!(
+                "entityType",
+                reg_classname,
                 "pSearchFromEntity",
                 reg_searchfroment,
                 "flSearchRadius",
@@ -2161,15 +2166,21 @@ fn traverse_nodes_and_populate<'a>(
                 "pStartEntity",
                 reg_startentity
             );
-            register_map.add_outparam("retval".into(), reg_output);
-            let cell = CPulseCell_Value_FindEntByClassNameWithin::new(classname.into());
-            add_cell_and_invoking(
-                graph_def,
-                Box::from(cell),
-                register_map,
-                target_chunk,
-                "Eval".into(),
-            );
+            let new_binding_id = graph_def.get_current_binding_id() + 1;
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
+            let instr = chunk.get_last_instruction_id() + 1;
+            let reg_output = chunk.add_register(
+                PulseValueType::PVAL_EHANDLE(Some(classname_static)).to_string(), instr);
+            reg_map.add_outparam("retval".into(), reg_output);
+            let binding = InvokeBinding {
+                register_map: reg_map,
+                func_name: "CPulseServerFuncs::FindEntityByClassnameWithinRadius".into(),
+                cell_index: -1,
+                src_chunk: -1,
+                src_instruction: -1,
+            };
+            graph_def.add_invoke_binding(binding);
             return Ok(reg_output);
         }
         PulseNodeTemplate::CompareOutput => {

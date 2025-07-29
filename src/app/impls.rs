@@ -581,7 +581,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::FindEntByName => {
                 input_entityname(graph, "entName");
-                input_string(graph, "entClass", InputParamKind::ConstantOnly);
+                input_string(graph, "entClass", InputParamKind::ConnectionOrConstant);
                 output_ehandle(graph, "out");
             }
             PulseNodeTemplate::DebugWorldText => {

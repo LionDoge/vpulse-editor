@@ -143,21 +143,6 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
     }
 }
 
-impl KV3Serialize for CPulseCell_Value_FindEntByName {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Value_FindEntByName\"
-                m_nEditorNodeID = -1
-                m_EntityType = \"{}\"
-            }}
-            "
-            , self.entity_type
-        }
-    }
-}
-
 impl KV3Serialize for CPulseCell_Step_DebugLog {
     fn serialize(&self) -> String {
         formatdoc! {
@@ -182,21 +167,6 @@ impl KV3Serialize for CPulseCell_Step_PublicOutput {
             }}
             "
             , self.output_idx
-        }
-    }
-}
-
-impl KV3Serialize for CPulseCell_Value_FindEntByClassNameWithin {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Value_FindEntByClassNameWithin\"
-                m_nEditorNodeID = -1
-                m_EntityType = \"{}\"
-            }}
-            "
-            , self.entity_type
         }
     }
 }
@@ -283,7 +253,6 @@ impl KV3Serialize for RegisterMap {
             "
             {{
                 m_Inparams = {}
-                m_InparamsWhichCanBeMoved = null
                 m_Outparams = {}
             }}
             "
@@ -444,11 +413,10 @@ impl KV3Serialize for DomainValue {
             {{
                 m_nType = \"{}\"
                 m_Value = \"{}\"
-                m_ExpectedRuntimeType = \"{}\"
                 m_RequiredRuntimeType = \"{}\"
             }}
             "
-            , self.typ, self.value, self.__deprecated_expected_runtime_type, self.required_runtime_type
+            , self.typ, self.value, self.required_runtime_type
         }
     }
 }

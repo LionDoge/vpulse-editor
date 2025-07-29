@@ -117,37 +117,6 @@ impl CPulseCell_Step_PublicOutput {
     }
 }
 
-// Value Cells
-#[derive(Default)]
-#[allow(non_camel_case_types)]
-pub struct CPulseCell_Value_FindEntByName {
-    pub(crate) entity_type: Cow<'static, str>,
-}
-impl PulseCell for CPulseCell_Value_FindEntByName {
-    fn get_cell_type(&self) -> CellType {
-        CellType::Value
-    }
-}
-impl CPulseCell_Value_FindEntByName {
-    pub fn new(entity_type: Cow<'static, str>) -> CPulseCell_Value_FindEntByName {
-        CPulseCell_Value_FindEntByName { entity_type }
-    }
-}
-
-pub struct CPulseCell_Value_FindEntByClassNameWithin {
-    pub(crate) entity_type: Cow<'static, str>,
-}
-impl CPulseCell_Value_FindEntByClassNameWithin {
-    pub fn new(entity_type: Cow<'static, str>) -> Self {
-        Self { entity_type }
-    }
-}
-impl PulseCell for CPulseCell_Value_FindEntByClassNameWithin {
-    fn get_cell_type(&self) -> CellType {
-        CellType::Value
-    }
-}
-
 // Outflow Cells
 pub struct OutflowConnection {
     pub outflow_name: Cow<'static, str>,

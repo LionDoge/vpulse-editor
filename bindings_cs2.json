@@ -1175,6 +1175,66 @@
         "displayname": "Kill This Cursor And Fail",
         "libname": "CPulseCursorFuncs::KillThisCursorAndFail",
         "description": "Optional. After taking an OnFailed outflow, signal to any observers that this cursor is now failed. Equivalent to not handling the original fail outflow. If you don't use this, handling OnFailed will be treated as success."
+    },
+
+    {
+        "type": "value",
+        "displayname": "Get Trace Hit",
+        "libname": "CPulseServerFuncs::GetTraceHit",
+        "description": "Get trace results from a position in direction at given length.",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vDirection",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "fMaxLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "hIgnoreEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "nTraceContents",
+                "type": "PVAL_SCHEMA_ENUM:PulseTraceContents_t"
+            },
+            {
+                "name": "nGroup",
+                "type": "PVAL_SCHEMA_ENUM:PulseCollisionGroup_t"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "DidHit",
+                "type": "PVAL_BOOL"
+            },
+            {
+                "name": "HitDistance",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "HitLocation",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "HitNormal",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "HitFraction",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "HitEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    }
     }
 
     ]

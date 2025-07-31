@@ -848,7 +848,8 @@ impl eframe::App for PulseGraphEditor {
                                     value.get_or_insert(false), ""
                                 );
                             }
-                            PulseValueType::PVAL_VEC3(value) => {
+                            PulseValueType::PVAL_VEC3(value)
+                            | PulseValueType::PVAL_VEC3_LOCAL(value) => {
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));

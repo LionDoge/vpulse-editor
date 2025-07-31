@@ -780,6 +780,7 @@ impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
+    mapped_registers_node_outputs: SecondaryMap<NodeId, SecondaryMap<OutputId, i32>>,
     pub traversed_entrypoints: Vec<(NodeId, i32)>, // used to track which entrypoints have been traversed
     pub cells: Vec<Box<dyn PulseCellTrait>>,
     pub constants: Vec<PulseConstant>,
@@ -841,6 +842,13 @@ impl PulseGraphDef {
     }
     pub fn add_register_mapping_input(&mut self, input_id: InputId, register_id: i32) {
         self.mapped_registers_inputs.insert(input_id, register_id);
+    }
+    pub fn get_mapped_register_node_outputs(&self, node_id: NodeId, output_id: OutputId) -> Option<&i32> {
+        self.mapped_registers_node_outputs.get(node_id)
+            .and_then(|map| map.get(output_id))
+    }
+    pub fn add_register_mapping_node_outputs(&mut self, node_id: NodeId, output_map: SecondaryMap<OutputId, i32>) {
+        self.mapped_registers_node_outputs.insert(node_id, output_map);
     }
     pub fn get_current_constant_id(&self) -> i32 {
         self.constants.len() as i32 - 1

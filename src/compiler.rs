@@ -820,6 +820,13 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Vec3(input_value));
                 }
+                PulseValueType::PVAL_VEC3_LOCAL(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param.value().clone().try_to_vec3()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Vec3Local(input_value));
+                }
                 PulseValueType::PVAL_COLOR_RGB(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);

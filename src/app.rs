@@ -25,6 +25,7 @@ fn get_supported_ui_types() -> Vec<PulseValueType> {
         PulseValueType::PVAL_STRING(None),
         PulseValueType::PVAL_BOOL_VALUE(Some(false)),
         PulseValueType::PVAL_VEC3(None),
+        PulseValueType::PVAL_VEC3_LOCAL(None),
         PulseValueType::PVAL_COLOR_RGB(None),
         PulseValueType::PVAL_EHANDLE(None),
         PulseValueType::DOMAIN_ENTITY_NAME,

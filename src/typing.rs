@@ -80,6 +80,7 @@ pub enum PulseValueType {
     PVAL_INVALID,
     PVAL_EHANDLE(Option<String>),
     PVAL_VEC3(Option<Vec3>),
+    PVAL_VEC3_LOCAL(Option<Vec3>),
     PVAL_COLOR_RGB(Option<Vec3>),
     PVAL_SNDEVT_GUID(Option<String>),
     PVAL_SNDEVT_NAME(Option<String>),
@@ -114,6 +115,7 @@ impl fmt::Display for PulseValueType {
                 }
             }
             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3_WORLDSPACE"),
+            PulseValueType::PVAL_VEC3_LOCAL(_) => write!(f, "PVAL_VEC3"),
             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
             PulseValueType::PVAL_BOOL_VALUE(_) => write!(f, "PVAL_BOOL"),
@@ -149,6 +151,7 @@ impl PulseValueType {
             PulseValueType::DOMAIN_ENTITY_NAME => "Entity Name",
             PulseValueType::PVAL_EHANDLE(_) => "Entity",
             PulseValueType::PVAL_VEC3(_) => "World Vector",
+            PulseValueType::PVAL_VEC3_LOCAL(_) => "Local Vector",
             PulseValueType::PVAL_COLOR_RGB(_) => "Color RGB",
             PulseValueType::PVAL_BOOL | PulseValueType::PVAL_BOOL_VALUE(_) => "Boolean",
             PulseValueType::PVAL_SNDEVT_GUID(_) => "Sound Event",
@@ -167,7 +170,8 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL),
         "PVAL_STRING" => Ok(PulseValueType::PVAL_STRING(None)),
         "PVAL_EHANDLE" => Ok(PulseValueType::PVAL_EHANDLE(None)),
-        "PVAL_VEC3" | "PVAL_VEC3_WORLDSPACE" => Ok(PulseValueType::PVAL_VEC3(None)), // TODO: make bindings match the actual types.
+        "PVAL_VEC3_WORLDSPACE" => Ok(PulseValueType::PVAL_VEC3(None)),
+        "PVAL_VEC3" => Ok(PulseValueType::PVAL_VEC3_LOCAL(None)),
         "PVAL_COLOR_RGB" => Ok(PulseValueType::PVAL_COLOR_RGB(None)),
         "PVAL_INVALID" => Ok(PulseValueType::PVAL_INVALID),
         "PVAL_SNDEVT_GUID" => Ok(PulseValueType::PVAL_SNDEVT_GUID(None)),
@@ -198,6 +202,13 @@ pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
             value: String::default(),
         },
         PulseDataType::Vec3 => PulseGraphValueType::Vec3 {
+            value: Vec3 {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        },
+        PulseDataType::Vec3Local => PulseGraphValueType::Vec3Local {
             value: Vec3 {
                 x: 0.0,
                 y: 0.0,
@@ -235,6 +246,12 @@ pub fn pulse_value_type_to_node_types(
         PulseValueType::PVAL_VEC3(_) => (
             PulseDataType::Vec3,
             PulseGraphValueType::Vec3 {
+                value: Vec3::default(),
+            },
+        ),
+        PulseValueType::PVAL_VEC3_LOCAL(_) => (
+            PulseDataType::Vec3Local,
+            PulseGraphValueType::Vec3Local {
                 value: Vec3::default(),
             },
         ),
@@ -298,6 +315,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_FLOAT(_)
         | PulseValueType::PVAL_STRING(_)
         | PulseValueType::PVAL_VEC3(_)
+        | PulseValueType::PVAL_VEC3_LOCAL(_)
         | PulseValueType::DOMAIN_ENTITY_NAME
         | PulseValueType::PVAL_COLOR_RGB(_)
         | PulseValueType::PVAL_SNDEVT_NAME(_) => InputParamKind::ConnectionOrConstant,

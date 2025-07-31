@@ -61,10 +61,10 @@ impl PulseGraphValueType {
     }
 
     pub fn try_to_vec3(self) -> anyhow::Result<Vec3> {
-        if let PulseGraphValueType::Vec3 { value } = self {
-            Ok(value)
-        } else {
-            anyhow::bail!("Invalid cast from {:?} to vec3", self)
+        match self {
+            PulseGraphValueType::Vec3 { value } 
+            | PulseGraphValueType::Vec3Local { value } => Ok(value),
+            _ => anyhow::bail!("Invalid cast from {:?} to vec3", self),
         }
     }
 
@@ -160,6 +160,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
             PulseDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
+            PulseDataType::Vec3Local => egui::Color32::from_rgb(168, 144, 91),
             PulseDataType::Color => egui::Color32::from_rgb(111, 66, 245), // Red for color
             PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
@@ -184,7 +185,8 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
         match self {
             PulseDataType::Scalar => Cow::Borrowed("scalar"),
             PulseDataType::Vec2 => Cow::Borrowed("2d vector"),
-            PulseDataType::Vec3 => Cow::Borrowed("3d vector"),
+            PulseDataType::Vec3 => Cow::Borrowed("3d world vector"),
+            PulseDataType::Vec3Local => Cow::Borrowed("3d local vector"),
             PulseDataType::Color => Cow::Borrowed("color"),
             PulseDataType::String => Cow::Borrowed("string"),
             PulseDataType::Bool => Cow::Borrowed("bool"),
@@ -970,7 +972,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ui.checkbox(value, param_name);
                 });
             }
-            PulseGraphValueType::Vec3 { value } => {
+            PulseGraphValueType::Vec3 {value} | PulseGraphValueType::Vec3Local { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ui.add(DragValue::new(&mut value.x));
@@ -1074,7 +1076,17 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 ));
                             };
                             if ui
-                                .selectable_value(value, PulseValueType::PVAL_VEC3(None), "Vector")
+                                .selectable_value(value, PulseValueType::PVAL_VEC3(None), "World Vector")
+                                .clicked()
+                            {
+                                responses.push(PulseGraphResponse::ChangeParamType(
+                                    _node_id,
+                                    param_name.to_string(),
+                                    PulseValueType::PVAL_VEC3(None),
+                                ));
+                            };
+                            if ui
+                                .selectable_value(value, PulseValueType::PVAL_VEC3(None), "Local Vector")
                                 .clicked()
                             {
                                 responses.push(PulseGraphResponse::ChangeParamType(

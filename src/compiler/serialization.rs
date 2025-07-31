@@ -495,6 +495,7 @@ pub enum PulseConstant {
     Float(f32),
     Integer(i32),
     Vec3(Vec3),
+    Vec3Local(Vec3),
     Color_RGB([f32; 4]),
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
@@ -515,6 +516,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
                 PulseConstant::Integer(_) => "PVAL_INT".to_string(),
                 PulseConstant::Vec3(_) => "PVAL_VEC3_WORLDSPACE".to_string(),
+                PulseConstant::Vec3Local(_) =>  "PVAL_VEC3".to_string(),
                 PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
                 PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
                 PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
@@ -524,7 +526,7 @@ impl KV3Serialize for PulseConstant {
                 | PulseConstant::SoundEventName(value) => format!("\"{value}\""),
                 PulseConstant::Float(value) => format!("{value:.8}"),
                 PulseConstant::Integer(value) => value.to_string(),
-                PulseConstant::Vec3(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
+                PulseConstant::Vec3(value) | PulseConstant::Vec3Local(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
                 PulseConstant::Bool(value) => value.to_string(),
                 PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
@@ -568,7 +570,8 @@ impl KV3Serialize for PulseVariable {
             PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
                 format!("{:?}", value.unwrap_or_default())
             }
-            PulseValueType::PVAL_VEC3(value) => {
+            PulseValueType::PVAL_VEC3(value)
+            | PulseValueType::PVAL_VEC3_LOCAL(value) => {
                 let val = value.unwrap_or_default();
                 format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
             }

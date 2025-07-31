@@ -26,6 +26,7 @@ pub enum PulseDataType {
     Scalar,
     Vec2,
     Vec3,
+    Vec3Local,
     Color,
     String,
     Bool,
@@ -68,6 +69,9 @@ pub enum PulseGraphValueType {
         value: bool,
     },
     Vec3 {
+        value: Vec3,
+    },
+    Vec3Local {
         value: Vec3,
     },
     Color {

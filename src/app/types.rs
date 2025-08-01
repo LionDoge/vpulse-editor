@@ -184,6 +184,7 @@ pub enum PulseNodeTemplate {
     ConstantString,
     ConstantVec3,
     ConstantInt,
+    LibraryBindingAssigned { binding: LibraryBindingIndex }
 }
 
 /// The response type is used to encode side-effects produced when drawing a
@@ -226,7 +227,9 @@ pub struct CustomOutputInfo {
     pub name: String,
     pub data: PulseValueType,
 }
-pub struct AllMyNodeTemplates;
+pub struct AllMyNodeTemplates {
+    pub game_function_count: usize,
+}
 
 #[cfg(feature = "nongame_asset_build")]
 #[derive(Deserialize)]

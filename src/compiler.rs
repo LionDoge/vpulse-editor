@@ -2045,7 +2045,8 @@ fn traverse_nodes_and_populate<'a>(
             }
             return Ok(reg_out);
         }
-        PulseNodeTemplate::InvokeLibraryBinding => {
+        PulseNodeTemplate::InvokeLibraryBinding
+        | PulseNodeTemplate::LibraryBindingAssigned { .. } => {
             if let Some(reg_out) =  nodes::invoke_binding::compile_node(graph, current_node, graph_def, graph_state, target_chunk, output_id)? {
                 return Ok(reg_out);
             } else {

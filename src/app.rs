@@ -969,7 +969,9 @@ impl eframe::App for PulseGraphEditor {
             .show(ctx, |ui| {
                 self.state.draw_graph_editor(
                     ui,
-                    AllMyNodeTemplates,
+                    AllMyNodeTemplates {
+                        game_function_count: self.user_state.bindings.gamefunctions.len()
+                    },
                     &mut self.user_state,
                     prepended_responses,
                 )
@@ -1054,6 +1056,18 @@ impl eframe::App for PulseGraphEditor {
                 }
                 NodeResponse::DeleteNodeFull { node_id, .. } => {
                     self.user_state.exposed_nodes.remove(node_id);
+                }
+                NodeResponse::CreatedNode(node_id) => {
+                    // This stuff is actually insane btw.
+                    // if the node is a library binding, then update the parameters
+                    if let PulseNodeTemplate::LibraryBindingAssigned { binding } 
+                        = self.state.graph.nodes.get(node_id).unwrap().user_data.template {
+                        let binding_index = binding;
+                        let binding_opt = self.user_state.get_library_binding_from_index(&binding_index).cloned();
+                        if let Some(binding) = binding_opt {
+                            self.update_library_binding_params(&node_id, &binding);
+                        }
+                    }
                 }
                 _ => {}
             }

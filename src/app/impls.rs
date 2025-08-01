@@ -254,47 +254,51 @@ impl NodeTemplateTrait for PulseNodeTemplate {
     type CategoryType = &'static str;
 
     fn node_finder_label(&self, _user_state: &mut Self::UserState) -> Cow<'_, str> {
-        Cow::Borrowed(match self {
-            PulseNodeTemplate::CellPublicMethod => "Public Method",
-            PulseNodeTemplate::EntFire => "EntFire",
-            PulseNodeTemplate::Compare => "Compare",
-            PulseNodeTemplate::ConcatString => "Concatenate strings",
-            PulseNodeTemplate::CellWait => "Wait",
-            PulseNodeTemplate::GetVar => "Load variable",
-            PulseNodeTemplate::SetVar => "Save variable",
-            PulseNodeTemplate::EventHandler => "Event Handler",
-            PulseNodeTemplate::IntToString => "Int to string",
-            PulseNodeTemplate::Operation => "Operation",
-            PulseNodeTemplate::FindEntByName => "Find entity by name",
-            PulseNodeTemplate::DebugWorldText => "Debug world text",
-            PulseNodeTemplate::DebugLog => "Debug log",
-            PulseNodeTemplate::FireOutput => "Fire output",
-            PulseNodeTemplate::GraphHook => "Graph Hook",
-            PulseNodeTemplate::GetGameTime => "Get game time",
-            PulseNodeTemplate::SetNextThink => "Set next think",
-            PulseNodeTemplate::Convert => "Convert",
-            PulseNodeTemplate::ForLoop => "For loop",
-            PulseNodeTemplate::WhileLoop => "While loop",
-            PulseNodeTemplate::StringToEntityName => "String to entity name",
-            PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding",
-            PulseNodeTemplate::FindEntitiesWithin => "Find entities within",
-            PulseNodeTemplate::IsValidEntity => "Is valid entity",
-            PulseNodeTemplate::CompareOutput => "Compare output",
-            PulseNodeTemplate::CompareIf => "If",
-            PulseNodeTemplate::IntSwitch => "Int Switch",
-            PulseNodeTemplate::SoundEventStart => "Sound event start",
-            PulseNodeTemplate::Function => "Function",
-            PulseNodeTemplate::CallNode => "Call node",
-            PulseNodeTemplate::ListenForEntityOutput => "Listen for output",
-            PulseNodeTemplate::Timeline => "Timeline",
-            PulseNodeTemplate::Comment => "Comment",
-            PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param",
-            PulseNodeTemplate::ConstantBool => "Constant Bool",
-            PulseNodeTemplate::ConstantFloat => "Constant Float",
-            PulseNodeTemplate::ConstantString => "Constant String",
-            PulseNodeTemplate::ConstantVec3 => "Constant Vec3",
-            PulseNodeTemplate::ConstantInt => "Constant Int",
-        })
+        match self {
+            PulseNodeTemplate::CellPublicMethod => "Public Method".into(),
+            PulseNodeTemplate::EntFire => "EntFire".into(),
+            PulseNodeTemplate::Compare => "Compare".into(),
+            PulseNodeTemplate::ConcatString => "Concatenate strings".into(),
+            PulseNodeTemplate::CellWait => "Wait".into(),
+            PulseNodeTemplate::GetVar => "Load variable".into(),
+            PulseNodeTemplate::SetVar => "Save variable".into(),
+            PulseNodeTemplate::EventHandler => "Event Handler".into(),
+            PulseNodeTemplate::IntToString => "Int to string".into(),
+            PulseNodeTemplate::Operation => "Operation".into(),
+            PulseNodeTemplate::FindEntByName => "Find entity by name".into(),
+            PulseNodeTemplate::DebugWorldText => "Debug world text".into(),
+            PulseNodeTemplate::DebugLog => "Debug log".into(),
+            PulseNodeTemplate::FireOutput => "Fire output".into(),
+            PulseNodeTemplate::GraphHook => "Graph Hook".into(),
+            PulseNodeTemplate::GetGameTime => "Get game time".into(),
+            PulseNodeTemplate::SetNextThink => "Set next think".into(),
+            PulseNodeTemplate::Convert => "Convert".into(),
+            PulseNodeTemplate::ForLoop => "For loop".into(),
+            PulseNodeTemplate::WhileLoop => "While loop".into(),
+            PulseNodeTemplate::StringToEntityName => "String to entity name".into(),
+            PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding".into(),
+            PulseNodeTemplate::FindEntitiesWithin => "Find entities within".into(),
+            PulseNodeTemplate::IsValidEntity => "Is valid entity".into(),
+            PulseNodeTemplate::CompareOutput => "Compare output".into(),
+            PulseNodeTemplate::CompareIf => "If".into(),
+            PulseNodeTemplate::IntSwitch => "Int Switch".into(),
+            PulseNodeTemplate::SoundEventStart => "Sound event start".into(),
+            PulseNodeTemplate::Function => "Function".into(),
+            PulseNodeTemplate::CallNode => "Call node".into(),
+            PulseNodeTemplate::ListenForEntityOutput => "Listen for output".into(),
+            PulseNodeTemplate::Timeline => "Timeline".into(),
+            PulseNodeTemplate::Comment => "Comment".into(),
+            PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param".into(),
+            PulseNodeTemplate::ConstantBool => "Constant Bool".into(),
+            PulseNodeTemplate::ConstantFloat => "Constant Float".into(),
+            PulseNodeTemplate::ConstantString => "Constant String".into(),
+            PulseNodeTemplate::ConstantVec3 => "Constant Vec3".into(),
+            PulseNodeTemplate::ConstantInt => "Constant Int".into(),
+            PulseNodeTemplate::LibraryBindingAssigned { binding } => {
+                // TODO: Setup proper lifetimes so we don't have to clone
+                _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
+            }
+        }
     }
 
     // this is what allows the library to show collapsible lists in the node finder.
@@ -326,6 +330,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GetGameTime
             | PulseNodeTemplate::SetNextThink
             | PulseNodeTemplate::InvokeLibraryBinding => {
+                vec!["Game functions"]
+            }
+            PulseNodeTemplate::LibraryBindingAssigned { binding: _ } => {
                 vec!["Game functions"]
             }
             PulseNodeTemplate::ForLoop | PulseNodeTemplate::WhileLoop => vec!["Loops"],
@@ -895,6 +902,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_vector3(graph, "value", InputParamKind::ConstantOnly);
                 output_vector3(graph, "out");
             }
+            PulseNodeTemplate::LibraryBindingAssigned { binding } => {
+                graph.add_input_param(
+                    node_id,
+                    String::from("binding"),
+                    PulseDataType::LibraryBindingChoice,
+                    PulseGraphValueType::LibraryBindingChoice {
+                        value: *binding,
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+            }
         }
     }
 }
@@ -906,7 +925,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
         // This function must return a list of node kinds, which the node finder
         // will use to display it to the user. Crates like strum can reduce the
         // boilerplate in enumerating all variants of an enum.
-        vec![
+        let mut templates = vec![
             PulseNodeTemplate::CellPublicMethod,
             PulseNodeTemplate::EntFire,
             //PulseNodeTemplate::Compare,
@@ -928,7 +947,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ForLoop,
             PulseNodeTemplate::WhileLoop,
             PulseNodeTemplate::StringToEntityName,
-            PulseNodeTemplate::InvokeLibraryBinding,
+            //PulseNodeTemplate::InvokeLibraryBinding, // replaced by LibraryBindingAssigned (displayed in node finder)
             PulseNodeTemplate::FindEntitiesWithin,
             //PulseNodeTemplate::IsValidEntity,
             PulseNodeTemplate::CompareOutput,
@@ -946,7 +965,13 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ConstantString,
             PulseNodeTemplate::ConstantVec3,
             PulseNodeTemplate::ConstantInt,
-        ]
+        ];
+        templates.extend(
+                (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
+                binding: LibraryBindingIndex(i),
+            }),
+        );
+        templates
     }
 }
 
@@ -1380,6 +1405,7 @@ impl NodeDataTrait for PulseNodeData {
             PulseNodeTemplate::GetGameTime
             | PulseNodeTemplate::SetNextThink
             | PulseNodeTemplate::InvokeLibraryBinding
+            | PulseNodeTemplate::LibraryBindingAssigned { .. } => Some(Color32::from_rgb(41, 139, 196)),
             | PulseNodeTemplate::SoundEventStart => Some(Color32::from_rgb(41, 139, 196)),
             PulseNodeTemplate::ConstantBool
             | PulseNodeTemplate::ConstantFloat

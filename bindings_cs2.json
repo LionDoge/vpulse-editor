@@ -1439,7 +1439,7 @@
     },
     {
         "type": "value",
-        "displayname": "Find Entities In Trigger",
+        "displayname": "trigger: Find Entities In Trigger",
         "libname": "CBaseTriggerAPI::FindEntitiesInTrigger",
         "description": "Return the current entities touching the trigger, matching the optional criteria.",
         "inparams": [
@@ -1465,7 +1465,7 @@
     },
     {
         "type": "value",
-        "displayname": "Is Touching",
+        "displayname": "trigger: Is Touching",
         "libname": "CBaseTriggerAPI::IsTouching",
         "description": "Is the other entity touching the trigger?",
         "inparams": [
@@ -1487,7 +1487,7 @@
     },
     {
         "type": "action",
-        "displayname": "Add Filter",
+        "displayname": "filter_multi: Add Filter",
         "libname": "CFilterMultipleAPI::AddFilter",
         "description": "Add the named entity to the filter list",
         "inparams": [
@@ -1503,7 +1503,7 @@
     },
     {
         "type": "action",
-        "displayname": "Remove Filter",
+        "displayname": "filter_multi: Remove Filter",
         "libname": "CFilterMultipleAPI::RemoveFilter",
         "description": "Remove the named entity from the filter list",
         "inparams": [
@@ -1658,7 +1658,7 @@
     },
     {
         "type": "value",
-        "displayname": "Force Spawn At Location",
+        "displayname": "point_template: Force Spawn At Location",
         "libname": "CPointTemplateAPI::ForceSpawnAtLocation",
         "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
         "inparams": [
@@ -1684,7 +1684,7 @@
     },
     {
         "type": "value",
-        "displayname": "Force Spawn Return Entities",
+        "displayname": "point_template: Force Spawn Return Entities",
         "libname": "CPointTemplateAPI::ForceSpawnReturnEntities",
         "description": "Tells the point_template entity to ForceSpawn and return the all the entities spawned",
         "inparams": [
@@ -1706,7 +1706,7 @@
     },
     {
         "type": "action",
-        "displayname": "Delete Created Spawn Groups",
+        "displayname": "point_template: Delete Created Spawn Groups",
         "libname": "CPointTemplateAPI::DeleteCreatedSpawnGroups",
         "description": "Deletes all spawn groups created by the template. Only works if you use asynchronous spawn and INSERT_INTO_NEWLY_CREATED_SPAWN_GROUP.",
         "inparams": [
@@ -1718,7 +1718,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Actual Speed",
+        "displayname": "phys_motor: Get Actual Speed",
         "libname": "CPhysMotorAPI::GetActualSpeed",
         "description": "Get the current rotation speed (deg/s) of the attached object about the motor's axis. May differ from the motor's target speed.",
         "inparams": [
@@ -1736,7 +1736,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Spin Up Time",
+        "displayname": "phys_motor: Set Spin Up Time",
         "libname": "CPhysMotorAPI::SetSpinUpTime",
         "description": "Sets the time the motor takes to spin up to a greater target speed when it's on.",
         "inparams": [
@@ -1752,7 +1752,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Spin Down Time",
+        "displayname": "phys_motor: Set Spin Down Time",
         "libname": "CPhysMotorAPI::SetSpinDownTime",
         "description": "Sets the time the motor takes to spin down to a lesser target speed when it's on.",
         "inparams": [
@@ -1768,7 +1768,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set System Inertia Scale",
+        "displayname": "phys_motor: Set System Inertia Scale",
         "libname": "CPhysMotorAPI::SetSystemInertiaScale",
         "description": "Sets the inertia scale on the motor, which affects the maximum amount of torque it can generate (this will also affect the actual time the motor takes to spin up or spin down).",
         "inparams": [
@@ -1784,7 +1784,7 @@
     },
     {
         "type": "action",
-        "displayname": "Teleport",
+        "displayname": "point_teleport: Teleport",
         "libname": "CPointTeleportAPI::Teleport",
         "description": "Teleport the target entity.",
         "inparams": [
@@ -1796,7 +1796,7 @@
     },
     {
         "type": "action",
-        "displayname": "Teleport Entity",
+        "displayname": "point_teleport: Teleport Entity",
         "libname": "CPointTeleportAPI::TeleportEntity",
         "description": "Teleport the entity specified by the parameter override. Use this to teleport an entity other than the one specified in the Entity To Teleport field.",
         "inparams": [
@@ -1812,7 +1812,7 @@
     },
     {
         "type": "action",
-        "displayname": "Teleport To Current Pos",
+        "displayname": "point_teleport: Teleport To Current Pos",
         "libname": "CPointTeleportAPI::TeleportToCurrentPos",
         "description": "Teleport the target entity to wherever the point_teleport entity is currently. The Teleport input teleports to the initial position of the point_teleport, so this input was added to avoid breaking old content.",
         "inparams": [
@@ -1824,7 +1824,7 @@
     },
     {
         "type": "action",
-        "displayname": "Teleport Entity To Current Pos",
+        "displayname": "point_teleport: Teleport Entity To Current Pos",
         "libname": "CPointTeleportAPI::TeleportEntityToCurrentPos",
         "description": "Teleport the entity specified by the parameter override to wherever the point_teleport entity is currently. The Teleport input teleports to the current position of the point_teleport",
         "inparams": [
@@ -1840,7 +1840,7 @@
     },
     {
         "type": "action",
-        "displayname": "Enable",
+        "displayname": "logic_relay: Enable",
         "libname": "CLogicRelayAPI::Enable",
         "description": "Enable this entity.",
         "inparams": [
@@ -1852,7 +1852,7 @@
     },
     {
         "type": "action",
-        "displayname": "Enable Refire",
+        "displayname": "logic_relay: Enable Refire",
         "libname": "CLogicRelayAPI::EnableRefire",
         "description": "",
         "inparams": [
@@ -1864,7 +1864,7 @@
     },
     {
         "type": "action",
-        "displayname": "Disable",
+        "displayname": "logic_relay: Disable",
         "libname": "CLogicRelayAPI::Disable",
         "description": "Disable this entity.",
         "inparams": [
@@ -1876,7 +1876,7 @@
     },
     {
         "type": "action",
-        "displayname": "Toggle",
+        "displayname": "logic_relay: Toggle",
         "libname": "CLogicRelayAPI::Toggle",
         "description": "Toggle the relay between enabled and disabled.",
         "inparams": [
@@ -1888,7 +1888,7 @@
     },
     {
         "type": "action",
-        "displayname": "Trigger",
+        "displayname": "logic_relay: Trigger",
         "libname": "CLogicRelayAPI::Trigger",
         "description": "Trigger the relay, causing its OnTrigger output to fire if it is enabled.",
         "inparams": [
@@ -1900,7 +1900,7 @@
     },
     {
         "type": "action",
-        "displayname": "Cancel Pending",
+        "displayname": "logic_relay: Cancel Pending",
         "libname": "CLogicRelayAPI::CancelPending",
         "description": "Cancel any events fired by this relay that are currently pending in the I/O event queue.",
         "inparams": [
@@ -1912,7 +1912,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Current Mover Speed",
+        "displayname": "func_mover: Get Current Mover Speed",
         "libname": "CFuncMoverAPI::GetCurrentMoverSpeed",
         "description": "Get the provided movers current speed (units per second)",
         "inparams": [

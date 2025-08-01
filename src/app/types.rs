@@ -50,6 +50,7 @@ pub enum PulseDataType {
     Resource,
     Array,
     GameTime,
+    TypeSafeInteger,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -132,6 +133,9 @@ pub enum PulseGraphValueType {
     },
     Array,
     GameTime,
+    TypeSafeInteger {
+        integer_type: String,
+    },
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph

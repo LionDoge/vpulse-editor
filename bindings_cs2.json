@@ -2904,42 +2904,6 @@
     },
     {
         "type": "value",
-        "displayname": "Get Inflictor",
-        "libname": "CTakeDamageInfoAPI::GetInflictor",
-        "description": "Inflictor is the entity that is dealing the damage.\nIt can be the attacker itself or a summoned unit, a projectile entity of some sort.\nIt is *MOST DEFINITELY NOT* the weapon or ability. Use Set/GetAbility for that.",
-        "inparams": [
-            {
-                "name": "_Target",
-                "type": "PVAL_OPAQUE_HANDLE:CTakeDamageInfo"
-            }
-        ],
-        "outparams": [
-            {
-                "name": "retval",
-                "type": "PVAL_EHANDLE"
-            }
-        ]
-    },
-    {
-        "type": "value",
-        "displayname": "Has Damage Type Burn",
-        "libname": "CTakeDamageInfoAPI::HasDamageTypeBurn",
-        "description": "",
-        "inparams": [
-            {
-                "name": "_Target",
-                "type": "PVAL_OPAQUE_HANDLE:CTakeDamageInfo"
-            }
-        ],
-        "outparams": [
-            {
-                "name": "retval",
-                "type": "PVAL_BOOL"
-            }
-        ]
-    },
-    {
-        "type": "value",
         "displayname": "Get Closest T Value To Entity",
         "libname": "CPathSimpleAPI::GetClosestTValueToEntity",
         "description": "Compute the closest T value on the path relative to the entity provided. (0.0 to 1.0 float value that defines the point along the spline)",

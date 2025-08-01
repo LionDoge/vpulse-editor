@@ -201,6 +201,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Resource => egui::Color32::from_rgb(250, 110, 192),
             PulseDataType::Array => egui::Color32::from_rgb(235, 113, 7),
             PulseDataType::GameTime => egui::Color32::from_rgb(118, 160, 219),
+            PulseDataType::TypeSafeInteger => egui::Color32::from_rgb(11, 125, 91),
         }
     }
 
@@ -234,6 +235,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Resource => Cow::Borrowed("Resource"),
             PulseDataType::Array => Cow::Borrowed("Array"),
             PulseDataType::GameTime => Cow::Borrowed("Game time"),
+            PulseDataType::TypeSafeInteger => Cow::Borrowed("Type-safe integer"),
         }
     }
 
@@ -1108,98 +1110,6 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 }
                             }
                         });
-                    // ComboBox::from_id_salt((_node_id, param_name))
-                    //     .selected_text(value.get_ui_name())
-                    //     .show_ui(ui, |ui| {
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_INT(None), "Integer")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_INT(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_FLOAT(None), "Float")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_FLOAT(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_VEC3(None), "World Vector")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_VEC3(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_VEC3_LOCAL(None), "Local Vector")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_VEC3_LOCAL(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(
-                    //                 value,
-                    //                 PulseValueType::PVAL_EHANDLE(None),
-                    //                 "Entity Handle",
-                    //             )
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_EHANDLE(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(
-                    //                 value,
-                    //                 PulseValueType::PVAL_STRING(None),
-                    //                 "String",
-                    //             )
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_STRING(None),
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_BOOL, "Boolean")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_BOOL,
-                    //             ));
-                    //         };
-                    //         if ui
-                    //             .selectable_value(value, PulseValueType::PVAL_SNDEVT_NAME(None), "Sound Event Name")
-                    //             .clicked()
-                    //         {
-                    //             responses.push(PulseGraphResponse::ChangeParamType(
-                    //                 _node_id,
-                    //                 param_name.to_string(),
-                    //                 PulseValueType::PVAL_SNDEVT_NAME(None),
-                    //             ));
-                    //         };
-                    //     });
                 });
             }
             PulseGraphValueType::EventBindingChoice { value } => {
@@ -1345,6 +1255,9 @@ impl WidgetValueTrait for PulseGraphValueType {
             }
             PulseGraphValueType::Array => {
                 ui.label(format!("Array {param_name}"));
+            }
+            PulseGraphValueType::TypeSafeInteger { integer_type } => {
+                ui.label(&**integer_type);
             }
         }
         // This allows you to return your responses from the inline widgets.

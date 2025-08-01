@@ -215,7 +215,7 @@ impl PulseValueType {
 
 pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeError> {
     match s {
-        "PVAL_INT" | "PVAL_TYPESAFE_INT" => Ok(PulseValueType::PVAL_INT(None)),
+        "PVAL_INT" => Ok(PulseValueType::PVAL_INT(None)),
         "PVAL_FLOAT" => Ok(PulseValueType::PVAL_FLOAT(None)),
         "PVAL_BOOL" => Ok(PulseValueType::PVAL_BOOL),
         "PVAL_STRING" => Ok(PulseValueType::PVAL_STRING(None)),
@@ -249,6 +249,9 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
             } else if s.starts_with("PVAL_RESOURCE:") {
                 let res_type = s.split_at(14).1;
                 Ok(PulseValueType::PVAL_RESOURCE(Some(res_type.to_string()), None))
+            } else if s.starts_with("PVAL_TYPESAFE_INT:") {
+                let int_type = s.split_at(18).1;
+                Ok(PulseValueType::PVAL_TYPESAFE_INT(Some(int_type.to_string()), None))
             } else {
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }
@@ -299,8 +302,7 @@ pub fn pulse_value_type_to_node_types(
 ) -> (PulseDataType, PulseGraphValueType) {
     match typ {
         PulseValueType::PVAL_INT(_)
-        | PulseValueType::PVAL_FLOAT(_)
-        | PulseValueType::PVAL_TYPESAFE_INT(_, _) => (
+        | PulseValueType::PVAL_FLOAT(_) => (
             PulseDataType::Scalar,
             PulseGraphValueType::Scalar { value: 0f32 },
         ),
@@ -406,6 +408,12 @@ pub fn pulse_value_type_to_node_types(
         PulseValueType::PVAL_GAMETIME(_) => (
             PulseDataType::GameTime,
             PulseGraphValueType::GameTime,
+        ),
+        PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => (
+            PulseDataType::TypeSafeInteger,
+            PulseGraphValueType::TypeSafeInteger {
+                integer_type: int_type.clone().unwrap_or_default(),
+            }
         ),
         _ => todo!("Implement more type conversions"),
     }

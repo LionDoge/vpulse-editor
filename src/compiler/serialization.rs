@@ -572,24 +572,25 @@ impl KV3Serialize for PulseVariable {
                     String::from("")
                 }
             }
-            PulseValueType::PVAL_FLOAT(value) => format!("{:.6}", value.unwrap_or_default()),
+            PulseValueType::PVAL_FLOAT(value) 
+            | PulseValueType::PVAL_GAMETIME(value) => format!("{:.6}", value.unwrap_or_default()),
             PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
             PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
                 format!("{:?}", value.unwrap_or_default())
             }
             PulseValueType::PVAL_VEC2(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.3}, {:.3}]", val.x, val.y)
+                format!("[{:.6}, {:.6}]", val.x, val.y)
             }
             PulseValueType::PVAL_VEC3(value)
             | PulseValueType::PVAL_VEC3_LOCAL(value)
             | PulseValueType::PVAL_QANGLE(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
+                format!("[{:.6}, {:.6}, {:.6}]", val.x, val.y, val.z)
             }
             PulseValueType::PVAL_VEC4(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.3}, {:.3}, {:.3}, {:.3}]", val.x, val.y, val.z, val.w)
+                format!("[{:.6}, {:.6}, {:.6}, {:.6}]", val.x, val.y, val.z, val.w)
             }
             PulseValueType::PVAL_COLOR_RGB(value) => {
                 let val = value.unwrap_or_default();
@@ -603,8 +604,7 @@ impl KV3Serialize for PulseVariable {
                 format!("\"{}\"", en.to_str())
             }
 
-            PulseValueType::PVAL_GAMETIME(_) 
-            | PulseValueType::PVAL_TRANSFORM(_)
+            PulseValueType::PVAL_TRANSFORM(_)
             | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
             | PulseValueType::PVAL_EHANDLE(_) // can't have a default value for ehandle
             | PulseValueType::DOMAIN_ENTITY_NAME

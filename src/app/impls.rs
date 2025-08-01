@@ -60,11 +60,27 @@ impl PulseGraphValueType {
         }
     }
 
+    pub fn try_to_vec2(self) -> anyhow::Result<Vec2> {
+        if let PulseGraphValueType::Vec2 { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to vec2", self)
+        }
+    }
+
     pub fn try_to_vec3(self) -> anyhow::Result<Vec3> {
         match self {
             PulseGraphValueType::Vec3 { value } 
             | PulseGraphValueType::Vec3Local { value } => Ok(value),
             _ => anyhow::bail!("Invalid cast from {:?} to vec3", self),
+        }
+    }
+
+    pub fn try_to_vec4(self) -> anyhow::Result<Vec4> {
+        if let PulseGraphValueType::Vec4 { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to vec4", self)
         }
     }
 
@@ -158,7 +174,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
     fn data_type_color(&self, _user_state: &mut PulseGraphState) -> egui::Color32 {
         match self {
             PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
-            PulseDataType::Vec2 => egui::Color32::from_rgb(238, 207, 109),
+            PulseDataType::Vec2 => egui::Color32::from_rgb(238, 163, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3Local => egui::Color32::from_rgb(168, 144, 91),
             PulseDataType::Color => egui::Color32::from_rgb(111, 66, 245), // Red for color
@@ -178,13 +194,13 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
             PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::CommentBox => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::Vec4 => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::QAngle => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::Transform => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::TransformWorldspace => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::Resource => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::Array => egui::Color32::from_rgb(0, 0, 0),
-            PulseDataType::GameTime => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Vec4 => egui::Color32::from_rgb(210, 238, 109),
+            PulseDataType::QAngle => egui::Color32::from_rgb(240, 252, 194),
+            PulseDataType::Transform => egui::Color32::from_rgb(110, 100, 176),
+            PulseDataType::TransformWorldspace => egui::Color32::from_rgb(169, 143, 247),
+            PulseDataType::Resource => egui::Color32::from_rgb(250, 110, 192),
+            PulseDataType::Array => egui::Color32::from_rgb(235, 113, 7),
+            PulseDataType::GameTime => egui::Color32::from_rgb(118, 160, 219),
         }
     }
 

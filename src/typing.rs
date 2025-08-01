@@ -161,10 +161,9 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_TRANSFORM(_) => write!(f, "PVAL_TRANSFORM"),
             PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => write!(f, "PVAL_TRANSFORM_WORLDSPACE"),
             PulseValueType::PVAL_RESOURCE(resource_type, _) => {
-                if let Some(resource_type) = resource_type {
-                    write!(f, "PVAL_RESOURCE:{resource_type}")
-                } else {
-                    write!(f, "PVAL_RESOURCE")
+                match resource_type.as_deref() {
+                    Some(rt) if !rt.is_empty() => write!(f, "PVAL_RESOURCE:{rt}"),
+                    _ => write!(f, "PVAL_RESOURCE"),
                 }
             }
             PulseValueType::PVAL_ARRAY(_) => write!(f, "PVAL_ARRAY"),

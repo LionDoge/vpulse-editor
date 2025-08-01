@@ -813,6 +813,13 @@ fn get_input_register_or_create_constant(
                         "PVAL_ENTITY_NAME".into(),
                     );
                 }
+                PulseValueType::PVAL_VEC2(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param.value().clone().try_to_vec2()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Vec2(input_value));
+                }
                 PulseValueType::PVAL_VEC3(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
@@ -826,6 +833,20 @@ fn get_input_register_or_create_constant(
                     let input_value = input_param.value().clone().try_to_vec3()?;
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Vec3Local(input_value));
+                }
+                PulseValueType::PVAL_VEC4(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param.value().clone().try_to_vec4()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Vec4(input_value));
+                }
+                PulseValueType::PVAL_QANGLE(_) => {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param.value().clone().try_to_vec3()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::QAngle(input_value));
                 }
                 PulseValueType::PVAL_COLOR_RGB(_) => {
                     instruction =
@@ -851,6 +872,14 @@ fn get_input_register_or_create_constant(
                     let input_typ_and_value = input_param.value().clone().try_enum()?;
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::SchemaEnum(input_typ_and_value.0, input_typ_and_value.1));
+                }
+                PulseValueType::PVAL_RESOURCE(resource_type, _) =>
+                {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let input_value = input_param.value().clone().try_to_string()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Resource(resource_type, input_value));
                 }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {

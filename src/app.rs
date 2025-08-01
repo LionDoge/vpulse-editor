@@ -6,6 +6,7 @@ mod migrations;
 
 use std::{path::PathBuf, fs, thread};
 use core::panic;
+use ron::value;
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
@@ -23,13 +24,21 @@ fn get_supported_ui_types() -> Vec<PulseValueType> {
         PulseValueType::PVAL_INT(None),
         PulseValueType::PVAL_FLOAT(None),
         PulseValueType::PVAL_STRING(None),
-        PulseValueType::PVAL_BOOL_VALUE(Some(false)),
+        PulseValueType::PVAL_BOOL_VALUE(None),
+        PulseValueType::PVAL_VEC2(None),
         PulseValueType::PVAL_VEC3(None),
         PulseValueType::PVAL_VEC3_LOCAL(None),
+        PulseValueType::PVAL_VEC4(None),
+        PulseValueType::PVAL_QANGLE(None),
+        PulseValueType::PVAL_TRANSFORM(None),
+        PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None),
         PulseValueType::PVAL_COLOR_RGB(None),
         PulseValueType::PVAL_EHANDLE(None),
         PulseValueType::DOMAIN_ENTITY_NAME,
         PulseValueType::PVAL_SNDEVT_GUID(None),
+        PulseValueType::PVAL_ARRAY(None),
+        PulseValueType::PVAL_RESOURCE(None, None),
+        PulseValueType::PVAL_GAMETIME(None),
     ]
 }
 
@@ -618,8 +627,24 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.data_type = PulseDataType::String;
             PulseValueType::PVAL_STRING(Some(var.default_value_buffer.clone()))
         }
+        PulseValueType::PVAL_VEC2(_) => {
+            var.data_type = PulseDataType::Vec2;
+            var.typ_and_default_value.to_owned()
+        }
         PulseValueType::PVAL_VEC3(_) => {
             var.data_type = PulseDataType::Vec3;
+            var.typ_and_default_value.to_owned()
+        }
+        PulseValueType::PVAL_VEC3_LOCAL(_) => {
+            var.data_type = PulseDataType::Vec3Local;
+            var.typ_and_default_value.to_owned()
+        }
+        PulseValueType::PVAL_VEC4(_) => {
+            var.data_type = PulseDataType::Vec4;
+            var.typ_and_default_value.to_owned()
+        }
+        PulseValueType::PVAL_QANGLE(_) => {
+            var.data_type = PulseDataType::QAngle;
             var.typ_and_default_value.to_owned()
         }
         // horrible stuff, this will likely be refactored.
@@ -845,14 +870,25 @@ impl eframe::App for PulseGraphEditor {
                         match &mut var.typ_and_default_value {
                             PulseValueType::PVAL_BOOL_VALUE(value) => {
                                 ui.checkbox(
-                                    value.get_or_insert(false), ""
+                                    value.get_or_insert_default(), ""
                                 );
                             }
+                            PulseValueType::PVAL_VEC2(value) => {
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                            }
                             PulseValueType::PVAL_VEC3(value)
-                            | PulseValueType::PVAL_VEC3_LOCAL(value) => {
+                            | PulseValueType::PVAL_VEC3_LOCAL(value)
+                            | PulseValueType::PVAL_QANGLE(value) => {
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
                                 ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
+                            }
+                            PulseValueType::PVAL_VEC4(value) => {
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
+                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().w).prefix("W: "));
                             }
                             PulseValueType::PVAL_COLOR_RGB(value) => {
                                 let color = value.get_or_insert_default();
@@ -864,7 +900,25 @@ impl eframe::App for PulseGraphEditor {
                                     color.z = arr[2] * 255.0;
                                 }
                             }
-                            PulseValueType::DOMAIN_ENTITY_NAME | PulseValueType::PVAL_SNDEVT_GUID(_) => {}
+                            PulseValueType::PVAL_RESOURCE(resource_type, value) => {
+                                let resource_type_val = resource_type.get_or_insert_with(Default::default);
+                                if ui.add(egui::TextEdit::singleline(resource_type_val)
+                                    .hint_text("Type")
+                                    .desired_width(40.0)).changed() 
+                                    && resource_type_val.trim().is_empty() {
+                                        *resource_type = None;
+                                    }
+                        
+                                ui.add(egui::TextEdit::singleline(value.get_or_insert_default()).hint_text("Resource path"));
+                            }
+                            PulseValueType::PVAL_GAMETIME(value) => {
+                                ui.add(egui::DragValue::new(value.get_or_insert_default()).speed(0.01));
+                            }
+                            PulseValueType::DOMAIN_ENTITY_NAME 
+                            | PulseValueType::PVAL_SNDEVT_GUID(_)
+                            | PulseValueType::PVAL_TRANSFORM(_)
+                            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
+                            | PulseValueType::PVAL_ARRAY(_) => {}
                             _ => {
                                 if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
                                     update_variable_data(var);

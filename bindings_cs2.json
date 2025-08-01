@@ -899,7 +899,7 @@
         "outparams": [
             {
                 "name": "retval",
-                "type": "PVAL_VEC3_WORLDSPACE"
+                "type": "PVAL_VEC3"
             }
         ]
     },
@@ -1031,7 +1031,6 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Set Next Think",
@@ -1044,7 +1043,6 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Tag Cursor",
@@ -1065,7 +1063,6 @@
             }
         ]
     },
-
     {
         "type": "value",
         "displayname": "Cursor Has Tag",
@@ -1088,7 +1085,6 @@
             }
         ]
     },
-
     {
         "type": "value",
         "displayname": "Any Other Cursors Have Tag",
@@ -1111,7 +1107,6 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Kill Cursors With Tag",
@@ -1132,7 +1127,6 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Kill All Other Cursors",
@@ -1145,7 +1139,6 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Remove Tag From Cursor",
@@ -1162,21 +1155,18 @@
             }
         ]
     },
-
     {
         "type": "action",
         "displayname": "Kill This Cursor And Cancel",
         "libname": "CPulseCursorFuncs::KillThisCursorAndCancel",
         "description": "Optional. After taking an OnCanceled outflow, signal to any observers that this cursor is now canceled. Equivalent to not handling the original cancel outflow. If you don't use this, handling OnCanceled will be treated as success."
     },
-
     {
         "type": "action",
         "displayname": "Kill This Cursor And Fail",
         "libname": "CPulseCursorFuncs::KillThisCursorAndFail",
         "description": "Optional. After taking an OnFailed outflow, signal to any observers that this cursor is now failed. Equivalent to not handling the original fail outflow. If you don't use this, handling OnFailed will be treated as success."
     },
-
     {
         "type": "value",
         "displayname": "Get Trace Hit",
@@ -1235,16 +1225,784 @@
             }
         ]
     },
-
     {
         "type": "value",
-        "displayname": "Get Entity Forward",
-        "libname": "CPulseServerFuncs::GetEntityForward",
-        "description": "Get the forward vector of an entity.",
+        "displayname": "Array Count",
+        "libname": "CPulseArraylib::ArrayCount",
+        "description": "Return the number of elements in the array.",
         "inparams": [
             {
-                "name": "hEnt",
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Set Count",
+        "libname": "CPulseArraylib::ArraySetCount",
+        "description": "Set the number of elements in the array.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "nCount",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array First N Elements",
+        "libname": "CPulseArraylib::ArrayFirstNElements",
+        "description": "Returns up to the maximum requested elements. Never grows the array (unlike SetCount).",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "nMaxElements",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Append",
+        "libname": "CPulseArraylib::ArrayAppend",
+        "description": "Copy 'element' to the end of 'a', increasing its count by one.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "element",
+                "type": "PVAL_VARIANT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Insert",
+        "libname": "CPulseArraylib::ArrayInsert",
+        "description": "Insert 'element' in the given index in 'a', increasing its count by one and moving the elements after index.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "nIndex",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "element",
+                "type": "PVAL_VARIANT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Remove Index",
+        "libname": "CPulseArraylib::ArrayRemoveIndex",
+        "description": "Remove the element at the given index in 'a', decreasing its count by one and moving the elements after index.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "nIndex",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Remove Element Matching",
+        "libname": "CPulseArraylib::ArrayRemoveElementMatching",
+        "description": "Remove all elements from 'a' which compare equal to 'element'.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "element",
+                "type": "PVAL_VARIANT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Remove Invalid Elements",
+        "libname": "CPulseArraylib::ArrayRemoveInvalidElements",
+        "description": "Remove all elements from 'a' which are invalid instances.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Concatenate",
+        "libname": "CPulseArraylib::ArrayConcatenate",
+        "description": "Add the array 'b' to the end of 'a'.",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            },
+            {
+                "name": "b",
+                "type": "PVAL_ARRAY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Array Shuffle",
+        "libname": "CPulseArraylib::ArrayShuffle",
+        "description": "Randomizes the order of items in the array (Knuth/Fisher-Yates Shuffle)",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Find Entities In Trigger",
+        "libname": "CBaseTriggerAPI::FindEntitiesInTrigger",
+        "description": "Return the current entities touching the trigger, matching the optional criteria.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:trigger"
+            },
+            {
+                "name": "entityType",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "optionalEntityName",
+                "type": "PVAL_ENTITY_NAME"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Is Touching",
+        "libname": "CBaseTriggerAPI::IsTouching",
+        "description": "Is the other entity touching the trigger?",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:trigger"
+            },
+            {
+                "name": "pOtherEntity",
                 "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Add Filter",
+        "libname": "CFilterMultipleAPI::AddFilter",
+        "description": "Add the named entity to the filter list",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:filter_multi"
+            },
+            {
+                "name": "pFilter",
+                "type": "PVAL_EHANDLE:filter_base"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Remove Filter",
+        "libname": "CFilterMultipleAPI::RemoveFilter",
+        "description": "Remove the named entity from the filter list",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:filter_multi"
+            },
+            {
+                "name": "pFilter",
+                "type": "PVAL_EHANDLE:filter_base"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Create Effect",
+        "libname": "CPulseFuncs_GameParticleManager::CreateEffect",
+        "description": "Create an instance of the specified particle system definition - returns a handle that can be used to modify or destroy the effect.",
+        "inparams": [
+            {
+                "name": "hSystem",
+                "type": "PVAL_RESOURCE:vpcf"
+            },
+            {
+                "name": "pOnEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "iAttachType",
+                "type": "PVAL_SCHEMA_ENUM:ParticleAttachment_t"
+            },
+            {
+                "name": "pConfigName",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Effect Control Ent",
+        "libname": "CPulseFuncs_GameParticleManager::SetEffectControlEnt",
+        "description": "Attach an effect control point to an entity",
+        "inparams": [
+            {
+                "name": "iEffect",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            },
+            {
+                "name": "iControlPoint",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "iAttachType",
+                "type": "PVAL_SCHEMA_ENUM:ParticleAttachment_t"
+            },
+            {
+                "name": "pEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachmentName",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Effect Control Vector",
+        "libname": "CPulseFuncs_GameParticleManager::SetEffectControlVector",
+        "description": "Set an effect control point to a relative vector",
+        "inparams": [
+            {
+                "name": "iEffect",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            },
+            {
+                "name": "iControlPoint",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "vPosition",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Effect Control World Vector",
+        "libname": "CPulseFuncs_GameParticleManager::SetEffectControlWorldVector",
+        "description": "Set an effect control point to a worldspace position",
+        "inparams": [
+            {
+                "name": "iEffect",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            },
+            {
+                "name": "iControlPoint",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "vPosition",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Effect Control Transform",
+        "libname": "CPulseFuncs_GameParticleManager::SetEffectControlTransform",
+        "description": "Set an effect control point to a worldspace transform",
+        "inparams": [
+            {
+                "name": "iEffect",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            },
+            {
+                "name": "iControlPoint",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "xTransform",
+                "type": "PVAL_TRANSFORM_WORLDSPACE"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Destroy Effect",
+        "libname": "CPulseFuncs_GameParticleManager::DestroyEffect",
+        "description": "Destroy a particle effect instance",
+        "inparams": [
+            {
+                "name": "iEffect",
+                "type": "PVAL_TYPESAFE_INT:ParticleIndex_t"
+            },
+            {
+                "name": "bDestroyImmediately",
+                "type": "PVAL_BOOL"
+            },
+            {
+                "name": "bPlayEndcap",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Force Spawn At Location",
+        "libname": "CPointTemplateAPI::ForceSpawnAtLocation",
+        "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_template"
+            },
+            {
+                "name": "pLocationEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pSpawnedEntityName",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Force Spawn Return Entities",
+        "libname": "CPointTemplateAPI::ForceSpawnReturnEntities",
+        "description": "Tells the point_template entity to ForceSpawn and return the all the entities spawned",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_template"
+            },
+            {
+                "name": "pLocationEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Delete Created Spawn Groups",
+        "libname": "CPointTemplateAPI::DeleteCreatedSpawnGroups",
+        "description": "Deletes all spawn groups created by the template. Only works if you use asynchronous spawn and INSERT_INTO_NEWLY_CREATED_SPAWN_GROUP.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_template"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Actual Speed",
+        "libname": "CPhysMotorAPI::GetActualSpeed",
+        "description": "Get the current rotation speed (deg/s) of the attached object about the motor's axis. May differ from the motor's target speed.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:phys_motor"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Spin Up Time",
+        "libname": "CPhysMotorAPI::SetSpinUpTime",
+        "description": "Sets the time the motor takes to spin up to a greater target speed when it's on.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:phys_motor"
+            },
+            {
+                "name": "fSpinUpTime",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Spin Down Time",
+        "libname": "CPhysMotorAPI::SetSpinDownTime",
+        "description": "Sets the time the motor takes to spin down to a lesser target speed when it's on.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:phys_motor"
+            },
+            {
+                "name": "fSpinDownTime",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set System Inertia Scale",
+        "libname": "CPhysMotorAPI::SetSystemInertiaScale",
+        "description": "Sets the inertia scale on the motor, which affects the maximum amount of torque it can generate (this will also affect the actual time the motor takes to spin up or spin down).",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:phys_motor"
+            },
+            {
+                "name": "flInertiaScale",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport",
+        "libname": "CPointTeleportAPI::Teleport",
+        "description": "Teleport the target entity.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_teleport"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport Entity",
+        "libname": "CPointTeleportAPI::TeleportEntity",
+        "description": "Teleport the entity specified by the parameter override. Use this to teleport an entity other than the one specified in the Entity To Teleport field.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_teleport"
+            },
+            {
+                "name": "param",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport To Current Pos",
+        "libname": "CPointTeleportAPI::TeleportToCurrentPos",
+        "description": "Teleport the target entity to wherever the point_teleport entity is currently. The Teleport input teleports to the initial position of the point_teleport, so this input was added to avoid breaking old content.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_teleport"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport Entity To Current Pos",
+        "libname": "CPointTeleportAPI::TeleportEntityToCurrentPos",
+        "description": "Teleport the entity specified by the parameter override to wherever the point_teleport entity is currently. The Teleport input teleports to the current position of the point_teleport",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_teleport"
+            },
+            {
+                "name": "param",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Enable",
+        "libname": "CLogicRelayAPI::Enable",
+        "description": "Enable this entity.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Enable Refire",
+        "libname": "CLogicRelayAPI::EnableRefire",
+        "description": "",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Disable",
+        "libname": "CLogicRelayAPI::Disable",
+        "description": "Disable this entity.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Toggle",
+        "libname": "CLogicRelayAPI::Toggle",
+        "description": "Toggle the relay between enabled and disabled.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Trigger",
+        "libname": "CLogicRelayAPI::Trigger",
+        "description": "Trigger the relay, causing its OnTrigger output to fire if it is enabled.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Cancel Pending",
+        "libname": "CLogicRelayAPI::CancelPending",
+        "description": "Cancel any events fired by this relay that are currently pending in the I/O event queue.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Current Mover Speed",
+        "libname": "CFuncMoverAPI::GetCurrentMoverSpeed",
+        "description": "Get the provided movers current speed (units per second)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:func_mover"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Abs Origin",
+        "libname": "CBaseEntityAPI::GetAbsOrigin",
+        "description": "The entity origin (absolute).",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Attachment Origin",
+        "libname": "CBaseEntityAPI::GetAttachmentOrigin",
+        "description": "Return the absolute position of the entity's attachment.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Attachment Angle",
+        "libname": "CBaseEntityAPI::GetAttachmentAngle",
+        "description": "Return the Angle of the entity's attachment.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_QANGLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Attachment Forward",
+        "libname": "CBaseEntityAPI::GetAttachmentForward",
+        "description": "Return the forward vector for the attachment",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
             }
         ],
         "outparams": [
@@ -1254,7 +2012,268 @@
             }
         ]
     },
-
+    {
+        "type": "value",
+        "displayname": "Get Attachment Up",
+        "libname": "CBaseEntityAPI::GetAttachmentUp",
+        "description": "Return the up vector for the attachment",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Attachment Left",
+        "libname": "CBaseEntityAPI::GetAttachmentLeft",
+        "description": "Return the left vector for the attachment",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Class Name Matches",
+        "libname": "CBaseEntityAPI::ClassNameMatches",
+        "description": "Returns true if the entity's class matches the one given (no wildcard support)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pClassName",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Name Matches",
+        "libname": "CBaseEntityAPI::NameMatches",
+        "description": "Returns true if the entity name matches the given string. Wildcards are accepted.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pNameOrWildcard",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Is Model",
+        "libname": "CBaseEntityAPI::IsModel",
+        "description": "Returns true if the entity is using the given model, false otherwise",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "strModel",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport To Point",
+        "libname": "CBaseEntityAPI::TeleportToPoint",
+        "description": "Teleport the given entity to the specified position and orientation",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vPosition",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Teleport To Transform",
+        "libname": "CBaseEntityAPI::TeleportToTransform",
+        "description": "Teleport the given entity to the specified transform",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "xTransform",
+                "type": "PVAL_TRANSFORM_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Debug Screen Text",
+        "libname": "CPulseServerFuncs::DebugScreenText",
+        "description": "Print some text to the game window.",
+        "inparams": [
+            {
+                "name": "pMessage",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "flScreenX",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flScreenY",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "nTextOffset",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            },
+            {
+                "name": "flAlpha",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Debug World Sphere",
+        "libname": "CPulseServerFuncs::DebugWorldSphere",
+        "description": "Draw a sphere at provided position in world space",
+        "inparams": [
+            {
+                "name": "vPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            },
+            {
+                "name": "flAlpha",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Debug World Cross",
+        "libname": "CPulseServerFuncs::DebugWorldCross",
+        "description": "Draw a cross at provided position in world space",
+        "inparams": [
+            {
+                "name": "vPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            },
+            {
+                "name": "flAlpha",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Debug World Line",
+        "libname": "CPulseServerFuncs::DebugWorldLine",
+        "description": "Draw a line between given points in world space",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vEndPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            },
+            {
+                "name": "flAlpha",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
     {
         "type": "action",
         "displayname": "Debug World Arrow",
@@ -1287,26 +2306,1755 @@
             }
         ]
     },
-    
     {
-        "type": "value",
-        "displayname": "Get Attachment Forward",
-        "libname": "CBaseEntityAPI::GetAttachmentForward",
-        "description": "Return the forward vector for the attachment.",
+        "type": "action",
+        "displayname": "Debug World Entity Axis",
+        "libname": "CPulseServerFuncs::DebugWorldEntityAxis",
+        "description": "Draw an axis at the provided entities transform in world space",
         "inparams": [
             {
-                "name": "_Target",
+                "name": "hEntity",
                 "type": "PVAL_EHANDLE"
             },
             {
-                "name": "pAttachment",
-                "type": "PVAL_STRING"
+                "name": "flAxisLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Debug World Axis",
+        "libname": "CPulseServerFuncs::DebugWorldAxis",
+        "description": "Draw an axis with the given position (and eventually rotation) in world space",
+        "inparams": [
+            {
+                "name": "vPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flAxisLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Game Time",
+        "libname": "CPulseServerFuncs::GetGameTime",
+        "description": "Get the current Game Time of the entity that this graph is running on.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_GAMETIME"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Game Frame Time",
+        "libname": "CPulseServerFuncs::GetGameFrameTime",
+        "description": "Get the current game frame time (i.e. dt) of the entity that this graph is running on.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Entity Origin",
+        "libname": "CPulseServerFuncs::SetEntityOrigin",
+        "description": "Set the position of an entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Entity Velocity",
+        "libname": "CPulseServerFuncs::GetEntityVelocity",
+        "description": "Get the velocity of an entity.",
+        "inparams": [
+            {
+                "name": "hEnt",
+                "type": "PVAL_EHANDLE"
             }
         ],
         "outparams": [
             {
                 "name": "retval",
                 "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Entity Forward",
+        "libname": "CPulseServerFuncs::GetEntityForward",
+        "description": "Get the forward vector of an entity.",
+        "inparams": [
+            {
+                "name": "hEnt",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Angle Between Vectors",
+        "libname": "CPulseServerFuncs::GetAngleBetweenVectors",
+        "description": "Get angle between vectors. Optional argument for signed or unsigned calculation",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "b",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "bSigned",
+                "type": "PVAL_BOOL"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Relative Position Between Entities",
+        "libname": "CPulseServerFuncs::GetRelativePositionBetweenEntities",
+        "description": "Get relative position between entities.",
+        "inparams": [
+            {
+                "name": "hEntSource",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "hEntTarget",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Relative Position Between Entity And Position",
+        "libname": "CPulseServerFuncs::GetRelativePositionBetweenEntityAndPosition",
+        "description": "Get relative position between positions.",
+        "inparams": [
+            {
+                "name": "hEntSource",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vTarget",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Deal Radius Damage",
+        "libname": "CPulseServerFuncs::DealRadiusDamage",
+        "description": "Deals radius damage to a position",
+        "inparams": [
+            {
+                "name": "hAttacker",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vOrigin",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDamage",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flForce",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Create Explosion",
+        "libname": "CPulseServerFuncs::CreateExplosion",
+        "description": "Creates an Explosion at a position",
+        "inparams": [
+            {
+                "name": "hAttacker",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vOrigin",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flDamage",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "explosionType",
+                "type": "PVAL_SCHEMA_ENUM:BaseExplosionTypes_t"
+            },
+            {
+                "name": "sExpSoundName",
+                "type": "PVAL_SNDEVT_NAME"
+            },
+            {
+                "name": "flForce",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Trace Entity",
+        "libname": "CPulseServerFuncs::GetTraceEntity",
+        "description": "Get entity if trace from position in direction at given length hits an entity",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vDirection",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "fLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "hIgnoreEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Trace Distance",
+        "libname": "CPulseServerFuncs::GetTraceDistance",
+        "description": "Get distance if trace from position in direction at given length hits an entity or static world",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vDirection",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "fLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "hIgnoreEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Trace World Distance",
+        "libname": "CPulseServerFuncs::GetTraceWorldDistance",
+        "description": "Get distance if trace from position in direction at given length hits static world, excludes entities",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vDirection",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "fLength",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Trace Hit",
+        "libname": "CPulseServerFuncs::GetTraceHit",
+        "description": "Get trace results from a position in direction at given length.",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vDirection",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "fMaxLength",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "hIgnoreEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "nTraceContents",
+                "type": "PVAL_SCHEMA_ENUM:PulseTraceContents_t"
+            },
+            {
+                "name": "nGroup",
+                "type": "PVAL_SCHEMA_ENUM:PulseCollisionGroup_t"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "DidHit",
+                "type": "PVAL_BOOL"
+            },
+            {
+                "name": "HitDistance",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "HitLocation",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "HitNormal",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "HitFraction",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "HitEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Has Dynamic Attribute",
+        "libname": "CPulseServerFuncs::HasDynamicAttribute",
+        "description": "Check for the presence of an attribute on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Dynamic Attribute Int",
+        "libname": "CPulseServerFuncs::SetDynamicAttributeInt",
+        "description": "Set an Int attribute value on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "nAttributeValue",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Dynamic Attribute Int",
+        "libname": "CPulseServerFuncs::GetDynamicAttributeInt",
+        "description": "Return the value of an Int attribute on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Dynamic Attribute String",
+        "libname": "CPulseServerFuncs::SetDynamicAttributeString",
+        "description": "Set a String attribute value on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "pAttributeValue",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Dynamic Attribute String",
+        "libname": "CPulseServerFuncs::GetDynamicAttributeString",
+        "description": "Return the value of a String attribute on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Dynamic Attribute E Handle",
+        "libname": "CPulseServerFuncs::SetDynamicAttributeEHandle",
+        "description": "Set an Entity Handle attribute value on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "hAttributeValue",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Dynamic Attribute E Handle",
+        "libname": "CPulseServerFuncs::GetDynamicAttributeEHandle",
+        "description": "Return the value of an Entity Handle attribute on the entity",
+        "inparams": [
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttributeKey",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Add Velocity To Entity",
+        "libname": "CPulseServerFuncs::AddVelocityToEntity",
+        "description": "Adds velocity to an entity",
+        "inparams": [
+            {
+                "name": "pEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "vVelocity",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Add Velocity To All Entities Within Radius",
+        "libname": "CPulseServerFuncs::AddVelocityToAllEntitiesWithinRadius",
+        "description": "Adds velocity to all entities in a sphere",
+        "inparams": [
+            {
+                "name": "vCenter",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "vVelocity",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Parent",
+        "libname": "CPulseServerFuncs::GetParent",
+        "description": "Returns the hierarchical parent of an entity",
+        "inparams": [
+            {
+                "name": "pEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Inflictor",
+        "libname": "CTakeDamageInfoAPI::GetInflictor",
+        "description": "Inflictor is the entity that is dealing the damage.\nIt can be the attacker itself or a summoned unit, a projectile entity of some sort.\nIt is *MOST DEFINITELY NOT* the weapon or ability. Use Set/GetAbility for that.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_OPAQUE_HANDLE:CTakeDamageInfo"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Has Damage Type Burn",
+        "libname": "CTakeDamageInfoAPI::HasDamageTypeBurn",
+        "description": "",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_OPAQUE_HANDLE:CTakeDamageInfo"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Closest T Value To Entity",
+        "libname": "CPathSimpleAPI::GetClosestTValueToEntity",
+        "description": "Compute the closest T value on the path relative to the entity provided. (0.0 to 1.0 float value that defines the point along the spline)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Closest Pos To Entity",
+        "libname": "CPathSimpleAPI::GetClosestPosToEntity",
+        "description": "Compute the closest position on the path relative to the entity provided. (world space vector)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Closest Dir To Entity",
+        "libname": "CPathSimpleAPI::GetClosestDirToEntity",
+        "description": "Compute the closest direction along the path relative to the entity provided. (world space vector)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Pos At T Value",
+        "libname": "CPathSimpleAPI::GetPosAtTValue",
+        "description": "Compute the position at the provided T Value of the spline. (world space vector)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "flTValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Dir At T Value",
+        "libname": "CPathSimpleAPI::GetDirAtTValue",
+        "description": "Compute the Direction along the spline at the provided T Value of the spline. (world space vector)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "flTValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Entity At T Value",
+        "libname": "CPathSimpleAPI::SetEntityAtTValue",
+        "description": "Set entity to the position of the provided T value of the spline (world space vector)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "hEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "flTValue",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Distance Between Entities Along Path",
+        "libname": "CPathSimpleAPI::GetDistanceBetweenEntitiesAlongPath",
+        "description": "Compute the distance along the path between provided Entity A and Entity B",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:path_simple"
+            },
+            {
+                "name": "hEntityA",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "hEntityB",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Arc Sin",
+        "libname": "CPulseMathlib::ArcSin",
+        "description": "Arc Sine of angle, in degrees (0 -> 0, 90 -> 1)",
+        "inparams": [
+            {
+                "name": "flDegrees",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Arc Cos",
+        "libname": "CPulseMathlib::ArcCos",
+        "description": "Arc Cosine of angle, in degrees (0 -> 0, 90 -> 1)",
+        "inparams": [
+            {
+                "name": "flDegrees",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Arc Tan",
+        "libname": "CPulseMathlib::ArcTan",
+        "description": "Arc Tangent of angle, in degrees (0 -> 0, 90 -> 1)",
+        "inparams": [
+            {
+                "name": "flDegrees",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Remap Clamped Float",
+        "libname": "CPulseMathlib::RemapClampedFloat",
+        "description": "Remap and clamp input value from input range to output range (float)",
+        "inparams": [
+            {
+                "name": "flVal",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flInputA",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flInputB",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flOutputA",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flOutputB",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Lerp Float",
+        "libname": "CPulseMathlib::LerpFloat",
+        "description": "Returns interpolated value between A and B based on frac 0.0 - 1.0 (float)",
+        "inparams": [
+            {
+                "name": "flFrac",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flValueA",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flValueB",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Lerp Vector",
+        "libname": "CPulseMathlib::LerpVector",
+        "description": "Returns interpolated value between A and B based on frac 0.0 - 1.0 (vector)",
+        "inparams": [
+            {
+                "name": "flFrac",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "vecValueA",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "vecValueB",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Lerp World Vector",
+        "libname": "CPulseMathlib::LerpWorldVector",
+        "description": "Returns interpolated value between A and B based on frac 0.0 - 1.0 (world vector)",
+        "inparams": [
+            {
+                "name": "flFrac",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "vecValueA",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vecValueB",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Integer Divide",
+        "libname": "CPulseMathlib::IntegerDivide",
+        "description": "Integer division - unlike the divide (/) node, this will truncate any remainder (floor) and return an integer.",
+        "inparams": [
+            {
+                "name": "nNumerator",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "nDenominator",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Is Valid Vector",
+        "libname": "CPulseMathlib::IsValidVector",
+        "description": "Returns true if the Vector is valid",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Is Valid World Vector",
+        "libname": "CPulseMathlib::IsValidWorldVector",
+        "description": "Returns true if the World Vector is valid",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+     {
+        "type": "value",
+        "displayname": "Length Vector",
+        "libname": "CPulseMathlib::LengthVector",
+        "description": "Length (magnitude) of Vector a",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Normalize Vector",
+        "libname": "CPulseMathlib::NormalizeVector",
+        "description": "Normalize Vector a",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Cross Product Vector",
+        "libname": "CPulseMathlib::CrossProductVector",
+        "description": "Cross Product of Vector a x Vector b",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "b",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Dot Product Vector",
+        "libname": "CPulseMathlib::DotProductVector",
+        "description": "Dot Product of Vector a • Vector b",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "b",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Vector2 D",
+        "libname": "CPulseMathlib::MakeVector2D",
+        "description": "Make a Vector2D from component parts.",
+        "inparams": [
+            {
+                "name": "x",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "y",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC2"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Vector2 D",
+        "libname": "CPulseMathlib::SplitVector2D",
+        "description": "Split a Vector2D into component parts.",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC2"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "X",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Y",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Vector",
+        "libname": "CPulseMathlib::MakeVector",
+        "description": "Make a Vector from component parts.",
+        "inparams": [
+            {
+                "name": "x",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "z",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Vector",
+        "libname": "CPulseMathlib::SplitVector",
+        "description": "Split a Vector into component parts.",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "X",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Z",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Vector4 D",
+        "libname": "CPulseMathlib::MakeVector4D",
+        "description": "Make a Vector from component parts.",
+        "inparams": [
+            {
+                "name": "x",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "z",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "w",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC4"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Vector4 D",
+        "libname": "CPulseMathlib::SplitVector4D",
+        "description": "Split a Vector into component parts.",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC4"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "X",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Z",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "W",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make World Vector",
+        "libname": "CPulseMathlib::MakeWorldVector",
+        "description": "Make a World Vector from component parts.",
+        "inparams": [
+            {
+                "name": "x",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "z",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split World Vector",
+        "libname": "CPulseMathlib::SplitWorldVector",
+        "description": "Split a World Vector into component parts.",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "X",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Y",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Z",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Transform",
+        "libname": "CPulseMathlib::MakeTransform",
+        "description": "Make a Transform from component parts.",
+        "inparams": [
+            {
+                "name": "origin",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "angle",
+                "type": "PVAL_QANGLE"
+            },
+            {
+                "name": "flScale",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_TRANSFORM"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Transform",
+        "libname": "CPulseMathlib::SplitTransform",
+        "description": "Split a Transform into component parts.",
+        "inparams": [
+            {
+                "name": "transform",
+                "type": "PVAL_TRANSFORM"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "Origin",
+                "type": "PVAL_VEC3"
+            },
+            {
+                "name": "Angle",
+                "type": "PVAL_QANGLE"
+            },
+            {
+                "name": "Scale",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make World Transform",
+        "libname": "CPulseMathlib::MakeWorldTransform",
+        "description": "Make a Transform from component parts.",
+        "inparams": [
+            {
+                "name": "origin",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "angle",
+                "type": "PVAL_QANGLE"
+            },
+            {
+                "name": "flScale",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_TRANSFORM_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split World Transform",
+        "libname": "CPulseMathlib::SplitWorldTransform",
+        "description": "Split a Transform into component parts.",
+        "inparams": [
+            {
+                "name": "transform",
+                "type": "PVAL_TRANSFORM_WORLDSPACE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "Origin",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "Angle",
+                "type": "PVAL_QANGLE"
+            },
+            {
+                "name": "Scale",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Color",
+        "libname": "CPulseMathlib::MakeColor",
+        "description": "Make a Color from component parts",
+        "inparams": [
+            {
+                "name": "r",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "g",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "b",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_COLOR_RGB"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Color",
+        "libname": "CPulseMathlib::SplitColor",
+        "description": "Split a Color into component parts.",
+        "inparams": [
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "R",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "G",
+                "type": "PVAL_INT"
+            },
+            {
+                "name": "B",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Make Angle",
+        "libname": "CPulseMathlib::MakeAngle",
+        "description": "Make an Angle from component parts",
+        "inparams": [
+            {
+                "name": "flPitch",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flYaw",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flRoll",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_QANGLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Split Angle",
+        "libname": "CPulseMathlib::SplitAngle",
+        "description": "Split an Angle into component parts.",
+        "inparams": [
+            {
+                "name": "angle",
+                "type": "PVAL_QANGLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "Pitch",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Yaw",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "Roll",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Float To Game Time",
+        "libname": "CPulseMathlib::FloatToGameTime",
+        "description": "Convert from a raw floating-point time to a Game Time that will be saved/loaded appropriately",
+        "inparams": [
+            {
+                "name": "flFloat",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_GAMETIME"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Game Time To Float",
+        "libname": "CPulseMathlib::GameTimeToFloat",
+        "description": "Convert from a Game Time a raw floating-point time that will NOT fixed up - use with caution!",
+        "inparams": [
+            {
+                "name": "flTime",
+                "type": "PVAL_GAMETIME"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Vector To World Vector",
+        "libname": "CPulseMathlib::VectorToWorldVector",
+        "description": "Convert from a local-space to a world-space vector",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC3"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "World Vector To Vector",
+        "libname": "CPulseMathlib::WorldVectorToVector",
+        "description": "Convert from a world-space to local-space vector",
+        "inparams": [
+            {
+                "name": "vecValue",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Body Group Value",
+        "libname": "CBaseModelEntityAPI::SetBodyGroupValue",
+        "description": "Change the active choice for the named bodygroup to the specified value",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pBodyGroupName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "iValue",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Material Group",
+        "libname": "CBaseModelEntityAPI::SetMaterialGroup",
+        "description": "Change the active materialgroup",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pName",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Model",
+        "libname": "CBaseModelEntityAPI::SetModel",
+        "description": "Change the current model",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "hModel",
+                "type": "PVAL_RESOURCE:vmdl"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Render Attribute Float",
+        "libname": "CBaseModelEntityAPI::SetRenderAttributeFloat",
+        "description": "Set the specified render attribute value",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pAttributeName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Render Attribute Vector",
+        "libname": "CBaseModelEntityAPI::SetRenderAttributeVector",
+        "description": "Set the specified render attribute value",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pAttributeName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "vValue",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Render Attribute4 Floats",
+        "libname": "CBaseModelEntityAPI::SetRenderAttribute4Floats",
+        "description": "Set the specified render attribute value",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pAttributeName",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "flX",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flY",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flZ",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flW",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Clear Render Attribute",
+        "libname": "CBaseModelEntityAPI::ClearRenderAttribute",
+        "description": "Clear the specified render attribute",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "pAttributeName",
+                "type": "PVAL_STRING"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Render Alpha",
+        "libname": "CBaseModelEntityAPI::SetRenderAlpha",
+        "description": "Alpha 0-255",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "nAlpha",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Render Color",
+        "libname": "CBaseModelEntityAPI::SetRenderColor",
+        "description": "Set object render color (Alpha is ignored)",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "cColor",
+                "type": "PVAL_COLOR_RGB"
             }
         ]
     }

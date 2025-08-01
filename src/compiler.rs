@@ -503,7 +503,7 @@ fn traverse_entry_cell(
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
     cell_method.entry_chunk = chunk_id;
-    cell_method.return_type = String::from("PVAL_INVALID");
+    cell_method.return_type = String::from("PVAL_VOID");
 
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     // create argument1 (TODO only if connection exists)

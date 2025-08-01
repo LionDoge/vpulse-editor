@@ -25,6 +25,8 @@ ron = "0.10.1"
 self_update = { version = "0.42.0", features = ["archive-zip"], default-features = false }
 open = "5.3.2"
 smol = "2.0.2"
+strum = "0.27.2"
+strum_macros = "0.27.2"
 
 [build-dependencies]
 embed-resource = "3.0.5"

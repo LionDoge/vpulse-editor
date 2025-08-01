@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 use crate::typing::{try_string_to_pulsevalue, PulseValueType};
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
@@ -45,34 +46,28 @@ pub struct GraphBindings {
     pub events: Vec<EventBinding>,
 }
 
-fn process_params(params: &mut Option<Vec<ParamInfo>>) {
+fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     if let Some(param_list) = params {
         for param in param_list.iter_mut() {
             // deliberately panic to signify invalid data in bindings
-            param.pulsetype = try_string_to_pulsevalue(&param.typ).unwrap();
+            param.pulsetype = try_string_to_pulsevalue(&param.typ).map_err(|err| {
+                anyhow::anyhow!("Invalid PulseValueType in bindings: {}: {}", param.typ, err)
+            })?;
             param.typ.clear();
         }
     }
+    Ok(())
 }
 
-pub fn load_bindings(filepath: &std::path::Path) -> Result<GraphBindings, std::io::Error> {
-    let json = std::fs::read_to_string(filepath);
-    match json {
-        Ok(json) => {
-            let bindings = from_str::<GraphBindings>(&json);
-            if let Err(err) = bindings {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, err));
-            }
-            let mut bindings = bindings.unwrap();
-            for binding in bindings.gamefunctions.iter_mut() {
-                process_params(&mut binding.inparams);
-                process_params(&mut binding.outparams);
-            }
-            for binding in bindings.events.iter_mut() {
-                process_params(&mut binding.inparams);
-            }
-            Ok(bindings)
-        }
-        Err(e) => Err(e),
+pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
+    let json = std::fs::read_to_string(filepath)?;
+    let mut bindings = from_str::<GraphBindings>(&json)?;
+    for binding in bindings.gamefunctions.iter_mut() {
+        process_params(&mut binding.inparams)?;
+        process_params(&mut binding.outparams)?;
     }
+    for binding in bindings.events.iter_mut() {
+        process_params(&mut binding.inparams)?;
+    }
+    Ok(bindings)
 }

@@ -13,10 +13,10 @@ impl fmt::Display for PulseTypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PulseTypeError::StringToEnumConversionMissing(s) => {
-                write!(f, "Could not convert string to enum: {s}")
+                write!(f, "Could not get enumerator from name: '{s}'")
             }
             PulseTypeError::StringToEnumSubtypeParseError(s) => {
-                write!(f, "Could not parse subtype from string: {s}")
+                write!(f, "Could not parse subtype from string: '{s}'")
             }
         }
     }

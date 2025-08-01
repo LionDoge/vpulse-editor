@@ -7,7 +7,7 @@ use indoc::formatdoc;
 use slotmap::SecondaryMap;
 use crate::{
     pulsetypes::*,
-    typing::{PulseValueType, Vec3},
+    typing::{PulseValueType, Vec2, Vec3, Vec4},
 };
 
 pub trait KV3Serialize {
@@ -494,11 +494,15 @@ pub enum PulseConstant {
     SoundEventName(String),
     Float(f32),
     Integer(i32),
+    Vec2(Vec2),
     Vec3(Vec3),
+    Vec4(Vec4),
     Vec3Local(Vec3),
+    QAngle(Vec3),
     Color_RGB([f32; 4]),
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
+    Resource(Option<String>, String), // (resource_type, value)
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> String {
@@ -515,82 +519,100 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
                 PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
                 PulseConstant::Integer(_) => "PVAL_INT".to_string(),
+                PulseConstant::Vec2(_) => "PVAL_VEC2".to_string(),
                 PulseConstant::Vec3(_) => "PVAL_VEC3_WORLDSPACE".to_string(),
+                PulseConstant::Vec4(_) => "PVAL_VEC4".to_string(),
+                PulseConstant::QAngle(_) => "PVAL_QANGLE".to_string(),
                 PulseConstant::Vec3Local(_) =>  "PVAL_VEC3".to_string(),
                 PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
                 PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
                 PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
+                PulseConstant::Resource(resource_type, _) => {
+                    if let Some(resource_type) = resource_type {
+                        format!("PVAL_RESOURCE:{resource_type}")
+                    } else {
+                        "PVAL_RESOURCE".to_string()
+                    }
+                }
             },
             match self {
                 PulseConstant::String(value)
                 | PulseConstant::SoundEventName(value) => format!("\"{value}\""),
                 PulseConstant::Float(value) => format!("{value:.8}"),
                 PulseConstant::Integer(value) => value.to_string(),
-                PulseConstant::Vec3(value) | PulseConstant::Vec3Local(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
+                PulseConstant::Vec2(value) => format!("[{:.3}, {:.3}]", value.x, value.y),
+                PulseConstant::Vec3(value)
+                | PulseConstant::Vec3Local(value)
+                | PulseConstant::QAngle(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
+                PulseConstant::Vec4(value) => format!("[{:.3}, {:.3}, {:.3}, {:.3}]", value.x, value.y, value.z, value.w),
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
                 PulseConstant::Bool(value) => value.to_string(),
                 PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
+                PulseConstant::Resource(_, value) => format!("\"{value}\""),
             }
         }
     }
 }
-// pub struct Variable {
-//     pub name: String,
-//     pub typ: String,
-//     pub default_value: i32,
-// }
 
-// impl KV3Serialize for Variable {
-//     fn serialize(&self) -> String {
-//         formatdoc!{
-//             "
-//             {{
-//                 m_Name = \"{}\"
-//                 m_Description = \"\"
-//                 m_Type = \"{}\"
-//                 m_DefaultValue = {}
-//                 m_bIsPublic = true
-//                 m_bIsObservable = false
-//                 m_nEditorNodeID = -1
-//             }}
-//             "
-//             , self.name, self.typ, self.default_value
-//         }
-//     }
-// }
 impl KV3Serialize for PulseVariable {
     fn serialize(&self) -> String {
         // convert default values to KV3 literal string.
         let literal = match &self.typ_and_default_value {
             PulseValueType::PVAL_STRING(value) => {
-                format!("\"{}\"", value.clone().unwrap_or_default())
+                if let Some(value) = value {
+                    format!("\"{value}\"")
+                } else {
+                    String::from("")
+                }
+            }
+            PulseValueType::PVAL_RESOURCE(_, value) => {
+                if let Some(value) = value {
+                    format!("\"{value}\"")
+                } else {
+                    String::from("")
+                }
             }
             PulseValueType::PVAL_FLOAT(value) => format!("{:.6}", value.unwrap_or_default()),
             PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
             PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
                 format!("{:?}", value.unwrap_or_default())
             }
+            PulseValueType::PVAL_VEC2(value) => {
+                let val = value.unwrap_or_default();
+                format!("[{:.3}, {:.3}]", val.x, val.y)
+            }
             PulseValueType::PVAL_VEC3(value)
-            | PulseValueType::PVAL_VEC3_LOCAL(value) => {
+            | PulseValueType::PVAL_VEC3_LOCAL(value)
+            | PulseValueType::PVAL_QANGLE(value) => {
                 let val = value.unwrap_or_default();
                 format!("[{:.3}, {:.3}, {:.3}]", val.x, val.y, val.z)
             }
+            PulseValueType::PVAL_VEC4(value) => {
+                let val = value.unwrap_or_default();
+                format!("[{:.3}, {:.3}, {:.3}, {:.3}]", val.x, val.y, val.z, val.w)
+            }
             PulseValueType::PVAL_COLOR_RGB(value) => {
-                let val = (*value).unwrap_or_default();
+                let val = value.unwrap_or_default();
                 format!("[{}, {}, {}]", val.x, val.y, val.z)
             }
-            PulseValueType::PVAL_EHANDLE(_) => String::from("null"), // can't have a default value for ehandle
-            PulseValueType::DOMAIN_ENTITY_NAME => String::from("null"),
-            PulseValueType::PVAL_INVALID => String::from("null"),
+            
             PulseValueType::PVAL_BOOL_VALUE(value) => value.unwrap_or_default().to_string(),
             PulseValueType::PVAL_BOOL => String::from("false"), // default value for bool is false
-            PulseValueType::PVAL_SNDEVT_GUID(_) => String::from("null"),
             PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
-            PulseValueType::PVAL_ACT => String::from("null"),
-            PulseValueType::PVAL_ANY => String::from("null"), // Any type doesn't have a default value
             PulseValueType::PVAL_SCHEMA_ENUM(en) => {
                 format!("\"{}\"", en.to_str())
             }
+
+            PulseValueType::PVAL_GAMETIME(_) 
+            | PulseValueType::PVAL_TRANSFORM(_)
+            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
+            | PulseValueType::PVAL_EHANDLE(_) // can't have a default value for ehandle
+            | PulseValueType::DOMAIN_ENTITY_NAME
+            | PulseValueType::PVAL_INVALID
+            | PulseValueType::PVAL_SNDEVT_GUID(_)
+            | PulseValueType::PVAL_ACT
+            | PulseValueType::PVAL_ANY
+            | PulseValueType::PVAL_ARRAY(_) => String::from("null"), // Any type doesn't have a default value
         };
         formatdoc! {"
             {{

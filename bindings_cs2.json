@@ -1234,6 +1234,81 @@
                 "type": "PVAL_EHANDLE"
             }
         ]
+    },
+
+    {
+        "type": "value",
+        "displayname": "Get Entity Forward",
+        "libname": "CPulseServerFuncs::GetEntityForward",
+        "description": "Get the forward vector of an entity.",
+        "inparams": [
+            {
+                "name": "hEnt",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
+    },
+
+    {
+        "type": "action",
+        "displayname": "Debug World Arrow",
+        "libname": "CPulseServerFuncs::DebugWorldArrow",
+        "description": "Draw an arrow between given points in world space pointing at end position",
+        "inparams": [
+            {
+                "name": "vStartPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "vEndPos",
+                "type": "PVAL_VEC3_WORLDSPACE"
+            },
+            {
+                "name": "flDuration",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "color",
+                "type": "PVAL_COLOR_RGB"
+            },
+            {
+                "name": "flWidth",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "flAlpha",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    
+    {
+        "type": "value",
+        "displayname": "Get Attachment Forward",
+        "libname": "CBaseEntityAPI::GetAttachmentForward",
+        "description": "Return the forward vector for the attachment.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "pAttachment",
+                "type": "PVAL_STRING"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_VEC3"
+            }
+        ]
     }
 
     ]

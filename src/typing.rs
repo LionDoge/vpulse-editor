@@ -37,21 +37,29 @@ impl Display for EventBindingIndex {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct Vec3 {
     pub x: f32,
     pub y: f32,
     pub z: f32,
 }
-
-impl Default for Vec3 {
-    fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Default)]
+pub struct Vec2 {
+    pub x: f32,
+    pub y: f32,
+}
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Default)]
+pub struct Vec4 {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+    pub w: f32,
+}
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Default)]
+pub struct Transform {
+    pub position: Vec3,
+    pub rotation: Vec3,
+    pub scale: f32,
 }
 
 impl Vec3 {
@@ -59,6 +67,19 @@ impl Vec3 {
         Self { x, y, z }
     }
 }
+
+impl Vec2 {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
+impl Vec4 {
+    pub fn new(x: f32, y: f32, z: f32, w: f32) -> Self {
+        Self { x, y, z, w }
+    }
+}
+
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
@@ -89,7 +110,15 @@ pub enum PulseValueType {
     DOMAIN_ENTITY_NAME,
     PVAL_ACT, // only used in the editor, not in the engine
     PVAL_ANY,
-    PVAL_SCHEMA_ENUM(SchemaEnumType)
+    PVAL_SCHEMA_ENUM(SchemaEnumType),
+    PVAL_VEC2(Option<Vec2>),
+    PVAL_VEC4(Option<Vec4>),
+    PVAL_QANGLE(Option<Vec3>),
+    PVAL_TRANSFORM(Option<Transform>),
+    PVAL_TRANSFORM_WORLDSPACE(Option<Transform>),
+    PVAL_RESOURCE(Option<String>, Option<String>), // (resource_type, resource_name)
+    PVAL_ARRAY(Option<Vec<PulseValueType>>),
+    PVAL_GAMETIME(Option<f32>),
 }
 
 impl fmt::Display for PulseValueType {
@@ -126,6 +155,20 @@ impl fmt::Display for PulseValueType {
             PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
                 write!(f, "PVAL_SCHEMA_ENUM:{}", enum_type.to_str())
             }
+            PulseValueType::PVAL_VEC2(_) => write!(f, "PVAL_VEC2"),
+            PulseValueType::PVAL_VEC4(_) => write!(f, "PVAL_VEC4"),
+            PulseValueType::PVAL_QANGLE(_) => write!(f, "PVAL_QANGLE"),
+            PulseValueType::PVAL_TRANSFORM(_) => write!(f, "PVAL_TRANSFORM"),
+            PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => write!(f, "PVAL_TRANSFORM_WORLDSPACE"),
+            PulseValueType::PVAL_RESOURCE(resource_type, _) => {
+                if let Some(resource_type) = resource_type {
+                    write!(f, "PVAL_RESOURCE:{resource_type}")
+                } else {
+                    write!(f, "PVAL_RESOURCE")
+                }
+            }
+            PulseValueType::PVAL_ARRAY(_) => write!(f, "PVAL_ARRAY"),
+            PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
         }
     }
 }
@@ -159,6 +202,14 @@ impl PulseValueType {
             PulseValueType::PVAL_ACT => "Action",
             PulseValueType::PVAL_ANY => "Any Type",
             PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => enum_type.to_str_ui(),
+            PulseValueType::PVAL_VEC2(_) => "Vector 2D",
+            PulseValueType::PVAL_VEC4(_) => "Vector 4D",
+            PulseValueType::PVAL_QANGLE(_) => "QAngle",
+            PulseValueType::PVAL_TRANSFORM(_) => "Transform",
+            PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => "World Transform",
+            PulseValueType::PVAL_RESOURCE(_, _) => "Resource",
+            PulseValueType::PVAL_ARRAY(_) => "Array",
+            PulseValueType::PVAL_GAMETIME(_) => "Game Time",
         }
     }
 }
@@ -179,6 +230,14 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_SNDEVT_NAME" => Ok(PulseValueType::PVAL_SNDEVT_NAME(None)),
         "PVAL_ACT" => Ok(PulseValueType::PVAL_ACT),
         "PVAL_ANY" | "PVAL_VARIANT" => Ok(PulseValueType::PVAL_ANY),
+        "PVAL_VEC2" => Ok(PulseValueType::PVAL_VEC2(None)),
+        "PVAL_VEC4" => Ok(PulseValueType::PVAL_VEC4(None)),
+        "PVAL_QANGLE" => Ok(PulseValueType::PVAL_QANGLE(None)),
+        "PVAL_TRANSFORM" => Ok(PulseValueType::PVAL_TRANSFORM(None)),
+        "PVAL_TRANSFORM_WORLDSPACE" => Ok(PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None)),
+        "PVAL_RESOURCE" => Ok(PulseValueType::PVAL_RESOURCE(None, None)),
+        "PVAL_ARRAY" => Ok(PulseValueType::PVAL_ARRAY(None)),
+        "PVAL_GAMETIME" => Ok(PulseValueType::PVAL_GAMETIME(None)),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
@@ -188,6 +247,9 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
                 let en = SchemaEnumType::from_str(enum_type)
                     .map_err(|_| PulseTypeError::StringToEnumConversionMissing(enum_type.to_string()))?;
                 Ok(PulseValueType::PVAL_SCHEMA_ENUM(en))
+            } else if s.starts_with("PVAL_RESOURCE:") {
+                let res_type = s.split_at(14).1;
+                Ok(PulseValueType::PVAL_RESOURCE(Some(res_type.to_string()), None))
             } else {
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }
@@ -304,6 +366,48 @@ pub fn pulse_value_type_to_node_types(
                 }
             )
         }
+        PulseValueType::PVAL_VEC2(_) => (
+            PulseDataType::Vec2,
+            PulseGraphValueType::Vec2 {
+                value: Vec2::default(),
+            },
+        ),
+        PulseValueType::PVAL_VEC4(_) => (
+            PulseDataType::Vec4,
+            PulseGraphValueType::Vec4 {
+                value: Vec4::default(),
+            },
+        ),
+        PulseValueType::PVAL_QANGLE(_) => (
+            PulseDataType::QAngle,
+            PulseGraphValueType::QAngle {
+                value: Vec3::default(),
+            },
+        ),
+        PulseValueType::PVAL_TRANSFORM(_) => (
+            PulseDataType::Transform,
+            PulseGraphValueType::Transform,
+        ),
+        PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => (
+            PulseDataType::TransformWorldspace,
+            PulseGraphValueType::TransformWorldspace,
+        ),
+        PulseValueType::PVAL_RESOURCE(resource_type, _) => (
+            PulseDataType::Resource,
+            PulseGraphValueType::Resource {
+                resource_type: resource_type.clone(),
+                value: String::default(),
+            },
+        ),
+        PulseValueType::PVAL_ARRAY(_) =>
+        (
+            PulseDataType::Array,
+            PulseGraphValueType::Array
+        ),
+        PulseValueType::PVAL_GAMETIME(_) => (
+            PulseDataType::GameTime,
+            PulseGraphValueType::GameTime,
+        ),
         _ => todo!("Implement more type conversions"),
     }
 }
@@ -316,15 +420,23 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_STRING(_)
         | PulseValueType::PVAL_VEC3(_)
         | PulseValueType::PVAL_VEC3_LOCAL(_)
+        | PulseValueType::PVAL_VEC2(_)
+        | PulseValueType::PVAL_VEC4(_)
+        | PulseValueType::PVAL_QANGLE(_)
+        | PulseValueType::PVAL_TRANSFORM(_)
+        | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
         | PulseValueType::DOMAIN_ENTITY_NAME
         | PulseValueType::PVAL_COLOR_RGB(_)
-        | PulseValueType::PVAL_SNDEVT_NAME(_) => InputParamKind::ConnectionOrConstant,
+        | PulseValueType::PVAL_SNDEVT_NAME(_)
+        | PulseValueType::PVAL_RESOURCE(_, _)
+        | PulseValueType::PVAL_GAMETIME(_) => InputParamKind::ConnectionOrConstant,
 
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)
         | PulseValueType::PVAL_INVALID
         | PulseValueType::PVAL_ACT
-        | PulseValueType::PVAL_ANY => InputParamKind::ConnectionOnly,
+        | PulseValueType::PVAL_ANY
+        | PulseValueType::PVAL_ARRAY(_) => InputParamKind::ConnectionOnly,
 
         PulseValueType::PVAL_BOOL
         | PulseValueType::PVAL_BOOL_VALUE(_)

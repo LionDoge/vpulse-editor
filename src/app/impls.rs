@@ -178,6 +178,13 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
             PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::CommentBox => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Vec4 => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::QAngle => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Transform => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::TransformWorldspace => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Resource => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::Array => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::GameTime => egui::Color32::from_rgb(0, 0, 0),
         }
     }
 
@@ -204,6 +211,13 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Any => Cow::Borrowed("Any type"),
             PulseDataType::SchemaEnum => Cow::Borrowed("Schema enum"),
             PulseDataType::CommentBox => Cow::Borrowed("Comment box"),
+            PulseDataType::Vec4 => Cow::Borrowed("4d vector"),
+            PulseDataType::QAngle => Cow::Borrowed("QAngle"),
+            PulseDataType::Transform => Cow::Borrowed("Transform"),
+            PulseDataType::TransformWorldspace => Cow::Borrowed("Worldspace transform"),
+            PulseDataType::Resource => Cow::Borrowed("Resource"),
+            PulseDataType::Array => Cow::Borrowed("Array"),
+            PulseDataType::GameTime => Cow::Borrowed("Game time"),
         }
     }
 
@@ -934,15 +948,6 @@ impl WidgetValueTrait for PulseGraphValueType {
         // inline parameter widgets.
         let mut responses = vec![];
         match self {
-            PulseGraphValueType::Vec2 { value } => {
-                ui.label(param_name);
-                ui.horizontal(|ui| {
-                    ui.label("x");
-                    ui.add(DragValue::new(&mut value.x));
-                    ui.label("y");
-                    ui.add(DragValue::new(&mut value.y));
-                });
-            }
             PulseGraphValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
                     // if this is a custom added parameter...
@@ -972,12 +977,30 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ui.checkbox(value, param_name);
                 });
             }
-            PulseGraphValueType::Vec3 {value} | PulseGraphValueType::Vec3Local { value } => {
+            PulseGraphValueType::Vec2 { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.add(DragValue::new(&mut value.x));
+                    ui.add(DragValue::new(&mut value.y));
+                });
+            }
+            PulseGraphValueType::Vec3 {value} 
+            | PulseGraphValueType::Vec3Local { value }
+            | PulseGraphValueType::QAngle { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ui.add(DragValue::new(&mut value.x));
                     ui.add(DragValue::new(&mut value.y));
                     ui.add(DragValue::new(&mut value.z));
+                });
+            }
+            PulseGraphValueType::Vec4 { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ui.add(DragValue::new(&mut value.x));
+                    ui.add(DragValue::new(&mut value.y));
+                    ui.add(DragValue::new(&mut value.z));
+                    ui.add(DragValue::new(&mut value.w));
                 });
             }
             PulseGraphValueType::Color { value } => {
@@ -1086,13 +1109,13 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 ));
                             };
                             if ui
-                                .selectable_value(value, PulseValueType::PVAL_VEC3(None), "Local Vector")
+                                .selectable_value(value, PulseValueType::PVAL_VEC3_LOCAL(None), "Local Vector")
                                 .clicked()
                             {
                                 responses.push(PulseGraphResponse::ChangeParamType(
                                     _node_id,
                                     param_name.to_string(),
-                                    PulseValueType::PVAL_VEC3(None),
+                                    PulseValueType::PVAL_VEC3_LOCAL(None),
                                 ));
                             };
                             if ui
@@ -1266,6 +1289,29 @@ impl WidgetValueTrait for PulseGraphValueType {
                         .desired_rows(2)
                         .desired_width(available_width)
                 );
+            }
+            // Transforms are made from MakeTransform node, so they are not editable directly.
+            PulseGraphValueType::Transform => {
+                ui.label(format!("Transform {param_name}"));
+            }
+            PulseGraphValueType::TransformWorldspace => {
+                ui.label(format!("Transform (world) {param_name}"));
+            }
+            PulseGraphValueType::Resource { resource_type, value } => {
+                ui.horizontal(|ui| {
+                    if let Some(resource_type) = resource_type {
+                        ui.label(format!("Resource {param_name} ({resource_type})"));
+                    } else {
+                        ui.label(format!("Resource {param_name}"));
+                    }
+                    ui.text_edit_singleline(value);
+                });
+            }
+            PulseGraphValueType::GameTime => {
+                ui.label(format!("Game Time {param_name}"));
+            }
+            PulseGraphValueType::Array => {
+                ui.label(format!("Array {param_name}"));
             }
         }
         // This allows you to return your responses from the inline widgets.

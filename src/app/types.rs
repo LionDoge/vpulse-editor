@@ -1,7 +1,6 @@
 use std::{collections::HashMap, path::PathBuf};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
-use eframe::egui;
 use egui_node_graph2::*;
 use crate::typing::*;
 use crate::pulsetypes::*;
@@ -44,6 +43,13 @@ pub enum PulseDataType {
     Any,
     SchemaEnum,
     CommentBox,
+    Vec4,
+    QAngle,
+    Transform,
+    TransformWorldspace,
+    Resource,
+    Array,
+    GameTime,
 }
 
 /// In the graph, input parameters can optionally have a constant value. This
@@ -57,7 +63,7 @@ pub enum PulseDataType {
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseGraphValueType {
     Vec2 {
-        value: egui::Vec2,
+        value: Vec2,
     },
     Scalar {
         value: f32,
@@ -112,6 +118,20 @@ pub enum PulseGraphValueType {
         value: SchemaEnumValue,
     },
     CommentBox {value: String},
+    Vec4 {
+        value: Vec4,
+    },
+    QAngle {
+        value: Vec3,
+    },
+    Transform,
+    TransformWorldspace,
+    Resource {
+        resource_type: Option<String>, // Used for displaying in the UI only.
+        value: String,
+    },
+    Array,
+    GameTime,
 }
 
 /// NodeTemplate is a mechanism to define node templates. It's what the graph

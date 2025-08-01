@@ -1519,7 +1519,7 @@
     },
     {
         "type": "value",
-        "displayname": "Create Effect",
+        "displayname": "Particle - Create Effect",
         "libname": "CPulseFuncs_GameParticleManager::CreateEffect",
         "description": "Create an instance of the specified particle system definition - returns a handle that can be used to modify or destroy the effect.",
         "inparams": [
@@ -1549,7 +1549,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Effect Control Ent",
+        "displayname": "Particle - Set Effect Control Ent",
         "libname": "CPulseFuncs_GameParticleManager::SetEffectControlEnt",
         "description": "Attach an effect control point to an entity",
         "inparams": [
@@ -1577,7 +1577,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Effect Control Vector",
+        "displayname": "Particle - Set Effect Control Vector",
         "libname": "CPulseFuncs_GameParticleManager::SetEffectControlVector",
         "description": "Set an effect control point to a relative vector",
         "inparams": [
@@ -1597,7 +1597,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Effect Control World Vector",
+        "displayname": "Particle - Set Effect Control World Vector",
         "libname": "CPulseFuncs_GameParticleManager::SetEffectControlWorldVector",
         "description": "Set an effect control point to a worldspace position",
         "inparams": [
@@ -1617,7 +1617,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Effect Control Transform",
+        "displayname": "Particle - Set Effect Control Transform",
         "libname": "CPulseFuncs_GameParticleManager::SetEffectControlTransform",
         "description": "Set an effect control point to a worldspace transform",
         "inparams": [
@@ -1638,7 +1638,7 @@
 
     {
         "type": "action",
-        "displayname": "Destroy Effect",
+        "displayname": "Particle - Destroy Effect",
         "libname": "CPulseFuncs_GameParticleManager::DestroyEffect",
         "description": "Destroy a particle effect instance",
         "inparams": [
@@ -2904,7 +2904,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Closest T Value To Entity",
+        "displayname": "path_simple: Get Closest T Value To Entity",
         "libname": "CPathSimpleAPI::GetClosestTValueToEntity",
         "description": "Compute the closest T value on the path relative to the entity provided. (0.0 to 1.0 float value that defines the point along the spline)",
         "inparams": [
@@ -2926,7 +2926,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Closest Pos To Entity",
+        "displayname": "path_simple: Get Closest Pos To Entity",
         "libname": "CPathSimpleAPI::GetClosestPosToEntity",
         "description": "Compute the closest position on the path relative to the entity provided. (world space vector)",
         "inparams": [
@@ -2948,7 +2948,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Closest Dir To Entity",
+        "displayname": "path_simple: Get Closest Dir To Entity",
         "libname": "CPathSimpleAPI::GetClosestDirToEntity",
         "description": "Compute the closest direction along the path relative to the entity provided. (world space vector)",
         "inparams": [
@@ -2970,7 +2970,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Pos At T Value",
+        "displayname": "path_simple: Get Pos At T Value",
         "libname": "CPathSimpleAPI::GetPosAtTValue",
         "description": "Compute the position at the provided T Value of the spline. (world space vector)",
         "inparams": [
@@ -2992,7 +2992,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Dir At T Value",
+        "displayname": "path_simple: Get Dir At T Value",
         "libname": "CPathSimpleAPI::GetDirAtTValue",
         "description": "Compute the Direction along the spline at the provided T Value of the spline. (world space vector)",
         "inparams": [
@@ -3014,7 +3014,7 @@
     },
     {
         "type": "action",
-        "displayname": "Set Entity At T Value",
+        "displayname": "path_simple: Set Entity At T Value",
         "libname": "CPathSimpleAPI::SetEntityAtTValue",
         "description": "Set entity to the position of the provided T value of the spline (world space vector)",
         "inparams": [
@@ -3034,7 +3034,7 @@
     },
     {
         "type": "value",
-        "displayname": "Get Distance Between Entities Along Path",
+        "displayname": "path_simple: Get Distance Between Entities Along Path",
         "libname": "CPathSimpleAPI::GetDistanceBetweenEntitiesAlongPath",
         "description": "Compute the distance along the path between provided Entity A and Entity B",
         "inparams": [

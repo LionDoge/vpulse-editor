@@ -45,10 +45,19 @@ impl PulseGraphValueType {
     }
 
     pub fn try_to_string(self) -> anyhow::Result<String> {
-        if let PulseGraphValueType::String { value } = self {
-            Ok(value)
+        match self {
+            PulseGraphValueType::String { value } => Ok(value),
+            PulseGraphValueType::InternalOutputName { value, .. } => Ok(value),
+            PulseGraphValueType::InternalVariableName { value, .. } => Ok(value),
+            _ => anyhow::bail!("Invalid cast from {:?} to string", self),
+        }
+    }
+
+    pub fn try_to_resource(self) -> anyhow::Result<(Option<String>, String)> {
+        if let PulseGraphValueType::Resource { resource_type, value } = self {
+            Ok((resource_type, value))
         } else {
-            anyhow::bail!("Invalid cast from {:?} to string", self)
+            anyhow::bail!("Invalid cast from {:?} to resource", self)
         }
     }
 

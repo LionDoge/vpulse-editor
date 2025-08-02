@@ -873,13 +873,13 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::SchemaEnum(input_typ_and_value.0, input_typ_and_value.1));
                 }
-                PulseValueType::PVAL_RESOURCE(resource_type, _) =>
+                PulseValueType::PVAL_RESOURCE(_, _) =>
                 {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
-                    let input_value = input_param.value().clone().try_to_string()?;
+                    let res = input_param.value().clone().try_to_resource()?;
                     chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Resource(resource_type, input_value));
+                    graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {

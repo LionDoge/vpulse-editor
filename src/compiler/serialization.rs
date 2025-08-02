@@ -548,7 +548,13 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
                 PulseConstant::Bool(value) => value.to_string(),
                 PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
-                PulseConstant::Resource(_, value) => format!("\"{value}\""),
+                PulseConstant::Resource(resource_type, value) => {
+                    if let Some(resource_type) = resource_type {
+                        format!("resource:\"{resource_type}:{value}\"")
+                    } else {
+                        format!("resource:\"{value}\"")
+                    }
+                }
             }
         }
     }

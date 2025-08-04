@@ -91,6 +91,7 @@ where
                     .inner_margin(vec2(10.0, 10.0))
                     .show(ui, |ui| {
                         ScrollArea::vertical()
+                            .min_scrolled_height(max_height)
                             .max_height(max_height)
                             .show(ui, |ui| {
                                 ui.set_width(scroll_area_width);

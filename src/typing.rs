@@ -173,13 +173,21 @@ impl fmt::Display for PulseValueType {
 }
 
 impl PulseValueType {
+    // defines the suffix for the operation name used in instructions eg. EQ_STRING, ADD_INT
     pub fn get_operation_suffix_name(&self) -> &'static str {
         match self {
-            PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
+            PulseValueType::PVAL_BOOL => "_BOOL",
             PulseValueType::PVAL_INT(_) => "_INT",
-            PulseValueType::PVAL_VEC3(_) => "", // Vec3 uses generic comparison (I think)
-            PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
+            PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
             PulseValueType::PVAL_STRING(_) => "_STRING",
+            PulseValueType::PVAL_VEC2(_) => "_VEC2",
+            PulseValueType::PVAL_VEC3(_) => "_VEC3",
+            PulseValueType::PVAL_VEC4(_) => "_VEC3",
+            PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
+            PulseValueType::DOMAIN_ENTITY_NAME => "_ENTITY_NAME",
+            PulseValueType::PVAL_SCHEMA_ENUM(_) => "_SCHEMA_ENUM",
+            PulseValueType::PVAL_COLOR_RGB(_) => "_COLOR_RGB",
+            PulseValueType::PVAL_ARRAY(_) => "_ARRAY",
             _ => "",
         }
     }

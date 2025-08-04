@@ -17,30 +17,6 @@ use crate::pulsetypes::*;
 use crate::typing::*;
 use types::*;
 
-// this includes default values inside enums if applicable.
-fn get_supported_ui_types() -> Vec<PulseValueType> {
-    vec![
-        PulseValueType::PVAL_INT(None),
-        PulseValueType::PVAL_FLOAT(None),
-        PulseValueType::PVAL_STRING(None),
-        PulseValueType::PVAL_BOOL_VALUE(None),
-        PulseValueType::PVAL_VEC2(None),
-        PulseValueType::PVAL_VEC3(None),
-        PulseValueType::PVAL_VEC3_LOCAL(None),
-        PulseValueType::PVAL_VEC4(None),
-        PulseValueType::PVAL_QANGLE(None),
-        PulseValueType::PVAL_TRANSFORM(None),
-        PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None),
-        PulseValueType::PVAL_COLOR_RGB(None),
-        PulseValueType::PVAL_EHANDLE(None),
-        PulseValueType::DOMAIN_ENTITY_NAME,
-        PulseValueType::PVAL_SNDEVT_GUID(None),
-        PulseValueType::PVAL_ARRAY(None),
-        PulseValueType::PVAL_RESOURCE(None, None),
-        PulseValueType::PVAL_GAMETIME(None),
-    ]
-}
-
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
@@ -803,7 +779,7 @@ impl eframe::App for PulseGraphEditor {
                         ComboBox::from_id_salt(format!("output{idx}"))
                             .selected_text(outputdef.typ.get_ui_name())
                             .show_ui(ui, |ui| {
-                                for typ in get_supported_ui_types() {
+                                for typ in PulseValueType::get_variable_supported_types() {
                                     let name = typ.get_ui_name();
                                     ui.selectable_value(&mut outputdef.typ,
                                          typ,
@@ -931,7 +907,7 @@ impl eframe::App for PulseGraphEditor {
                         ComboBox::from_id_salt(format!("var{idx}"))
                             .selected_text(var.typ_and_default_value.get_ui_name())
                             .show_ui(ui, |ui| {
-                                for typ in get_supported_ui_types() {
+                                for typ in PulseValueType::get_variable_supported_types() {
                                     let name = typ.get_ui_name();
                                     if ui.selectable_value(&mut var.typ_and_default_value,
                                          typ,

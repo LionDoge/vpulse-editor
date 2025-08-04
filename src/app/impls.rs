@@ -1149,7 +1149,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ComboBox::from_id_salt((_node_id, param_name))
                         .selected_text(value.get_ui_name())
                         .show_ui(ui, |ui| {
-                            for typ in super::get_supported_ui_types() {
+                            for typ in PulseValueType::get_variable_supported_types() {
                                 let name = typ.get_ui_name();
                                 if ui.selectable_value(value,
                                         typ.clone(),

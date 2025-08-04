@@ -181,7 +181,8 @@ impl PulseValueType {
             PulseValueType::PVAL_FLOAT(_) => "_FLOAT",
             PulseValueType::PVAL_STRING(_) => "_STRING",
             PulseValueType::PVAL_VEC2(_) => "_VEC2",
-            PulseValueType::PVAL_VEC3(_) => "_VEC3",
+            PulseValueType::PVAL_VEC3(_)
+            | PulseValueType::PVAL_VEC3_LOCAL(_) => "_VEC3",
             PulseValueType::PVAL_VEC4(_) => "_VEC3",
             PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
             PulseValueType::DOMAIN_ENTITY_NAME => "_ENTITY_NAME",
@@ -218,6 +219,64 @@ impl PulseValueType {
             PulseValueType::PVAL_ARRAY(_) => "Array",
             PulseValueType::PVAL_GAMETIME(_) => "Game Time",
         }
+    }
+    pub fn get_comparable_types() -> Vec<PulseValueType> {
+        vec![
+            PulseValueType::PVAL_INT(None),
+            PulseValueType::PVAL_FLOAT(None),
+            PulseValueType::PVAL_STRING(None),
+            PulseValueType::PVAL_BOOL,
+            PulseValueType::PVAL_EHANDLE(None),
+            PulseValueType::DOMAIN_ENTITY_NAME,
+            PulseValueType::PVAL_VEC2(None),
+            PulseValueType::PVAL_VEC3(None),
+            PulseValueType::PVAL_VEC3_LOCAL(None),
+            PulseValueType::PVAL_VEC4(None),
+            PulseValueType::PVAL_COLOR_RGB(None),
+            PulseValueType::PVAL_ARRAY(None),
+            PulseValueType::PVAL_QANGLE(None), // it doesn't have it's own suffix, but maybe it works.
+        ]
+    }
+    pub fn get_operatable_types() -> Vec<PulseValueType> {
+        vec![
+            PulseValueType::PVAL_INT(None),
+            PulseValueType::PVAL_FLOAT(None),
+            PulseValueType::PVAL_STRING(None),
+            PulseValueType::PVAL_VEC2(None),
+            PulseValueType::PVAL_VEC3(None),
+            PulseValueType::PVAL_VEC3_LOCAL(None),
+            PulseValueType::PVAL_VEC4(None),
+        ]
+    }
+    pub fn get_scalable_types() -> Vec<PulseValueType> {
+        vec![
+            PulseValueType::PVAL_VEC2(None),
+            PulseValueType::PVAL_VEC3(None),
+            PulseValueType::PVAL_VEC3_LOCAL(None),
+            PulseValueType::PVAL_VEC4(None),
+        ]
+    }
+    pub fn get_variable_supported_types() -> Vec<PulseValueType> {
+        vec![
+            PulseValueType::PVAL_INT(None),
+            PulseValueType::PVAL_FLOAT(None),
+            PulseValueType::PVAL_STRING(None),
+            PulseValueType::PVAL_BOOL_VALUE(None),
+            PulseValueType::PVAL_VEC2(None),
+            PulseValueType::PVAL_VEC3(None),
+            PulseValueType::PVAL_VEC3_LOCAL(None),
+            PulseValueType::PVAL_VEC4(None),
+            PulseValueType::PVAL_QANGLE(None),
+            PulseValueType::PVAL_TRANSFORM(None),
+            PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None),
+            PulseValueType::PVAL_COLOR_RGB(None),
+            PulseValueType::PVAL_EHANDLE(None),
+            PulseValueType::DOMAIN_ENTITY_NAME,
+            PulseValueType::PVAL_SNDEVT_GUID(None),
+            PulseValueType::PVAL_ARRAY(None),
+            PulseValueType::PVAL_RESOURCE(None, None),
+            PulseValueType::PVAL_GAMETIME(None),
+        ]
     }
 }
 

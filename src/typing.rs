@@ -117,7 +117,7 @@ pub enum PulseValueType {
     PVAL_TRANSFORM(Option<Transform>),
     PVAL_TRANSFORM_WORLDSPACE(Option<Transform>),
     PVAL_RESOURCE(Option<String>, Option<String>), // (resource_type, resource_name)
-    PVAL_ARRAY(Option<Vec<PulseValueType>>),
+    PVAL_ARRAY(Option<String>),
     PVAL_GAMETIME(Option<f32>),
 }
 

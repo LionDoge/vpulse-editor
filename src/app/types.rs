@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::PathBuf, borrow::Cow};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
 use egui_node_graph2::*;
@@ -14,6 +14,7 @@ use crate::bindings::{GraphBindings, FunctionBinding, EventBinding};
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
     pub custom_named_outputs: HashMap<OutputId, CustomOutputInfo>,
+    pub input_hint_text: Option<Cow<'static, str>>
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -184,6 +185,7 @@ pub enum PulseNodeTemplate {
     ConstantString,
     ConstantVec3,
     ConstantInt,
+    NewArray,
     LibraryBindingAssigned { binding: LibraryBindingIndex }
 }
 

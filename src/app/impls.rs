@@ -303,6 +303,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ConstantString => "Constant String".into(),
             PulseNodeTemplate::ConstantVec3 => "Constant Vec3".into(),
             PulseNodeTemplate::ConstantInt => "Constant Int".into(),
+            PulseNodeTemplate::NewArray => "New Array".into(),
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 // TODO: Setup proper lifetimes so we don't have to clone
                 _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
@@ -352,7 +353,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::ConstantFloat
             | PulseNodeTemplate::ConstantString
             | PulseNodeTemplate::ConstantVec3
-            | PulseNodeTemplate::ConstantInt => vec!["Constants"],
+            | PulseNodeTemplate::ConstantInt 
+            | PulseNodeTemplate::NewArray => vec!["Constants"],
         }
     }
 
@@ -366,6 +368,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         PulseNodeData {
             template: *self,
             custom_named_outputs: HashMap::new(),
+            input_hint_text: None,
         }
     }
 
@@ -529,6 +532,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         };
         let output_vector3 = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Vec3);
+        };
+        let output_array = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Array);
         };
 
         let mut make_referencable = || {
@@ -910,6 +916,19 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ConstantVec3 => {
                 input_vector3(graph, "value", InputParamKind::ConstantOnly);
                 output_vector3(graph, "out");
+            }
+            PulseNodeTemplate::NewArray => {
+                graph.add_input_param(
+                    node_id,
+                    "Array contents".to_string(),
+                    PulseDataType::String,
+                    PulseGraphValueType::String {
+                        value: "1, 2, 3".to_string(),
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+                output_array(graph, "out");
             }
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 graph.add_input_param(
@@ -1420,7 +1439,8 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::ConstantFloat
             | PulseNodeTemplate::ConstantString
             | PulseNodeTemplate::ConstantInt
-            | PulseNodeTemplate::ConstantVec3 => Some(Color32::from_rgb(77, 100, 105)),
+            | PulseNodeTemplate::ConstantVec3 
+            | PulseNodeTemplate::NewArray => Some(Color32::from_rgb(77, 100, 105)),
             PulseNodeTemplate::ConcatString
             | PulseNodeTemplate::Comment
             | PulseNodeTemplate::SetAnimGraphParam => None,

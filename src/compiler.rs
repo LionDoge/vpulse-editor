@@ -881,6 +881,14 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
+                PulseValueType::PVAL_ARRAY(_) =>
+                {
+                    instruction =
+                        instruction_templates::get_const(new_constant_id, target_register);
+                    let res = input_param.value().clone().try_to_string()?;
+                    chunk.add_instruction(instruction);
+                    graph_def.add_constant(PulseConstant::Array(res));
+                }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
                     return Ok(None);
@@ -2610,6 +2618,19 @@ fn traverse_nodes_and_populate<'a>(
                 graph_state,
                 target_chunk,
                 "value",
+                PulseValueType::PVAL_STRING(None),
+                false,
+            )?;
+            return Ok(reg_out.unwrap_or(-1));
+        }
+        PulseNodeTemplate::NewArray => {
+            let reg_out = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "Array contents",
                 PulseValueType::PVAL_STRING(None),
                 false,
             )?;

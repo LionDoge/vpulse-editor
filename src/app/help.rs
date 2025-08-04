@@ -42,6 +42,7 @@ pub fn help_hover_text(template: PulseNodeTemplate) -> &'static str {
         PulseNodeTemplate::CallNode => "Allows to call remote nodes from anywhere. For example a 'Function'.",
         PulseNodeTemplate::ListenForEntityOutput => "Listens to an output from the provided entity in the current map, causing an action if it gets triggered. Also provides the activator entity handle.",
         PulseNodeTemplate::Timeline => "Runs actions in a sequential order with a delay between each action.",
+        PulseNodeTemplate::NewArray => "Creates a new array with the provided contents. The contents should be a comma-separated list of values, it will be interpreted as raw KeyValues3 array content.",
         _ => "",
     }
 }

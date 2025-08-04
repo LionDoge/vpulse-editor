@@ -1143,13 +1143,21 @@ impl WidgetValueTrait for PulseGraphValueType {
                     *prevvalue = value.clone();
                 }
             }
+            // NOTE: Available types in the combobox are defined by the node template type.
+            // We only want to allow some types to be selected depending on the context.
             PulseGraphValueType::Typ { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ComboBox::from_id_salt((_node_id, param_name))
                         .selected_text(value.get_ui_name())
                         .show_ui(ui, |ui| {
-                            for typ in PulseValueType::get_variable_supported_types() {
+                            let type_list: Vec<PulseValueType> = match &_node_data.template {
+                                PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
+                                PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
+                                _ => PulseValueType::get_variable_supported_types(),
+                            };
+
+                            for typ in type_list {
                                 let name = typ.get_ui_name();
                                 if ui.selectable_value(value,
                                         typ.clone(),

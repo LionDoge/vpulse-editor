@@ -969,8 +969,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::DebugLog,
             PulseNodeTemplate::FireOutput,
             PulseNodeTemplate::GraphHook,
-            PulseNodeTemplate::GetGameTime,
-            PulseNodeTemplate::SetNextThink,
+            //PulseNodeTemplate::GetGameTime,
+            //PulseNodeTemplate::SetNextThink,
             PulseNodeTemplate::Convert,
             PulseNodeTemplate::ForLoop,
             PulseNodeTemplate::WhileLoop,
@@ -993,6 +993,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ConstantString,
             PulseNodeTemplate::ConstantVec3,
             PulseNodeTemplate::ConstantInt,
+            PulseNodeTemplate::NewArray,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {

@@ -681,7 +681,7 @@ where
         inner_rect.max.x = inner_rect.max.x.max(inner_rect.min.x);
         inner_rect.max.y = inner_rect.max.y.max(inner_rect.min.y);
 
-        let mut child_ui = ui.child_ui(inner_rect, *ui.layout(), None);
+        let mut child_ui = ui.new_child(UiBuilder::new().max_rect(inner_rect).layout(*ui.layout()));
 
         // Get interaction rect from memory, it may expand after the window response on resize.
         let interaction_rect = ui
@@ -717,6 +717,7 @@ where
                     self.graph,
                     user_state,
                 ));
+                ui.add_space(4.0 * pan_zoom.zoom); // margin
                 ui.add_space(8.0 * pan_zoom.zoom); // The size of the little cross icon
             });
             ui.add_space(margin.y);

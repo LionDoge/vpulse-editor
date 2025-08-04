@@ -100,9 +100,9 @@ impl Scale for Style {
         self.visuals.selection.stroke.scale(amount);
 
         self.visuals.resize_corner_size *= amount;
-        self.visuals.text_cursor.stroke.width *= amount;
+        //self.visuals.text_cursor.stroke.width *= amount;
         self.visuals.clip_rect_margin *= amount;
-        self.visuals.window_rounding.scale(amount);
+        //self.visuals.window_rounding.scale(amount);
         self.visuals.window_shadow.scale(amount);
         self.visuals.popup_shadow.scale(amount);
     }

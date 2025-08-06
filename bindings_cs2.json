@@ -2,8 +2,8 @@
     "events": [
 
     {
-        "displayname": "Event_OnRoundStart",
-        "libname": "CCSPointPulseAPI::Event_OnRoundStart",
+        "displayname": "OnRoundStart",
+        "libname": "CCSPointPulseAPI::OnRoundStart",
         "inparams": [
             {
                 "name": "nRoundNumber",
@@ -12,12 +12,12 @@
         ]
     },
     {
-        "displayname": "Event_OnRoundFreezeEnd",
-        "libname": "CCSPointPulseAPI::Event_OnRoundFreezeEnd"
+        "displayname": "OnRoundFreezeEnd",
+        "libname": "CCSPointPulseAPI::OnRoundFreezeEnd"
     },
     {
-        "displayname": "Event_OnRoundEnd",
-        "libname": "CCSPointPulseAPI::Event_OnRoundEnd",
+        "displayname": "OnRoundEnd",
+        "libname": "CCSPointPulseAPI::OnRoundEnd",
         "inparams": [
             {
                 "name": "nWinner",

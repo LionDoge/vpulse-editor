@@ -464,7 +464,8 @@ impl KV3Serialize for OutputDefinition {
             "
             {{
                 m_Name = \"{}\"
-                m_Type = \"{}\"
+                m_Description = \"\"
+                m_ParamType = \"{}\"
             }}
             "
             , self.name, self.typ.to_string()

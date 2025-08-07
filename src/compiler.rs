@@ -1506,36 +1506,42 @@ fn traverse_nodes_and_populate<'a>(
                 "outputName",
                 try_to_string
             );
-            let reg_param = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "param",
-                PulseValueType::PVAL_ANY,
-                false,
-            )?;
+            
             let pub_output = graph_def.get_public_output_index(output_name.as_str());
             if let Some(pub_output) = pub_output {
+                let output_info = graph_def
+                    .public_outputs
+                    .get(pub_output)
+                    .ok_or(anyhow!("Public output not found").context("FireOutput node"))?;
+                let reg_param = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    graph_state,
+                    target_chunk,
+                    "param",
+                    output_info.typ.clone(),
+                    false,
+                )?;
                 graph_def
                 .cells
                 .push(Box::from(CPulseCell_Step_PublicOutput::new(
                     pub_output as i32,
                 )));
+                let new_binding_id = graph_def.get_current_binding_id() + 1;
+                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                chunk.add_instruction(instruction_templates::cell_invoke(new_binding_id));
+                let reg_map = reg_map_setup_inputs!("Param", reg_param);
+                let binding = InvokeBinding {
+                    register_map: reg_map,
+                    func_name: "Run".into(),
+                    cell_index: graph_def.cells.len() as i32 - 1,
+                    src_chunk: target_chunk,
+                    src_instruction: chunk.get_last_instruction_id() + 1,
+                };
+                graph_def.add_invoke_binding(binding);
             }
-            let new_binding_id = graph_def.get_current_binding_id() + 1;
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            chunk.add_instruction(instruction_templates::cell_invoke(new_binding_id));
-            let reg_map = reg_map_setup_inputs!("Param", reg_param);
-            let binding = InvokeBinding {
-                register_map: reg_map,
-                func_name: "Run".into(),
-                cell_index: graph_def.cells.len() as i32 - 1,
-                src_chunk: target_chunk,
-                src_instruction: chunk.get_last_instruction_id() + 1,
-            };
-            graph_def.add_invoke_binding(binding);
+           
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::GetGameTime => {

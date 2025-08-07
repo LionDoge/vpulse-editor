@@ -960,30 +960,12 @@ impl eframe::App for PulseGraphEditor {
                 NodeResponse::User(user_event) => {
                     match user_event {
                         // node that supports adding parameters is trying to add one
-                        PulseGraphResponse::AddOutputParam(node_id, name, data) => {
-                            {
-                                let node = self.state.graph.nodes.get(node_id).unwrap();
-                                // check if the output of the name exists already...
-                                let nam = node
-                                    .user_data
-                                    .custom_named_outputs
-                                    .iter()
-                                    .find(|v| v.1.name == name);
-                                if nam.is_some() {
-                                    continue;
-                                }
-                            }
-                            let output_id = self.state.graph.add_output_param(
+                        PulseGraphResponse::AddOutputParam(node_id, name, datatype) => {
+                            self.state.graph.add_output_param(
                                 node_id,
-                                name.clone(),
-                                pulse_value_type_to_node_types(&data).0,
+                                name,
+                                datatype,
                             );
-                            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
-                            let output_info = CustomOutputInfo { name, data };
-                            // remember the custom output
-                            node.user_data
-                                .custom_named_outputs
-                                .insert(output_id, output_info);
                         }
                         PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                             // node that supports adding parameters is removing one
@@ -996,17 +978,6 @@ impl eframe::App for PulseGraphEditor {
                                 .get_output(&name)
                                 .unwrap();
                             self.state.graph.remove_output_param(param);
-                            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
-                            // in practice it will only be one, in theory there could be a bunch of the same name...
-                            let keys_to_remove: Vec<_> = node
-                                .user_data
-                                .custom_named_outputs
-                                .iter()
-                                .filter_map(|(k, v)| if v.name == name { Some(*k) } else { None })
-                                .collect();
-                            for k in keys_to_remove {
-                                node.user_data.custom_named_outputs.remove(&k);
-                            }
                         }
                         PulseGraphResponse::ChangeOutputParamType(node_id, name) => {
                             self.update_output_node_param(node_id, &name, "param");

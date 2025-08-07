@@ -195,7 +195,7 @@ pub enum PulseNodeTemplate {
 /// mechanism allows creating additional side effects from user code.
 #[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
-    AddOutputParam(NodeId, String, PulseValueType),
+    AddOutputParam(NodeId, String, PulseDataType),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
@@ -211,6 +211,7 @@ pub enum PulseGraphResponse {
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
+    #[cfg_attr(feature = "persistence", serde(skip))]
     pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,

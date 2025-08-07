@@ -16,13 +16,13 @@ impl Default for PulseGraphValueType {
 }
 
 impl PulseGraphState {
-    pub fn add_node_custom_param(&mut self, param_name: String, node_id: NodeId) {
-        if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
-            vec_params.push(param_name);
-        } else {
-            self.added_parameters.insert(node_id, vec![param_name]);
-        }
-    }
+    // pub fn add_node_custom_param(&mut self, param_name: String, node_id: NodeId) {
+    //     if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
+    //         vec_params.push(param_name);
+    //     } else {
+    //         self.added_parameters.insert(node_id, vec![param_name]);
+    //     }
+    // }
 
     pub fn load_from(&mut self, other: PulseGraphState) {
         self.added_parameters = other.added_parameters;
@@ -1004,6 +1004,37 @@ impl NodeTemplateIter for AllMyNodeTemplates {
     }
 }
 
+impl PulseNodeTemplate {
+    fn has_user_addable_outputs(&self) -> bool {
+        // This function is used to determine if the node has outputs that can be
+        // added and removed by the user. This is used to prove an add parameter button, as well as
+        // to display the "X" button next to custom added output params.
+        matches!(self, PulseNodeTemplate::CellPublicMethod)
+    }
+}
+
+pub fn type_selection_widget(
+    ui: &mut egui::Ui,
+    id_salt: impl std::hash::Hash,
+    current_value: &mut PulseValueType,
+    type_list: Vec<PulseValueType>,
+    mut callback: impl FnMut(PulseValueType) // when a type selection is made
+) {
+    ComboBox::from_id_salt(id_salt)
+        .selected_text(current_value.get_ui_name())
+        .show_ui(ui, |ui| {
+            for typ in type_list {
+                let name = typ.get_ui_name();
+                if ui.selectable_value(current_value,
+                    typ.clone(),
+                    name
+                ).clicked() {
+                    callback(typ.clone());
+                }
+            }
+        });
+}
+
 impl WidgetValueTrait for PulseGraphValueType {
     type Response = PulseGraphResponse;
     type UserState = PulseGraphState;
@@ -1022,18 +1053,6 @@ impl WidgetValueTrait for PulseGraphValueType {
         match self {
             PulseGraphValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
-                    // if this is a custom added parameter...
-                    let vec_params = _user_state.added_parameters.get(_node_id);
-                    if let Some(params) = vec_params {
-                        if params.iter().any(|x| x == param_name)
-                            && ui.button("X").on_hover_text("Remove parameter").clicked()
-                        {
-                            responses.push(PulseGraphResponse::RemoveOutputParam(
-                                _node_id,
-                                param_name.to_string(),
-                            ));
-                        }
-                    }
                     ui.label(param_name);
                     ui.add(DragValue::new(value));
                 });
@@ -1149,29 +1168,25 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::Typ { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ComboBox::from_id_salt((_node_id, param_name))
-                        .selected_text(value.get_ui_name())
-                        .show_ui(ui, |ui| {
-                            let type_list: Vec<PulseValueType> = match &_node_data.template {
-                                PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
-                                PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
-                                _ => PulseValueType::get_variable_supported_types(),
-                            };
-
-                            for typ in type_list {
-                                let name = typ.get_ui_name();
-                                if ui.selectable_value(value,
-                                        typ.clone(),
-                                        name
-                                ).clicked() {
-                                    responses.push(PulseGraphResponse::ChangeParamType(
-                                        _node_id,
-                                        param_name.to_string(),
-                                        typ,
-                                    ));
-                                }
-                            }
-                        });
+                    let type_list: Vec<PulseValueType> = match &_node_data.template {
+                        PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
+                        PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
+                        _ => PulseValueType::get_variable_supported_types(),
+                    };
+                    let callback = |new_type: PulseValueType| {
+                        responses.push(PulseGraphResponse::ChangeParamType(
+                            _node_id,
+                            param_name.to_string(),
+                            new_type,
+                        ));
+                    };
+                    type_selection_widget(
+                        ui,
+                        (_node_id, param_name),
+                        value,
+                        type_list,
+                        callback
+                    );
                 });
             }
             PulseGraphValueType::EventBindingChoice { value } => {
@@ -1394,10 +1409,37 @@ impl NodeDataTrait for PulseNodeData {
                 responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
                     node_id,
                     param_name.clone(),
-                    PulseValueType::PVAL_ACT,
+                    PulseDataType::Action,
                 )));
-                user_state.add_node_custom_param(param_name, node_id);
+                //user_state.add_node_custom_param(param_name, node_id);
             }
+        }
+
+        if matches!(node.user_data.template, PulseNodeTemplate::CellPublicMethod) {
+            ui.horizontal(|ui| {
+                let id = egui::Id::new(("custom_choice", node_id));
+                let mut selected_val = ui.ctx().memory_mut(|mem| {
+                    mem.data
+                        .get_temp_mut_or_insert_with(id, || PulseValueType::PVAL_INT(None)).clone()
+                    });
+                type_selection_widget(
+                    ui,
+                    node_id,
+                    &mut selected_val,
+                    PulseValueType::get_variable_supported_types(),
+                    |_| {}
+                );
+                if ui.button("Add output").clicked() {
+                    responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
+                        node_id,
+                        "test".to_string(),
+                        PulseDataType::String,
+                    )));
+                }
+                ui.memory_mut(|mem| {
+                    mem.data.insert_temp(id, selected_val);
+                });
+            });
         }
         responses
     }
@@ -1454,6 +1496,30 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::Comment
             | PulseNodeTemplate::SetAnimGraphParam => None,
         }
+    }
+
+    fn output_ui(
+        &self,
+        ui: &mut egui::Ui,
+        _node_id: NodeId,
+        _graph: &Graph<Self, Self::DataType, Self::ValueType>,
+        _user_state: &mut Self::UserState,
+        param_name: &str,
+    ) -> Vec<NodeResponse<Self::Response, Self>> {
+        let mut responses = vec![];
+        ui.horizontal(|ui| {
+            if self.template.has_user_addable_outputs()
+                // don't allow removing of the default outflowing action that's present in most nodes.
+                // can't figure out the exact data type from the lib, so that's the best we got.
+                && !matches!(param_name, "outAction") 
+                && ui.button("X").on_hover_text("Remove").clicked() {
+                responses.push(
+                    NodeResponse::User(PulseGraphResponse::RemoveOutputParam(_node_id, param_name.to_string()))
+                );
+            }
+            ui.label(param_name);
+        });
+        responses
     }
 }
 

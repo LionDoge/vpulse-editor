@@ -1459,7 +1459,7 @@
         "outparams": [
             {
                 "name": "retval",
-                "type": "PVAL_ARRAY"
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
             }
         ]
     },
@@ -1700,7 +1700,7 @@
         "outparams": [
             {
                 "name": "retval",
-                "type": "PVAL_ARRAY"
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
             }
         ]
     },

@@ -308,6 +308,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 // TODO: Setup proper lifetimes so we don't have to clone
                 _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
             }
+            PulseNodeTemplate::GetArrayElement => "Get array element".into(),
         }
     }
 
@@ -331,7 +332,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Operation => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => vec!["Timing"],
-            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => vec!["Variables"],
+            PulseNodeTemplate::GetVar 
+            | PulseNodeTemplate::SetVar
+            | PulseNodeTemplate::GetArrayElement => vec!["Variables"],
             PulseNodeTemplate::IntToString
             | PulseNodeTemplate::Convert
             | PulseNodeTemplate::StringToEntityName => vec!["Conversion"],
@@ -511,7 +514,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-
+        let input_array = |graph: &mut PulseGraph, name: &str| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::Array,
+                PulseGraphValueType::Array,
+                InputParamKind::ConnectionOnly,
+                true,
+            );
+        };
         let output_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
         };
@@ -942,6 +954,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     true,
                 );
             }
+            PulseNodeTemplate::GetArrayElement => {
+                input_typ(graph, "expectedType");
+                input_array(graph, "array");
+                input_scalar(graph, "index", InputParamKind::ConnectionOrConstant, 0.0);
+                output_scalar(graph, "out");
+            }
         }
     }
 }
@@ -994,6 +1012,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ConstantVec3,
             PulseNodeTemplate::ConstantInt,
             PulseNodeTemplate::NewArray,
+            PulseNodeTemplate::GetArrayElement,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1473,7 +1492,9 @@ impl NodeDataTrait for PulseNodeData {
             PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => {
                 Some(Color32::from_rgb(184, 64, 28))
             }
-            PulseNodeTemplate::GetVar | PulseNodeTemplate::SetVar => {
+            PulseNodeTemplate::GetVar 
+            | PulseNodeTemplate::SetVar
+            | PulseNodeTemplate::GetArrayElement => {
                 Some(Color32::from_rgb(50, 125, 168))
             }
             PulseNodeTemplate::IntToString

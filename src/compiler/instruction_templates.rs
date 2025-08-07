@@ -131,3 +131,17 @@ pub fn call_sync(call_info_index: i32, dest_chunk: i32, dest_instruction: i32) -
         ..Default::default()
     }
 }
+
+pub fn get_array_element(
+    register_to: i32,
+    array_register: i32,
+    index_register: i32,
+) -> Instruction {
+    Instruction {
+        code: String::from("GET_ARRAY_ELEMENT"),
+        reg0: register_to,
+        reg1: array_register,
+        reg2: index_register,
+        ..Default::default()
+    }
+}

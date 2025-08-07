@@ -327,6 +327,23 @@ impl PulseGraphEditor {
                     InputParamKind::ConnectionOrConstant,
                 );
             }
+            PulseNodeTemplate::GetArrayElement => {
+                if new_type.is_none() {
+                    panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
+                }
+                let new_type = new_type.unwrap();
+                let param_a = node.get_input("expectedType");
+                if param_a.is_err() {
+                    panic!("node that requires input 'expectedType', but it was not found");
+                }
+                let param_output = node.get_output("out");
+                if param_output.is_ok() {
+                    let param_output = param_output.unwrap();
+                    self.state.graph.remove_output_param(param_output);
+                    let types = pulse_value_type_to_node_types(&new_type);
+                    self.add_node_output_simple(node_id, types.0, "out");
+                }
+            }
             _ => {}
         }
     }

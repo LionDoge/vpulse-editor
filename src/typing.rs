@@ -166,7 +166,12 @@ impl fmt::Display for PulseValueType {
                     _ => write!(f, "PVAL_RESOURCE"),
                 }
             }
-            PulseValueType::PVAL_ARRAY(_) => write!(f, "PVAL_ARRAY"),
+            PulseValueType::PVAL_ARRAY(arr_type) => {
+                match arr_type.as_deref() {
+                    Some(arr_type) if !arr_type.is_empty() => write!(f, "PVAL_ARRAY:{arr_type}"),
+                    _ => write!(f, "PVAL_ARRAY:PVAL_ANY"), // default to Any subtype, otherwise the game crashes!
+                }
+            }
             PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
         }
     }
@@ -319,6 +324,9 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
             } else if s.starts_with("PVAL_TYPESAFE_INT:") {
                 let int_type = s.split_at(18).1;
                 Ok(PulseValueType::PVAL_TYPESAFE_INT(Some(int_type.to_string()), None))
+            } else if s.starts_with("PVAL_ARRAY:") {
+                let int_type = s.split_at(11).1;
+                Ok(PulseValueType::PVAL_ARRAY(Some(int_type.to_string())))
             } else {
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }

@@ -2624,17 +2624,87 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out.unwrap_or(-1));
         }
         PulseNodeTemplate::NewArray => {
-            let reg_out = get_input_register_or_create_constant(
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let array_contents = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "Array contents",
+                try_to_string
+            );
+            let const_id = graph_def.add_constant(PulseConstant::Array(format!("[{array_contents}]")));
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr = chunk.get_last_instruction_id() + 1;
+            let reg_out = chunk.add_register(
+                "PVAL_ARRAY".into(),
+                instr,
+            );
+            if let Some(out) = output_id {
+                graph_def.add_register_mapping(*out, reg_out);
+            }
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instruction = instruction_templates::get_const(const_id, reg_out);
+            chunk.add_instruction(instruction);
+            return Ok(reg_out);
+        }
+        PulseNodeTemplate::GetArrayElement => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+
+            let typ = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "expectedType",
+                try_pulse_type
+            );
+            let reg_array = get_input_register_or_create_constant(
                 graph,
                 current_node,
                 graph_def,
                 graph_state,
                 target_chunk,
-                "Array contents",
-                PulseValueType::PVAL_STRING(None),
+                "array",
+                PulseValueType::PVAL_ARRAY(None),
                 false,
             )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_index = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "index",
+                PulseValueType::PVAL_INT(None),
+                false,
+            )?;
+
+            if let Some(reg_array) = reg_array {
+                if let Some(reg_index) = reg_index {
+                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                    let instr = chunk.get_last_instruction_id() + 1;
+                    let reg_out = chunk.add_register(
+                        typ.to_string(),
+                        instr
+                    );
+                    if let Some(out) = output_id {
+                        graph_def.add_register_mapping(*out, reg_out);
+                    }
+
+                    let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+                    // if we have both registers, we can get the array element
+                    let instr_get_array_element =
+                        instruction_templates::get_array_element(reg_out, reg_array, reg_index);
+                    chunk.add_instruction(instr_get_array_element);
+                    return Ok(reg_out);
+                }
+            }
+            anyhow::bail!(
+                "GetArrayElement node: Failed to get input registers for array or index."
+            );
         }
         _ => todo!(
             "Implement node template: {:?}",

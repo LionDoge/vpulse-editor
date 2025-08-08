@@ -117,7 +117,7 @@ pub enum PulseValueType {
     PVAL_TRANSFORM(Option<Transform>),
     PVAL_TRANSFORM_WORLDSPACE(Option<Transform>),
     PVAL_RESOURCE(Option<String>, Option<String>), // (resource_type, resource_name)
-    PVAL_ARRAY(Option<String>),
+    PVAL_ARRAY(Box<PulseValueType>),
     PVAL_GAMETIME(Option<f32>),
 }
 
@@ -167,10 +167,7 @@ impl fmt::Display for PulseValueType {
                 }
             }
             PulseValueType::PVAL_ARRAY(arr_type) => {
-                match arr_type.as_deref() {
-                    Some(arr_type) if !arr_type.is_empty() => write!(f, "PVAL_ARRAY:{arr_type}"),
-                    _ => write!(f, "PVAL_ARRAY:PVAL_ANY"), // default to Any subtype, otherwise the game crashes!
-                }
+                write!(f, "PVAL_ARRAY:{}", arr_type)
             }
             PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
         }
@@ -238,7 +235,7 @@ impl PulseValueType {
             PulseValueType::PVAL_VEC3_LOCAL(None),
             PulseValueType::PVAL_VEC4(None),
             PulseValueType::PVAL_COLOR_RGB(None),
-            PulseValueType::PVAL_ARRAY(None),
+            PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_QANGLE(None), // it doesn't have it's own suffix, but maybe it works.
         ]
     }
@@ -278,7 +275,7 @@ impl PulseValueType {
             PulseValueType::PVAL_EHANDLE(None),
             PulseValueType::DOMAIN_ENTITY_NAME,
             PulseValueType::PVAL_SNDEVT_GUID(None),
-            PulseValueType::PVAL_ARRAY(None),
+            PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_RESOURCE(None, None),
             PulseValueType::PVAL_GAMETIME(None),
         ]
@@ -307,7 +304,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_TRANSFORM" => Ok(PulseValueType::PVAL_TRANSFORM(None)),
         "PVAL_TRANSFORM_WORLDSPACE" => Ok(PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None)),
         "PVAL_RESOURCE" => Ok(PulseValueType::PVAL_RESOURCE(None, None)),
-        "PVAL_ARRAY" => Ok(PulseValueType::PVAL_ARRAY(None)),
+        "PVAL_ARRAY" => Ok(PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY))),
         "PVAL_GAMETIME" => Ok(PulseValueType::PVAL_GAMETIME(None)),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
@@ -325,8 +322,10 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
                 let int_type = s.split_at(18).1;
                 Ok(PulseValueType::PVAL_TYPESAFE_INT(Some(int_type.to_string()), None))
             } else if s.starts_with("PVAL_ARRAY:") {
-                let int_type = s.split_at(11).1;
-                Ok(PulseValueType::PVAL_ARRAY(Some(int_type.to_string())))
+                let arr_type = s.split_at(11).1;
+                Ok(PulseValueType::PVAL_ARRAY(Box::new(
+                    try_string_to_pulsevalue(arr_type).unwrap_or(PulseValueType::PVAL_ANY)
+                )))
             } else {
                 Err(PulseTypeError::StringToEnumConversionMissing(s.to_string()))
             }

@@ -2682,7 +2682,7 @@ fn traverse_nodes_and_populate<'a>(
                 graph_state,
                 target_chunk,
                 "array",
-                PulseValueType::PVAL_ARRAY(None),
+                PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
                 false,
             )?;
             let reg_index = get_input_register_or_create_constant(

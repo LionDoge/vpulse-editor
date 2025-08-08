@@ -1399,7 +1399,7 @@ impl NodeDataTrait for PulseNodeData {
         ui: &mut egui::Ui,
         node_id: NodeId,
         _graph: &Graph<PulseNodeData, PulseDataType, PulseGraphValueType>,
-        user_state: &mut Self::UserState,
+        _user_state: &mut Self::UserState,
     ) -> Vec<NodeResponse<PulseGraphResponse, PulseNodeData>>
     where
         PulseGraphResponse: UserResponseTrait,

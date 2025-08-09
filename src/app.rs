@@ -546,6 +546,16 @@ impl PulseGraphEditor {
         }
         Ok(())
     }
+    fn get_node_connected_to_input(&self, input_id: InputId) -> Option<NodeId> {
+        let connection_to_input: Option<OutputId> = self.state.graph.connection(input_id);
+        if let Some(output) = connection_to_input {
+            // get the node that the desired input is connected to
+            let connected_node_id = &self.state.graph.outputs[output].node;
+            Some(*connected_node_id)
+        } else {
+            None
+        }
+    }
     // determine based on the node type if we should try to update the data type for the output.
     fn update_polymorphic_output_types(&mut self, node_id: NodeId) -> anyhow::Result<()> {
         // if the node is a "Make Array" node, we need to update the output type based on the array type
@@ -593,6 +603,51 @@ impl PulseGraphEditor {
                     try_pulse_type
                 );
                 Ok(typ)
+            }
+            PulseNodeTemplate::LibraryBindingAssigned { binding } => {
+                let binding = &self.user_state.bindings.gamefunctions[binding.0];
+                if let Some(polymorphic_return) = &binding.polymorphic_return {
+                    match &polymorphic_return {
+                        // full type means that we copy over the return type from the binding
+                        PolimorphicTypeInfo::FullType (param_name) => {
+                            let input_id = node.get_input(param_name).unwrap();
+                            let connected_node_id = self.get_node_connected_to_input(input_id).unwrap();
+                            let connected_node = self.state.graph.nodes.get(connected_node_id)
+                                .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
+                            let full_type = self.get_polymorphic_output_type(connected_node)?;
+                            Ok(full_type)
+                        }
+                        PolimorphicTypeInfo::TypeParam(param_name) => {
+                            // type param means that we use the type parameter from the binding
+                            let input_id = node.get_input(param_name)?;
+                            let connected_node = self.get_node_connected_to_input(input_id);
+                            if connected_node.is_none() {
+                                return Ok(PulseValueType::PVAL_ANY);
+                            }
+                            let connected_node_id = connected_node.unwrap();
+                            let connected_node = self.state.graph.nodes.get(connected_node_id)
+                                .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
+                            let full_type = self.get_polymorphic_output_type(connected_node)?;
+
+                            // Must be an array, otherwise the definition is wrong!
+                            if let PulseValueType::PVAL_ARRAY(inner) = full_type {
+                                Ok(*inner)
+                            } else {
+                                Err(anyhow::anyhow!("Polymorphic return type requested inner type from param, but that param was not Array type, which seems wrong!"))
+                            }
+                        }
+                        _ => {
+                            Ok(PulseValueType::PVAL_ANY)
+                        }
+                    }
+                } else {
+                    // get just the output type
+                    // TODO: figure out the source connection type (could be something else than just retval)
+                    let typ = binding.find_outparam_by_name("retval")
+                        .map(|p| p.pulsetype.clone())
+                        .unwrap_or(PulseValueType::PVAL_ANY);
+                    Ok(typ)
+                }
             }
             _ => Ok(PulseValueType::PVAL_ANY)
         }

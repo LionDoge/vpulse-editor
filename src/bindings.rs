@@ -14,7 +14,6 @@ pub enum LibraryBindingType {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize))]
 pub enum PolimorphicTypeInfo {
-    Invalid,
     TypeParam(String),
     FullType(String),
     ToSubtype(String),
@@ -44,6 +43,16 @@ pub struct FunctionBinding {
     pub outparams: Option<Vec<ParamInfo>>,
     #[serde(deserialize_with = "deserialize_polymorphic_arg", default)]
     pub polymorphic_return: Option<PolimorphicTypeInfo>,
+}
+
+impl FunctionBinding {
+    pub fn find_inparam_by_name(&self, name: &str) -> Option<&ParamInfo> {
+        self.inparams.as_ref()?.iter().find(|p| p.name == name)
+    }
+
+    pub fn find_outparam_by_name(&self, name: &str) -> Option<&ParamInfo> {
+        self.outparams.as_ref()?.iter().find(|p| p.name == name)
+    }
 }
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
 pub struct EventBinding {

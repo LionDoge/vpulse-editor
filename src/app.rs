@@ -568,6 +568,9 @@ impl PulseGraphEditor {
                     let graph = &mut self.state.graph;
                     let output = graph.get_output_mut(output_id);
                     output.typ = new_data_type.0;
+                    // a bit lame having to re-borrow as mutable, but for now it works.
+                    let node = self.state.graph.nodes.get_mut(node_id).unwrap();
+                    node.user_data.custom_output_type = Some(new_type);
                 }
                 Ok(())
             }

@@ -14,7 +14,9 @@ use crate::bindings::{GraphBindings, FunctionBinding, EventBinding};
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
     pub custom_named_outputs: HashMap<OutputId, CustomOutputInfo>,
-    pub input_hint_text: Option<Cow<'static, str>>
+    pub input_hint_text: Option<Cow<'static, str>>,
+    // used for polymorphic output types
+    pub custom_output_type: Option<PulseValueType>,
 }
 
 /// `DataType`s are what defines the possible range of connections when

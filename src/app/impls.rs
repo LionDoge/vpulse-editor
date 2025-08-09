@@ -372,6 +372,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             template: *self,
             custom_named_outputs: HashMap::new(),
             input_hint_text: None,
+            custom_output_type: None,
         }
     }
 

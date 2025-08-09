@@ -2668,13 +2668,10 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-
-            let typ = get_constant_graph_input_value!(
-                graph,
-                current_node,
-                "expectedType",
-                try_pulse_type
-            );
+            // get type that's determined dynamically depending on the connections
+            // this should be handled by the UI.
+            let typ = current_node.user_data.custom_output_type
+                .as_ref().unwrap_or(&PulseValueType::PVAL_ANY);
             let reg_array = get_input_register_or_create_constant(
                 graph,
                 current_node,

@@ -218,7 +218,7 @@ impl PulseValueType {
             PulseValueType::PVAL_TRANSFORM(_) => "Transform",
             PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => "World Transform",
             PulseValueType::PVAL_RESOURCE(_, _) => "Resource",
-            PulseValueType::PVAL_ARRAY(_) => "Array",
+            PulseValueType::PVAL_ARRAY(_) => "Array<Unspecified type>",
             PulseValueType::PVAL_GAMETIME(_) => "Game Time",
         }
     }

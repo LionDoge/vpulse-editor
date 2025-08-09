@@ -11,6 +11,14 @@ pub enum LibraryBindingType {
     Action,
     Value,
 }
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "persistence", derive(Serialize))]
+pub enum PolimorphicTypeInfo {
+    Invalid,
+    TypeParam(String),
+    FullType(String),
+    ToSubtype(String),
+}
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize))]
@@ -20,10 +28,12 @@ pub struct ParamInfo {
     pub typ: String,
     #[serde(skip_deserializing)]
     pub pulsetype: PulseValueType,
+    #[serde(deserialize_with = "deserialize_polymorphic_arg", default)]
+    pub polymorphic_arg: Option<PolimorphicTypeInfo>,
 }
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "persistence", derive(Serialize))]
+//#[cfg_attr(feature = "persistence", derive(Serialize))]
 pub struct FunctionBinding {
     #[serde(rename = "type")]
     pub typ: LibraryBindingType,
@@ -32,6 +42,8 @@ pub struct FunctionBinding {
     pub description: Option<String>,
     pub inparams: Option<Vec<ParamInfo>>,
     pub outparams: Option<Vec<ParamInfo>>,
+    #[serde(deserialize_with = "deserialize_polymorphic_arg", default)]
+    pub polymorphic_return: Option<PolimorphicTypeInfo>,
 }
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
 pub struct EventBinding {
@@ -70,4 +82,28 @@ pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings
         process_params(&mut binding.inparams)?;
     }
     Ok(bindings)
+}
+
+fn deserialize_polymorphic_arg<'de, D>(deserializer: D) -> Result<Option<PolimorphicTypeInfo>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    // First, deserialize as a string
+    let s = String::deserialize(deserializer)?;
+    
+    let parts: Vec<&str> = s.split(':').collect();
+    
+    if parts.len() != 2 {
+        return Ok(None);
+    }
+    // example: "a:typeparam"
+    let param_name = parts[0].to_string();
+    let type_enum = parts[1].to_string();
+    
+    match type_enum.as_str() {
+        "typeparam" => Ok(Some(PolimorphicTypeInfo::TypeParam(param_name))),
+        "fulltype" => Ok(Some(PolimorphicTypeInfo::FullType(param_name))),
+        "to_subtype" => Ok(Some(PolimorphicTypeInfo::ToSubtype(param_name))),
+        _ => Ok(None),
+    }
 }

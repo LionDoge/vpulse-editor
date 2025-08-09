@@ -1248,6 +1248,7 @@
         "displayname": "Array Set Count",
         "libname": "CPulseArraylib::ArraySetCount",
         "description": "Set the number of elements in the array.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1270,6 +1271,7 @@
         "displayname": "Array First N Elements",
         "libname": "CPulseArraylib::ArrayFirstNElements",
         "description": "Returns up to the maximum requested elements. Never grows the array (unlike SetCount).",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1292,6 +1294,7 @@
         "displayname": "Array Append",
         "libname": "CPulseArraylib::ArrayAppend",
         "description": "Copy 'element' to the end of 'a', increasing its count by one.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1299,7 +1302,8 @@
             },
             {
                 "name": "element",
-                "type": "PVAL_VARIANT"
+                "type": "PVAL_VARIANT",
+                "polymorphic_arg": "a:typeparam"
             }
         ],
         "outparams": [
@@ -1314,6 +1318,7 @@
         "displayname": "Array Insert",
         "libname": "CPulseArraylib::ArrayInsert",
         "description": "Insert 'element' in the given index in 'a', increasing its count by one and moving the elements after index.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1325,7 +1330,8 @@
             },
             {
                 "name": "element",
-                "type": "PVAL_VARIANT"
+                "type": "PVAL_VARIANT",
+                "polymorphic_arg": "a:typeparam"
             }
         ],
         "outparams": [
@@ -1340,6 +1346,7 @@
         "displayname": "Array Remove Index",
         "libname": "CPulseArraylib::ArrayRemoveIndex",
         "description": "Remove the element at the given index in 'a', decreasing its count by one and moving the elements after index.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1362,6 +1369,7 @@
         "displayname": "Array Remove Element Matching",
         "libname": "CPulseArraylib::ArrayRemoveElementMatching",
         "description": "Remove all elements from 'a' which compare equal to 'element'.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1369,7 +1377,8 @@
             },
             {
                 "name": "element",
-                "type": "PVAL_VARIANT"
+                "type": "PVAL_VARIANT",
+                "polymorphic_arg": "a:typeparam"
             }
         ],
         "outparams": [
@@ -1384,6 +1393,7 @@
         "displayname": "Array Remove Invalid Elements",
         "libname": "CPulseArraylib::ArrayRemoveInvalidElements",
         "description": "Remove all elements from 'a' which are invalid instances.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1402,6 +1412,7 @@
         "displayname": "Array Concatenate",
         "libname": "CPulseArraylib::ArrayConcatenate",
         "description": "Add the array 'b' to the end of 'a'.",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1424,6 +1435,7 @@
         "displayname": "Array Shuffle",
         "libname": "CPulseArraylib::ArrayShuffle",
         "description": "Randomizes the order of items in the array (Knuth/Fisher-Yates Shuffle)",
+        "polymorphic_return": "a:fulltype",
         "inparams": [
             {
                 "name": "a",
@@ -1442,6 +1454,7 @@
         "displayname": "trigger: Find Entities In Trigger",
         "libname": "CBaseTriggerAPI::FindEntitiesInTrigger",
         "description": "Return the current entities touching the trigger, matching the optional criteria.",
+        "polymorphic_return": "entityType:to_subtype",
         "inparams": [
             {
                 "name": "_Target",

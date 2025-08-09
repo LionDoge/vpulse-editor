@@ -546,6 +546,54 @@ impl PulseGraphEditor {
         }
         Ok(())
     }
+    // determine based on the node type if we should try to update the data type for the output.
+    fn update_polymorphic_output_types(&mut self, node_id: NodeId) -> anyhow::Result<()> {
+        // if the node is a "Make Array" node, we need to update the output type based on the array type
+        let template = self.state.graph.nodes.get(node_id).unwrap().user_data.template;
+        match template {
+            PulseNodeTemplate::GetArrayElement => {
+                let node = self.state.graph.nodes.get(node_id).unwrap();
+                let input_id = node.get_input("array")?;
+                let connection_to_input: Option<OutputId> = self.state.graph.connection(input_id);
+                if let Some(output) = connection_to_input {
+                    // get the node that the desired input is connected to
+                    let connected_node_id = &self.state.graph.outputs[output].node;
+                    let connected_node = self.state.graph.nodes.get(*connected_node_id)
+                        .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
+                    // get type information from the connected node
+                    let new_type = self.get_polymorphic_output_type(connected_node)?;
+                    let new_data_type = pulse_value_type_to_node_types(&new_type);
+                    // update the output type on this node
+                    let output_id = node.get_output("out")?;
+                    let graph = &mut self.state.graph;
+                    let output = graph.get_output_mut(output_id);
+                    output.typ = new_data_type.0;
+                }
+                Ok(())
+            }
+            _ => {
+                Ok(())
+            }
+        }
+    }
+    // get approperiate output type based on type parameters (only arrays are relevant here)
+    // this allows nodes that interact with arrays to have a proper output type based on the concrete array type.
+    fn get_polymorphic_output_type(&self, node: &Node<PulseNodeData>) -> anyhow::Result<PulseValueType> {
+        match node.user_data.template {
+            PulseNodeTemplate::NewArray => {
+                // TODO: get_constant_graph_input_value should probably be moved out of the compiler module
+                let graph = &self.state.graph;
+                let typ = crate::compiler::get_constant_graph_input_value!(
+                    graph,
+                    node,
+                    "arrayType",
+                    try_pulse_type
+                );
+                Ok(typ)
+            }
+            _ => Ok(PulseValueType::PVAL_ANY)
+        }
+    }
 }
 
 impl PulseGraphEditor {
@@ -1031,6 +1079,13 @@ impl eframe::App for PulseGraphEditor {
                         if let Some(binding) = binding_opt {
                             self.update_library_binding_params(&node_id, &binding);
                         }
+                    }
+                }
+                NodeResponse::ConnectEventEnded { output: _, input, input_hook: _} => {
+                    let graph = &self.state.graph;
+                    let node_id = graph.get_input(input).node;
+                    if let Err(e) = self.update_polymorphic_output_types(node_id) {
+                        println!("[UI] Warning: Failed to update polymorphic output types: {e}");
                     }
                 }
                 _ => {}

@@ -167,7 +167,7 @@ impl fmt::Display for PulseValueType {
                 }
             }
             PulseValueType::PVAL_ARRAY(arr_type) => {
-                write!(f, "PVAL_ARRAY:{}", arr_type)
+                write!(f, "PVAL_ARRAY:{arr_type}")
             }
             PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
         }

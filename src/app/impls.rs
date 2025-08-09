@@ -303,7 +303,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ConstantString => "Constant String".into(),
             PulseNodeTemplate::ConstantVec3 => "Constant Vec3".into(),
             PulseNodeTemplate::ConstantInt => "Constant Int".into(),
-            PulseNodeTemplate::NewArray => "New Array".into(),
+            PulseNodeTemplate::NewArray => "Make Array".into(),
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 // TODO: Setup proper lifetimes so we don't have to clone
                 _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
@@ -930,6 +930,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_vector3(graph, "out");
             }
             PulseNodeTemplate::NewArray => {
+                input_typ(graph, "arrayType");
                 graph.add_input_param(
                     node_id,
                     "Array contents".to_string(),
@@ -955,7 +956,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 );
             }
             PulseNodeTemplate::GetArrayElement => {
-                input_typ(graph, "expectedType");
+                //input_typ(graph, "expectedType");
                 input_array(graph, "array");
                 input_scalar(graph, "index", InputParamKind::ConnectionOrConstant, 0.0);
                 output_scalar(graph, "out");

@@ -229,6 +229,10 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
     pub fn get_output(&self, output: OutputId) -> &OutputParam<DataType> {
         &self.outputs[output]
     }
+
+    pub fn get_output_mut(&mut self, output: OutputId) -> &mut OutputParam<DataType> {
+        self.outputs.get_mut(output).expect("Output should exist")
+    }
 }
 
 impl<NodeData, DataType, ValueType> Default for Graph<NodeData, DataType, ValueType> {

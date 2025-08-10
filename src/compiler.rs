@@ -13,6 +13,7 @@ use crate::bindings::LibraryBindingType;
 use crate::pulsetypes::*;
 use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
+use crate::utils::*;
 use serialization::*;
 
 #[cfg(feature = "nongame_asset_build")]
@@ -22,7 +23,7 @@ use crate::app::types::EditorConfig;
 
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {
-        let connected_nodes = get_next_action_nodes($current_node, $graph, "outAction");
+        let connected_nodes = get_nodes_connected_to_output($current_node, $graph, "outAction");
         if connected_nodes.is_ok() {
             for (connected_node, input_name) in connected_nodes.unwrap().iter() {
                 return traverse_nodes_and_populate(
@@ -42,7 +43,7 @@ pub(crate) use graph_next_action;
 
 macro_rules! graph_run_next_actions_no_return {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident, $action_name:expr) => {{
-        let connected_nodes = get_next_action_nodes($current_node, $graph, $action_name);
+        let connected_nodes = get_nodes_connected_to_output($current_node, $graph, $action_name);
         if let Ok(connected_nodes) = connected_nodes {
             let mut any = false;
             for (connected_node, input_name) in connected_nodes.iter() {
@@ -139,90 +140,6 @@ macro_rules! reg_map_setup_inputs {
     }
 }
 pub(crate) use reg_map_setup_inputs;
-
-#[allow(dead_code)]
-fn get_connected_output_node(
-    graph: &PulseGraph,
-    out_action_id: &OutputId,
-) -> anyhow::Result<Option<NodeId>> {
-    // dumb way of finding outgoing connection node.
-    for group in graph.iter_connection_groups() {
-        for connection in group.1 {
-            if connection == *out_action_id {
-                let input_action: &InputParam<PulseDataType, PulseGraphValueType> =
-                    graph.inputs.get(group.0).ok_or(
-                        anyhow!("Can't find input value {:?}", group.0)
-                            .context("get_connected_output_node"),
-                    )?;
-                return Ok(Some(input_action.node));
-            }
-        }
-    }
-    Ok(None)
-}
-
-// returns list of pairs of nodes and inputs connected to a given output.
-// TODO could be optimized to return a group of node and it's inputs
-fn get_connected_action_nodes_and_inputs(
-    graph: &PulseGraph,
-    out_action_id: &OutputId,
-) -> anyhow::Result<Vec<(NodeId, InputId)>> {
-    let mut node_input_pairs = vec![];
-    for connection in graph.iter_connections() {
-        if connection.1 == *out_action_id {
-            let node_of_input = graph
-                .inputs
-                .get(connection.0)
-                .ok_or(anyhow!("Can't find input value {:?}", connection.0))?
-                .node();
-            let input_id = connection.0;
-            node_input_pairs.push((node_of_input, input_id));
-        }
-    }
-    Ok(node_input_pairs)
-}
-
-#[allow(dead_code)]
-fn get_next_action_node<'a>(
-    origin_node: &'a Node<PulseNodeData>,
-    graph: &'a PulseGraph,
-    name: &str,
-) -> anyhow::Result<Option<&'a Node<PulseNodeData>>> {
-    let out_action_id = origin_node.get_output(name)?;
-    let connected_node_id = get_connected_output_node(graph, &out_action_id)?;
-    match connected_node_id {
-        Some(id) => Ok(graph.nodes.get(id)),
-        None => Ok(None),
-    }
-}
-
-// return list of pairs of the connected node and corresponding name
-fn get_next_action_nodes<'a>(
-    origin_node: &'a Node<PulseNodeData>,
-    graph: &'a PulseGraph,
-    name: &str,
-) -> anyhow::Result<Vec<(&'a Node<PulseNodeData>, &'a str)>> {
-    let mut res = vec![];
-    let out_action_id = origin_node.get_output(name)?;
-    let connected_nodes_inputs = get_connected_action_nodes_and_inputs(graph, &out_action_id)?;
-    for conn in connected_nodes_inputs.iter() {
-        let node = graph.nodes.get(conn.0).ok_or_else(|| {
-            anyhow::anyhow!("Node with id {:?} not found in the graph", conn.0)
-                .context("get_next_action_nodes found NodeId, but couldn't get node data")
-        })?;
-        let input_name: &'a str = node
-            .inputs
-            .iter()
-            .find(|item| item.1 == conn.1)
-            .ok_or_else(|| {
-                anyhow::anyhow!("Input with id {:?} not found in the node", conn.1)
-                    .context("get_next_action_nodes found InputId, but couldn't get input data")
-            })
-            .map(|e| e.0.as_ref())?;
-        res.push((node, input_name));
-    }
-    Ok(res)
-}
 
 // process all inflow nodes and logic chain.
 // returns false if no inflow node was processed
@@ -363,7 +280,7 @@ fn traverse_event_cell(
     }
 
     graph_def.cells.push(Box::from(cell_event));
-    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
     for (connected_node, input_name) in connected_node.iter() {
         traverse_nodes_and_populate(
             graph,
@@ -391,7 +308,7 @@ fn traverse_graphhook_cell(
     let cell_hook =
         CPulseCell_Inflow_GraphHook::new(hook_name.into(), RegisterMap::default(), chunk_id);
     graph_def.cells.push(Box::from(cell_hook));
-    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
     for (connected_node, input_name) in connected_node.iter() {
         traverse_nodes_and_populate(
             graph,
@@ -520,7 +437,7 @@ fn traverse_entry_cell(
     graph_def.add_register_mapping(output_id_arg1, reg_id_arg1);
     graph_def.cells.push(Box::from(cell_method));
 
-    let connected_node = get_next_action_nodes(node, graph, "outAction")?;
+    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
     for (connected_node, input_name) in connected_node.iter() {
         traverse_nodes_and_populate(
             graph,
@@ -2268,7 +2185,7 @@ fn traverse_nodes_and_populate<'a>(
                     continue;
                 }
 
-                let next_actions = get_connected_action_nodes_and_inputs(graph, &out.1)?;
+                let next_actions = get_nodes_and_inputs_connected_from_output(graph, &out.1)?;
                 if !next_actions.is_empty() {
                     let this_action_instruction_id = graph_def
                         .chunks

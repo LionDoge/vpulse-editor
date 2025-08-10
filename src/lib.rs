@@ -8,6 +8,7 @@ mod bindings;
 mod compiler;
 mod pulsetypes;
 mod typing;
+mod utils;
 pub use app::PulseGraphEditor;
 // ----------------------------------------------------------------------------
 // When compiling for web:

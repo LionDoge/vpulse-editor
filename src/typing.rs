@@ -80,16 +80,6 @@ impl Vec4 {
     }
 }
 
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum PvalBoolCompat {
-    // New format with data
-    WithData(Option<bool>),
-    // Old format without data - just the variant name
-    WithoutData,
-}
-
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Default)]
 #[allow(non_camel_case_types)]
 pub enum PulseValueType {

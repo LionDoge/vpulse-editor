@@ -100,6 +100,10 @@ pub fn compile_node(
             } else {
                 &param.pulsetype
             };
+            println!(
+                "InvokeLibraryBinding - {}: Adding output parameter {} with type {}",
+                binding.displayname, param.name, ret_type
+            );
             let reg_out = chunk.add_register(
                 ret_type.to_string(),
                 chunk.get_last_instruction_id() + 1,

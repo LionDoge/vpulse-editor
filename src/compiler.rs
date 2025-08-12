@@ -798,13 +798,13 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
-                PulseValueType::PVAL_ARRAY(_) =>
+                PulseValueType::PVAL_ARRAY(typ) =>
                 {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
                     let res = input_param.value().clone().try_to_string()?;
                     chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Array(res));
+                    graph_def.add_constant(PulseConstant::Array(*typ, res));
                 }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
@@ -2565,14 +2565,18 @@ fn traverse_nodes_and_populate<'a>(
                 "Array contents",
                 try_to_string
             );
-            let const_id = graph_def.add_constant(PulseConstant::Array(format!("[{array_contents}]")));
+            let arr_type = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "arrayType",
+                try_pulse_type
+            );
+            let const_id = graph_def.add_constant(PulseConstant::Array(arr_type.clone(), format!("[{array_contents}]")));
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
 
-            let default_arr_type = PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY));
-            let arr_type = current_node.user_data.custom_output_type.as_ref().unwrap_or(&default_arr_type);
             let reg_out = chunk.add_register(
-                arr_type.to_string(),
+                PulseValueType::PVAL_ARRAY(Box::from(arr_type)).to_string(),
                 instr,
             );
             if let Some(out) = output_id {

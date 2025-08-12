@@ -504,7 +504,7 @@ pub enum PulseConstant {
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
     Resource(Option<String>, String), // (resource_type, value)
-    Array(String), // raw KV3 array content
+    Array(PulseValueType, String), // raw KV3 array content
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> String {
@@ -536,7 +536,9 @@ impl KV3Serialize for PulseConstant {
                         "PVAL_RESOURCE".to_string()
                     }
                 }
-                PulseConstant::Array(_) => "PVAL_ARRAY".to_string(),
+                PulseConstant::Array(typ, _) => {
+                    format!("PVAL_ARRAY:{}", typ.to_string()).to_string()
+                }
             },
             match self {
                 PulseConstant::String(value)
@@ -552,7 +554,7 @@ impl KV3Serialize for PulseConstant {
                 PulseConstant::Bool(value) => value.to_string(),
                 PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
                 PulseConstant::Resource(_, value) => format!("resource:\"{value}\""),
-                PulseConstant::Array(value) => value.clone(), // raw KV3 array content
+                PulseConstant::Array(_, value) => value.clone(), // raw KV3 array content
             }
         }
     }

@@ -577,17 +577,25 @@ impl PulseGraphEditor {
                     "arrayType",
                     try_pulse_type
                 );
-                Some(typ)
+                Some(PulseValueType::PVAL_ARRAY(Box::new(typ)))
             }
             PulseNodeTemplate::GetArrayElement => {
-                // use provided type from previous node
-                let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap(); // already checked, can unwrap.
-                node_data_mut.user_data.custom_output_type = source_type.clone();
-                // update output in UI
-                let out_id = node_data_mut.get_output("out")?;
-                self.state.graph.get_output_mut(out_id).typ = 
-                pulse_value_type_to_node_types(&source_type.clone().unwrap_or(PulseValueType::PVAL_ANY)).0;
-                source_type
+                // if the source type is not None, we can update the output type
+                if let Some(source_type) = &source_type {
+                    // if the source type is an array, we need to update the output type to the inner type
+                    if let PulseValueType::PVAL_ARRAY(inner) = source_type {
+                        let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap(); // already checked, can unwrap.
+                        let out_id = node_data_mut.get_output("out")?;
+                        node_data_mut.user_data.custom_output_type = Some((**inner).clone());
+                        // update output in UI
+                        self.state.graph.get_output_mut(out_id).typ = pulse_value_type_to_node_types(inner).0;
+                        Some((**inner).clone())
+                    } else {
+                        panic!("GetArrayElement node expected source type to be an array, but it was not. This is a bug!");
+                    }
+                } else {
+                    None
+                }
             }
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 let binding = &self.user_state.bindings.gamefunctions[binding.0];

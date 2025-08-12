@@ -206,6 +206,7 @@ pub enum PulseGraphResponse {
     ChangeEventBinding(NodeId, EventBinding),
     ChangeFunctionBinding(NodeId, FunctionBinding),
     ChangeRemoteNodeId(NodeId, NodeId),
+    UpdatePolymorphicTypes(NodeId),
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and

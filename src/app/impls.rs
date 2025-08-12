@@ -1200,6 +1200,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                             param_name.to_string(),
                             new_type,
                         ));
+                        responses.push(PulseGraphResponse::UpdatePolymorphicTypes(_node_id));
                     };
                     type_selection_widget(
                         ui,

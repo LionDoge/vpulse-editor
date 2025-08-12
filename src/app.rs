@@ -1152,6 +1152,11 @@ impl eframe::App for PulseGraphEditor {
                         PulseGraphResponse::ChangeRemoteNodeId(node_id, node_id_refrence) => {
                             self.update_remote_node_params(&node_id, &node_id_refrence);
                         }
+                        PulseGraphResponse::UpdatePolymorphicTypes(node_id) => {
+                            if let Err(e) = self.update_polymorphic_output_types(node_id, None, None) {
+                                println!("[UI] Warning: Failed to update polymorphic output types: {e}");
+                            }
+                        }
                     }
                 }
                 NodeResponse::DeleteNodeFull { node_id, .. } => {

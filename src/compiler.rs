@@ -2568,8 +2568,11 @@ fn traverse_nodes_and_populate<'a>(
             let const_id = graph_def.add_constant(PulseConstant::Array(format!("[{array_contents}]")));
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
+
+            let default_arr_type = PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY));
+            let arr_type = current_node.user_data.custom_output_type.as_ref().unwrap_or(&default_arr_type);
             let reg_out = chunk.add_register(
-                "PVAL_ARRAY".into(),
+                arr_type.to_string(),
                 instr,
             );
             if let Some(out) = output_id {

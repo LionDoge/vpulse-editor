@@ -91,8 +91,17 @@ pub fn compile_node(
                 anyhow::anyhow!(e).context("\n Failed in LibraryBinding node. Mismatch between UI and ParamInfo")
             })?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let ret_type = if binding.polymorphic_return.is_some() {
+                // if the binding is polymorphic, we need to use the polymorphic type
+                current_node.user_data
+                    .custom_output_type
+                    .as_ref()
+                    .unwrap_or(&param.pulsetype)
+            } else {
+                &param.pulsetype
+            };
             let reg_out = chunk.add_register(
-                param.pulsetype.to_string(),
+                ret_type.to_string(),
                 chunk.get_last_instruction_id() + 1,
             );
 

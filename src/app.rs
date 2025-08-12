@@ -15,6 +15,7 @@ use crate::bindings::*;
 use crate::compiler::compile_graph;
 use crate::pulsetypes::*;
 use crate::typing::*;
+use crate::utils::get_node_ids_connected_to_output;
 use types::*;
 
 #[derive(Default)]
@@ -556,101 +557,112 @@ impl PulseGraphEditor {
             None
         }
     }
-    // determine based on the node type if we should try to update the data type for the output.
-    fn update_polymorphic_output_types(&mut self, node_id: NodeId) -> anyhow::Result<()> {
+    // traverse forward to nodes connected to THIS node's output recursively
+    // until we reach a node that doesn't depend on polymorphic return type.
+    fn update_polymorphic_output_types(&mut self, node_id: NodeId, source_type: Option<PulseValueType>, source_input_name: Option<&str>) -> anyhow::Result<()> {
         // if the node is a "Make Array" node, we need to update the output type based on the array type
-        let template = self.state.graph.nodes.get(node_id).unwrap().user_data.template;
-        match template {
-            PulseNodeTemplate::GetArrayElement => {
-                let node = self.state.graph.nodes.get(node_id).unwrap();
-                let input_id = node.get_input("array")?;
-                let connection_to_input: Option<OutputId> = self.state.graph.connection(input_id);
-                if let Some(output) = connection_to_input {
-                    // get the node that the desired input is connected to
-                    let connected_node_id = &self.state.graph.outputs[output].node;
-                    let connected_node = self.state.graph.nodes.get(*connected_node_id)
-                        .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
-                    // get type information from the connected node
-                    let new_type = self.get_polymorphic_output_type(connected_node)?;
-                    let new_data_type = pulse_value_type_to_node_types(&new_type);
-                    // update the output type on this node
-                    let output_id = node.get_output("out")?;
-                    let graph = &mut self.state.graph;
-                    let output = graph.get_output_mut(output_id);
-                    output.typ = new_data_type.0;
-                    // a bit lame having to re-borrow as mutable, but for now it works.
-                    let node = self.state.graph.nodes.get_mut(node_id).unwrap();
-                    node.user_data.custom_output_type = Some(new_type);
-                }
-                Ok(())
-            }
-            _ => {
-                Ok(())
-            }
-        }
-    }
-    // get approperiate output type based on type parameters (only arrays are relevant here)
-    // this allows nodes that interact with arrays to have a proper output type based on the concrete array type.
-    fn get_polymorphic_output_type(&self, node: &Node<PulseNodeData>) -> anyhow::Result<PulseValueType> {
-        match node.user_data.template {
+        let node_data = self.state.graph.nodes.get(node_id)
+            .ok_or(anyhow::anyhow!("Node with id {:?} not found in the graph", node_id))?;
+        if !has_polymorhpic_dependent_return(&node_data.user_data.template, &self.user_state) {
+            return Ok(());
+        };
+        
+        let opt_new_type = match node_data.user_data.template {
             PulseNodeTemplate::NewArray => {
-                // TODO: get_constant_graph_input_value should probably be moved out of the compiler module
                 let graph = &self.state.graph;
+                // TODO: get_constant_graph_input_value should probably be moved out of the compiler module
                 let typ = crate::compiler::get_constant_graph_input_value!(
                     graph,
-                    node,
+                    node_data,
                     "arrayType",
                     try_pulse_type
                 );
-                Ok(typ)
+                Some(typ)
+            }
+            PulseNodeTemplate::GetArrayElement => {
+                // use provided type from previous node
+                let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap(); // already checked, can unwrap.
+                node_data_mut.user_data.custom_output_type = source_type.clone();
+                // update output in UI
+                let out_id = node_data_mut.get_output("out")?;
+                self.state.graph.get_output_mut(out_id).typ = 
+                pulse_value_type_to_node_types(&source_type.clone().unwrap_or(PulseValueType::PVAL_ANY)).0;
+                source_type
             }
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 let binding = &self.user_state.bindings.gamefunctions[binding.0];
+                let new_type = if let Some(typ) = source_type {
+                    Some(typ)
+                } else {
+                   node_data.user_data.custom_output_type.clone()
+                };
                 if let Some(polymorphic_return) = &binding.polymorphic_return {
                     match &polymorphic_return {
                         // full type means that we copy over the return type from the binding
                         PolimorphicTypeInfo::FullType (param_name) => {
-                            let input_id = node.get_input(param_name).unwrap();
-                            let connected_node_id = self.get_node_connected_to_input(input_id).unwrap();
-                            let connected_node = self.state.graph.nodes.get(connected_node_id)
-                                .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
-                            let full_type = self.get_polymorphic_output_type(connected_node)?;
-                            Ok(full_type)
-                        }
-                        PolimorphicTypeInfo::TypeParam(param_name) => {
-                            // type param means that we use the type parameter from the binding
-                            let input_id = node.get_input(param_name)?;
-                            let connected_node = self.get_node_connected_to_input(input_id);
-                            if connected_node.is_none() {
-                                return Ok(PulseValueType::PVAL_ANY);
-                            }
-                            let connected_node_id = connected_node.unwrap();
-                            let connected_node = self.state.graph.nodes.get(connected_node_id)
-                                .ok_or(anyhow::anyhow!("Can't find node that the output is connected to"))?;
-                            let full_type = self.get_polymorphic_output_type(connected_node)?;
-
-                            // Must be an array, otherwise the definition is wrong!
-                            if let PulseValueType::PVAL_ARRAY(inner) = full_type {
-                                Ok(*inner)
+                            println!("source input name: {}", source_input_name.unwrap_or_default());
+                            if source_input_name.is_some_and(|f| f == param_name) || source_input_name.is_none() {
+                                let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap();
+                                node_data_mut.user_data.custom_output_type = new_type.clone();
+                                new_type
                             } else {
-                                Err(anyhow::anyhow!("Polymorphic return type requested inner type from param, but that param was not Array type, which seems wrong!"))
+                                None
+                            }
+                        }
+                        PolimorphicTypeInfo::TypeParam (param_name) => {
+                            // type param means that we use the type parameter from the binding
+                            // Must be an array, otherwise the definition is wrong!
+                            println!("source input name: {}", source_input_name.unwrap_or_default());
+                            if source_input_name.is_some_and(|f| f == param_name) || source_input_name.is_none() {
+                                new_type.map(|new_type| {
+                                    if let PulseValueType::PVAL_ARRAY(inner) = new_type {
+                                        let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap();
+                                        node_data_mut.user_data.custom_output_type = Some(*inner.clone());
+                                        *inner
+                                    } else {
+                                        panic!("Polymorphic return type requested inner type from param, but that param was not Array type, which seems wrong!");
+                                    }
+                                })
+                            } else {
+                                None
                             }
                         }
                         _ => {
-                            Ok(PulseValueType::PVAL_ANY)
+                            None
                         }
                     }
                 } else {
-                    // get just the output type
-                    // TODO: figure out the source connection type (could be something else than just retval)
-                    let typ = binding.find_outparam_by_name("retval")
-                        .map(|p| p.pulsetype.clone())
-                        .unwrap_or(PulseValueType::PVAL_ANY);
-                    Ok(typ)
+                    None
                 }
             }
-            _ => Ok(PulseValueType::PVAL_ANY)
+            _ => None
+        };
+        // now update the custom type in user data so the compiler can use it
+        // this will only happen if the resulting type is not None
+        if let Some(new_type) = &opt_new_type {
+            let node_data_mut = self.state.graph.nodes.get_mut(node_id).unwrap();
+            node_data_mut.user_data.custom_output_type = opt_new_type.clone();
+            println!(
+                "[UI] Updating polymorphic output type of node {:?} to {:?}",
+                node_id, new_type
+            );
+            // LOL, this needs to be slightly improved to make it more generic.
+            let outnodes = get_node_ids_connected_to_output(
+                self.state.graph.nodes.get(node_id).unwrap(), &self.state.graph, "out")
+                .unwrap_or_default();
+            let outnodes2 = get_node_ids_connected_to_output(
+                self.state.graph.nodes.get(node_id).unwrap(), &self.state.graph, "retval")
+                .unwrap_or_default();
+            for node_and_input_name in outnodes.iter().chain(outnodes2.iter()) {
+                // recursively update the output type of connected nodes
+                self.update_polymorphic_output_types(
+                    node_and_input_name.0,
+                     opt_new_type.clone(),
+                      Some(&node_and_input_name.1)
+                )?;
+            }
         }
+        Ok(())
     }
 }
 
@@ -775,6 +787,24 @@ pub fn update_variable_data(var: &mut PulseVariable) {
 
 #[cfg(feature = "persistence")]
 const PERSISTENCE_KEY: &str = "egui_node_graph";
+
+pub fn has_polymorhpic_dependent_return(
+    template: &PulseNodeTemplate,
+    user_state: &PulseGraphState,
+) -> bool {
+    match template {
+        PulseNodeTemplate::GetArrayElement
+        | PulseNodeTemplate::NewArray => true,
+        PulseNodeTemplate::LibraryBindingAssigned { binding: idx } => {
+            let binding = match user_state.get_library_binding_from_index(idx) {
+                Some(binding) => binding,
+                None => return false,
+            };
+            binding.polymorphic_return.is_some()
+        }
+        _ => false
+    }
+}
 
 impl eframe::App for PulseGraphEditor {
     #[cfg(feature = "persistence")]
@@ -1139,10 +1169,10 @@ impl eframe::App for PulseGraphEditor {
                         }
                     }
                 }
-                NodeResponse::ConnectEventEnded { output: _, input, input_hook: _} => {
+                NodeResponse::ConnectEventEnded { output, input: _ , input_hook: _} => {
                     let graph = &self.state.graph;
-                    let node_id = graph.get_input(input).node;
-                    if let Err(e) = self.update_polymorphic_output_types(node_id) {
+                    let node_id = graph.get_output(output).node;
+                    if let Err(e) = self.update_polymorphic_output_types(node_id, None, None) {
                         println!("[UI] Warning: Failed to update polymorphic output types: {e}");
                     }
                 }

@@ -50,3 +50,30 @@ pub fn get_nodes_connected_to_output<'a>(
     }
     Ok(res)
 }
+
+pub fn get_node_ids_connected_to_output(
+    origin_node: &Node<PulseNodeData>,
+    graph: &PulseGraph,
+    name: &str,
+) -> anyhow::Result<Vec<(NodeId, String)>> {
+    let mut res = vec![];
+    let out_action_id = origin_node.get_output(name)?;
+    let connected_nodes_inputs = get_nodes_and_inputs_connected_from_output(graph, &out_action_id)?;
+    for conn in connected_nodes_inputs.iter() {
+        let node = graph.nodes.get(conn.0).ok_or_else(|| {
+            anyhow::anyhow!("Node with id {:?} not found in the graph", conn.0)
+                .context("get_next_action_nodes found NodeId, but couldn't get node data")
+        })?;
+        let input_name: String = node
+            .inputs
+            .iter()
+            .find(|item| item.1 == conn.1)
+            .ok_or_else(|| {
+                anyhow::anyhow!("Input with id {:?} not found in the node", conn.1)
+                    .context("get_next_action_nodes found InputId, but couldn't get input data")
+            })
+            .map(|e| e.0.to_string())?;
+        res.push((conn.0, input_name));
+    }
+    Ok(res)
+}

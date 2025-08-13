@@ -635,6 +635,16 @@ impl PulseGraphEditor {
                                 None
                             }
                         }
+                        PolimorphicTypeInfo::ToSubtype(_param_name) => {
+                            // FUTURE: to_subtype requests a specific return subtype described in the provided parameter
+                            // However it's only really used for EHandles, and if a method requests a specific subtype of EHandle
+                            // then it will be upcasted anyways, so doing anything here is not really worth the effort.
+                            if let Some(param) = binding.find_outparam_by_name("retval") {
+                                Some(param.pulsetype.clone())
+                            } else {
+                                Some(PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_EHANDLE(None))))
+                            }
+                        }
                         _ => {
                             None
                         }
@@ -1020,11 +1030,11 @@ impl eframe::App for PulseGraphEditor {
                     ui.horizontal(|ui| {
                         // change the label text if we're working on an EHandle type, as it can't have a default value.
                         // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
-                        if matches!(var.typ_and_default_value, PulseValueType::PVAL_EHANDLE(_)) {
-                            ui.label("EHandle class");
-                        } else {
-                            ui.label("Default value");
-                        }
+                        match &var.typ_and_default_value {
+                            PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
+                            PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
+                            _ => ui.label("Default value"),
+                        };
 
                         match &mut var.typ_and_default_value {
                             PulseValueType::PVAL_BOOL_VALUE(value) => {

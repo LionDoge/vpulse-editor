@@ -4034,6 +4034,64 @@
                 "type": "PVAL_COLOR_RGB"
             }
         ]
+    },
+    {
+        "type": "value",
+        "displayname": "Find All Entities",
+        "libname": "CPulseServerFuncs::FindAllEntities",
+        "description": "Search for a chosen type of entity either by classname or name. Returns all found entities. Keywords: get",
+        "polymorphic_return": "entityType:to_subtype",
+        "inparams": [
+            {
+                "name": "entityType",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "entityName",
+                "type": "PVAL_ENTITY_NAME"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Find All Entities Within Radius",
+        "libname": "CPulseServerFuncs::FindAllEntitiesWithinRadius",
+        "description": "Search for a chosen type of entity either by classname or name within a radius of a given entity. Returns all found entities. Keywords: get",
+        "polymorphic_return": "entityType:to_subtype",
+        "inparams": [
+            {
+                "name": "entityType",
+                "type": "PVAL_STRING"
+            },
+            {
+                "name": "entityName",
+                "type": "PVAL_ENTITY_NAME"
+            },
+            {
+                "name": "pSearchFromEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "flSearchRadius",
+                "type": "PVAL_FLOAT"
+            },
+            {
+                "name": "bReturnSorted",
+                "type": "PVAL_BOOL"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
+            }
+        ]
     }
 
     ]

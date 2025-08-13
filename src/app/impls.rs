@@ -1142,47 +1142,44 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ui.text_edit_singleline(value);
                 });
             }
-            PulseGraphValueType::InternalOutputName { prevvalue, value } => {
+            PulseGraphValueType::InternalOutputName { prevvalue: _, value } => {
                 ui.horizontal(|ui| {
                     ui.label("Output");
-                    ComboBox::from_id_salt(_node_id)
+                    ComboBox::from_id_salt(("outch", _node_id))
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
                             for outputparam in _user_state.public_outputs.iter() {
-                                ui.selectable_value(
+                                if ui.selectable_value(
                                     value,
                                     outputparam.name.clone(),
                                     outputparam.name.clone(),
-                                );
+                                ).clicked() {
+                                    responses.push(PulseGraphResponse::ChangeOutputParamType(
+                                        _node_id,
+                                        value.to_string(),
+                                    ));
+                                }
                             }
                         });
                 });
-                if prevvalue != value {
-                    responses.push(PulseGraphResponse::ChangeOutputParamType(
-                        _node_id,
-                        value.clone(),
-                    ));
-                    *prevvalue = value.clone();
-                }
             }
-            PulseGraphValueType::InternalVariableName { prevvalue, value } => {
+            PulseGraphValueType::InternalVariableName { prevvalue: _, value } => {
                 ui.horizontal(|ui| {
                     ui.label("Variable");
-                    ComboBox::from_id_salt(_node_id)
+                    ComboBox::from_id_salt(("varch", _node_id))
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
                             for var in _user_state.variables.iter() {
-                                ui.selectable_value(value, var.name.clone(), var.name.clone());
+                                if ui.selectable_value(value, var.name.clone(), var.name.clone()).clicked() {
+                                    responses.push(PulseGraphResponse::ChangeVariableParamType(
+                                        _node_id,
+                                        value.to_string(),
+                                    ));
+                                    responses.push(PulseGraphResponse::UpdatePolymorphicTypes(_node_id));
+                                }
                             }
                         });
                 });
-                if prevvalue != value {
-                    responses.push(PulseGraphResponse::ChangeVariableParamType(
-                        _node_id,
-                        value.clone(),
-                    ));
-                    *prevvalue = value.clone();
-                }
             }
             // NOTE: Available types in the combobox are defined by the node template type.
             // We only want to allow some types to be selected depending on the context.

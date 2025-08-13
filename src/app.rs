@@ -643,6 +643,25 @@ impl PulseGraphEditor {
                     None
                 }
             }
+            PulseNodeTemplate::GetVar => {
+                // compiler should handle the register generation fine without any info from here
+                // we only just provide info to connected nodes from this one
+                let name_id = node_data
+                    .get_input("variableName")
+                    .map_err(|e| anyhow!(e).context(": Update polymorphic types"))?;
+                let var_name = self.state.graph
+                    .get_input(name_id)
+                    .value()
+                    .clone()
+                    .try_variable_name()
+                    .map_err(|e| anyhow!(e).context(": Update polymorphic types"))?;
+                let var = self
+                    .user_state
+                    .variables
+                    .iter()
+                    .find(|var| var.name == *var_name);
+                var.map(|var| var.typ_and_default_value.clone())
+            }
             _ => None
         };
         // now update the custom type in user data so the compiler can use it
@@ -661,7 +680,10 @@ impl PulseGraphEditor {
             let outnodes2 = get_node_ids_connected_to_output(
                 self.state.graph.nodes.get(node_id).unwrap(), &self.state.graph, "retval")
                 .unwrap_or_default();
-            for node_and_input_name in outnodes.iter().chain(outnodes2.iter()) {
+            let outnodes3 = get_node_ids_connected_to_output(
+                self.state.graph.nodes.get(node_id).unwrap(), &self.state.graph, "value")
+                .unwrap_or_default();
+            for node_and_input_name in outnodes.iter().chain(outnodes2.iter()).chain(outnodes3.iter()) {
                 // recursively update the output type of connected nodes
                 self.update_polymorphic_output_types(
                     node_and_input_name.0,
@@ -787,7 +809,7 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.typ_and_default_value.to_owned()
         }
         _ => {
-            var.data_type = PulseDataType::Scalar;
+            var.data_type = pulse_value_type_to_node_types(&var.typ_and_default_value).0;
             var.typ_and_default_value.to_owned()
         }
     };
@@ -802,7 +824,8 @@ pub fn has_polymorhpic_dependent_return(
 ) -> bool {
     match template {
         PulseNodeTemplate::GetArrayElement
-        | PulseNodeTemplate::NewArray => true,
+        | PulseNodeTemplate::NewArray
+        | PulseNodeTemplate::GetVar => true,
         PulseNodeTemplate::LibraryBindingAssigned { binding: idx } => {
             let binding = match user_state.get_library_binding_from_index(idx) {
                 Some(binding) => binding,
@@ -1050,11 +1073,23 @@ impl eframe::App for PulseGraphEditor {
                             PulseValueType::PVAL_GAMETIME(value) => {
                                 ui.add(egui::DragValue::new(value.get_or_insert_default()).speed(0.01));
                             }
+                            PulseValueType::PVAL_ARRAY(inner_type) => {
+                                // TODO: make it recursive, so we can have more nested types.
+                                ComboBox::from_id_salt(format!("var{idx}_inner"))
+                                    .selected_text(inner_type.get_ui_name())
+                                    .show_ui(ui, |ui| {
+                                        for typ in PulseValueType::get_variable_supported_types() {
+                                            let name = typ.get_ui_name();
+                                            ui.selectable_value(inner_type,
+                                                Box::from(typ),
+                                                name);
+                                        }
+                                    });
+                            }
                             PulseValueType::DOMAIN_ENTITY_NAME 
                             | PulseValueType::PVAL_SNDEVT_GUID(_)
                             | PulseValueType::PVAL_TRANSFORM(_)
-                            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
-                            | PulseValueType::PVAL_ARRAY(_) => {}
+                            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => {}
                             _ => {
                                 if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
                                     update_variable_data(var);

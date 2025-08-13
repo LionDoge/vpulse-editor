@@ -190,6 +190,8 @@ pub enum PulseNodeTemplate {
     NewArray,
     LibraryBindingAssigned { binding: LibraryBindingIndex },
     GetArrayElement,
+    ScaleVector,
+    ReturnValue,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

@@ -309,6 +309,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
             }
             PulseNodeTemplate::GetArrayElement => "Get array element".into(),
+            PulseNodeTemplate::ScaleVector => "Scale vector".into(),
+            PulseNodeTemplate::ReturnValue => "Return value".into(),
         }
     }
 
@@ -328,8 +330,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::CompareIf
             | PulseNodeTemplate::IntSwitch
             | PulseNodeTemplate::CallNode
-            | PulseNodeTemplate::Function => vec!["Logic"],
-            PulseNodeTemplate::Operation => vec!["Math"],
+            | PulseNodeTemplate::Function 
+            | PulseNodeTemplate::ReturnValue => vec!["Logic"],
+            PulseNodeTemplate::Operation 
+            | PulseNodeTemplate::ScaleVector => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => vec!["Timing"],
             PulseNodeTemplate::GetVar 
@@ -481,13 +485,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
-        let input_typ = |graph: &mut PulseGraph, name: &str| {
+        let input_typ = |graph: &mut PulseGraph, name: &str, def_typ: PulseValueType| {
             graph.add_input_param(
                 node_id,
                 name.to_string(),
                 PulseDataType::Typ,
                 PulseGraphValueType::Typ {
-                    value: PulseValueType::PVAL_INT(None),
+                    value: def_typ,
                 },
                 InputParamKind::ConstantOnly,
                 true,
@@ -578,7 +582,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Compare => {
                 input_action(graph);
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
-                input_typ(graph, "type");
+                input_typ(graph, "type", PulseValueType::PVAL_INT(None));
                 input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
                 input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
                 output_action(graph, "True");
@@ -642,7 +646,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_string(graph, "out");
             }
             PulseNodeTemplate::Operation => {
-                input_typ(graph, "type");
+                input_typ(graph, "type", PulseValueType::PVAL_INT(None));
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
                 input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
                 input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
@@ -714,8 +718,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Convert => {
-                input_typ(graph, "typefrom");
-                input_typ(graph, "typeto");
+                input_typ(graph, "typefrom", PulseValueType::PVAL_INT(None));
+                input_typ(graph, "typeto", PulseValueType::PVAL_STRING(None));
                 input_string(graph, "entityclass", InputParamKind::ConstantOnly);
                 input_scalar(graph, "input", InputParamKind::ConnectionOrConstant, 0.0);
                 output_scalar(graph, "out");
@@ -764,7 +768,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "False");
             }
             PulseNodeTemplate::CompareOutput => {
-                input_typ(graph, "type");
+                input_typ(graph, "type", PulseValueType::PVAL_INT(None));
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
                 input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
                 input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
@@ -931,7 +935,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_vector3(graph, "out");
             }
             PulseNodeTemplate::NewArray => {
-                input_typ(graph, "arrayType");
+                input_typ(graph, "arrayType", PulseValueType::PVAL_INT(None));
                 graph.add_input_param(
                     node_id,
                     "Array contents".to_string(),
@@ -961,6 +965,17 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_array(graph, "array");
                 input_scalar(graph, "index", InputParamKind::ConnectionOrConstant, 0.0);
                 output_scalar(graph, "out");
+            }
+            PulseNodeTemplate::ScaleVector => {
+                input_typ(graph, "type", PulseValueType::PVAL_VEC3(None));
+                input_vector3(graph, "vector", InputParamKind::ConnectionOrConstant);
+                input_scalar(graph, "scale", InputParamKind::ConnectionOrConstant, 1.0);
+                input_bool(graph, "invert", InputParamKind::ConstantOnly);
+                output_vector3(graph, "out");
+            }
+            PulseNodeTemplate::ReturnValue => {
+                input_action(graph);
+                input_any(graph, "value");
             }
         }
     }
@@ -1015,6 +1030,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ConstantInt,
             PulseNodeTemplate::NewArray,
             PulseNodeTemplate::GetArrayElement,
+            PulseNodeTemplate::ScaleVector,
+            PulseNodeTemplate::ReturnValue,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1189,6 +1206,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                     let type_list: Vec<PulseValueType> = match &_node_data.template {
                         PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
                         PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
+                        PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),
                         _ => PulseValueType::get_variable_supported_types(),
                     };
                     let callback = |new_type: PulseValueType| {
@@ -1515,7 +1533,9 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::NewArray => Some(Color32::from_rgb(77, 100, 105)),
             PulseNodeTemplate::ConcatString
             | PulseNodeTemplate::Comment
-            | PulseNodeTemplate::SetAnimGraphParam => None,
+            | PulseNodeTemplate::SetAnimGraphParam
+            | PulseNodeTemplate::ReturnValue
+            | PulseNodeTemplate::ScaleVector => None,
         }
     }
 

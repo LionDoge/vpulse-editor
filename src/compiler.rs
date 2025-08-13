@@ -2641,6 +2641,89 @@ fn traverse_nodes_and_populate<'a>(
                 "GetArrayElement node: Failed to get input registers for array or index."
             );
         }
+        PulseNodeTemplate::ScaleVector => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let typ = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "type",
+                try_pulse_type
+            );
+            let invert = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "invert",
+                try_to_bool
+            );
+            let src_vec = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "vector",
+                typ.clone(),
+                false,
+            )?;
+            let scale_factor = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "scale",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            )?;
+            let Some(scale_factor) = scale_factor else {
+                anyhow::bail!("ScaleVector node: Failed to get scale factor register.");
+            };
+            let Some(src_vec) = src_vec else {
+                anyhow::bail!("ScaleVector node: Failed to get source vector register.");
+            };
+
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr = chunk.get_last_instruction_id() + 1;
+            let reg_out = chunk.add_register(typ.to_string(), instr);
+            let instr_scale_vector = Instruction {
+                code: if invert {
+                    format!("SCALE_INV{}", typ.get_operation_suffix_name())
+                } else {
+                    format!("SCALE{}", typ.get_operation_suffix_name())
+                },
+                reg0: reg_out,
+                reg1: src_vec,
+                reg2: scale_factor,
+                ..Default::default()
+            };
+            
+            chunk.add_instruction(instr_scale_vector);
+            if let Some(out) = output_id {
+                graph_def.add_register_mapping(*out, reg_out);
+            }
+            return Ok(reg_out);
+        }
+        PulseNodeTemplate::ReturnValue => {
+            let val = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "value",
+                PulseValueType::PVAL_ANY,
+                false,
+            )?;
+            let Some(val) = val else {
+                anyhow::bail!("ReturnValue node: No value provided");
+            };
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instruction = instruction_templates::return_value(val);
+            chunk.add_instruction(instruction);
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

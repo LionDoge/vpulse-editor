@@ -145,3 +145,11 @@ pub fn get_array_element(
         ..Default::default()
     }
 }
+
+pub fn return_value(register_id: i32) -> Instruction {
+    Instruction {
+        code: String::from("RETURN_VALUE"),
+        reg0: register_id,
+        ..Default::default()
+    }
+}

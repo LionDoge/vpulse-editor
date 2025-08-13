@@ -175,7 +175,7 @@ impl PulseValueType {
             PulseValueType::PVAL_VEC2(_) => "_VEC2",
             PulseValueType::PVAL_VEC3(_)
             | PulseValueType::PVAL_VEC3_LOCAL(_) => "_VEC3",
-            PulseValueType::PVAL_VEC4(_) => "_VEC3",
+            PulseValueType::PVAL_VEC4(_) => "_VEC4",
             PulseValueType::PVAL_EHANDLE(_) => "_EHANDLE",
             PulseValueType::DOMAIN_ENTITY_NAME => "_ENTITY_NAME",
             PulseValueType::PVAL_SCHEMA_ENUM(_) => "_SCHEMA_ENUM",
@@ -208,7 +208,7 @@ impl PulseValueType {
             PulseValueType::PVAL_TRANSFORM(_) => "Transform",
             PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => "World Transform",
             PulseValueType::PVAL_RESOURCE(_, _) => "Resource",
-            PulseValueType::PVAL_ARRAY(_) => "Array<Unspecified type>",
+            PulseValueType::PVAL_ARRAY(_) => "Array",
             PulseValueType::PVAL_GAMETIME(_) => "Game Time",
         }
     }
@@ -268,6 +268,14 @@ impl PulseValueType {
             PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_RESOURCE(None, None),
             PulseValueType::PVAL_GAMETIME(None),
+        ]
+    }
+    pub fn get_vector_types() -> Vec<PulseValueType> {
+        vec![
+            PulseValueType::PVAL_VEC2(None),
+            PulseValueType::PVAL_VEC3(None),
+            PulseValueType::PVAL_VEC3_LOCAL(None),
+            PulseValueType::PVAL_VEC4(None),
         ]
     }
 }

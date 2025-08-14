@@ -1003,10 +1003,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ForEach => {
                 input_action(graph);
                 input_array(graph, "array");
-                output_action(graph, "loopAction");
-                output_action(graph, "endAction");
                 output_scalar(graph, "index");
                 output_scalar(graph, "out"); // actual type will be set depending on the connected array.
+                output_action(graph, "loopAction");
+                output_action(graph, "endAction");
             }
         }
     }

@@ -311,6 +311,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GetArrayElement => "Get array element".into(),
             PulseNodeTemplate::ScaleVector => "Scale vector".into(),
             PulseNodeTemplate::ReturnValue => "Return value".into(),
+            PulseNodeTemplate::ForEach => "For each".into(),
         }
     }
 
@@ -352,7 +353,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::LibraryBindingAssigned { binding: _ } => {
                 vec!["Game functions"]
             }
-            PulseNodeTemplate::ForLoop | PulseNodeTemplate::WhileLoop => vec!["Loops"],
+            PulseNodeTemplate::ForLoop 
+            | PulseNodeTemplate::WhileLoop
+            | PulseNodeTemplate::ForEach => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
             PulseNodeTemplate::Comment => vec!["Editor"],
             PulseNodeTemplate::SetAnimGraphParam => vec!["Animation"],
@@ -977,6 +980,14 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_action(graph);
                 input_any(graph, "value");
             }
+            PulseNodeTemplate::ForEach => {
+                input_action(graph);
+                input_array(graph, "array");
+                output_action(graph, "loopAction");
+                output_action(graph, "endAction");
+                output_scalar(graph, "index");
+                output_scalar(graph, "out"); // actual type will be set depending on the connected array.
+            }
         }
     }
 }
@@ -1032,6 +1043,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::GetArrayElement,
             PulseNodeTemplate::ScaleVector,
             PulseNodeTemplate::ReturnValue,
+            PulseNodeTemplate::ForEach,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1502,6 +1514,7 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::CompareIf
             | PulseNodeTemplate::IntSwitch
             | PulseNodeTemplate::ForLoop
+            | PulseNodeTemplate::ForEach
             | PulseNodeTemplate::WhileLoop => Some(Color32::from_rgb(166, 99, 41)),
             PulseNodeTemplate::CallNode | PulseNodeTemplate::Function => {
                 Some(Color32::from_rgb(28, 67, 150))
@@ -1574,6 +1587,12 @@ impl PulseGraphState {
     }
     pub fn get_event_binding_from_index(&self, idx: &EventBindingIndex) -> Option<&EventBinding> {
         self.bindings.events.get(idx.0)
+    }
+    pub fn find_library_binding_by_name(
+        &self,
+        name: &str,
+    ) -> Option<&FunctionBinding> {
+        self.bindings.gamefunctions.iter().find(|b| b.libname == name)
     }
 }
 

@@ -38,7 +38,7 @@ pub fn compile_node(
     }
     
     let binding = binding.unwrap();
-    let mut register_map = RegisterMap::default();
+    let mut register_map: RegisterMap = RegisterMap::default();
     if let Some(inparams) = &binding.inparams {
         for param in inparams.iter() {
             let inp = get_input_register_or_create_constant(

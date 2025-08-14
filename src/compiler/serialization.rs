@@ -205,7 +205,7 @@ impl KV3Serialize for Register {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct RegisterMap {
     pub inparams: Vec<(Cow<'static, str>, i32)>,
     pub outparams: Vec<(Cow<'static, str>, i32)>,
@@ -216,6 +216,12 @@ impl RegisterMap {
     }
     pub fn add_outparam(&mut self, name: Cow<'static, str>, num: i32) {
         self.outparams.push((name, num));
+    }
+    pub fn get_inparam_by_name(&self, name: &str) -> Option<i32> {
+        self.inparams.iter().find(|(n, _)| n == name).map(|(_, num)| *num)
+    }
+    pub fn get_outparam_by_name(&self, name: &str) -> Option<i32> {
+        self.outparams.iter().find(|(n, _)| n == name).map(|(_, num)| *num)
     }
 }
 

@@ -192,6 +192,7 @@ pub enum PulseNodeTemplate {
     GetArrayElement,
     ScaleVector,
     ReturnValue,
+    ForEach,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

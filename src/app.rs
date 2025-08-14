@@ -579,7 +579,8 @@ impl PulseGraphEditor {
                 );
                 Some(PulseValueType::PVAL_ARRAY(Box::new(typ)))
             }
-            PulseNodeTemplate::GetArrayElement => {
+            PulseNodeTemplate::GetArrayElement
+            | PulseNodeTemplate::ForEach => {
                 // if the source type is not None, we can update the output type
                 if let Some(source_type) = &source_type {
                     // if the source type is an array, we need to update the output type to the inner type
@@ -591,7 +592,7 @@ impl PulseGraphEditor {
                         self.state.graph.get_output_mut(out_id).typ = pulse_value_type_to_node_types(inner).0;
                         Some((**inner).clone())
                     } else {
-                        panic!("GetArrayElement node expected source type to be an array, but it was not. This is a bug!");
+                        panic!("GetArrayElement/ForEach node expected source type to be an array, but it was not. This is a bug!");
                     }
                 } else {
                     None
@@ -835,7 +836,8 @@ pub fn has_polymorhpic_dependent_return(
     match template {
         PulseNodeTemplate::GetArrayElement
         | PulseNodeTemplate::NewArray
-        | PulseNodeTemplate::GetVar => true,
+        | PulseNodeTemplate::GetVar
+        | PulseNodeTemplate::ForEach => true,
         PulseNodeTemplate::LibraryBindingAssigned { binding: idx } => {
             let binding = match user_state.get_library_binding_from_index(idx) {
                 Some(binding) => binding,

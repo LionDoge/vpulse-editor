@@ -80,7 +80,8 @@ impl PulseGraphValueType {
     pub fn try_to_vec3(self) -> anyhow::Result<Vec3> {
         match self {
             PulseGraphValueType::Vec3 { value } 
-            | PulseGraphValueType::Vec3Local { value } => Ok(value),
+            | PulseGraphValueType::Vec3Local {value}
+            | PulseGraphValueType::QAngle { value } => Ok(value),
             _ => anyhow::bail!("Invalid cast from {:?} to vec3", self),
         }
     }

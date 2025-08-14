@@ -10,7 +10,6 @@ use crate::app::types::{
     PulseNodeTemplate,
 };
 use crate::bindings::LibraryBindingType;
-use crate::compiler::nodes::invoke_binding;
 use crate::pulsetypes::*;
 use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
@@ -25,8 +24,8 @@ use crate::app::types::EditorConfig;
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {
         let connected_nodes = get_nodes_connected_to_output($current_node, $graph, "outAction");
-        if connected_nodes.is_ok() {
-            for (connected_node, input_name) in connected_nodes.unwrap().iter() {
+        if let Ok(connected_nodes) = connected_nodes {
+            for (connected_node, input_name) in connected_nodes.iter() {
                 return traverse_nodes_and_populate(
                     $graph,
                     connected_node,
@@ -99,8 +98,7 @@ macro_rules! get_connection_only_graph_input_value {
             ))
         })?;
         let connection = $graph.connection(input_id);
-        let result: i32 = if connection.is_some() {
-            let connection = connection.unwrap();
+        let result: i32 = if let Some(connection) = connection {
             let param = $graph.get_output(connection);
             let out_node = $graph.nodes.get(param.node).ok_or(
                 anyhow!("Can't find input value of {}", $input).context(format!(
@@ -1577,8 +1575,10 @@ fn traverse_nodes_and_populate<'a>(
                 false,
             )?;
             // TODO: only EQ for now
-            let mut instr_compare = Instruction::default();
-            instr_compare.code = format!("EQ{}", compare_type.get_operation_suffix_name());
+            let mut instr_compare = Instruction {
+                code: format!("EQ{}", compare_type.get_operation_suffix_name()),
+                ..Default::default()
+            };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let reg_cond = chunk.add_register(
                 String::from("PVAL_BOOL"),
@@ -1634,8 +1634,8 @@ fn traverse_nodes_and_populate<'a>(
             chunk.add_instruction(instruction_templates::return_void());
             let ending_instr_id = chunk.get_last_instruction_id();
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
-            if instr_jump_false.is_some() {
-                instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;
+            if let Some(instr_jump_false) = instr_jump_false {
+                instr_jump_false.dest_instruction = false_condition_instr_id;
             } else {
                 anyhow::bail!(
                     "Compare node: Failed to find JUMP[false_condition] with id: {}",
@@ -1643,8 +1643,8 @@ fn traverse_nodes_and_populate<'a>(
                 );
             }
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
-            if instr_jump_end.is_some() {
-                instr_jump_end.unwrap().dest_instruction = ending_instr_id;
+            if let Some(instr_jump_end) = instr_jump_end {
+                instr_jump_end.dest_instruction = ending_instr_id;
             } else {
                 anyhow::bail!(
                     "Compare node: Failed to find JUMP[end] with id: {}",
@@ -1700,8 +1700,8 @@ fn traverse_nodes_and_populate<'a>(
             // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
             let ending_instr_id = chunk.get_last_instruction_id() + 1;
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
-            if instr_jump_false.is_some() {
-                instr_jump_false.unwrap().dest_instruction = false_condition_instr_id;
+            if let Some(instr_jump_false) = instr_jump_false {
+                instr_jump_false.dest_instruction = false_condition_instr_id;
             } else {
                 anyhow::bail!(
                     "Compare node: Failed to find JUMP[false_condition] with id: {}",
@@ -1709,8 +1709,8 @@ fn traverse_nodes_and_populate<'a>(
                 );
             }
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
-            if instr_jump_end.is_some() {
-                instr_jump_end.unwrap().dest_instruction = ending_instr_id;
+            if let Some(instr_jump_end) = instr_jump_end {
+                instr_jump_end.dest_instruction = ending_instr_id;
             } else {
                 anyhow::bail!(
                     "Compare node: Failed to find JUMP[end] with id: {}",
@@ -1832,8 +1832,8 @@ fn traverse_nodes_and_populate<'a>(
             let end_instr_id = chunk.get_last_instruction_id() + 1;
             // update the jump instruction defined ealier to point to the end of the loop
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
-            if instr_jump_end.is_some() {
-                instr_jump_end.unwrap().dest_instruction = end_instr_id;
+            if let Some(instr_jump_end) = instr_jump_end {
+                instr_jump_end.dest_instruction = end_instr_id;
             } else {
                 anyhow::bail!(
                     "ForLoop node: Failed to find JUMP[end] with id: {}",
@@ -2851,8 +2851,8 @@ fn traverse_nodes_and_populate<'a>(
             let end_instr_id = chunk.get_last_instruction_id() + 1;
             // update the jump instruction defined ealier to point to the end of the loop
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
-            if instr_jump_end.is_some() {
-                instr_jump_end.unwrap().dest_instruction = end_instr_id;
+            if let Some(instr_jump_end) = instr_jump_end {
+                instr_jump_end.dest_instruction = end_instr_id;
             } else {
                 anyhow::bail!(
                     "ForEach node: Failed to find JUMP[end] with id: {}",

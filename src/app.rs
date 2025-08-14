@@ -217,9 +217,8 @@ impl PulseGraphEditor {
                     .variables
                     .iter()
                     .find(|var| var.name == *name);
-                if var.is_some() {
-                    let var_unwrp = var.unwrap();
-                    self.add_node_output_simple(node_id, var_unwrp.data_type.clone(), "value");
+                if let Some(var) = var {
+                    self.add_node_output_simple(node_id, var.data_type.clone(), "value");
                 }
             }
             PulseNodeTemplate::SetVar => {
@@ -232,12 +231,11 @@ impl PulseGraphEditor {
                     .variables
                     .iter()
                     .find(|var| var.name == *name);
-                if var.is_some() {
-                    let var_unwrp = var.unwrap();
-                    let val_typ = data_type_to_value_type(&var_unwrp.data_type);
+                if let Some(var) = var {
+                    let val_typ = data_type_to_value_type(&var.data_type);
                     self.add_node_input_simple(
                         node_id,
-                        var_unwrp.data_type.clone(),
+                        var.data_type.clone(),
                         val_typ,
                         "value",
                         InputParamKind::ConnectionOrConstant,
@@ -279,8 +277,8 @@ impl PulseGraphEditor {
             PulseNodeTemplate::Convert => {
                 if name == "typefrom" {
                     let param_input = node.get_input("input");
-                    if param_input.is_ok() {
-                        self.state.graph.remove_input_param(param_input.unwrap());
+                    if let Ok(param_input) = param_input {
+                        self.state.graph.remove_input_param(param_input);
                         let types = pulse_value_type_to_node_types(&new_type.unwrap());
                         self.add_node_input_simple(
                             node_id,
@@ -292,8 +290,8 @@ impl PulseGraphEditor {
                     }
                 } else if name == "typeto" {
                     let param_output = node.get_output("out");
-                    if param_output.is_ok() {
-                        self.state.graph.remove_output_param(param_output.unwrap());
+                    if let Ok(param_output) = param_output {
+                        self.state.graph.remove_output_param(param_output);
                         let types = pulse_value_type_to_node_types(&new_type.unwrap());
                         self.add_node_output_simple(node_id, types.0, "out");
                     }
@@ -338,8 +336,7 @@ impl PulseGraphEditor {
                     panic!("node that requires input 'expectedType', but it was not found");
                 }
                 let param_output = node.get_output("out");
-                if param_output.is_ok() {
-                    let param_output = param_output.unwrap();
+                if let Ok(param_output) = param_output {
                     self.state.graph.remove_output_param(param_output);
                     let types = pulse_value_type_to_node_types(&new_type);
                     self.add_node_output_simple(node_id, types.0, "out");
@@ -547,16 +544,6 @@ impl PulseGraphEditor {
         }
         Ok(())
     }
-    fn get_node_connected_to_input(&self, input_id: InputId) -> Option<NodeId> {
-        let connection_to_input: Option<OutputId> = self.state.graph.connection(input_id);
-        if let Some(output) = connection_to_input {
-            // get the node that the desired input is connected to
-            let connected_node_id = &self.state.graph.outputs[output].node;
-            Some(*connected_node_id)
-        } else {
-            None
-        }
-    }
     // traverse forward to nodes connected to THIS node's output recursively
     // until we reach a node that doesn't depend on polymorphic return type.
     fn update_polymorphic_output_types(&mut self, node_id: NodeId, source_type: Option<PulseValueType>, source_input_name: Option<&str>) -> anyhow::Result<()> {
@@ -645,9 +632,6 @@ impl PulseGraphEditor {
                             } else {
                                 Some(PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_EHANDLE(None))))
                             }
-                        }
-                        _ => {
-                            None
                         }
                     }
                 } else {

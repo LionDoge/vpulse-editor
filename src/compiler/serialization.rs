@@ -217,6 +217,7 @@ impl RegisterMap {
     pub fn add_outparam(&mut self, name: Cow<'static, str>, num: i32) {
         self.outparams.push((name, num));
     }
+    #[allow(dead_code)]
     pub fn get_inparam_by_name(&self, name: &str) -> Option<i32> {
         self.inparams.iter().find(|(n, _)| n == name).map(|(_, num)| *num)
     }
@@ -543,7 +544,7 @@ impl KV3Serialize for PulseConstant {
                     }
                 }
                 PulseConstant::Array(typ, _) => {
-                    format!("PVAL_ARRAY:{}", typ.to_string()).to_string()
+                    format!("PVAL_ARRAY:{}", typ)
                 }
             },
             match self {

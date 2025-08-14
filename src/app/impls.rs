@@ -1079,7 +1079,8 @@ impl PulseNodeTemplate {
         // This function is used to determine if the node has outputs that can be
         // added and removed by the user. This is used to prove an add parameter button, as well as
         // to display the "X" button next to custom added output params.
-        matches!(self, PulseNodeTemplate::CellPublicMethod)
+        //matches!(self, PulseNodeTemplate::CellPublicMethod)
+        false
     }
 }
 
@@ -1506,32 +1507,32 @@ impl NodeDataTrait for PulseNodeData {
             }
         }
 
-        if matches!(node.user_data.template, PulseNodeTemplate::CellPublicMethod) {
-            ui.horizontal(|ui| {
-                let id = egui::Id::new(("custom_choice", node_id));
-                let mut selected_val = ui.ctx().memory_mut(|mem| {
-                    mem.data
-                        .get_temp_mut_or_insert_with(id, || PulseValueType::PVAL_INT(None)).clone()
-                    });
-                type_selection_widget(
-                    ui,
-                    node_id,
-                    &mut selected_val,
-                    PulseValueType::get_variable_supported_types(),
-                    |_| {}
-                );
-                if ui.button("Add output").clicked() {
-                    responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
-                        node_id,
-                        "test".to_string(),
-                        PulseDataType::String,
-                    )));
-                }
-                ui.memory_mut(|mem| {
-                    mem.data.insert_temp(id, selected_val);
-                });
-            });
-        }
+        // if matches!(node.user_data.template, PulseNodeTemplate::CellPublicMethod) {
+        //     ui.horizontal(|ui| {
+        //         let id = egui::Id::new(("custom_choice", node_id));
+        //         let mut selected_val = ui.ctx().memory_mut(|mem| {
+        //             mem.data
+        //                 .get_temp_mut_or_insert_with(id, || PulseValueType::PVAL_INT(None)).clone()
+        //             });
+        //         type_selection_widget(
+        //             ui,
+        //             node_id,
+        //             &mut selected_val,
+        //             PulseValueType::get_variable_supported_types(),
+        //             |_| {}
+        //         );
+        //         if ui.button("Add output").clicked() {
+        //             responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
+        //                 node_id,
+        //                 "test".to_string(),
+        //                 PulseDataType::String,
+        //             )));
+        //         }
+        //         ui.memory_mut(|mem| {
+        //             mem.data.insert_temp(id, selected_val);
+        //         });
+        //     });
+        // }
         responses
     }
 

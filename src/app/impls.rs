@@ -580,7 +580,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     PulseGraphValueType::String {
                         value: "method".to_string(),
                     },
-                    InputParamKind::ConnectionOrConstant,
+                    InputParamKind::ConstantOnly,
                     true,
                 );
                 output_string(graph, "argument1");

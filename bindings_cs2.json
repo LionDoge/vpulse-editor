@@ -4092,6 +4092,342 @@
                 "type": "PVAL_ARRAY:PVAL_EHANDLE"
             }
         ]
+    },
+    {
+        "type": "value",
+        "displayname": "Deg2 Rad",
+        "libname": "CPulseMathlib::Deg2Rad",
+        "description": "Convert degrees (0-180) to radians (0-pi)",
+        "inparams": [
+            {
+                "name": "flDegrees",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Rad2 Deg",
+        "libname": "CPulseMathlib::Rad2Deg",
+        "description": "Convert radians (0-pi) to degrees (0-180)",
+        "inparams": [
+            {
+                "name": "flRadians",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Round Float",
+        "libname": "CPulseMathlib::RoundFloat",
+        "description": "Round - round float up or down to integer",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Floor Float",
+        "libname": "CPulseMathlib::FloorFloat",
+        "description": "Floor - round float down to nearest integer",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Ceiling Float",
+        "libname": "CPulseMathlib::CeilingFloat",
+        "description": "Ceiling - round float up to nearest integer)",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Pi",
+        "libname": "CPulseMathlib::Pi",
+        "description": "Returns the constant pi (3.14...)",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sqrt",
+        "libname": "CPulseMathlib::Sqrt",
+        "description": "Square root",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "R Sqrt",
+        "libname": "CPulseMathlib::RSqrt",
+        "description": "Reciprocoal square root (1/sqrt)",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sqr Float",
+        "libname": "CPulseMathlib::SqrFloat",
+        "description": "Square",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sqr Int",
+        "libname": "CPulseMathlib::SqrInt",
+        "description": "Square",
+        "inparams": [
+            {
+                "name": "nValue",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Frac",
+        "libname": "CPulseMathlib::Frac",
+        "description": "Fractional component (ie. returns 0.34 for 12.34)",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Saturate",
+        "libname": "CPulseMathlib::Saturate",
+        "description": "Saturate (clamps float between 0 and 1)",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Log",
+        "libname": "CPulseMathlib::Log",
+        "description": "Natural logarithm (base e)",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Log2",
+        "libname": "CPulseMathlib::Log2",
+        "description": "Base-2 logarithm",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Log10",
+        "libname": "CPulseMathlib::Log10",
+        "description": "Base-10 logarithm",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Exp",
+        "libname": "CPulseMathlib::Exp",
+        "description": "Computes e ( 2.71...) raised to a power",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Exp2",
+        "libname": "CPulseMathlib::Exp2",
+        "description": "Computes 2 ( 2.71...) raised to a power",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sign Float",
+        "libname": "CPulseMathlib::SignFloat",
+        "description": "Returns -1.0 or 0.0 or 1.0 based on the sign of the argument",
+        "inparams": [
+            {
+                "name": "flValue",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sign Int",
+        "libname": "CPulseMathlib::SignInt",
+        "description": "Returns -1 or 0 or 1 based on the sign of the argument",
+        "inparams": [
+            {
+                "name": "nValue",
+                "type": "PVAL_INT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
     }
 
     ],

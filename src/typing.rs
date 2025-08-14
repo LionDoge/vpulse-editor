@@ -189,6 +189,7 @@ impl PulseValueType {
             PulseValueType::PVAL_SCHEMA_ENUM(_) => "_SCHEMA_ENUM",
             PulseValueType::PVAL_COLOR_RGB(_) => "_COLOR_RGB",
             PulseValueType::PVAL_ARRAY(_) => "_ARRAY",
+            PulseValueType::PVAL_GAMETIME(_) => "_GAMETIME",
             _ => "",
         }
     }
@@ -235,6 +236,7 @@ impl PulseValueType {
             PulseValueType::PVAL_COLOR_RGB(None),
             PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_QANGLE(None), // it doesn't have it's own suffix, but maybe it works.
+            PulseValueType::PVAL_GAMETIME(None),
         ]
     }
     pub fn get_operatable_types() -> Vec<PulseValueType> {

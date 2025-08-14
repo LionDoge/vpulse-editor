@@ -991,9 +991,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ScaleVector => {
                 input_typ(graph, "type", PulseValueType::PVAL_VEC3(None));
-                input_vector3(graph, "vector", InputParamKind::ConnectionOrConstant);
-                input_scalar(graph, "scale", InputParamKind::ConnectionOrConstant, 1.0);
                 input_bool(graph, "invert", InputParamKind::ConstantOnly);
+                input_scalar(graph, "scale", InputParamKind::ConnectionOrConstant, 1.0);
+                input_vector3(graph, "vector", InputParamKind::ConnectionOrConstant);
                 output_vector3(graph, "out");
             }
             PulseNodeTemplate::ReturnValue => {

@@ -342,6 +342,32 @@ impl PulseGraphEditor {
                     self.add_node_output_simple(node_id, types.0, "out");
                 }
             }
+            PulseNodeTemplate::ScaleVector => {
+                if new_type.is_none() {
+                    panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
+                }
+                let new_type = new_type.unwrap();
+                let types = pulse_value_type_to_node_types(&new_type);
+                let output_id = node.get_output("out");
+                let param_vec = node.get_input("vector");
+                if output_id.is_err() {
+                    panic!("node requires output 'out', but it was not found");
+                }
+                let output = self.state.graph.get_output_mut(output_id.unwrap());
+                output.typ = types.0.clone();
+                if param_vec.is_err(){
+                    panic!("node that requires inputs 'A' and 'B', but one of them was not found");
+                }
+                self.state.graph.remove_input_param(param_vec.unwrap());
+
+                self.add_node_input_simple(
+                    node_id,
+                    types.0,
+                    types.1,
+                    "vector",
+                    InputParamKind::ConnectionOrConstant,
+                );
+            }
             _ => {}
         }
     }

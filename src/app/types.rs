@@ -211,6 +211,7 @@ pub enum PulseGraphResponse {
     ChangeVariableParamType(NodeId, String),
     ChangeParamType(NodeId, String, PulseValueType),
     ChangeEventBinding(NodeId, EventBinding),
+    #[allow(dead_code)]
     ChangeFunctionBinding(NodeId, FunctionBinding),
     ChangeRemoteNodeId(NodeId, NodeId),
     UpdatePolymorphicTypes(NodeId),

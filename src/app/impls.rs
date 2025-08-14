@@ -1289,37 +1289,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                         });
                 });
             }
-            PulseGraphValueType::LibraryBindingChoice { value } => {
-                ui.horizontal(|ui| {
-                    ui.label("Function");
-                    if let Some(binding) = _user_state.get_library_binding_from_index(value) {
-                        ComboBox::from_id_salt(_node_id)
-                            .selected_text(&binding.displayname)
-                            .show_ui(ui, |ui| {
-                                for (idx, func) in
-                                    _user_state.bindings.gamefunctions.iter().enumerate()
-                                {
-                                    let str = func.displayname.as_str();
-                                    let mut selectable_value = ui
-                                        .selectable_value::<LibraryBindingIndex>(
-                                            value,
-                                            LibraryBindingIndex(idx),
-                                            str,
-                                        );
-                                    if let Some(desc) = func.description.as_ref() {
-                                        selectable_value = selectable_value.on_hover_text(desc);
-                                    }
-                                    if selectable_value.clicked() {
-                                        responses.push(PulseGraphResponse::ChangeFunctionBinding(
-                                            _node_id,
-                                            func.clone(),
-                                        ));
-                                    }
-                                }
-                            });
-                    }
-                });
-            }
+            PulseGraphValueType::LibraryBindingChoice { value: _ } => { /* hidden */ }
             PulseGraphValueType::HookBindingChoice { value } => {
                 ui.horizontal(|ui| {
                     ui.label("Hook");

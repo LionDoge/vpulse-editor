@@ -150,6 +150,14 @@ impl PulseGraphValueType {
         }
     }
 
+    pub fn try_hook_binding(self) -> anyhow::Result<HookBindingIndex> {
+        if let PulseGraphValueType::HookBindingChoice { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to hook binding", self)
+        }
+    }
+
     pub fn try_sndevt_name(self) -> anyhow::Result<String> {
         if let PulseGraphValueType::SoundEventName { value } = self {
             Ok(value)
@@ -187,7 +195,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Vec2 => egui::Color32::from_rgb(238, 163, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3Local => egui::Color32::from_rgb(168, 144, 91),
-            PulseDataType::Color => egui::Color32::from_rgb(111, 66, 245), // Red for color
+            PulseDataType::Color => egui::Color32::from_rgb(111, 66, 245),
             PulseDataType::String => egui::Color32::from_rgb(52, 171, 235),
             PulseDataType::Action => egui::Color32::from_rgb(252, 3, 165),
             PulseDataType::EHandle => egui::Color32::from_rgb(11, 200, 31),
@@ -198,6 +206,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Typ => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::EventBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::LibraryBindingChoice => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::HookBindingChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::SndEventHandle => egui::Color32::from_rgb(224, 123, 216),
             PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 100, 120),
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
@@ -232,6 +241,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::Typ => Cow::Borrowed("Type"),
             PulseDataType::EventBindingChoice => Cow::Borrowed("Event binding"),
             PulseDataType::LibraryBindingChoice => Cow::Borrowed("Library binding"),
+            PulseDataType::HookBindingChoice => Cow::Borrowed("Hook binding"),
             PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
             PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
             PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
@@ -710,7 +720,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::GraphHook => {
-                input_string(graph, "hookName", InputParamKind::ConstantOnly);
+                graph.add_input_param(
+                    node_id,
+                    String::from("hook"),
+                    PulseDataType::HookBindingChoice,
+                    PulseGraphValueType::HookBindingChoice {
+                        value: HookBindingIndex(0),
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::GetGameTime => {
@@ -1300,6 +1319,28 @@ impl WidgetValueTrait for PulseGraphValueType {
                     }
                 });
             }
+            PulseGraphValueType::HookBindingChoice { value } => {
+                ui.horizontal(|ui| {
+                    ui.label("Hook");
+                    ComboBox::from_id_salt((param_name, _node_id))
+                        .selected_text(
+                            &_user_state
+                                .get_hook_binding_from_index(value)
+                                .unwrap()
+                                .displayname,
+                        )
+                        .show_ui(ui, |ui| {
+                            for (idx, hook) in _user_state.bindings.hooks.iter().enumerate() {
+                                let str = hook.displayname.as_str();
+                                ui.selectable_value::<HookBindingIndex>(
+                                    value,
+                                    HookBindingIndex(idx),
+                                    str,
+                                );
+                            }
+                        });
+                });
+            }
             PulseGraphValueType::NodeChoice { node } => {
                 ui.horizontal(|ui| {
                     ui.label("Node");
@@ -1578,7 +1619,7 @@ impl NodeDataTrait for PulseNodeData {
     }
 }
 
-use crate::bindings::{FunctionBinding, EventBinding};
+use crate::bindings::{EventBinding, FunctionBinding, HookBinding};
 impl PulseGraphState {
     pub fn get_library_binding_from_index(
         &self,
@@ -1588,6 +1629,9 @@ impl PulseGraphState {
     }
     pub fn get_event_binding_from_index(&self, idx: &EventBindingIndex) -> Option<&EventBinding> {
         self.bindings.events.get(idx.0)
+    }
+    pub fn get_hook_binding_from_index(&self, idx: &HookBindingIndex) -> Option<&HookBinding> {
+        self.bindings.hooks.get(idx.0)
     }
     pub fn find_library_binding_by_name(
         &self,

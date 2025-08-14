@@ -61,10 +61,18 @@ pub struct EventBinding {
     pub inparams: Option<Vec<ParamInfo>>,
 }
 
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
+pub struct HookBinding {
+    pub displayname: String,
+    pub libname: String,
+    pub description: Option<String>,
+}
+
 #[derive(Deserialize, Debug, Default)]
 pub struct GraphBindings {
     pub gamefunctions: Vec<FunctionBinding>,
     pub events: Vec<EventBinding>,
+    pub hooks: Vec<HookBinding>,
 }
 
 fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {

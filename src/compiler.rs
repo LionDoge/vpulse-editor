@@ -302,10 +302,13 @@ fn traverse_graphhook_cell(
     graph_def: &mut PulseGraphDef,
     _graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
-    let hook_name = get_constant_graph_input_value!(graph, node, "hookName", try_to_string);
+    let hook_id = get_constant_graph_input_value!(graph, node, "hook", try_hook_binding);
+    let hook = _graph_state
+        .get_hook_binding_from_index(&hook_id)
+        .ok_or_else(|| anyhow::anyhow!("Hook binding with id {} not found", hook_id))?;
     let chunk_id = graph_def.create_chunk();
     let cell_hook =
-        CPulseCell_Inflow_GraphHook::new(hook_name.into(), RegisterMap::default(), chunk_id);
+        CPulseCell_Inflow_GraphHook::new(hook.libname.clone().into(), RegisterMap::default(), chunk_id);
     graph_def.cells.push(Box::from(cell_hook));
     let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
     for (connected_node, input_name) in connected_node.iter() {

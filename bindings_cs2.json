@@ -4094,6 +4094,20 @@
         ]
     }
 
+    ],
+
+    "hooks": 
+    [
+        {
+            "libname": "CPulseGraphInstance_ServerEntity::InitialActivate",
+            "displayname": "Initial Activate",
+            "description": "Called when the parent entity is activated as it initially spawned"
+        },
+        {
+            "libname": "CPulseGraphInstance_ServerEntity::Think",
+            "displayname": "Think",
+            "description": "Called when the parent entity has been told to think via SetNextThink"
+        }
     ]
 }
 

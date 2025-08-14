@@ -37,6 +37,14 @@ impl Display for EventBindingIndex {
     }
 }
 
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct HookBindingIndex(pub usize);
+impl Display for HookBindingIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "HookBindingIndex({})", self.0)
+    }
+}
+
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Default)]
 pub struct Vec3 {
     pub x: f32,

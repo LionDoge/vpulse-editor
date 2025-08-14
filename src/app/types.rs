@@ -41,6 +41,7 @@ pub enum PulseDataType {
     Typ,
     EventBindingChoice,
     LibraryBindingChoice,
+    HookBindingChoice,
     SoundEventName,
     NoideChoice,
     Any,
@@ -112,6 +113,9 @@ pub enum PulseGraphValueType {
     },
     LibraryBindingChoice {
         value: LibraryBindingIndex,
+    },
+    HookBindingChoice {
+        value: HookBindingIndex,
     },
     NodeChoice {
         node: Option<NodeId>,

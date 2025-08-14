@@ -431,6 +431,7 @@ impl PulseGraphEditor {
             }
         }
     }
+
     // Update inputs on "Call Node" depending on the type of referenced node.
     fn update_remote_node_params(&mut self, node_id: &NodeId, node_id_refrence: &NodeId) {
         let node = self.state.graph.nodes.get_mut(*node_id).unwrap();

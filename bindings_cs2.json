@@ -1700,6 +1700,7 @@
         "displayname": "point_template: Force Spawn Return Entities",
         "libname": "CPointTemplateAPI::ForceSpawnReturnEntities",
         "description": "Tells the point_template entity to ForceSpawn and return the all the entities spawned",
+        "polymorphic_return": "_:to_subtype",
         "inparams": [
             {
                 "name": "_Target",

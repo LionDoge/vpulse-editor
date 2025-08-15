@@ -2069,6 +2069,9 @@ fn traverse_nodes_and_populate<'a>(
                 src_instruction: -1,
             };
             graph_def.add_invoke_binding(binding);
+            if let Some(output_id) = output_id {
+                graph_def.add_register_mapping(*output_id, reg_output);
+            }
             return Ok(reg_output);
         }
         PulseNodeTemplate::CompareOutput => {

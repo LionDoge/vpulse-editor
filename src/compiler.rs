@@ -644,7 +644,7 @@ fn get_input_register_or_create_constant(
     always_reevaluate: bool,
 ) -> anyhow::Result<Option<i32>> {
     let input_id = current_node.get_input(input_name).map_err(|e| {
-        anyhow::anyhow!(e).context(format!("{:?} node", &current_node.user_data.template))
+        anyhow::anyhow!(e).context(format!("failed to find input {input_name} in node {:?}", &current_node.user_data.template))
     })?;
     let connection_to_input: Option<OutputId> = graph.connection(input_id);
     let target_register: i32;

@@ -766,24 +766,24 @@ where
                         ui.label(param_name);
                     }
 
-                    let height_intermediate = ui.min_rect().bottom();
+                    //let height_intermediate = ui.min_rect().bottom();
 
-                    let max_connections = self.graph[param_id]
-                        .max_connections
-                        .map(NonZeroU32::get)
-                        .unwrap_or(std::u32::MAX)
-                        as usize;
-                    let port_height = port_height(
-                        max_connections != 1,
-                        self.graph.connections(param_id).len(),
-                        max_connections,
-                    );
-                    let margin = 5.0 * pan_zoom.zoom;
-                    let missing_space =
-                        port_height - (height_intermediate - height_before) + margin;
-                    if missing_space > 0.0 {
-                        ui.add_space(missing_space);
-                    }
+                    // let max_connections = self.graph[param_id]
+                    //     .max_connections
+                    //     .map(NonZeroU32::get)
+                    //     .unwrap_or(std::u32::MAX)
+                    //     as usize;
+                    // let port_height = port_height(
+                    //     max_connections != 1,
+                    //     self.graph.connections(param_id).len(),
+                    //     max_connections,
+                    // );
+                    // let margin = 5.0 * pan_zoom.zoom;
+                    // let missing_space =
+                    //     port_height - (height_intermediate - height_before) + margin;
+                    // if missing_space > 0.0 {
+                    //     ui.add_space(missing_space);
+                    // }
 
                     self.graph[self.node_id].user_data.separator(
                         ui,

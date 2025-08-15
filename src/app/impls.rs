@@ -1092,6 +1092,7 @@ pub fn type_selection_widget(
     mut callback: impl FnMut(PulseValueType) // when a type selection is made
 ) {
     ComboBox::from_id_salt(id_salt)
+        .width(0.0)
         .selected_text(current_value.get_ui_name())
         .show_ui(ui, |ui| {
             for typ in type_list {
@@ -1196,6 +1197,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label("Output");
                     ComboBox::from_id_salt(("outch", _node_id))
+                        .width(0.0)
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
                             for outputparam in _user_state.public_outputs.iter() {
@@ -1217,6 +1219,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label("Variable");
                     ComboBox::from_id_salt(("varch", _node_id))
+                        .width(0.0)
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
                             for var in _user_state.variables.iter() {
@@ -1263,6 +1266,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label("Event");
                     ComboBox::from_id_salt(_node_id)
+                        .width(0.0)
                         .selected_text(
                             &_user_state
                                 .get_event_binding_from_index(value)
@@ -1294,6 +1298,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label("Hook");
                     ComboBox::from_id_salt((param_name, _node_id))
+                        .width(0.0)
                         .selected_text(
                             &_user_state
                                 .get_hook_binding_from_index(value)
@@ -1324,6 +1329,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                         None => "-- CHOOSE --",
                     };
                     ComboBox::from_id_salt(_node_id)
+                        .width(0.0)
                         .selected_text(node_name)
                         .show_ui(ui, |ui| {
                             for node_pair in _user_state.exposed_nodes.iter() {
@@ -1352,6 +1358,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
                     ComboBox::from_id_salt((_node_id, param_name))
+                        .width(0.0)
                         .selected_text(value.get_ui_name())
                         .show_ui(ui, |ui| {
                             for choice in enum_type.get_all_types_as_enums().iter() {

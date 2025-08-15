@@ -4085,6 +4085,11 @@
             {
                 "name": "bReturnSorted",
                 "type": "PVAL_BOOL"
+            },
+            {
+                "name": "bIncludeNonPhysicalEntities",
+                "type": "PVAL_BOOL",
+                "description": "Search all entities in existence, not just ones with a physics representation (slow). Player is also not considered a physical entity, don't ask me why."
             }
         ],
         "outparams": [
@@ -4427,6 +4432,56 @@
             {
                 "name": "retval",
                 "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Are Entities In Hierarchy",
+        "libname": "CPulseServerFuncs::AreEntitiesInHierarchy",
+        "description": "Checks if entity a and entity b are in hierarchy together",
+        "inparams": [
+            {
+                "name": "hEntityA",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "hEntityB",
+                "type": "PVAL_EHANDLE"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Sort Entity Array By Distance",
+        "libname": "CPulseServerFuncs::SortEntityArrayByDistance",
+        "description": "Returns the input array sorted by distance to a reference entity.",
+        "polymorphic_return": "a:fulltype",
+        "inparams": [
+            {
+                "name": "a",
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
+            },
+            {
+                "name": "referenceEntity",
+                "type": "PVAL_EHANDLE"
+            },
+            {
+                "name": "bFurthestFirst",
+                "type": "PVAL_BOOL",
+                "description": "Return furthest entities first"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
             }
         ]
     }

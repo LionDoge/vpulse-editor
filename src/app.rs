@@ -871,6 +871,7 @@ impl eframe::App for PulseGraphEditor {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_visuals(egui::Visuals::dark());
+        ctx.style_mut(|s| s.interaction.selectable_labels = false);
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui: &mut egui::Ui| {
                 if ui.button("Compile").clicked() {

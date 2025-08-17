@@ -567,10 +567,10 @@
         "type": "value",
         "displayname": "Sin",
         "libname": "CPulseMathlib::Sin",
-        "description": "Sine of angle, in degrees (0 -> 0, 90 -> 1)",
+        "description": "Sine of angle. Input in radians, output in radians",
         "inparams": [
             {
-                "name": "flDegrees",
+                "name": "flRadians",
                 "type": "PVAL_FLOAT"
             }
         ],
@@ -585,10 +585,10 @@
         "type": "value",
         "displayname": "Cos",
         "libname": "CPulseMathlib::Cos",
-        "description": "Cosine of angle, in degrees (0 -> 1, 90 -> 0)",
+        "description": "Cosine of angle. Input in radians, output in radians",
         "inparams": [
             {
-                "name": "flDegrees",
+                "name": "flRadians",
                 "type": "PVAL_FLOAT"
             }
         ],
@@ -3076,10 +3076,10 @@
         "type": "value",
         "displayname": "Arc Sin",
         "libname": "CPulseMathlib::ArcSin",
-        "description": "Arc Sine of angle, in degrees (0 -> 0, 90 -> 1)",
+        "description": "Arc Sine of input value. Input must be -1.0, 1.0 range. Output in radians, from -π/2 to π/2",
         "inparams": [
             {
-                "name": "flDegrees",
+                "name": "flValue",
                 "type": "PVAL_FLOAT"
             }
         ],
@@ -3094,10 +3094,10 @@
         "type": "value",
         "displayname": "Arc Cos",
         "libname": "CPulseMathlib::ArcCos",
-        "description": "Arc Cosine of angle, in degrees (0 -> 0, 90 -> 1)",
+        "description": "Arc Cosine of input value. Input must be -1.0, 1.0 range. Output in radians, from 0 to π",
         "inparams": [
             {
-                "name": "flDegrees",
+                "name": "flValue",
                 "type": "PVAL_FLOAT"
             }
         ],
@@ -3112,10 +3112,10 @@
         "type": "value",
         "displayname": "Arc Tan",
         "libname": "CPulseMathlib::ArcTan",
-        "description": "Arc Tangent of angle, in degrees (0 -> 0, 90 -> 1)",
+        "description": "Arc Tangent of input value. Input can be any real number. Output in radians, from -π/2 to π/2",
         "inparams": [
             {
-                "name": "flDegrees",
+                "name": "flValue",
                 "type": "PVAL_FLOAT"
             }
         ],
@@ -4482,6 +4482,24 @@
             {
                 "name": "retval",
                 "type": "PVAL_ARRAY:PVAL_EHANDLE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Tan",
+        "libname": "CPulseMathlib::Tan",
+        "description": "Tangent of angle. Input in radians, output in radians",
+        "inparams": [
+            {
+                "name": "flRadians",
+                "type": "PVAL_FLOAT"
+            }
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_FLOAT"
             }
         ]
     }

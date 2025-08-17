@@ -197,6 +197,9 @@ pub enum PulseNodeTemplate {
     ScaleVector,
     ReturnValue,
     ForEach,
+    And,
+    Or,
+    Not,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

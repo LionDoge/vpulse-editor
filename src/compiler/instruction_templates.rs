@@ -153,3 +153,28 @@ pub fn return_value(register_id: i32) -> Instruction {
         ..Default::default()
     }
 }
+
+pub fn and_bool(register_a: i32, register_b: i32, register_out: i32) -> Instruction {
+    Instruction {
+        code: String::from("AND"),
+        reg0: register_out,
+        reg1: register_a,
+        reg2: register_b,
+        ..Default::default()
+    }
+}
+
+pub fn or_bool(register_a: i32, register_b: i32, register_out: i32) -> Instruction {
+    let mut instr = and_bool(register_a, register_b, register_out);
+    instr.code = String::from("OR");
+    instr
+}
+
+pub fn not_bool(register_in: i32, register_out: i32) -> Instruction {
+    Instruction {
+        code: String::from("NOT"),
+        reg0: register_out,
+        reg1: register_in,
+        ..Default::default()
+    }
+}

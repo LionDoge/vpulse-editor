@@ -928,6 +928,26 @@ impl PulseGraphDef {
     pub fn get_invoke_binding_mut(&mut self, index: i32) -> Option<&mut InvokeBinding> {
         self.bindings.get_mut(index as usize)
     }
+    pub fn add_chunk_instruction(
+        &mut self,
+        chunk_id: usize,
+        instruction: Instruction,
+    ) -> Option<i32> {
+        self.chunks.get_mut(chunk_id)
+            .map(|chunk| chunk.add_instruction(instruction))
+    }
+    // Adds a new register to the specified chunk, and returns the register ID. If written_by_instruction is None, it will use the last instruction ID of the chunk + 1.
+    pub fn add_chunk_register(
+        &mut self,
+        chunk_id: usize,
+        reg_type: String,
+        written_by_instruction: Option<i32>,
+    ) -> Option<i32> {
+        self.chunks.get_mut(chunk_id)
+            .map(|chunk| chunk.add_register(
+                reg_type, written_by_instruction.unwrap_or(chunk.get_last_instruction_id() + 1)
+            ))
+    }
 }
 
 #[cfg(feature = "nongame_asset_build")]

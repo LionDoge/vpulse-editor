@@ -323,6 +323,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ScaleVector => "Scale vector".into(),
             PulseNodeTemplate::ReturnValue => "Return value".into(),
             PulseNodeTemplate::ForEach => "For each".into(),
+            PulseNodeTemplate::And => "And".into(),
+            PulseNodeTemplate::Or => "Or".into(),
+            PulseNodeTemplate::Not => "Not".into(),
         }
     }
 
@@ -343,7 +346,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::IntSwitch
             | PulseNodeTemplate::CallNode
             | PulseNodeTemplate::Function 
-            | PulseNodeTemplate::ReturnValue => vec!["Logic"],
+            | PulseNodeTemplate::ReturnValue
+            | PulseNodeTemplate::And
+            | PulseNodeTemplate::Or
+            | PulseNodeTemplate::Not => vec!["Logic"],
             PulseNodeTemplate::Operation 
             | PulseNodeTemplate::ScaleVector => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
@@ -1008,6 +1014,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
             }
+            PulseNodeTemplate::And
+            | PulseNodeTemplate::Or => {
+                input_bool(graph, "A", InputParamKind::ConnectionOrConstant);
+                input_bool(graph, "B", InputParamKind::ConnectionOrConstant);
+                output_bool(graph, "out");
+            }
+            PulseNodeTemplate::Not => {
+                input_bool(graph, "in", InputParamKind::ConnectionOrConstant);
+                output_bool(graph, "out");
+            }
         }
     }
 }
@@ -1132,7 +1148,7 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::String { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ui.text_edit_singleline(value);
+                    ui.text_edit_singleline(value)
                 });
             }
             PulseGraphValueType::Bool { value } => {
@@ -1423,17 +1439,17 @@ impl NodeDataTrait for PulseNodeData {
         _ui: &mut egui::Ui,
         _node_id: NodeId,
         _graph: &Graph<Self, Self::DataType, Self::ValueType>,
-        _user_state: &mut Self::UserState,
+        user_state: &mut Self::UserState,
     ) -> Vec<NodeResponse<Self::Response, Self>>
     where
         Self::Response: UserResponseTrait,
     {
         let node_template = _graph.nodes.get(_node_id).unwrap().user_data.template;
-        let help_text = help::help_hover_text(node_template);
+        let help_text = help::help_hover_text(node_template, user_state);
         if !help_text.is_empty() {
             _ui.label("ℹ").on_hover_text(help_text);
         }
-        if let Some(node_name) = _user_state.exposed_nodes.get_mut(_node_id) {
+        if let Some(node_name) = user_state.exposed_nodes.get_mut(_node_id) {
             _ui.text_edit_singleline(node_name);
         }
         vec![]
@@ -1535,7 +1551,10 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::IntSwitch
             | PulseNodeTemplate::ForLoop
             | PulseNodeTemplate::ForEach
-            | PulseNodeTemplate::WhileLoop => Some(Color32::from_rgb(166, 99, 41)),
+            | PulseNodeTemplate::WhileLoop
+            | PulseNodeTemplate::And
+            | PulseNodeTemplate::Not
+            | PulseNodeTemplate::Or => Some(Color32::from_rgb(166, 99, 41)),
             PulseNodeTemplate::CallNode | PulseNodeTemplate::Function => {
                 Some(Color32::from_rgb(28, 67, 150))
             }

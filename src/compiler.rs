@@ -2875,6 +2875,110 @@ fn traverse_nodes_and_populate<'a>(
                 "endAction"
             );
         }
+        PulseNodeTemplate::And => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let reg_a = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "A",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?.ok_or_else(|| {
+                anyhow::anyhow!("And node: Failed to get input register for 'A'.")
+            })?;
+            let reg_b = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "B",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?.ok_or_else(|| {
+                anyhow::anyhow!("And node: Failed to get input register for 'B'.")
+            })?;
+            let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
+                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'And' node."))?;
+            let instr = instruction_templates::and_bool(
+                reg_a,
+                reg_b,
+                reg_out
+            );
+            graph_def.add_chunk_instruction(target_chunk as usize, instr);
+            return Ok(reg_out);
+        }
+        PulseNodeTemplate::Or => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let reg_a = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "A",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?.ok_or_else(|| {
+                anyhow::anyhow!("Or node: Failed to get input register for 'A'.")
+            })?;
+            let reg_b = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "B",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?.ok_or_else(|| {
+                anyhow::anyhow!("Or node: Failed to get input register for 'B'.")
+            })?;
+            let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
+                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Or' node."))?;
+            let instr = instruction_templates::or_bool(
+                reg_a,
+                reg_b,
+                reg_out
+            );
+            graph_def.add_chunk_instruction(target_chunk as usize, instr);
+            return Ok(reg_out);
+        }
+        PulseNodeTemplate::Not => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let reg_in = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "in",
+                PulseValueType::PVAL_BOOL,
+                false,
+            )?.ok_or_else(|| {
+                anyhow::anyhow!("Not node: Failed to get input register for 'A'.")
+            })?;
+            let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
+                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Not' node."))?;
+            let instr = instruction_templates::not_bool(
+                reg_in,
+                reg_out,
+            );
+            graph_def.add_chunk_instruction(target_chunk as usize, instr);
+            return Ok(reg_out);
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

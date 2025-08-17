@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+use crate::app::types::PulseGraphState;
 use super::types::PulseNodeTemplate;
 
-pub fn help_hover_text(template: PulseNodeTemplate) -> &'static str {
+pub fn help_hover_text<'a>(template: PulseNodeTemplate, _user_state: &PulseGraphState) -> Cow<'a, str> {
     match template {
         PulseNodeTemplate::CellPublicMethod => "(Entry point) Exposes a public method to the game as an entity input in case of a ServerPointEntity domain. \
             The input will be named after the method name. an argument can be passed in which is accessible from the argument port.",
@@ -43,6 +45,12 @@ pub fn help_hover_text(template: PulseNodeTemplate) -> &'static str {
         PulseNodeTemplate::ListenForEntityOutput => "Listens to an output from the provided entity in the current map, causing an action if it gets triggered. Also provides the activator entity handle.",
         PulseNodeTemplate::Timeline => "Runs actions in a sequential order with a delay between each action.",
         PulseNodeTemplate::NewArray => "Creates a new array with the provided contents. The contents should be a comma-separated list of values, it will be interpreted as raw KeyValues3 array content.",
+        // PulseNodeTemplate::LibraryBindingAssigned { binding } => {
+        //     let binding = user_state.get_library_binding_from_index(&binding);
+        //     if let Some(binding) = binding {
+        //         &binding.description.unwrap_or_default()
+        //     }
+        // }
         _ => "",
-    }
+    }.into()
 }

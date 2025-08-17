@@ -41,18 +41,6 @@ impl PulseGraphEditor {
     }
     // perform a save including including some cleanup
     fn perform_save(&mut self, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
-        // clear deprecated references
-        // this is a bit inefficient but will do for now.
-        for node in self.state.graph.nodes.iter() {
-            for exposed_node in self.user_state.exposed_nodes.iter_mut() {
-                if exposed_node.0 == node.0 {
-                    // remove the node if it doesn't exist anymore.
-                    if !self.state.graph.nodes.contains_key(node.0) {
-                        exposed_node.1.clear();
-                    }
-                }
-            }
-        }
         let dest_path;
         if let Some(filepath) = filepath {
             dest_path = filepath;
@@ -80,14 +68,31 @@ impl PulseGraphEditor {
         }
         did_pick
     }
-    // loads MyGraphState, and applies some corrections if some data is missing for files saved in older versions
-    fn load_state_with_backwards_compat(&mut self, new_state: MyEditorState) {
-        self.state = new_state;
+    // Applies some corrections if some data is missing or changed for files saved in older versions
+    pub fn verify_compat(&mut self) {
         // v0.1.1 introduces a SecondaryMap node_sizes in GraphEditorState
         // make sure that it is populated with every existing node.
         if self.state.node_sizes.is_empty() {
             for node in self.state.graph.nodes.iter() {
                 self.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
+            }
+        }
+        // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
+        let nodes = &mut self.state.graph.nodes;
+        for (_node_id, node) in nodes.iter_mut() {
+            if let PulseNodeTemplate::LibraryBindingAssigned { binding } = &node.user_data.template {
+                if let Some(binding) = self.user_state.get_library_binding_from_index(binding) {
+                    if binding.inparams.is_none() {
+                        continue;
+                    }
+                    let nodes = node.inputs.iter_mut().filter(|input| {
+                        let nam_lowercase = input.0.to_lowercase();
+                        !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
+                    });
+                    for (input, param) in nodes.zip(binding.inparams.as_ref().unwrap().iter()) {
+                        input.0 = param.name.clone();
+                    }
+                }
             }
         }
     }
@@ -99,10 +104,11 @@ impl PulseGraphEditor {
                 e.to_string()
             )
         })?;
-        self.load_state_with_backwards_compat(loaded_graph.state);
+        self.state = loaded_graph.state;
         self.user_state.load_from(loaded_graph.user_state);
         // we don't serialize file path since the file could be moved between save/open.
         self.user_state.save_file_path = Some(filepath);
+        self.verify_compat();
         Ok(())
     }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
@@ -763,6 +769,7 @@ impl PulseGraphEditor {
                     .show();
             }
         };
+        grph.verify_compat();
         grph
     }
 }

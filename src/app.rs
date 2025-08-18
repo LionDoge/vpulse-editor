@@ -1052,8 +1052,7 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 for (idx, outputdef) in self.user_state.public_outputs.iter_mut().enumerate() {
-                    // let output_frame = egui::Frame::default().inner_margin(4.0).begin(ui);
-                    // {
+                    ui.separator();
                     ui.horizontal(|ui| {
                         if ui.button("X").clicked() {
                             output_scheduled_for_deletion = idx;
@@ -1096,8 +1095,6 @@ impl eframe::App for PulseGraphEditor {
                         }
                         outputdef.typ_old = outputdef.typ.clone();
                     }
-                    // }
-                    // output_frame.end(ui);
                 }
                 ui.separator();
                 ui.label("Variables:");
@@ -1113,12 +1110,30 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 for (idx, var) in self.user_state.variables.iter_mut().enumerate() {
+                    ui.separator();
                     ui.horizontal(|ui| {
                         if ui.button("X").clicked() {
                             variable_scheduled_for_deletion = idx;
                         }
                         ui.label("Name");
                         ui.text_edit_singleline(&mut var.name);
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Param type");
+                        ComboBox::from_id_salt(format!("var{idx}"))
+                            .selected_text(var.typ_and_default_value.get_ui_name())
+                            .show_ui(ui, |ui| {
+                                for typ in PulseValueType::get_variable_supported_types() {
+                                    let name = typ.get_ui_name();
+                                    if ui.selectable_value(&mut var.typ_and_default_value,
+                                         typ,
+                                         name
+                                    ).clicked() {
+                                        // if the type is changed, update the variable data.
+                                        update_variable_data(var);
+                                    }
+                                }
+                            });
                     });
                     ui.horizontal(|ui| {
                         // change the label text if we're working on an EHandle type, as it can't have a default value.
@@ -1200,23 +1215,6 @@ impl eframe::App for PulseGraphEditor {
                             }
                         }
                             
-                    });
-                    ui.horizontal(|ui| {
-                        ui.label("Param type");
-                        ComboBox::from_id_salt(format!("var{idx}"))
-                            .selected_text(var.typ_and_default_value.get_ui_name())
-                            .show_ui(ui, |ui| {
-                                for typ in PulseValueType::get_variable_supported_types() {
-                                    let name = typ.get_ui_name();
-                                    if ui.selectable_value(&mut var.typ_and_default_value,
-                                         typ,
-                                         name
-                                    ).clicked() {
-                                        // if the type is changed, update the variable data.
-                                        update_variable_data(var);
-                                    }
-                                }
-                            });
                     });
                 }
             });

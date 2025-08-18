@@ -930,7 +930,8 @@ impl eframe::App for PulseGraphEditor {
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui: &mut egui::Ui| {
-                if ui.button("Compile").clicked() {
+                if ui.button("Compile").clicked()
+                    || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::R)) {
                     if let Err(e) =
                         compile_graph(&self.state.graph, &self.user_state, 
                             #[cfg(feature = "nongame_asset_build")]&self.editor_config)

@@ -1,4 +1,4 @@
-use std::{borrow::Cow, collections::HashMap};
+use std::borrow::Cow;
 use egui_node_graph2::*;
 use eframe::egui::Color32;
 use eframe::egui::{self, ComboBox, DragValue};
@@ -398,7 +398,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
     fn user_data(&self, _user_state: &mut Self::UserState) -> Self::NodeData {
         PulseNodeData {
             template: *self,
-            custom_named_outputs: HashMap::new(),
+            custom_named_outputs: Default::default(),
             input_hint_text: None,
             custom_output_type: None,
         }

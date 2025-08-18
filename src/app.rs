@@ -6,6 +6,7 @@ mod migrations;
 
 use std::{path::PathBuf, fs, thread};
 use core::panic;
+use eframe::egui::Vec2;
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
@@ -722,6 +723,47 @@ impl PulseGraphEditor {
         }
         Ok(())
     }
+    fn clone_node(&mut self, source_node_id: NodeId, pos_offset: egui::Vec2) -> NodeId {
+        let source_node_data = self.state.graph.nodes.get(source_node_id).unwrap();
+        let source_label = source_node_data.label.clone();
+        let source_user_data = source_node_data.user_data.clone();
+        let inputs = source_node_data.inputs.clone();
+        let outputs = source_node_data.outputs.clone();
+        let new_node = self.state.graph.add_node(
+            source_label,
+            source_user_data,
+            |grph, node_id| {
+                // clone inputs
+                // no input names in InputParam directly, they're stored directly in the node as vec of tuples
+                for (input_name, input_id) in inputs {
+                    let input_param = grph.get_input(input_id);
+                    grph.add_input_param(
+                        node_id,
+                        input_name,
+                        input_param.typ.clone(),
+                        input_param.value.clone(),
+                        input_param.kind,
+                        true,
+                    );
+                }
+                // clone outputs
+                for (output_name, output_id) in outputs {
+                    let output_param = grph.get_output(output_id);
+                    grph.add_output_param(
+                        node_id,
+                        output_name,
+                        output_param.typ.clone(),
+                    );
+                }
+            }
+        );
+        // unwraps should basically never fail, otherwise there would be bigger issues.
+        let orig_pos = self.state.node_positions.get(source_node_id).unwrap();
+        self.state.node_positions.insert(new_node,*orig_pos + pos_offset);
+        self.state.node_sizes.insert(new_node, *self.state.node_sizes.get(source_node_id).unwrap());
+        self.state.node_order.push(new_node);
+        new_node
+    }
 }
 
 impl PulseGraphEditor {
@@ -945,6 +987,16 @@ impl eframe::App for PulseGraphEditor {
                                 .show();
                         }
                     }
+                }
+                if ctx.input(|i| i.modifiers.shift && i.key_released(egui::Key::D)) {
+                    let selected_nodes: Vec<_> = self.state.selected_nodes.to_vec();
+                    let mut new_nodes: Vec<_> = vec![];
+                    for node_id in selected_nodes {
+                        new_nodes.push(
+                            self.clone_node(node_id, Vec2::new(20.0, 20.0))
+                        );
+                    }
+                    self.state.selected_nodes = new_nodes;
                 }
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::TOP), |ui| {
                     if ui.button("Check for updates").clicked() {

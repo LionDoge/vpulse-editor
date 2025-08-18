@@ -1,4 +1,4 @@
-use std::{collections::HashMap, path::PathBuf, borrow::Cow};
+use std::{path::PathBuf, borrow::Cow};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
 use egui_node_graph2::*;
@@ -9,11 +9,13 @@ use crate::bindings::{GraphBindings, FunctionBinding, EventBinding};
 /// The NodeData holds a custom data struct inside each node. It's useful to
 /// store additional information that doesn't live in parameters. For this
 /// example, the node data stores the template (i.e. the "type") of the node.
-#[derive(Default)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
-    pub custom_named_outputs: HashMap<OutputId, CustomOutputInfo>,
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub custom_named_outputs: EmptyStruct,
     pub input_hint_text: Option<Cow<'static, str>>,
     // used for polymorphic output types
     pub custom_output_type: Option<PulseValueType>,
@@ -278,3 +280,8 @@ pub type MyEditorState = GraphEditorState<
     PulseNodeTemplate,
     PulseGraphState,
 >;
+
+// compatibility shenanigans
+#[derive(Default, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+pub struct EmptyStruct; 

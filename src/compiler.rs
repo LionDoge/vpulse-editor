@@ -471,6 +471,8 @@ pub fn compile_graph(
     graph_def.public_outputs = graph_state.public_outputs.clone();
     graph_def.map_name = String::from("maps/main.vmap");
     graph_def.xml_name = String::default();
+    graph_def.graph_domain = graph_state.graph_domain.clone();
+    graph_def.graph_subtype = graph_state.graph_subtype.clone();
 
     match traverse_inflow_nodes(graph, &mut graph_def, graph_state) {
         Ok(true) => {

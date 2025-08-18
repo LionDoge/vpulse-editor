@@ -241,6 +241,11 @@ pub struct PulseGraphState {
     pub save_file_path: Option<PathBuf>,
     #[cfg_attr(feature = "persistence", serde(skip))]
     pub bindings: GraphBindings,
+
+    #[cfg_attr(feature = "persistence", serde(default))]
+    pub graph_domain: String,
+    #[cfg_attr(feature = "persistence", serde(default))]
+    pub graph_subtype: String,
 }
 
 // Compare this snippet from src/instruction_templates.rs:

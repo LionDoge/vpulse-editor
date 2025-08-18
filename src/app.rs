@@ -96,6 +96,13 @@ impl PulseGraphEditor {
                 }
             }
         }
+        // this fills out the default domain and subdomain if they're not set at launch time
+        if self.user_state.graph_domain.is_empty() {
+            self.user_state.graph_domain = "ServerEntity".to_string();
+        }
+        if self.user_state.graph_subtype.is_empty() {
+            self.user_state.graph_subtype = "PVAL_EHANDLE:point_pulse".to_string();
+        }
     }
     fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(&filepath)?;
@@ -1019,6 +1026,18 @@ impl eframe::App for PulseGraphEditor {
         let mut variable_scheduled_for_deletion: usize = usize::MAX;
         let mut output_node_updates = vec![];
         egui::SidePanel::left("left_panel").show(ctx, |ui| {
+            egui::CollapsingHeader::new("Advanced")
+                .default_open(false)
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label("Graph domain").on_hover_text("Suggests which context the graph can be used in, and what features are available.");
+                        ui.text_edit_singleline(&mut self.user_state.graph_domain);
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Graph sub-type").on_hover_text("The type on which the graph will be ran on eg. point entity/model entity/panel.");
+                        ui.text_edit_singleline(&mut self.user_state.graph_subtype);
+                    });
+                });
             egui::ScrollArea::vertical().show(ui, |ui| {
                 ui.label("Outputs:");
                 if ui.button("Add output").clicked() {

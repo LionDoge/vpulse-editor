@@ -857,6 +857,8 @@ pub struct PulseGraphDef {
     pub call_infos: Vec<CallInfo>,
     pub map_name: String,
     pub xml_name: String,
+    pub graph_domain: String,
+    pub graph_subtype: String,
 }
 impl PulseGraphDef {
     pub fn create_chunk(&mut self) -> i32 {
@@ -991,8 +993,8 @@ impl KV3Serialize for PulseGraphDef {
                 [
                     {}
                 ]
-                m_DomainIdentifier = \"ServerEntity\"
-                m_DomainSubType = \"PVAL_EHANDLE:point_pulse\"
+                m_DomainIdentifier = \"{}\"
+                m_DomainSubType = \"{}\"
                 m_ParentMapName = \"{}\"
                 m_ParentXmlName = \"{}\"
                 m_vecGameBlackboards = []
@@ -1034,6 +1036,7 @@ impl KV3Serialize for PulseGraphDef {
             , self.cells.iter().map(|cell| {
                 cell.serialize()
             }).collect::<Vec<_>>().join(",\n\n")
+            , self.graph_domain, self.graph_subtype
             , self.map_name, self.xml_name
             , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<_>>().join(",\n\n")
             , self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect::<Vec<_>>().join(",\n\n")

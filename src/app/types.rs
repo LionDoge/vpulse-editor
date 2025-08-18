@@ -200,6 +200,8 @@ pub enum PulseNodeTemplate {
     And,
     Or,
     Not,
+    RandomInt,
+    RandomFloat,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

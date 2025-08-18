@@ -326,6 +326,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::And => "And".into(),
             PulseNodeTemplate::Or => "Or".into(),
             PulseNodeTemplate::Not => "Not".into(),
+            PulseNodeTemplate::RandomFloat => "Random float".into(),
+            PulseNodeTemplate::RandomInt => "Random int".into(),
         }
     }
 
@@ -351,7 +353,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::Or
             | PulseNodeTemplate::Not => vec!["Logic"],
             PulseNodeTemplate::Operation 
-            | PulseNodeTemplate::ScaleVector => vec!["Math"],
+            | PulseNodeTemplate::ScaleVector
+            | PulseNodeTemplate::RandomFloat
+            | PulseNodeTemplate::RandomInt => vec!["Math"],
             PulseNodeTemplate::ConcatString => vec!["String"],
             PulseNodeTemplate::CellWait | PulseNodeTemplate::Timeline => vec!["Timing"],
             PulseNodeTemplate::GetVar 
@@ -1024,6 +1028,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_bool(graph, "in", InputParamKind::ConnectionOrConstant);
                 output_bool(graph, "out");
             }
+            PulseNodeTemplate::RandomFloat
+            | PulseNodeTemplate::RandomInt => {
+                input_scalar(graph, "min", InputParamKind::ConnectionOrConstant, 0.0);
+                input_scalar(graph, "max", InputParamKind::ConnectionOrConstant, 10.0);
+                output_scalar(graph, "out");
+            }
         }
     }
 }
@@ -1080,6 +1090,11 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ScaleVector,
             PulseNodeTemplate::ReturnValue,
             PulseNodeTemplate::ForEach,
+            PulseNodeTemplate::And,
+            PulseNodeTemplate::Or,
+            PulseNodeTemplate::Not,
+            PulseNodeTemplate::RandomInt,
+            PulseNodeTemplate::RandomFloat,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1587,7 +1602,9 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::Comment
             | PulseNodeTemplate::SetAnimGraphParam
             | PulseNodeTemplate::ReturnValue
-            | PulseNodeTemplate::ScaleVector => None,
+            | PulseNodeTemplate::ScaleVector
+            | PulseNodeTemplate::RandomFloat
+            | PulseNodeTemplate::RandomInt => None,
         }
     }
 

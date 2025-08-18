@@ -814,6 +814,32 @@ impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
     }
 }
 
+impl KV3Serialize for CPulseCell_Value_RandomInt {
+    fn serialize(&self) -> String {
+        formatdoc! {
+            "
+            {{
+                _class = \"CPulseCell_Value_RandomInt\"
+                m_nEditorNodeID = -1
+            }}
+            "
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Value_RandomFloat {
+    fn serialize(&self) -> String {
+        formatdoc! {
+            "
+            {{
+                _class = \"CPulseCell_Value_RandomFloat\"
+                m_nEditorNodeID = -1
+            }}
+            "
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,

@@ -260,3 +260,19 @@ impl CPulseCell_Step_SetAnimGraphParam {
         Self { param_name }
     }
 }
+#[derive(Default)]
+pub struct CPulseCell_Value_RandomInt;
+
+impl PulseCell for CPulseCell_Value_RandomInt {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Value
+    }
+}
+#[derive(Default)]
+pub struct CPulseCell_Value_RandomFloat;
+
+impl PulseCell for CPulseCell_Value_RandomFloat {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Value
+    }
+}

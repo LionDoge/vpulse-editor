@@ -2979,6 +2979,80 @@ fn traverse_nodes_and_populate<'a>(
             graph_def.add_chunk_instruction(target_chunk as usize, instr);
             return Ok(reg_out);
         }
+        PulseNodeTemplate::RandomInt => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let min = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "min",
+                PulseValueType::PVAL_INT(None),
+                false,
+            )?;
+            let max = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "max",
+                PulseValueType::PVAL_INT(None),
+                false,
+            )?;
+            let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_INT".to_string(), None)
+                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
+            let mut reg_map = reg_map_setup_inputs!(
+                "nMin",
+                min,
+                "nMax",
+                max
+            );
+            reg_map.add_outparam("retval".into(), reg_out);
+            add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomInt), reg_map, target_chunk, "Eval".into());
+            return Ok(reg_out);
+        }
+        PulseNodeTemplate::RandomFloat => {
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            let min = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "min",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            )?;
+            let max = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "max",
+                PulseValueType::PVAL_FLOAT(None),
+                false,
+            )?;
+            let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_FLOAT".to_string(), None)
+                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
+            let mut reg_map = reg_map_setup_inputs!(
+                "flMin",
+                min,
+                "flMax",
+                max
+            );
+            reg_map.add_outparam("retval".into(), reg_out);
+            add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomFloat), reg_map, target_chunk, "Eval".into());
+            return Ok(reg_out);
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

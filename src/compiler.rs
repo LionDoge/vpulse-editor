@@ -1516,12 +1516,6 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::Convert => {
             let mut register = try_find_output_mapping(graph_def, output_id);
             if register == -1 {
-                let type_from = get_constant_graph_input_value!(
-                    graph,
-                    current_node,
-                    "typefrom",
-                    try_pulse_type
-                );
                 let mut type_to =
                     get_constant_graph_input_value!(graph, current_node, "typeto", try_pulse_type);
                 if type_to == PulseValueType::PVAL_EHANDLE(None) {
@@ -1540,7 +1534,7 @@ fn traverse_nodes_and_populate<'a>(
                     graph_state,
                     target_chunk,
                     "input",
-                    type_from.clone(),
+                    PulseValueType::PVAL_ANY,
                     false,
                 )?;
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();

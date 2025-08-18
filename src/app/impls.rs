@@ -751,11 +751,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::Convert => {
-                input_typ(graph, "typefrom", PulseValueType::PVAL_INT(None));
                 input_typ(graph, "typeto", PulseValueType::PVAL_STRING(None));
                 input_string(graph, "entityclass", InputParamKind::ConstantOnly);
-                input_scalar(graph, "input", InputParamKind::ConnectionOrConstant, 0.0);
-                output_scalar(graph, "out");
+                input_any(graph, "input");
+                output_string(graph, "out");
             }
             PulseNodeTemplate::ForLoop => {
                 input_action(graph);

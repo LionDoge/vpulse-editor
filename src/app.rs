@@ -78,22 +78,66 @@ impl PulseGraphEditor {
                 self.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
             }
         }
-        // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
         let nodes = &mut self.state.graph.nodes;
-        for (_node_id, node) in nodes.iter_mut() {
-            if let PulseNodeTemplate::LibraryBindingAssigned { binding } = &node.user_data.template {
-                if let Some(binding) = self.user_state.get_library_binding_from_index(binding) {
-                    if binding.inparams.is_none() {
-                        continue;
-                    }
-                    let nodes = node.inputs.iter_mut().filter(|input| {
-                        let nam_lowercase = input.0.to_lowercase();
-                        !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
-                    });
-                    for (input, param) in nodes.zip(binding.inparams.as_ref().unwrap().iter()) {
-                        input.0 = param.name.clone();
+        let mut sound_event_nodes = vec![];
+        for (node_id, node) in nodes.iter_mut() {
+            match node.user_data.template {
+                // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
+                PulseNodeTemplate::LibraryBindingAssigned { binding } => {
+                    if let Some(binding) = self.user_state.get_library_binding_from_index(&binding) {
+                        if binding.inparams.is_none() {
+                            continue;
+                        }
+                        let nodes = node.inputs.iter_mut().filter(|input| {
+                            let nam_lowercase = input.0.to_lowercase();
+                            !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
+                        });
+                        for (input, param) in nodes.zip(binding.inparams.as_ref().unwrap().iter()) {
+                            input.0 = param.name.clone();
+                        }
                     }
                 }
+                // v0.3.1 we added sound event source input.
+                PulseNodeTemplate::SoundEventStart => {
+                    // if the input is not present, add it to a list, and then add the input later
+                    // can't do it here because of borrow checker
+                    if node.get_input("soundEventType").is_err() {
+                        sound_event_nodes.push(node_id);
+                    }
+                }
+                _ => (),
+            }
+        }
+        for node_id in sound_event_nodes {
+            self.state.graph.add_input_param(
+                node_id,
+                "soundEventType".to_string(),
+                PulseDataType::GeneralEnum,
+                PulseGraphValueType::GeneralEnumChoice {
+                    value: GeneralEnumChoice::SoundEventStartType(SoundEventStartType::default())
+                },
+                InputParamKind::ConstantOnly,
+                true,
+            );
+            // TODO: would be good to have some publically accessible simplifications for adding common inputs
+            self.state.graph.add_input_param(
+                node_id,
+                "ActionIn".to_string(),
+                PulseDataType::Action,
+                PulseGraphValueType::Action,
+                InputParamKind::ConnectionOnly,
+                true,
+            );
+            self.state.graph.add_output_param(node_id, "outAction".to_string(), PulseDataType::Action);
+            // all of this below is just to move the input action to the top, since the library doesn't really make that easy.
+            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
+            let mut input_id = None;
+            node.inputs.retain(|input| {
+                input_id = Some(input.1);
+                input.0 != "ActionIn"
+            });
+            if let Some(input_id) = input_id {
+                node.inputs.insert(0,("ActionIn".to_string(), input_id));
             }
         }
         // this fills out the default domain and subdomain if they're not set at launch time

@@ -548,8 +548,8 @@ impl KV3Serialize for PulseConstant {
                 }
             },
             match self {
-                PulseConstant::String(value)
-                | PulseConstant::SoundEventName(value) => format!("soundevent:\"{value}\""),
+                PulseConstant::String(value) => format!("\"{value}\""),
+                PulseConstant::SoundEventName(value) => format!("soundevent:\"{value}\""),
                 PulseConstant::Float(value) => format!("{value:.8}"),
                 PulseConstant::Integer(value) => value.to_string(),
                 PulseConstant::Vec2(value) => format!("[{:.3}, {:.3}]", value.x, value.y),

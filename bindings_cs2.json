@@ -1531,7 +1531,7 @@
         ]
     },
     {
-        "type": "value",
+        "type": "action",
         "displayname": "Particle - Create Effect",
         "libname": "CPulseFuncs_GameParticleManager::CreateEffect",
         "description": "Create an instance of the specified particle system definition - returns a handle that can be used to modify or destroy the effect.",
@@ -1670,7 +1670,7 @@
         ]
     },
     {
-        "type": "value",
+        "type": "action",
         "displayname": "point_template: Force Spawn At Location",
         "libname": "CPointTemplateAPI::ForceSpawnAtLocation",
         "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",

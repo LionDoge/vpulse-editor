@@ -115,12 +115,9 @@ pub fn compile_node(
         }
     }
     // set the current returned register to the output that was requested (if any)
-    let reg_output = if let Some(output_id) = output_id {
-        remembered_outputs.get(*output_id).copied().unwrap_or(-1)
-    } else {
-        println!("Warning: InvokeLibraryBinding node: Output requested, but not present as a parameter, using -1 as default register output");
-        -1
-    };
+    let result = output_id.as_ref()
+        .map(|output_id| remembered_outputs.get(*output_id).copied().unwrap_or(-1));
+    // InvokeLibraryBinding node: Saved output ID not found right after generation, this is a bug
     graph_def.add_register_mapping_node_outputs(current_node.id, remembered_outputs);
     let invoke_binding = InvokeBinding {
         register_map,
@@ -133,8 +130,5 @@ pub fn compile_node(
     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
     chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
     graph_def.add_invoke_binding(invoke_binding);
-    match binding.typ {
-        LibraryBindingType::Action => Ok(None),
-        LibraryBindingType::Value => Ok(Some(reg_output)),
-    }
+    Ok(result)
 }

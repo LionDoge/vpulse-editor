@@ -1986,6 +1986,9 @@ fn traverse_nodes_and_populate<'a>(
         }
         PulseNodeTemplate::InvokeLibraryBinding
         | PulseNodeTemplate::LibraryBindingAssigned { .. } => {
+            // if action, then continue without returning, in other case return the output register, 
+            // if action was connected already and is requested again later then it will reuse saved outputs
+            // if output was eval'ed first and then action (usually shouldn't happen) then node will be fully evaluated again.
             if let Some(reg_out) =  nodes::invoke_binding::compile_node(graph, current_node, graph_def, graph_state, target_chunk, output_id)? {
                 return Ok(reg_out);
             } else {

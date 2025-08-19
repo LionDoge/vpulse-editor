@@ -838,12 +838,14 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::SoundEventStart => {
+                input_action(graph);
                 input_sndevt_name(
                     graph,
                     "strSoundEventName",
                     InputParamKind::ConnectionOrConstant,
                 );
                 input_ehandle(graph, "hTargetEntity");
+                output_action(graph, "outAction");
                 graph.add_output_param(node_id, "retval".into(), PulseDataType::SndEventHandle);
             }
             PulseNodeTemplate::Function => {

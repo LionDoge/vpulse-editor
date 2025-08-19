@@ -9,7 +9,6 @@ use crate::app::types::{
     PulseDataType, PulseGraph, PulseGraphState, PulseGraphValueType, PulseNodeData,
     PulseNodeTemplate,
 };
-use crate::bindings::LibraryBindingType;
 use crate::pulsetypes::*;
 use crate::typing::get_preffered_inputparamkind_from_type;
 use crate::typing::PulseValueType;
@@ -836,7 +835,7 @@ fn traverse_nodes_and_populate<'a>(
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
     target_chunk: i32,
-    output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, (not action)
+    output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, always None for when node was reached through an action.
     source_input_name: &Option<Cow<'a, str>>, // mostly useful for traversing to next actions. It lets know about what action was specified for nodes that have multiple action inputs
 ) -> anyhow::Result<i32> {
     match current_node.user_data.template {
@@ -2291,53 +2290,62 @@ fn traverse_nodes_and_populate<'a>(
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::SoundEventStart => {
-            let mut reg_out = try_find_output_mapping(graph_def, output_id);
-            if reg_out == -1 {
-                let reg_soundevent = get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "strSoundEventName",
-                    PulseValueType::PVAL_SNDEVT_NAME(None),
-                    false,
-                )?;
-                let reg_target_entity = get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "hTargetEntity",
-                    PulseValueType::PVAL_EHANDLE(None),
-                    false,
-                )?;
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                let instr = chunk.get_last_instruction_id() + 1;
-                reg_out =
-                    chunk.add_register(PulseValueType::PVAL_SNDEVT_GUID(None).to_string(), instr);
-                if let Some(out) = output_id {
-                    graph_def.add_register_mapping(*out, reg_out);
+            if output_id.is_some() {
+                let reg_out = try_find_output_mapping(graph_def, output_id);
+                if reg_out > -1 {
+                    return Ok(reg_out);
                 }
-                let mut register_map = reg_map_setup_inputs!(
-                    "strSoundEventName",
-                    reg_soundevent,
-                    "hTargetEntity",
-                    reg_target_entity
-                );
-                register_map.add_outparam("retval".into(), reg_out);
-                let cell =
-                    CPulseCell_SoundEventStart::new(SoundEventStartType::SOUNDEVENT_START_ENTITY);
-                add_cell_and_invoking(
-                    graph_def,
-                    Box::new(cell),
-                    register_map,
-                    target_chunk,
-                    "Run".into(),
-                );
             }
-            return Ok(reg_out);
+            let reg_soundevent = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "strSoundEventName",
+                PulseValueType::PVAL_SNDEVT_NAME(None),
+                false,
+            )?;
+            let reg_target_entity = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "hTargetEntity",
+                PulseValueType::PVAL_EHANDLE(None),
+                false,
+            )?;
+            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
+            let instr = chunk.get_last_instruction_id() + 1;
+
+            let reg_out =
+                chunk.add_register(PulseValueType::PVAL_SNDEVT_GUID(None).to_string(), instr);
+            if let Some(out) = output_id {
+                graph_def.add_register_mapping(*out, reg_out);
+            }
+            let mut register_map = reg_map_setup_inputs!(
+                "strSoundEventName",
+                reg_soundevent,
+                "hTargetEntity",
+                reg_target_entity
+            );
+            register_map.add_outparam("retval".into(), reg_out);
+            let cell =
+                CPulseCell_SoundEventStart::new(SoundEventStartType::SOUNDEVENT_START_ENTITY);
+            add_cell_and_invoking(
+                graph_def,
+                Box::new(cell),
+                register_map,
+                target_chunk,
+                "Run".into(),
+            );
+            
+            if output_id.is_some() {
+                return Ok(reg_out);
+            } else {
+                graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            }
         }
         PulseNodeTemplate::CallNode => {
             // CallNode is a special node that is used to call another node, which is defined by the template.

@@ -4,7 +4,7 @@ use std::str::FromStr;
 use strum::VariantArray as _;
 use strum_macros::VariantArray;
 
-pub trait SchemaEnumTrait {
+pub trait PulseEnumTrait {
     fn to_str(self) -> &'static str;
     fn to_str_ui(&self) -> &'static str;
 }
@@ -194,7 +194,7 @@ impl SchemaEnumValue {
     }
 }
 
-impl SchemaEnumTrait for PulseCursorCancelPriority {
+impl PulseEnumTrait for PulseCursorCancelPriority {
     fn to_str(self) -> &'static str {
         match self {
             PulseCursorCancelPriority::None => "None",
@@ -213,7 +213,7 @@ impl SchemaEnumTrait for PulseCursorCancelPriority {
     }
 }
 
-impl SchemaEnumTrait for PulseTraceContents {
+impl PulseEnumTrait for PulseTraceContents {
     fn to_str(self) -> &'static str {
         match self {
             PulseTraceContents::StaticLevel => "STATIC_LEVEL",
@@ -228,7 +228,7 @@ impl SchemaEnumTrait for PulseTraceContents {
     }
 }
 
-impl SchemaEnumTrait for PulseCollisionGroup {
+impl PulseEnumTrait for PulseCollisionGroup {
     fn to_str(self) -> &'static str {
         match self {
             PulseCollisionGroup::Default => "DEFAULT",
@@ -241,7 +241,7 @@ impl SchemaEnumTrait for PulseCollisionGroup {
     }
 }
 
-impl SchemaEnumTrait for ParticleAttachment {
+impl PulseEnumTrait for ParticleAttachment {
     fn to_str(self) -> &'static str {
         match self {
             ParticleAttachment::AbsOrigin => "PATTACH_ABSORIGIN",
@@ -284,7 +284,7 @@ impl SchemaEnumTrait for ParticleAttachment {
     }
 }
 
-impl SchemaEnumTrait for BaseExplosionTypes {
+impl PulseEnumTrait for BaseExplosionTypes {
     fn to_str(self) -> &'static str {
         match self {
             BaseExplosionTypes::Default => "EXPLOSION_TYPE_DEFAULT",
@@ -323,6 +323,55 @@ impl SchemaEnumTrait for BaseExplosionTypes {
             BaseExplosionTypes::Ice => "Ice",
             BaseExplosionTypes::None => "None",
             BaseExplosionTypes::Custom => "Custom",
+        }
+    }
+}
+
+//----------------- CELL RELATED ENUMS -----------------//
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum GeneralEnumChoice {
+    SoundEventStartType(SoundEventStartType),
+}
+#[allow(unused)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum SoundEventStartType {
+    Player,
+    World,
+    #[default]
+    Entity,
+}
+
+impl GeneralEnumChoice {
+    pub fn get_all_choices(&self) -> Vec<GeneralEnumChoice> {
+        match self {
+            GeneralEnumChoice::SoundEventStartType(_) => {
+                SoundEventStartType::VARIANTS
+                    .iter()
+                    .map(|&v| GeneralEnumChoice::SoundEventStartType(v))
+                    .collect()
+            }
+        }
+    }
+    pub fn to_str_ui(&self) -> &'static str {
+        match self {
+            GeneralEnumChoice::SoundEventStartType(value) => value.to_str_ui(),
+        }
+    }
+}
+
+impl PulseEnumTrait for SoundEventStartType {
+    fn to_str(self) -> &'static str {
+        match self {
+            SoundEventStartType::Player => "SOUNDEVENT_START_PLAYER",
+            SoundEventStartType::World => "SOUNDEVENT_START_WORLD",
+            SoundEventStartType::Entity => "SOUNDEVENT_START_ENTITY",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            SoundEventStartType::Player => "Player",
+            SoundEventStartType::World => "World",
+            SoundEventStartType::Entity => "Entity",
         }
     }
 }

@@ -185,6 +185,14 @@ impl PulseGraphValueType {
             anyhow::bail!("Invalid cast from {:?} to schema enum", self)
         }
     }
+    
+    pub fn try_general_enum(self) -> anyhow::Result<GeneralEnumChoice> {
+        if let PulseGraphValueType::GeneralEnumChoice { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to general enum", self)
+        }
+    }
 }
 
 // A trait for the data types, to tell the library how to display them
@@ -212,6 +220,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
             PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::GeneralEnum => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::CommentBox => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Vec4 => egui::Color32::from_rgb(210, 238, 109),
             PulseDataType::QAngle => egui::Color32::from_rgb(240, 252, 194),
@@ -247,6 +256,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
             PulseDataType::Any => Cow::Borrowed("Any type"),
             PulseDataType::SchemaEnum => Cow::Borrowed("Schema enum"),
+            PulseDataType::GeneralEnum => Cow::Borrowed("Enum"),
             PulseDataType::CommentBox => Cow::Borrowed("Comment box"),
             PulseDataType::Vec4 => Cow::Borrowed("4d vector"),
             PulseDataType::QAngle => Cow::Borrowed("QAngle"),
@@ -553,6 +563,18 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 true,
             );
         };
+        let input_general_enum = |graph: &mut PulseGraph, name: &str, enum_type: GeneralEnumChoice| {
+            graph.add_input_param(
+                node_id,
+                name.to_string(),
+                PulseDataType::GeneralEnum,
+                PulseGraphValueType::GeneralEnumChoice {
+                    value: enum_type,
+                },
+                InputParamKind::ConstantOnly,
+                true,
+            );
+        };
         let output_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
         };
@@ -843,6 +865,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     graph,
                     "strSoundEventName",
                     InputParamKind::ConnectionOrConstant,
+                );
+                input_general_enum(
+                    graph,
+                    "soundEventType",
+                    GeneralEnumChoice::SoundEventStartType(SoundEventStartType::default()),
                 );
                 input_ehandle(graph, "hTargetEntity");
                 output_action(graph, "outAction");
@@ -1436,6 +1463,20 @@ impl WidgetValueTrait for PulseGraphValueType {
             }
             PulseGraphValueType::TypeSafeInteger { integer_type } => {
                 ui.label(&**integer_type);
+            }
+            PulseGraphValueType::GeneralEnumChoice { value } => {
+                ui.horizontal(|ui| {
+                    ui.label(param_name);
+                    ComboBox::from_id_salt((_node_id, param_name))
+                        .width(0.0)
+                        .selected_text(value.to_str_ui())
+                        .show_ui(ui, |ui| {
+                            for choice in value.get_all_choices().iter() {
+                                let str = choice.to_str_ui();
+                                ui.selectable_value::<GeneralEnumChoice>(value, choice.clone(), str);
+                            }
+                        });
+                });
             }
         }
         // This allows you to return your responses from the inline widgets.

@@ -80,7 +80,7 @@ macro_rules! get_constant_graph_input_value {
         )?;
         input_param.value.clone().$typ_func().map_err(|e| {
             anyhow::anyhow!(e).context(format!(
-                "Get constant input value for {} node {:?}",
+                "Get constant input value conversion for {} node {:?}",
                 $input, $node.user_data.template
             ))
         })?
@@ -2316,6 +2316,21 @@ fn traverse_nodes_and_populate<'a>(
                 PulseValueType::PVAL_EHANDLE(None),
                 false,
             )?;
+            let enum_choice = get_constant_graph_input_value!(
+                graph,
+                current_node,
+                "soundEventType",
+                try_general_enum
+            );
+            #[allow(irrefutable_let_patterns)]
+            let event_start_type = if let GeneralEnumChoice::SoundEventStartType(choice) = enum_choice {
+                choice
+            } else {
+                anyhow::bail!(
+                    "SoundEventStart node: Expected SoundEventStartType, got {:?}",
+                    enum_choice
+                );
+            };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
 
@@ -2332,7 +2347,7 @@ fn traverse_nodes_and_populate<'a>(
             );
             register_map.add_outparam("retval".into(), reg_out);
             let cell =
-                CPulseCell_SoundEventStart::new(SoundEventStartType::SOUNDEVENT_START_ENTITY);
+                CPulseCell_SoundEventStart::new(event_start_type);
             add_cell_and_invoking(
                 graph_def,
                 Box::new(cell),

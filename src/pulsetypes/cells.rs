@@ -1,5 +1,6 @@
 #![allow(nonstandard_style)]
 use std::borrow::Cow;
+use super::enumerators::SoundEventStartType;
 use crate::compiler::serialization::{KV3Serialize, PulseRuntimeArgument, RegisterMap};
 
 #[allow(unused)]
@@ -168,13 +169,6 @@ impl CPulseCell_Outflow_IntSwitch {
 }
 
 // Other cells
-#[allow(unused)]
-pub enum SoundEventStartType {
-    SOUNDEVENT_START_PLAYER,
-    SOUNDEVENT_START_WORLD,
-    SOUNDEVENT_START_ENTITY,
-}
-
 pub struct CPulseCell_SoundEventStart {
     pub(crate) typ: SoundEventStartType,
 }

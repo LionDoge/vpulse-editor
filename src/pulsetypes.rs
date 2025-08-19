@@ -1,5 +1,5 @@
 mod cells;
-mod enumerators;
+pub mod enumerators;
 pub use cells::*;
 pub use enumerators::*;
 

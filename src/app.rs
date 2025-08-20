@@ -568,6 +568,13 @@ impl PulseGraphEditor {
                         InputParamKind::ConnectionOnly,
                         true,
                     );
+                    self.state.graph.add_input_param(*node_id,
+                        "Async".into(),
+                        PulseDataType::Bool,
+                        PulseGraphValueType::Bool { value: Default::default() },
+                        InputParamKind::ConstantOnly,
+                        true,
+                    );
                 }
                 PulseNodeTemplate::Timeline => {
                     self.state.graph.add_input_param(
@@ -991,6 +998,7 @@ impl eframe::App for PulseGraphEditor {
                 // User pressed the "Save" button or
                 if ui.button("Save").clicked()
                     || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::S))
+                    
                 {
                     // is path set? if yes then save, if not promt the user first
                     let mut perform_save: bool = true;
@@ -1040,7 +1048,8 @@ impl eframe::App for PulseGraphEditor {
                         }
                     }
                 }
-                if ctx.input(|i| i.modifiers.shift && i.key_released(egui::Key::D)) {
+                if !ctx.wants_keyboard_input() 
+                    && ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::D)) {
                     let selected_nodes: Vec<_> = self.state.selected_nodes.to_vec();
                     let mut new_nodes: Vec<_> = vec![];
                     for node_id in selected_nodes {

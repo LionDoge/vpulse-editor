@@ -2373,11 +2373,20 @@ fn traverse_nodes_and_populate<'a>(
 
                 match node.user_data.template {
                     PulseNodeTemplate::Function => {
-                        let instr = instruction_templates::call_sync(
+                        let mut instr = instruction_templates::call_sync(
                             add_call_reference(graph_def, target_chunk, call_instr_id),
                             remote_chunk_or_cell,
                             0,
                         );
+                        let is_async = get_constant_graph_input_value!(
+                            graph,
+                            current_node,
+                            "Async",
+                            try_to_bool
+                        );
+                        if is_async {
+                            instr.code = String::from("PULSE_CALL_ASYNC_FIRE");
+                        }
                         let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                         chunk.add_instruction(instr);
                     }

@@ -820,6 +820,10 @@ impl PulseGraphEditor {
         self.state.node_positions.insert(new_node,*orig_pos + pos_offset);
         self.state.node_sizes.insert(new_node, *self.state.node_sizes.get(source_node_id).unwrap());
         self.state.node_order.push(new_node);
+        // make sure exposed node info gets cloned as well (like function node)
+        if let Some(name) = self.user_state.exposed_nodes.get(source_node_id).cloned() {
+            self.user_state.exposed_nodes.insert(new_node, format!("{name} clone"));
+        }
         new_node
     }
 }

@@ -838,6 +838,21 @@ fn traverse_nodes_and_populate<'a>(
     output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, always None for when node was reached through an action.
     source_input_name: &Option<Cow<'a, str>>, // mostly useful for traversing to next actions. It lets know about what action was specified for nodes that have multiple action inputs
 ) -> anyhow::Result<i32> {
+    // to avoid having to pass the same parameters over and over again.
+    macro_rules! get_register {
+        ($name:expr, $typ:expr) => {
+            get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                $name,
+                $typ,
+                false,
+            )?
+        };
+    }
     match current_node.user_data.template {
         PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
@@ -848,17 +863,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(try_find_output_mapping(graph_def, output_id));
         }
         PulseNodeTemplate::CellWait => {
-            let reg_time = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "time",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-
+            let reg_time = get_register!("time", PulseValueType::PVAL_FLOAT(None));
             let register_map = reg_map_setup_inputs!("flDurationSec", reg_time);
             let cell = CPulseCell_Inflow_Wait::new(
                 target_chunk,
@@ -882,16 +887,7 @@ fn traverse_nodes_and_populate<'a>(
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::EntFire => {
-            let reg_entity = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "entity",
-                PulseValueType::DOMAIN_ENTITY_NAME,
-                false,
-            )?;
+            let reg_entity = get_register!("entity", PulseValueType::DOMAIN_ENTITY_NAME);
             let input_value =
                 get_constant_graph_input_value!(graph, current_node, "input", try_to_string);
             // this one might be empty, but we want to use it for OutputConnection if we know it at compile time.
@@ -918,16 +914,7 @@ fn traverse_nodes_and_populate<'a>(
 
             let mut reg_param = None;
             if param_value_exists {
-                reg_param = get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "value",
-                    PulseValueType::PVAL_STRING(None),
-                    false,
-                )?;
+                reg_param = get_register!("value", PulseValueType::PVAL_STRING(None));
             }
 
             // add invoke binding for FireAtName cell
@@ -1128,16 +1115,7 @@ fn traverse_nodes_and_populate<'a>(
                 .unwrap()
                 .typ_and_default_value
                 .clone();
-            let reg_value = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                typ,
-                false,
-            )?;
+            let reg_value = get_register!("value", typ);
             if let Some(reg_value) = reg_value {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 chunk.add_instruction(instruction_templates::set_var(reg_value, var_id.unwrap()));
@@ -1152,26 +1130,8 @@ fn traverse_nodes_and_populate<'a>(
             }
             let operation_typ =
                 get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
-            let reg_a = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "A",
-                operation_typ.clone(),
-                false,
-            )?;
-            let reg_b = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "B",
-                operation_typ.clone(),
-                false,
-            )?;
+            let reg_a = get_register!("A", operation_typ.clone());
+            let reg_b = get_register!("B", operation_typ.clone());
             let operation_input_param =
                 get_constant_graph_input_value!(graph, current_node, "operation", try_to_string);
             let operation_suffix = operation_typ.get_operation_suffix_name();
@@ -1206,26 +1166,8 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let reg_entity_class = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "entClass",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
-            let reg_entity_name = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "entName",
-                PulseValueType::DOMAIN_ENTITY_NAME,
-                false,
-            )?;
+            let reg_entity_class = get_register!("entClass", PulseValueType::PVAL_STRING(None));
+            let reg_entity_name = get_register!("entName", PulseValueType::DOMAIN_ENTITY_NAME);
             
             let new_binding_id = graph_def.get_current_binding_id() + 1;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1255,16 +1197,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::DebugWorldText => {
-            let reg_message = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "pMessage",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
+            let reg_message = get_register!("pMessage", PulseValueType::PVAL_STRING(None));
             // resolve connection to hEntity
             let hentity_input_id = current_node
                 .get_input("hEntity")
@@ -1274,79 +1207,14 @@ fn traverse_nodes_and_populate<'a>(
                 println!("No connection found for hEntity input in DebugWorldText node. Node will not be processed, next action won't execute.");
                 return Ok(-1);
             }
-            let reg_hentity = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "hEntity",
-                PulseValueType::PVAL_EHANDLE(None),
-                false,
-            )?;
+            let reg_hentity = get_register!("hEntity", PulseValueType::PVAL_EHANDLE(None));
             // other params
-            let reg_ntextoffset = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "nTextOffset",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
-            let reg_flduration = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "flDuration",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            let reg_flverticaloffset = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "flVerticalOffset",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            // color:
-            let reg_color = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "color",
-                PulseValueType::PVAL_COLOR_RGB(None),
-                false,
-            )?;
-            let reg_alpha = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "flAlpha",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            let reg_scale = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "flScale",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            // bAttached:
+            let reg_ntextoffset = get_register!("nTextOffset", PulseValueType::PVAL_INT(None));
+            let reg_flduration = get_register!("flDuration", PulseValueType::PVAL_FLOAT(None));
+            let reg_flverticaloffset = get_register!("flVerticalOffset", PulseValueType::PVAL_FLOAT(None));
+            let reg_color = get_register!("color", PulseValueType::PVAL_COLOR_RGB(None));
+            let reg_alpha = get_register!("flAlpha", PulseValueType::PVAL_FLOAT(None));
+            let reg_scale = get_register!("flScale", PulseValueType::PVAL_FLOAT(None));
             let attached =
                 get_constant_graph_input_value!(graph, current_node, "bAttached", try_to_bool);
             graph_def.add_constant(PulseConstant::Bool(attached));
@@ -1389,21 +1257,9 @@ fn traverse_nodes_and_populate<'a>(
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::DebugLog => {
-            let reg_message = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "pMessage",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
+            let reg_message = get_register!("pMessage", PulseValueType::PVAL_STRING(None));
             graph_def.cells.push(Box::from(CPulseCell_Step_DebugLog));
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_message) = reg_message {
-                register_map.add_inparam("pMessage".into(), reg_message);
-            }
+            let register_map = reg_map_setup_inputs!("pMessage", reg_message);
             let new_binding_id = graph_def.get_current_binding_id() + 1;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
@@ -1433,16 +1289,7 @@ fn traverse_nodes_and_populate<'a>(
                     .public_outputs
                     .get(pub_output)
                     .ok_or(anyhow!("Public output not found").context("FireOutput node"))?;
-                let reg_param = get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "param",
-                    output_info.typ.clone(),
-                    false,
-                )?;
+                let reg_param = get_register!("param", output_info.typ.clone());
                 graph_def
                 .cells
                 .push(Box::from(CPulseCell_Step_PublicOutput::new(
@@ -1486,20 +1333,8 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_output);
         }
         PulseNodeTemplate::SetNextThink => {
-            let reg_dt = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "dt",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
-            let mut register_map = RegisterMap::default();
-            if let Some(reg_dt) = reg_dt {
-                register_map.add_inparam("dt".into(), reg_dt);
-            }
+            let reg_dt = get_register!("dt", PulseValueType::PVAL_FLOAT(None));
+            let register_map = reg_map_setup_inputs!("dt", reg_dt);
             let new_binding_id = graph_def.get_current_binding_id() + 1;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
@@ -1528,16 +1363,7 @@ fn traverse_nodes_and_populate<'a>(
                     );
                     type_to = PulseValueType::PVAL_EHANDLE(Some(str_entclass));
                 }
-                let reg_input = get_input_register_or_create_constant(
-                    graph,
-                    current_node,
-                    graph_def,
-                    graph_state,
-                    target_chunk,
-                    "input",
-                    PulseValueType::PVAL_ANY,
-                    false,
-                )?;
+                let reg_input = get_register!("input", PulseValueType::PVAL_ANY);
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 register =
                     chunk.add_register(type_to.to_string(), chunk.get_last_instruction_id() + 1);
@@ -1552,26 +1378,8 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::Compare => {
             let compare_type =
                 get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
-            let reg_a = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "A",
-                compare_type.clone(),
-                false,
-            )?;
-            let reg_b = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "B",
-                compare_type.clone(),
-                false,
-            )?;
+            let reg_a = get_register!("A", compare_type.clone());
+            let reg_b = get_register!("B", compare_type.clone());
             // TODO: only EQ for now
             let mut instr_compare = Instruction {
                 code: format!("EQ{}", compare_type.get_operation_suffix_name()),
@@ -1727,36 +1535,12 @@ fn traverse_nodes_and_populate<'a>(
                     return Ok(-1);
                 }
             }
-            let reg_from = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "start",
-                PulseValueType::PVAL_INT(None),
-                false,
-            );
-            let reg_to = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "end",
-                PulseValueType::PVAL_INT(None),
-                false,
-            );
-            let reg_step = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "step",
-                PulseValueType::PVAL_INT(None),
-                false,
-            );
+            let reg_from = get_register!("start", PulseValueType::PVAL_INT(None))
+                .ok_or(anyhow!("ForLoop node: Failed to get 'start' register"))?;
+            let reg_to = get_register!("end", PulseValueType::PVAL_INT(None))
+                .ok_or(anyhow!("ForLoop node: Failed to get 'end' register"))?;
+            let reg_step = get_register!("step", PulseValueType::PVAL_INT(None))
+                .ok_or(anyhow!("ForLoop node: Failed to get 'step' register"))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // new constant = 1 for incrementing
             // new register and constant
@@ -1782,23 +1566,19 @@ fn traverse_nodes_and_populate<'a>(
                 .map_err(|e| anyhow!(e).context("ForLoop node"))?;
             graph_def.add_register_mapping(output_idx_id, reg_idx);
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let reg_from = reg_from?.ok_or(anyhow!(
-                "ForLoop node: Input 'from' somehow ended up resulting to None!"
-            ))?;
             let instr_copy = instruction_templates::copy_value(reg_idx, reg_from);
             chunk.add_instruction(instr_copy);
             let reg_cond = chunk.add_register(
                 String::from("PVAL_BOOL"),
                 chunk.get_last_instruction_id() + 1,
             );
-            let mut instr_compare = Instruction::default();
-            let reg_to = reg_to?.ok_or(anyhow!(
-                "ForLoop node: Input 'to' somehow ended up resulting to None!"
-            ))?;
-            instr_compare.code = String::from("LTE_INT");
-            instr_compare.reg0 = reg_cond;
-            instr_compare.reg1 = reg_idx;
-            instr_compare.reg2 = reg_to;
+            let instr_compare = Instruction {
+                code: String::from("LTE_INT"),
+                reg0: reg_cond,
+                reg1: reg_idx,
+                reg2: reg_to,
+                ..Default::default()
+            };
             let instr_compare_id = chunk.add_instruction(instr_compare);
             // jump over the unconditional jump to the end
             let instr_jump_cond =
@@ -1818,9 +1598,6 @@ fn traverse_nodes_and_populate<'a>(
             // borrow again (we know that it still is fine)
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // increment the index by step
-            let reg_step = reg_step?.ok_or(anyhow!(
-                "ForLoop node: Input 'step' somehow ended up resulting to None!"
-            ))?;
             let instr_add = instruction_templates::add_value(reg_idx, reg_step, reg_idx);
             chunk.add_instruction(instr_add);
 
@@ -1947,16 +1724,7 @@ fn traverse_nodes_and_populate<'a>(
             );
         }
         PulseNodeTemplate::StringToEntityName => {
-            let reg_input = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "entityName",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
+            let reg_input = get_register!("pStr", PulseValueType::PVAL_STRING(None));
             let mut reg_out = try_find_output_mapping(graph_def, output_id);
             if reg_out == -1 {
                 let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, I've put it here because borrow checker
@@ -2001,47 +1769,10 @@ fn traverse_nodes_and_populate<'a>(
             }
             let classname_static =
                 get_constant_graph_input_value!(graph, current_node, "classname", try_to_string);
-            let reg_classname = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "classname",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
-            let reg_searchfroment = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "pSearchFromEntity",
-                PulseValueType::PVAL_EHANDLE(None),
-                false,
-            )?;
-            let reg_radius = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "flSearchRadius",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            // connection only
-            let reg_startentity = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "pStartEntity",
-                PulseValueType::PVAL_EHANDLE(None),
-                false,
-            )?;
+            let reg_classname = get_register!("classname", PulseValueType::PVAL_STRING(None));
+            let reg_searchfroment = get_register!("pSearchFromEntity", PulseValueType::PVAL_EHANDLE(None));
+            let reg_radius = get_register!("flSearchRadius", PulseValueType::PVAL_FLOAT(None));
+            let reg_startentity = get_register!("pStartEntity", PulseValueType::PVAL_EHANDLE(None));
             let mut reg_map = reg_map_setup_inputs!(
                 "entityType",
                 reg_classname,
@@ -2075,26 +1806,8 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::CompareOutput => {
             let compare_type =
                 get_constant_graph_input_value!(graph, current_node, "type", try_pulse_type);
-            let reg_a = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "A",
-                compare_type.clone(),
-                false,
-            )?;
-            let reg_b = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "B",
-                compare_type.clone(),
-                false,
-            )?;
+            let reg_a = get_register!("A", compare_type.clone());
+            let reg_b = get_register!("B", compare_type.clone());
             // value that we will match to generate a operation
             // this might get turned into a proper enum at some point
             let compare_value =
@@ -2117,31 +1830,32 @@ fn traverse_nodes_and_populate<'a>(
                     chunk.add_instruction(instr_compare);
                     reg_cond
                 };
+            let op_suffix = compare_type.get_operation_suffix_name();
             let reg_comp: i32 = match compare_value.as_str() {
                 "==" => create_comp_instructions(
-                    format!("EQ{}", compare_type.get_operation_suffix_name()).into(),
+                    format!("EQ{}", op_suffix).into(),
                     reg_a,
                     reg_b,
                 ),
                 "!=" => create_comp_instructions(
-                    format!("NE{}", compare_type.get_operation_suffix_name()).into(),
+                    format!("NE{}", op_suffix).into(),
                     reg_a,
                     reg_b,
                 ),
                 "<" => create_comp_instructions(
-                    format!("LT{}", compare_type.get_operation_suffix_name()).into(),
+                    format!("LT{}", op_suffix).into(),
                     reg_a,
                     reg_b,
                 ),
                 "<=" => create_comp_instructions(
-                    format!("LTE{}", compare_type.get_operation_suffix_name()).into(),
+                    format!("LTE{}", op_suffix).into(),
                     reg_a,
                     reg_b,
                 ),
                 // > is NOT <=
                 ">" => {
                     let reg_lte = create_comp_instructions(
-                        format!("LTE{}", compare_type.get_operation_suffix_name()).into(),
+                        format!("LTE{}", op_suffix).into(),
                         reg_a,
                         reg_b,
                     );
@@ -2151,7 +1865,7 @@ fn traverse_nodes_and_populate<'a>(
                 // >= is NOT <
                 ">=" => {
                     let reg_lt = create_comp_instructions(
-                        format!("LT{}", compare_type.get_operation_suffix_name()).into(),
+                        format!("LT{}", op_suffix).into(),
                         reg_a,
                         reg_b,
                     );
@@ -2168,16 +1882,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_comp);
         }
         PulseNodeTemplate::IntSwitch => {
-            let reg_value = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
+            let reg_value = get_register!("value", PulseValueType::PVAL_INT(None));
             let register_map = reg_map_setup_inputs!("nSwitchValue", reg_value);
             // now comes the processing of the outflows
             let mut outflow_connections = vec![];
@@ -2296,26 +2001,8 @@ fn traverse_nodes_and_populate<'a>(
                     return Ok(reg_out);
                 }
             }
-            let reg_soundevent = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "strSoundEventName",
-                PulseValueType::PVAL_SNDEVT_NAME(None),
-                false,
-            )?;
-            let reg_target_entity = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "hTargetEntity",
-                PulseValueType::PVAL_EHANDLE(None),
-                false,
-            )?;
+            let reg_soundevent = get_register!("strSoundEventName", PulseValueType::PVAL_SNDEVT_NAME(None));
+            let reg_target_entity = get_register!("hTargetEntity", PulseValueType::PVAL_EHANDLE(None));
             let enum_choice = get_constant_graph_input_value!(
                 graph,
                 current_node,
@@ -2391,16 +2078,7 @@ fn traverse_nodes_and_populate<'a>(
                         chunk.add_instruction(instr);
                     }
                     PulseNodeTemplate::ListenForEntityOutput => {
-                        let reg_entity = get_input_register_or_create_constant(
-                            graph,
-                            current_node,
-                            graph_def,
-                            graph_state,
-                            target_chunk,
-                            "hEntity",
-                            PulseValueType::PVAL_EHANDLE(None),
-                            false,
-                        )?;
+                        let reg_entity = get_register!("hEntity", PulseValueType::PVAL_EHANDLE(None));
                         let register_map = reg_map_setup_inputs!("hEntity", reg_entity);
                         let binding_id = graph_def.get_current_binding_id() + 1;
                         let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -2494,26 +2172,8 @@ fn traverse_nodes_and_populate<'a>(
         }
         PulseNodeTemplate::SetAnimGraphParam => {
             let reg_param_name = get_constant_graph_input_value!(graph, current_node, "paramName", try_to_string);
-            let reg_entity = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "hEntity",
-                PulseValueType::PVAL_EHANDLE(None),
-                false,
-            )?;
-            let reg_param_value = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "pParamValue",
-                PulseValueType::PVAL_ANY,
-                false,
-            )?;
+            let reg_entity = get_register!("hEntity", PulseValueType::PVAL_EHANDLE(None));
+            let reg_param_value = get_register!("pParamValue", PulseValueType::PVAL_ANY);
 
             let cell = CPulseCell_Step_SetAnimGraphParam::new(
                 reg_param_name.into(),
@@ -2528,69 +2188,39 @@ fn traverse_nodes_and_populate<'a>(
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::ConstantBool => {
-            let reg_out = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            return Ok(get_register!("value", PulseValueType::PVAL_BOOL).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantFloat => {
-            let reg_out = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            return Ok(get_register!("value", PulseValueType::PVAL_FLOAT(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantInt => {
-            let reg_out = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            return Ok(get_register!("value", PulseValueType::PVAL_INT(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantVec3 => {
-            let reg_out = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_VEC3(None),
-                false,
-            )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            return Ok(get_register!("value", PulseValueType::PVAL_VEC3(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantString => {
-            let reg_out = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_STRING(None),
-                false,
-            )?;
-            return Ok(reg_out.unwrap_or(-1));
+            let reg_out = try_find_output_mapping(graph_def, output_id);
+            if reg_out > -1 {
+                return Ok(reg_out);
+            }
+            return Ok(get_register!("value", PulseValueType::PVAL_STRING(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::NewArray => {
             let reg_out = try_find_output_mapping(graph_def, output_id);
@@ -2634,26 +2264,11 @@ fn traverse_nodes_and_populate<'a>(
             // this should be handled by the UI.
             let typ = current_node.user_data.custom_output_type
                 .as_ref().unwrap_or(&PulseValueType::PVAL_ANY);
-            let reg_array = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "array",
-                PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
-                false,
-            )?;
-            let reg_index = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "index",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
+            let reg_array = get_register!(
+                "array", 
+                PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY))
+            );
+            let reg_index = get_register!("index", PulseValueType::PVAL_INT(None));
 
             if let Some(reg_array) = reg_array {
                 if let Some(reg_index) = reg_index {
@@ -2696,32 +2311,10 @@ fn traverse_nodes_and_populate<'a>(
                 "invert",
                 try_to_bool
             );
-            let src_vec = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "vector",
-                typ.clone(),
-                false,
-            )?;
-            let scale_factor = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "scale",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            let Some(scale_factor) = scale_factor else {
-                anyhow::bail!("ScaleVector node: Failed to get scale factor register.");
-            };
-            let Some(src_vec) = src_vec else {
-                anyhow::bail!("ScaleVector node: Failed to get source vector register.");
-            };
+            let reg_src_vec = get_register!("vector", typ.clone())
+                .ok_or(anyhow!("ScaleVector node: Failed to get source vector register."))?;
+            let reg_scale_factor = get_register!("scale", PulseValueType::PVAL_FLOAT(None))
+                .ok_or(anyhow!("ScaleVector node: Failed to get scale factor register."))?;
 
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
@@ -2733,8 +2326,8 @@ fn traverse_nodes_and_populate<'a>(
                     format!("SCALE{}", typ.get_operation_suffix_name())
                 },
                 reg0: reg_out,
-                reg1: src_vec,
-                reg2: scale_factor,
+                reg1: reg_src_vec,
+                reg2: reg_scale_factor,
                 ..Default::default()
             };
             
@@ -2745,22 +2338,12 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::ReturnValue => {
-            let val = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "value",
-                PulseValueType::PVAL_ANY,
-                false,
-            )?;
-            let Some(val) = val else {
-                anyhow::bail!("ReturnValue node: No value provided");
-            };
-            let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let instruction = instruction_templates::return_value(val);
-            chunk.add_instruction(instruction);
+            let reg_val = get_register!("value", PulseValueType::PVAL_ANY)
+                .ok_or(anyhow!("ReturnValue node: Failed to get value register."))?;
+            graph_def.add_chunk_instruction(
+                target_chunk as usize,
+                instruction_templates::return_value(reg_val)
+            );
         }
         PulseNodeTemplate::ForEach => {
             if output_id.is_some() {
@@ -2768,23 +2351,19 @@ fn traverse_nodes_and_populate<'a>(
                 if reg_idx != -1 {
                     return Ok(reg_idx);
                 } else {
-                    println!("[WARN] ForLoop node: Failed to find output register for 'index' when a node requested it.
-                    This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action.");
-                    return Ok(-1);
+                    anyhow::bail!(
+                        "ForEach node: Failed to find output register for 'index/element' when a node requested it.
+                        This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action.
+                        Please report this as a bug!"
+                    );
                 }
             }
             let typ = current_node.user_data.custom_output_type
                 .as_ref().unwrap_or(&PulseValueType::PVAL_ANY);
-            let reg_array_opt = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "array",
-                PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
-                false,
-            )?;
+            let reg_array_opt = get_register!(
+                "array", 
+                PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY))
+            );
             let Some(reg_array) = reg_array_opt else {
                 anyhow::bail!("ForLoop node: Failed to get input register for array.");
             };
@@ -2802,16 +2381,6 @@ fn traverse_nodes_and_populate<'a>(
             )?;
             let reg_to = reg_map_arraycount.get_outparam_by_name("retval")
                 .ok_or(anyhow!("ForEach node: Failed to get 'retval' register from ArrayCount"))?;
-            
-            // new constant = Int(0) for incrementing
-            // new reg "idx" (constant Int = 0) (written by yet unknown)
-            // new reg "cond" (written by following instruction)
-            // "idx" LTE "to" "cond"
-            // JUMP_COND{reg_cond}[curr + 3]
-            // JUMP[end] (to the end)
-            // body
-            // "idx" ADD 1 "idx"
-            // JUMP[cond] (to the condition)
 
             // SETUP NEW REGISTERS
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -2868,7 +2437,6 @@ fn traverse_nodes_and_populate<'a>(
             let instr_get_arr_element = instruction_templates::get_array_element(reg_value_out, reg_array, reg_idx);
             chunk.add_instruction(instr_get_arr_element);
 
-
             graph_run_next_actions_no_return!(
                 graph,
                 current_node,
@@ -2911,30 +2479,14 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let reg_a = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
+            let reg_a = get_register!(
                 "A",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?.ok_or_else(|| {
-                anyhow::anyhow!("And node: Failed to get input register for 'A'.")
-            })?;
-            let reg_b = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
+                PulseValueType::PVAL_BOOL
+            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'A'."))?;
+            let reg_b = get_register!(
                 "B",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?.ok_or_else(|| {
-                anyhow::anyhow!("And node: Failed to get input register for 'B'.")
-            })?;
+                PulseValueType::PVAL_BOOL
+            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'B'."))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
                 .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'And' node."))?;
             let instr = instruction_templates::and_bool(
@@ -2950,30 +2502,14 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let reg_a = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
+            let reg_a = get_register!(
                 "A",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?.ok_or_else(|| {
-                anyhow::anyhow!("Or node: Failed to get input register for 'A'.")
-            })?;
-            let reg_b = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
+                PulseValueType::PVAL_BOOL
+            ).ok_or(anyhow::anyhow!("Or node: Failed to get input register for 'A'."))?;
+            let reg_b = get_register!(
                 "B",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?.ok_or_else(|| {
-                anyhow::anyhow!("Or node: Failed to get input register for 'B'.")
-            })?;
+                PulseValueType::PVAL_BOOL
+            ).ok_or(anyhow::anyhow!("Or node: Failed to get input register for 'B'."))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
                 .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Or' node."))?;
             let instr = instruction_templates::or_bool(
@@ -2989,18 +2525,10 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let reg_in = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
+            let reg_in = get_register!(
                 "in",
-                PulseValueType::PVAL_BOOL,
-                false,
-            )?.ok_or_else(|| {
-                anyhow::anyhow!("Not node: Failed to get input register for 'A'.")
-            })?;
+                PulseValueType::PVAL_BOOL
+            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'in'."))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
                 .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Not' node."))?;
             let instr = instruction_templates::not_bool(
@@ -3015,33 +2543,15 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let min = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "min",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
-            let max = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "max",
-                PulseValueType::PVAL_INT(None),
-                false,
-            )?;
+            let reg_min = get_register!("min", PulseValueType::PVAL_INT(None));
+            let reg_max = get_register!("max", PulseValueType::PVAL_INT(None));
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_INT".to_string(), None)
                 .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
             let mut reg_map = reg_map_setup_inputs!(
                 "nMin",
-                min,
+                reg_min,
                 "nMax",
-                max
+                reg_max
             );
             reg_map.add_outparam("retval".into(), reg_out);
             add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomInt), reg_map, target_chunk, "Eval".into());
@@ -3052,33 +2562,15 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let min = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "min",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
-            let max = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "max",
-                PulseValueType::PVAL_FLOAT(None),
-                false,
-            )?;
+            let reg_min = get_register!("min", PulseValueType::PVAL_FLOAT(None));
+            let reg_max = get_register!("max", PulseValueType::PVAL_FLOAT(None));
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_FLOAT".to_string(), None)
                 .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
             let mut reg_map = reg_map_setup_inputs!(
                 "flMin",
-                min,
+                reg_min,
                 "flMax",
-                max
+                reg_max
             );
             reg_map.add_outparam("retval".into(), reg_out);
             add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomFloat), reg_map, target_chunk, "Eval".into());

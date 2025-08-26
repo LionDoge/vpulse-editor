@@ -580,7 +580,7 @@ impl KV3Serialize for PulseVariable {
             }
             PulseValueType::PVAL_RESOURCE(_, value) => {
                 if let Some(value) = value {
-                    format!("\"{value}\"")
+                    format!("resource:\"{value}\"")
                 } else {
                     String::from("")
                 }

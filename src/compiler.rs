@@ -1115,7 +1115,26 @@ fn traverse_nodes_and_populate<'a>(
                 .unwrap()
                 .typ_and_default_value
                 .clone();
-            let reg_value = get_register!("value", typ);
+            let reg_value = get_register!("value", typ.clone());
+            // try to reinterpret to specific entity type (if we're dealing with entities) before saving
+            let reg_value = match typ {
+                PulseValueType::PVAL_EHANDLE(Some(ref subtype)) => {
+                    let reg_reinterpreted = 
+                        graph_def.add_chunk_register(
+                            target_chunk as usize, 
+                            format!("PVAL_EHANDLE:{subtype}"), 
+                            None
+                        );
+                    let instruction = instruction_templates::reinterpret_instance(
+                        reg_reinterpreted.unwrap(),
+                        reg_value.unwrap_or(-1),
+                    );
+                    graph_def.add_chunk_instruction(target_chunk as usize, instruction);
+                    reg_reinterpreted
+                }
+                _ => reg_value,
+            };
+
             if let Some(reg_value) = reg_value {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 chunk.add_instruction(instruction_templates::set_var(reg_value, var_id.unwrap()));

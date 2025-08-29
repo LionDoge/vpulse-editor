@@ -147,6 +147,14 @@ fn traverse_inflow_nodes(
     _graph_state: &PulseGraphState,
 ) -> anyhow::Result<bool> {
     let mut processed: bool = false;
+    // add a empty method at the start, otherwise async calls don't work
+    // don't know how that's related, but that seems to be the case weirdly enough
+    let cell_method = CPulseCell_Inflow_Method {
+        entry_chunk: -1,
+        ..Default::default()
+    };
+    graph_def.add_cell(Box::from(cell_method));
+    // iterate nodes
     for node in graph.iter_nodes() {
         let data: &Node<PulseNodeData> = graph.nodes.get(node).unwrap();
         // start at all possible entry points

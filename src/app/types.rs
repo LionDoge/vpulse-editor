@@ -231,7 +231,6 @@ pub enum PulseGraphResponse {
 /// The graph 'global' state. This state struct is passed around to the node and
 /// parameter drawing callbacks. The contents of this struct are entirely up to
 /// the user. For this example, we use it to keep track of the 'active' node.
-#[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
     #[cfg_attr(feature = "persistence", serde(skip))]
@@ -250,6 +249,22 @@ pub struct PulseGraphState {
     pub graph_domain: String,
     #[cfg_attr(feature = "persistence", serde(default))]
     pub graph_subtype: String,
+}
+
+impl Default for PulseGraphState {
+    fn default() -> Self {
+        PulseGraphState {
+            added_parameters: SecondaryMap::new(),
+            public_outputs: Vec::new(),
+            variables: Vec::new(),
+            exposed_nodes: SecondaryMap::new(),
+            outputs_dropdown_choices: vec![],
+            save_file_path: None,
+            bindings: GraphBindings::default(),
+            graph_domain: "ServerEntity".to_string(),
+            graph_subtype: "PVAL_EHANDLE:point_pulse".to_string(),
+        }
+    }
 }
 
 // Compare this snippet from src/instruction_templates.rs:

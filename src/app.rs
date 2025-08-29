@@ -163,6 +163,11 @@ impl PulseGraphEditor {
         self.verify_compat();
         Ok(())
     }
+    fn new_graph(&mut self) {
+        self.state = MyEditorState::default();
+        self.user_state.load_from(PulseGraphState::default());
+        self.user_state.save_file_path = None;
+    }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
         let param = self
             .state
@@ -1050,6 +1055,23 @@ impl eframe::App for PulseGraphEditor {
                                 .set_description(e.to_string())
                                 .show();
                         }
+                    }
+                }
+                if ui.button("New").clicked() {
+                    let mut do_new = true;
+                    if !self.state.graph.nodes.is_empty() {
+                        let response = MessageDialog::new()
+                            .set_level(rfd::MessageLevel::Warning)
+                            .set_title("Create new graph")
+                            .set_buttons(rfd::MessageButtons::YesNo)
+                            .set_description("Are you sure you want to create a new graph? Unsaved changes will be lost.")
+                            .show();
+                        if response == rfd::MessageDialogResult::No {
+                            do_new = false;
+                        }
+                    }
+                    if do_new {
+                        self.new_graph();
                     }
                 }
                 if !ctx.wants_keyboard_input() 

@@ -1161,9 +1161,9 @@ where
             let node_rect = titlebar_rect.union(body_rect).union(bottom_body_rect);
             let outline = if self.selected {
                 Shape::Rect(RectShape {
-                    rect: node_rect.expand(1.0 * pan_zoom.zoom),
+                    rect: node_rect.expand(2.0 * pan_zoom.zoom),
                     corner_radius: corner_radius.into(),
-                    fill: Color32::WHITE.lighten(0.8),
+                    fill: Color32::from_rgb(184, 241, 255).lighten(0.8),
                     stroke: Stroke::NONE,
                     stroke_kind: StrokeKind::Middle,
                     blur_width: 0.0,

@@ -1,5 +1,5 @@
 use egui::epaint::Shadow;
-use egui::{style::WidgetVisuals, Margin, Rounding, Stroke, Style, Vec2};
+use egui::{style::WidgetVisuals, Margin, CornerRadius, Stroke, Style, Vec2};
 
 // Copied from https://github.com/gzp-crey/shine
 
@@ -25,19 +25,19 @@ impl Scale for Vec2 {
 
 impl Scale for Margin {
     fn scale(&mut self, amount: f32) {
-        self.left *= amount;
-        self.right *= amount;
-        self.top *= amount;
-        self.bottom *= amount;
+        self.left *= amount as i8;
+        self.right *= amount as i8;
+        self.top *= amount as i8;
+        self.bottom *= amount as i8;
     }
 }
 
-impl Scale for Rounding {
+impl Scale for CornerRadius {
     fn scale(&mut self, amount: f32) {
-        self.ne *= amount;
-        self.nw *= amount;
-        self.se *= amount;
-        self.sw *= amount;
+        self.ne *= amount as u8;
+        self.nw *= amount as u8;
+        self.se *= amount as u8;
+        self.sw *= amount as u8;
     }
 }
 
@@ -49,7 +49,7 @@ impl Scale for Stroke {
 
 impl Scale for Shadow {
     fn scale(&mut self, amount: f32) {
-        self.spread *= amount.clamp(0.4, 1.);
+        self.spread *= amount.clamp(0.4, 1.) as u8;
     }
 }
 
@@ -57,7 +57,7 @@ impl Scale for WidgetVisuals {
     fn scale(&mut self, amount: f32) {
         self.bg_stroke.scale(amount);
         self.fg_stroke.scale(amount);
-        self.rounding.scale(amount);
+        self.corner_radius.scale(amount);
         self.expansion *= amount.clamp(0.4, 1.);
     }
 }

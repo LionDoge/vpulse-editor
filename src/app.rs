@@ -1012,7 +1012,7 @@ impl eframe::App for PulseGraphEditor {
                     ui.label("contents");
                 });
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui: &mut egui::Ui| {
+            egui::MenuBar::new().ui(ui, |ui: &mut egui::Ui| {
                 if ui.button("Compile").clicked()
                     || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::R)) {
                     if let Err(e) =

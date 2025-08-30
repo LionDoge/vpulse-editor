@@ -7,6 +7,7 @@ mod migrations;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
 use eframe::egui::Button;
+use eframe::egui::TextStyle;
 use eframe::egui::Vec2;
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
@@ -1179,8 +1180,10 @@ impl eframe::App for PulseGraphEditor {
                             if ui.button("X").clicked() {
                                 output_scheduled_for_deletion = idx;
                             }
-                            ui.label("Name");
-                            ui.text_edit_singleline(&mut outputdef.name);
+                            ui.add(egui::TextEdit::singleline(&mut outputdef.name)
+                                .font(TextStyle::Heading)
+                                .hint_text("Output name")
+                            );
                         });
                         ui.horizontal(|ui| {
                             ui.label("Param type");
@@ -1243,8 +1246,10 @@ impl eframe::App for PulseGraphEditor {
                             if ui.button("X").clicked() {
                                 variable_scheduled_for_deletion = idx;
                             }
-                            ui.label("Name");
-                            ui.text_edit_singleline(&mut var.name);
+                            ui.add(egui::TextEdit::singleline(&mut var.name)
+                                .font(TextStyle::Heading)
+                                .hint_text("Variable name")
+                            );
                         });
                         ui.horizontal(|ui| {
                             ui.label("Param type");

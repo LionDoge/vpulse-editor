@@ -625,7 +625,8 @@ impl KV3Serialize for PulseVariable {
             | PulseValueType::PVAL_SNDEVT_GUID(_)
             | PulseValueType::PVAL_ACT
             | PulseValueType::PVAL_ANY
-            | PulseValueType::PVAL_ARRAY(_) => String::from("null"), // Any type doesn't have a default value
+            | PulseValueType::PVAL_ARRAY(_) => String::from("null"),
+            _ => String::from("null"), // Other types don't have a default value
         };
         formatdoc! {"
             {{
@@ -826,6 +827,29 @@ impl KV3Serialize for CPulseCell_Value_RandomFloat {
                 m_nEditorNodeID = -1
             }}
             "
+        }
+    }
+}
+
+impl KV3Serialize for CPulseCell_Inflow_EntOutputHandler {
+    fn serialize(&self) -> String {
+        formatdoc! {
+            "
+            {{
+                _class = \"CPulseCell_Inflow_EntOutputHandler\"
+                m_nEditorNodeID = -1
+                m_EntryChunk = {}
+                m_RegisterMap = {}
+                m_SourceEntity = {}
+                m_SourceOutput = \"{}\"
+                m_ExpectedParamType = \"{}\"
+            }}
+            "
+            , self.entry_chunk
+            , self.register_map.serialize()
+            , self.source_entity
+            , self.source_output
+            , self.expected_param_type.to_string()
         }
     }
 }

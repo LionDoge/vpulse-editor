@@ -338,6 +338,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::Not => "Not".into(),
             PulseNodeTemplate::RandomFloat => "Random float".into(),
             PulseNodeTemplate::RandomInt => "Random int".into(),
+            PulseNodeTemplate::EntOutputHandler => "Entity Output Handler".into(),
         }
     }
 
@@ -346,7 +347,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         match self {
             PulseNodeTemplate::CellPublicMethod
             | PulseNodeTemplate::EventHandler
-            | PulseNodeTemplate::GraphHook => vec!["Inflow"],
+            | PulseNodeTemplate::GraphHook
+            | PulseNodeTemplate::EntOutputHandler => vec!["Inflow"],
             PulseNodeTemplate::EntFire
             | PulseNodeTemplate::FindEntByName
             | PulseNodeTemplate::FindEntitiesWithin
@@ -1062,6 +1064,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_scalar(graph, "max", InputParamKind::ConnectionOrConstant, 10.0);
                 output_scalar(graph, "out");
             }
+            PulseNodeTemplate::EntOutputHandler => {
+                input_string(graph, "entityName", InputParamKind::ConstantOnly);
+                input_string(graph, "outputName", InputParamKind::ConstantOnly);
+                // TODO: implement passing the output parameter
+                //input_typ(graph, "expectedType", PulseValueType::PVAL_ANY);
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -1123,6 +1132,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::Not,
             PulseNodeTemplate::RandomInt,
             PulseNodeTemplate::RandomFloat,
+            PulseNodeTemplate::EntOutputHandler,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1596,7 +1606,8 @@ impl NodeDataTrait for PulseNodeData {
         match self.template {
             PulseNodeTemplate::CellPublicMethod
             | PulseNodeTemplate::EventHandler
-            | PulseNodeTemplate::GraphHook => Some(Color32::from_rgb(186, 52, 146)),
+            | PulseNodeTemplate::GraphHook
+            | PulseNodeTemplate::EntOutputHandler => Some(Color32::from_rgb(186, 52, 146)),
             PulseNodeTemplate::EntFire
             | PulseNodeTemplate::FindEntByName
             | PulseNodeTemplate::FindEntitiesWithin

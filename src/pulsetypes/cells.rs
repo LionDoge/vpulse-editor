@@ -1,7 +1,7 @@
 #![allow(nonstandard_style)]
 use std::borrow::Cow;
 use super::enumerators::SoundEventStartType;
-use crate::compiler::serialization::{KV3Serialize, PulseRuntimeArgument, RegisterMap};
+use crate::{compiler::serialization::{KV3Serialize, PulseRuntimeArgument, RegisterMap}, typing::PulseValueType};
 
 #[allow(unused)]
 pub enum CellType {
@@ -268,5 +268,37 @@ pub struct CPulseCell_Value_RandomFloat;
 impl PulseCell for CPulseCell_Value_RandomFloat {
     fn get_cell_type(&self) -> CellType {
         CellType::Value
+    }
+}
+
+pub struct CPulseCell_Inflow_EntOutputHandler {
+    pub(crate) register_map: RegisterMap,
+    pub(crate) entry_chunk: i32,
+    pub(crate) source_entity: String,
+    pub(crate) source_output: String,
+    pub(crate) expected_param_type: PulseValueType,
+}
+
+impl PulseCell for CPulseCell_Inflow_EntOutputHandler {
+    fn get_cell_type(&self) -> CellType {
+        CellType::Inflow
+    }
+}
+
+impl CPulseCell_Inflow_EntOutputHandler {
+    pub fn new(
+        register_map: RegisterMap,
+        entry_chunk: i32,
+        source_entity: String,
+        source_output: String,
+        expected_param_type: PulseValueType,
+    ) -> Self {
+        Self {
+            register_map,
+            entry_chunk,
+            source_entity,
+            source_output,
+            expected_param_type,
+        }
     }
 }

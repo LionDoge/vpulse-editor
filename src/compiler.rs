@@ -171,6 +171,10 @@ fn traverse_inflow_nodes(
                 processed = true;
                 traverse_graphhook_cell(graph, data, graph_def, _graph_state)?;
             }
+            PulseNodeTemplate::EntOutputHandler => {
+                processed = true;
+                traverse_ent_output_cell(graph, data, graph_def, _graph_state)?;
+            }
             _ => {}
         }
     }
@@ -460,6 +464,53 @@ fn traverse_entry_cell(
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     chunk.add_instruction(instruction_templates::return_void());
+    Ok(())
+}
+
+fn traverse_ent_output_cell(
+    graph: &PulseGraph,
+    node: &Node<PulseNodeData>,
+    graph_def: &mut PulseGraphDef,
+    graph_state: &PulseGraphState,
+) -> anyhow::Result<()> {
+    let chunk_id = graph_def.create_chunk();
+    let entity_name = get_constant_graph_input_value!(
+        graph,
+        node,
+        "entityName",
+        try_to_string
+    );
+    let output_name = get_constant_graph_input_value!(
+        graph,
+        node,
+        "outputName",
+        try_to_string
+    );
+    // TODO: implement passing the output parameter
+    let expected_param_type = PulseValueType::PVAL_VOID;
+    // let expected_param_type = get_constant_graph_input_value!(
+    //     graph,
+    //     node,
+    //     "expectedType",
+    //     try_pulse_type
+    // );
+    let cell = CPulseCell_Inflow_EntOutputHandler::new(
+        RegisterMap::default(),
+        chunk_id,
+        entity_name,
+        output_name,
+        expected_param_type,
+    );
+    graph_def.cells.push(Box::from(cell));
+    graph_run_next_actions_no_return!(
+        graph,
+        node,
+        graph_def,
+        graph_state,
+        chunk_id,
+        "outAction"
+    );
+    graph_def.add_chunk_instruction(chunk_id as usize, instruction_templates::return_void());
     Ok(())
 }
 

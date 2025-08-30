@@ -117,6 +117,7 @@ pub enum PulseValueType {
     PVAL_RESOURCE(Option<String>, Option<String>), // (resource_type, resource_name)
     PVAL_ARRAY(Box<PulseValueType>),
     PVAL_GAMETIME(Option<f32>),
+    PVAL_VOID,
 }
 
 impl fmt::Display for PulseValueType {
@@ -168,6 +169,7 @@ impl fmt::Display for PulseValueType {
                 write!(f, "PVAL_ARRAY:{arr_type}")
             }
             PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
+            PulseValueType::PVAL_VOID => write!(f, "PVAL_VOID"),
         }
     }
 }
@@ -219,6 +221,7 @@ impl PulseValueType {
             PulseValueType::PVAL_RESOURCE(_, _) => "Resource",
             PulseValueType::PVAL_ARRAY(_) => "Array",
             PulseValueType::PVAL_GAMETIME(_) => "Game Time",
+            PulseValueType::PVAL_VOID => "Void",
         }
     }
     pub fn get_comparable_types() -> Vec<PulseValueType> {
@@ -314,6 +317,7 @@ pub fn try_string_to_pulsevalue(s: &str) -> Result<PulseValueType, PulseTypeErro
         "PVAL_RESOURCE" => Ok(PulseValueType::PVAL_RESOURCE(None, None)),
         "PVAL_ARRAY" => Ok(PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY))),
         "PVAL_GAMETIME" => Ok(PulseValueType::PVAL_GAMETIME(None)),
+        "PVAL_VOID" => Ok(PulseValueType::PVAL_VOID),
         _ => {
             if s.starts_with("PVAL_EHANDLE:") {
                 let ent_type = s.split_at(13).1;
@@ -525,7 +529,8 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_INVALID
         | PulseValueType::PVAL_ACT
         | PulseValueType::PVAL_ANY
-        | PulseValueType::PVAL_ARRAY(_) => InputParamKind::ConnectionOnly,
+        | PulseValueType::PVAL_ARRAY(_)
+        | PulseValueType::PVAL_VOID => InputParamKind::ConnectionOnly,
 
         PulseValueType::PVAL_BOOL
         | PulseValueType::PVAL_BOOL_VALUE(_)

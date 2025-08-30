@@ -21,6 +21,21 @@ use types::*;
 
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+pub enum ModalWindowType {
+    #[default]
+    None,
+    ConfirmSave
+}
+
+#[derive(Default)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
+pub struct ModalWindow {
+    pub window_type: ModalWindowType,
+    pub is_open: bool,
+}
+
+#[derive(Default)]
+#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
     #[cfg_attr(feature = "persistence", serde(default))]
     version: FileVersion,
@@ -29,6 +44,8 @@ pub struct PulseGraphEditor {
     #[cfg(feature = "nongame_asset_build")]
     #[serde(skip)]
     editor_config: EditorConfig,
+    #[serde(skip)]
+    current_modal_dialog: ModalWindow,
 }
 
 impl PulseGraphEditor {
@@ -988,6 +1005,12 @@ impl eframe::App for PulseGraphEditor {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
+
+        egui::Window::new("Modal Window")
+                .open(&mut self.current_modal_dialog.is_open)
+                .show(ctx, |ui| {
+                    ui.label("contents");
+                });
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui: &mut egui::Ui| {
                 if ui.button("Compile").clicked()
@@ -1131,49 +1154,55 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 for (idx, outputdef) in self.user_state.public_outputs.iter_mut().enumerate() {
-                    ui.separator();
-                    ui.horizontal(|ui| {
-                        if ui.button("X").clicked() {
-                            output_scheduled_for_deletion = idx;
-                        }
-                        ui.label("Name");
-                        ui.text_edit_singleline(&mut outputdef.name);
-                    });
-                    ui.horizontal(|ui| {
-                        ui.label("Param type");
-                        ComboBox::from_id_salt(format!("output{idx}"))
-                            .selected_text(outputdef.typ.get_ui_name())
-                            .show_ui(ui, |ui| {
-                                for typ in PulseValueType::get_variable_supported_types() {
-                                    let name = typ.get_ui_name();
-                                    ui.selectable_value(&mut outputdef.typ,
-                                         typ,
-                                         name
-                                    );
-                                }
-                            });
-                    });
-                    if outputdef.typ != outputdef.typ_old {
-                        let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
-                        for nodeid in node_ids {
-                            let node = self.state.graph.nodes.get(nodeid).unwrap();
-                            if node.user_data.template == PulseNodeTemplate::FireOutput {
-                                let inp = node.get_input("outputName");
-                                let val = self
-                                    .state
-                                    .graph
-                                    .get_input(inp.unwrap())
-                                    .value()
-                                    .clone()
-                                    .try_output_name()
-                                    .unwrap();
-                                if outputdef.name == val {
-                                    output_node_updates.push((nodeid, outputdef.name.clone()));
+                    ui.add_space(4.0);
+                    egui::Frame::default()
+                        .inner_margin(8.0)
+                        .fill(egui::Color32::from_rgba_unmultiplied(36, 36, 36, 255))
+                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                        .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            if ui.button("X").clicked() {
+                                output_scheduled_for_deletion = idx;
+                            }
+                            ui.label("Name");
+                            ui.text_edit_singleline(&mut outputdef.name);
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label("Param type");
+                            ComboBox::from_id_salt(format!("output{idx}"))
+                                .selected_text(outputdef.typ.get_ui_name())
+                                .show_ui(ui, |ui| {
+                                    for typ in PulseValueType::get_variable_supported_types() {
+                                        let name = typ.get_ui_name();
+                                        ui.selectable_value(&mut outputdef.typ,
+                                            typ,
+                                            name
+                                        );
+                                    }
+                                });
+                        });
+                        if outputdef.typ != outputdef.typ_old {
+                            let node_ids: Vec<_> = self.state.graph.iter_nodes().collect();
+                            for nodeid in node_ids {
+                                let node = self.state.graph.nodes.get(nodeid).unwrap();
+                                if node.user_data.template == PulseNodeTemplate::FireOutput {
+                                    let inp = node.get_input("outputName");
+                                    let val = self
+                                        .state
+                                        .graph
+                                        .get_input(inp.unwrap())
+                                        .value()
+                                        .clone()
+                                        .try_output_name()
+                                        .unwrap();
+                                    if outputdef.name == val {
+                                        output_node_updates.push((nodeid, outputdef.name.clone()));
+                                    }
                                 }
                             }
+                            outputdef.typ_old = outputdef.typ.clone();
                         }
-                        outputdef.typ_old = outputdef.typ.clone();
-                    }
+                    });
                 }
                 ui.separator();
                 ui.label("Variables:");
@@ -1189,112 +1218,118 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 for (idx, var) in self.user_state.variables.iter_mut().enumerate() {
-                    ui.separator();
-                    ui.horizontal(|ui| {
-                        if ui.button("X").clicked() {
-                            variable_scheduled_for_deletion = idx;
-                        }
-                        ui.label("Name");
-                        ui.text_edit_singleline(&mut var.name);
-                    });
-                    ui.horizontal(|ui| {
-                        ui.label("Param type");
-                        ComboBox::from_id_salt(format!("var{idx}"))
-                            .selected_text(var.typ_and_default_value.get_ui_name())
-                            .show_ui(ui, |ui| {
-                                for typ in PulseValueType::get_variable_supported_types() {
-                                    let name = typ.get_ui_name();
-                                    if ui.selectable_value(&mut var.typ_and_default_value,
-                                         typ,
-                                         name
-                                    ).clicked() {
-                                        // if the type is changed, update the variable data.
+                    ui.add_space(4.0);
+                    egui::Frame::default()
+                        .inner_margin(8.0)
+                        .fill(egui::Color32::from_rgba_unmultiplied(36, 36, 36, 255))
+                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                        .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            if ui.button("X").clicked() {
+                                variable_scheduled_for_deletion = idx;
+                            }
+                            ui.label("Name");
+                            ui.text_edit_singleline(&mut var.name);
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label("Param type");
+                            ComboBox::from_id_salt(format!("var{idx}"))
+                                .selected_text(var.typ_and_default_value.get_ui_name())
+                                .show_ui(ui, |ui| {
+                                    for typ in PulseValueType::get_variable_supported_types() {
+                                        let name = typ.get_ui_name();
+                                        if ui.selectable_value(&mut var.typ_and_default_value,
+                                            typ,
+                                            name
+                                        ).clicked() {
+                                            // if the type is changed, update the variable data.
+                                            update_variable_data(var);
+                                        }
+                                    }
+                                });
+                        });
+                        ui.horizontal(|ui| {
+                            // change the label text if we're working on an EHandle type, as it can't have a default value.
+                            // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
+                            match &var.typ_and_default_value {
+                                PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
+                                PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
+                                _ => ui.label("Default value"),
+                            };
+
+                            match &mut var.typ_and_default_value {
+                                PulseValueType::PVAL_BOOL_VALUE(value) => {
+                                    ui.checkbox(
+                                        value.get_or_insert_default(), ""
+                                    );
+                                }
+                                PulseValueType::PVAL_VEC2(value) => {
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                                }
+                                PulseValueType::PVAL_VEC3(value)
+                                | PulseValueType::PVAL_VEC3_LOCAL(value)
+                                | PulseValueType::PVAL_QANGLE(value) => {
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
+                                }
+                                PulseValueType::PVAL_VEC4(value) => {
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
+                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().w).prefix("W: "));
+                                }
+                                PulseValueType::PVAL_COLOR_RGB(value) => {
+                                    let color = value.get_or_insert_default();
+                                    // there's probably a better way, but our type system is a mess right now, I can't be bothered.
+                                    let mut arr = [color.x / 255.0, color.y / 255.0, color.z / 255.0];
+                                    if ui.color_edit_button_rgb(&mut arr).changed() {
+                                        color.x = arr[0] * 255.0;
+                                        color.y = arr[1] * 255.0;
+                                        color.z = arr[2] * 255.0;
+                                    }
+                                }
+                                PulseValueType::PVAL_RESOURCE(resource_type, value) => {
+                                    let resource_type_val = resource_type.get_or_insert_with(Default::default);
+                                    if ui.add(egui::TextEdit::singleline(resource_type_val)
+                                        .hint_text("Type")
+                                        .desired_width(40.0)).changed() 
+                                        && resource_type_val.trim().is_empty() {
+                                            *resource_type = None;
+                                        }
+                            
+                                    ui.add(egui::TextEdit::singleline(value.get_or_insert_default()).hint_text("Resource path"));
+                                }
+                                PulseValueType::PVAL_GAMETIME(value) => {
+                                    ui.add(egui::DragValue::new(value.get_or_insert_default()).speed(0.01));
+                                }
+                                PulseValueType::PVAL_ARRAY(inner_type) => {
+                                    // TODO: make it recursive, so we can have more nested types.
+                                    ComboBox::from_id_salt(format!("var{idx}_inner"))
+                                        .selected_text(inner_type.get_ui_name())
+                                        .show_ui(ui, |ui| {
+                                            for typ in PulseValueType::get_variable_supported_types() {
+                                                let name = typ.get_ui_name();
+                                                ui.selectable_value(inner_type,
+                                                    Box::from(typ),
+                                                    name);
+                                            }
+                                        });
+                                }
+                                PulseValueType::DOMAIN_ENTITY_NAME 
+                                | PulseValueType::PVAL_SNDEVT_GUID(_)
+                                | PulseValueType::PVAL_TRANSFORM(_)
+                                | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => {}
+                                _ => {
+                                    if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
                                         update_variable_data(var);
                                     }
                                 }
-                            });
-                    });
-                    ui.horizontal(|ui| {
-                        // change the label text if we're working on an EHandle type, as it can't have a default value.
-                        // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
-                        match &var.typ_and_default_value {
-                            PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
-                            PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
-                            _ => ui.label("Default value"),
-                        };
-
-                        match &mut var.typ_and_default_value {
-                            PulseValueType::PVAL_BOOL_VALUE(value) => {
-                                ui.checkbox(
-                                    value.get_or_insert_default(), ""
-                                );
                             }
-                            PulseValueType::PVAL_VEC2(value) => {
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                            }
-                            PulseValueType::PVAL_VEC3(value)
-                            | PulseValueType::PVAL_VEC3_LOCAL(value)
-                            | PulseValueType::PVAL_QANGLE(value) => {
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
-                            }
-                            PulseValueType::PVAL_VEC4(value) => {
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
-                                ui.add(egui::DragValue::new(&mut value.get_or_insert_default().w).prefix("W: "));
-                            }
-                            PulseValueType::PVAL_COLOR_RGB(value) => {
-                                let color = value.get_or_insert_default();
-                                // there's probably a better way, but our type system is a mess right now, I can't be bothered.
-                                let mut arr = [color.x / 255.0, color.y / 255.0, color.z / 255.0];
-                                if ui.color_edit_button_rgb(&mut arr).changed() {
-                                    color.x = arr[0] * 255.0;
-                                    color.y = arr[1] * 255.0;
-                                    color.z = arr[2] * 255.0;
-                                }
-                            }
-                            PulseValueType::PVAL_RESOURCE(resource_type, value) => {
-                                let resource_type_val = resource_type.get_or_insert_with(Default::default);
-                                if ui.add(egui::TextEdit::singleline(resource_type_val)
-                                    .hint_text("Type")
-                                    .desired_width(40.0)).changed() 
-                                    && resource_type_val.trim().is_empty() {
-                                        *resource_type = None;
-                                    }
-                        
-                                ui.add(egui::TextEdit::singleline(value.get_or_insert_default()).hint_text("Resource path"));
-                            }
-                            PulseValueType::PVAL_GAMETIME(value) => {
-                                ui.add(egui::DragValue::new(value.get_or_insert_default()).speed(0.01));
-                            }
-                            PulseValueType::PVAL_ARRAY(inner_type) => {
-                                // TODO: make it recursive, so we can have more nested types.
-                                ComboBox::from_id_salt(format!("var{idx}_inner"))
-                                    .selected_text(inner_type.get_ui_name())
-                                    .show_ui(ui, |ui| {
-                                        for typ in PulseValueType::get_variable_supported_types() {
-                                            let name = typ.get_ui_name();
-                                            ui.selectable_value(inner_type,
-                                                Box::from(typ),
-                                                name);
-                                        }
-                                    });
-                            }
-                            PulseValueType::DOMAIN_ENTITY_NAME 
-                            | PulseValueType::PVAL_SNDEVT_GUID(_)
-                            | PulseValueType::PVAL_TRANSFORM(_)
-                            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => {}
-                            _ => {
-                                if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
-                                    update_variable_data(var);
-                                }
-                            }
-                        }
-                            
-                    });
+                                
+                        });
+                        });
                 }
             });
         });

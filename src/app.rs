@@ -6,11 +6,12 @@ mod migrations;
 
 use std::{path::PathBuf, fs, thread};
 use core::panic;
+use eframe::egui::Button;
 use eframe::egui::Vec2;
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
-use eframe::egui::{self, ComboBox};
+use eframe::egui::{self, ComboBox, Modal, Id, RichText};
 use egui_node_graph2::*;
 use crate::bindings::*;
 use crate::compiler::compile_graph;
@@ -1006,11 +1007,37 @@ impl eframe::App for PulseGraphEditor {
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
 
-        egui::Window::new("Modal Window")
-                .open(&mut self.current_modal_dialog.is_open)
-                .show(ctx, |ui| {
-                    ui.label("contents");
-                });
+        if self.current_modal_dialog.is_open {
+            let modal = Modal::new(Id::new("MainModal")).show(ctx, |ui| {
+                match self.current_modal_dialog.window_type {
+                    ModalWindowType::ConfirmSave => {
+                        ui.set_width(400.0);
+                        
+                        ui.label(RichText::new("Create new graph").size(24.0));
+                        ui.label(RichText::new("Are you sure you want to create a new graph? Unsaved changes will be lost.").size(16.0));
+
+                        egui::Sides::new().show(
+                            ui,
+                |_ui| {},
+                |ui| {
+                            let btn_no = ui.add_sized([120., 30.], Button::new(RichText::new("No").size(18.0)));
+                            let btn_yes = ui.add_sized([120., 30.], Button::new(RichText::new("Yes").size(18.0)));
+                            if btn_no.clicked() {
+                                ui.close();
+                            }
+                            if btn_yes.clicked() {
+                                self.new_graph();
+                                ui.close();
+                            }
+                        });
+                    }
+                    ModalWindowType::None => {}
+                }
+            });
+            if modal.should_close() {
+                self.current_modal_dialog.is_open = false;
+            }
+        }
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui: &mut egui::Ui| {
                 if ui.button("Compile").clicked()
@@ -1080,23 +1107,11 @@ impl eframe::App for PulseGraphEditor {
                         }
                     }
                 }
-                if ui.button("New").clicked() {
-                    let mut do_new = true;
-                    if !self.state.graph.nodes.is_empty() {
-                        let response = MessageDialog::new()
-                            .set_level(rfd::MessageLevel::Warning)
-                            .set_title("Create new graph")
-                            .set_buttons(rfd::MessageButtons::YesNo)
-                            .set_description("Are you sure you want to create a new graph? Unsaved changes will be lost.")
-                            .show();
-                        if response == rfd::MessageDialogResult::No {
-                            do_new = false;
-                        }
+                if ui.button("New").clicked()
+                    && !self.state.graph.nodes.is_empty() {
+                        self.current_modal_dialog.is_open = true;
+                        self.current_modal_dialog.window_type = ModalWindowType::ConfirmSave;
                     }
-                    if do_new {
-                        self.new_graph();
-                    }
-                }
                 if !ctx.wants_keyboard_input() 
                     && ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::D)) {
                     let selected_nodes: Vec<_> = self.state.selected_nodes.to_vec();

@@ -1815,7 +1815,7 @@ fn traverse_nodes_and_populate<'a>(
             );
         }
         PulseNodeTemplate::StringToEntityName => {
-            let reg_input = get_register!("pStr", PulseValueType::PVAL_STRING(None));
+            let reg_input = get_register!("entityName", PulseValueType::PVAL_STRING(None));
             let mut reg_out = try_find_output_mapping(graph_def, output_id);
             if reg_out == -1 {
                 let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, I've put it here because borrow checker

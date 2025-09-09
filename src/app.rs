@@ -21,6 +21,7 @@ use crate::typing::*;
 use crate::utils::get_node_ids_connected_to_output;
 use types::*;
 
+static APP_NAME: &str = "Pulse Graph Editor";
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum ModalWindowType {
@@ -237,10 +238,11 @@ impl PulseGraphEditor {
         self.verify_compat();
         Ok(())
     }
-    fn new_graph(&mut self) {
+    fn new_graph(&mut self, ctx: &egui::Context) {
         self.state = MyEditorState::default();
         self.user_state.load_from(PulseGraphState::default());
         self.user_state.save_file_path = None;
+        self.update_titlebar(ctx);
     }
     pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
         let param = self
@@ -905,6 +907,21 @@ impl PulseGraphEditor {
         }
         new_node
     }
+
+    fn update_titlebar(&self, ctx: &egui::Context) {
+        let file_name = if let Some(file_path) = &self.user_state.save_file_path {
+            file_path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("<UNSAVED>")
+                .to_string()
+        } else {
+            "<UNSAVED>".to_string()
+        };
+        ctx.send_viewport_cmd(egui::ViewportCommand::Title(
+            format!("{APP_NAME} - {}", file_name)
+        ));
+    }
 }
 
 impl PulseGraphEditor {
@@ -918,6 +935,7 @@ impl PulseGraphEditor {
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
 
+        grph.update_titlebar(&cc.egui_ctx);
         #[cfg(feature = "nongame_asset_build")] {
             let cfg_res: anyhow::Result<EditorConfig> = {
                 let cfg_str = std::fs::read_to_string("config.json");
@@ -1062,7 +1080,6 @@ impl eframe::App for PulseGraphEditor {
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
-
         if self.current_modal_dialog.is_open {
             let modal = Modal::new(Id::new("MainModal")).show(ctx, |ui| {
                 match self.current_modal_dialog.window_type {
@@ -1082,7 +1099,7 @@ impl eframe::App for PulseGraphEditor {
                                 ui.close();
                             }
                             if btn_yes.clicked() {
-                                self.new_graph();
+                                self.new_graph(ctx);
                                 ui.close();
                             }
                         });
@@ -1119,6 +1136,7 @@ impl eframe::App for PulseGraphEditor {
                     let mut perform_save: bool = true;
                     if self.user_state.save_file_path.is_none() {
                         perform_save = self.dialog_change_save_file();
+                        self.update_titlebar(ctx);
                     }
                     if perform_save {
                         if let Err(e) = self.perform_save(None) {
@@ -1160,6 +1178,8 @@ impl eframe::App for PulseGraphEditor {
                                 .set_buttons(rfd::MessageButtons::Ok)
                                 .set_description(e.to_string())
                                 .show();
+                        } else {
+                            //self.update_titlebar(ctx);
                         }
                     }
                 }

@@ -28,6 +28,58 @@
                 "type": "PVAL_INT"
             }
         ]
+    },
+    {
+        "displayname": "logic_relay: OnSpawn",
+        "libname": "CLogicRelayAPI::OnSpawn",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "displayname": "logic_relay: OnTrigger",
+        "libname": "CLogicRelayAPI::OnTrigger",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:logic_relay"
+            }
+        ]
+    },
+    {
+        "displayname": "basemodelentity: OnDestructiblePartDestroyed",
+        "libname": "CBaseModelEntityAPI::OnDestructiblePartDestroyed",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:basemodelentity"
+            },
+            {
+                "name": "nHitGroup",
+                "type": "PVAL_SCHEMA_ENUM:HitGroup_t"
+            },
+            {
+                "name": "nDamageLevel",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "displayname": "point_template: OnEntitySpawned",
+        "libname": "CPointTemplateAPI::OnEntitySpawned",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:point_template"
+            },
+            {
+                "name": "entities",
+                "type": "PVAL_ARRAY:PVAL_EHANDLE"
+            }
+        ]
     }
 
     ],

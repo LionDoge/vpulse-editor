@@ -68,6 +68,32 @@ pub enum BaseExplosionTypes {
     None,
     Custom,
 }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum HitGroup {
+    #[default]
+    Invalid,
+    Generic,
+    Head,
+    Chest,
+    Stomach,
+    LeftArm,
+    RightArm,
+    LeftLeg,
+    RightLeg,
+    Neck,
+    Unused,
+    Gear,
+    Special,
+    T2BossFrontLeftLegWeakpoint,
+    T2BossFrontRightLegWeakpoint,
+    T2BossRearLeftLegWeakpoint,
+    T2BossRearRightLegWeakpoint,
+    T2BossHeadWeakpoint,
+    T2BossBackWeakpoint,
+    DroneBossDroneWeakpoint,
+    HeadNoResist,
+    Count,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SchemaEnumType {
@@ -76,6 +102,7 @@ pub enum SchemaEnumType {
     CollisionGroup,
     ParticleAttachment,
     BaseExplosionTypes,
+    HitGroup,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -85,6 +112,7 @@ pub enum SchemaEnumValue {
     CollisionGroup(PulseCollisionGroup),
     ParticleAttachment(ParticleAttachment),
     BaseExplosionTypes(BaseExplosionTypes),
+    HitGtoup(HitGroup),
 }
 
 impl FromStr for SchemaEnumType {
@@ -96,6 +124,7 @@ impl FromStr for SchemaEnumType {
             "PulseCollisionGroup_t" => Ok(SchemaEnumType::CollisionGroup),
             "ParticleAttachment_t" => Ok(SchemaEnumType::ParticleAttachment),
             "BaseExplosionTypes_t" => Ok(SchemaEnumType::BaseExplosionTypes),
+            "HitGroup_t" => Ok(SchemaEnumType::HitGroup),
             _ => Err(anyhow::anyhow!(
                 "Unknown SchemaEnumType: {}",
                 s
@@ -137,6 +166,12 @@ impl SchemaEnumType {
                     .map(|&v| SchemaEnumValue::BaseExplosionTypes(v))
                     .collect()
             }
+            SchemaEnumType::HitGroup => {
+                HitGroup::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::HitGtoup(v))
+                    .collect()
+            }
         }
     }
     pub fn to_str(self) -> &'static str {
@@ -146,6 +181,7 @@ impl SchemaEnumType {
             SchemaEnumType::CollisionGroup => "PulseCollisionGroup_t",
             SchemaEnumType::ParticleAttachment => "ParticleAttachment_t",
             SchemaEnumType::BaseExplosionTypes => "BaseExplosionTypes_t",
+            SchemaEnumType::HitGroup => "HitGroup_t",
         }
     }
     pub fn to_str_ui(self) -> &'static str {
@@ -155,6 +191,7 @@ impl SchemaEnumType {
             SchemaEnumType::CollisionGroup => "Collision Group",
             SchemaEnumType::ParticleAttachment => "Particle Attachment",
             SchemaEnumType::BaseExplosionTypes => "Base Explosion Types",
+            SchemaEnumType::HitGroup => "Hit Group",
         }
     }
 }
@@ -167,6 +204,7 @@ impl SchemaEnumValue {
             SchemaEnumValue::CollisionGroup(value) => value.to_str_ui(),
             SchemaEnumValue::ParticleAttachment(value) => value.to_str_ui(),
             SchemaEnumValue::BaseExplosionTypes(value) => value.to_str_ui(),
+            SchemaEnumValue::HitGtoup(value) => value.to_str_ui(),
         }
     }
     pub fn to_str(&self) -> &'static str {
@@ -176,6 +214,7 @@ impl SchemaEnumValue {
             SchemaEnumValue::CollisionGroup(value) => value.to_str(),
             SchemaEnumValue::ParticleAttachment(value) => value.to_str(),
             SchemaEnumValue::BaseExplosionTypes(value) => value.to_str(),
+            SchemaEnumValue::HitGtoup(value) => value.to_str(),
         }
     }
     pub fn default_from_type(typ: &SchemaEnumType) -> Self {
@@ -190,6 +229,8 @@ impl SchemaEnumValue {
                 SchemaEnumValue::ParticleAttachment(ParticleAttachment::default()),
             SchemaEnumType::BaseExplosionTypes => 
                 SchemaEnumValue::BaseExplosionTypes(BaseExplosionTypes::default()),
+            SchemaEnumType::HitGroup =>
+                SchemaEnumValue::HitGtoup(HitGroup::default()),
         }
     }
 }
@@ -324,6 +365,38 @@ impl PulseEnumTrait for BaseExplosionTypes {
             BaseExplosionTypes::None => "None",
             BaseExplosionTypes::Custom => "Custom",
         }
+    }
+}
+
+impl PulseEnumTrait for HitGroup {
+    fn to_str(self) -> &'static str {
+        match self {
+            HitGroup::Invalid => "HITGROUP_INVALID",
+            HitGroup::Generic => "HITGROUP_GENERIC",
+            HitGroup::Head => "HITGROUP_HEAD",
+            HitGroup::Chest => "HITGROUP_CHEST",
+            HitGroup::Stomach => "HITGROUP_STOMACH",
+            HitGroup::LeftArm => "HITGROUP_LEFTARM",
+            HitGroup::RightArm => "HITGROUP_RIGHTARM",
+            HitGroup::LeftLeg => "HITGROUP_LEFTLEG",
+            HitGroup::RightLeg => "HITGROUP_RIGHTLEG",
+            HitGroup::Neck => "HITGROUP_NECK",
+            HitGroup::Unused => "HITGROUP_UNUSED",
+            HitGroup::Gear => "HITGROUP_GEAR",
+            HitGroup::Special => "HITGROUP_SPECIAL",
+            HitGroup::T2BossFrontLeftLegWeakpoint => "HITGROUP_T2_BOSS_FRONT_LEFT_LEG_WEAKPOINT",
+            HitGroup::T2BossFrontRightLegWeakpoint => "HITGROUP_T2_BOSS_FRONT_RIGHT_LEG_WEAKPOINT",
+            HitGroup::T2BossRearLeftLegWeakpoint => "HITGROUP_T2_BOSS_REAR_LEFT_LEG_WEAKPOINT",
+            HitGroup::T2BossRearRightLegWeakpoint => "HITGROUP_T2_BOSS_REAR_RIGHT_LEG_WEAKPOINT",
+            HitGroup::T2BossHeadWeakpoint => "HITGROUP_T2_BOSS_HEAD_WEAKPOINT",
+            HitGroup::T2BossBackWeakpoint => "HITGROUP_T2_BOSS_BACK_WEAKPOINT",
+            HitGroup::DroneBossDroneWeakpoint => "HITGROUP_DRONE_BOSS_DRONE_WEAKPOINT",
+            HitGroup::HeadNoResist => "HITGROUP_HEAD_NO_RESIST",
+            HitGroup::Count => "HITGROUP_COUNT",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        self.to_str()
     }
 }
 

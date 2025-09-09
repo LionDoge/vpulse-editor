@@ -1179,7 +1179,7 @@ impl eframe::App for PulseGraphEditor {
                                 .set_description(e.to_string())
                                 .show();
                         } else {
-                            //self.update_titlebar(ctx);
+                            self.update_titlebar(ctx);
                         }
                     }
                 }

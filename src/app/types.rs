@@ -241,7 +241,6 @@ pub struct PulseGraphState {
     pub exposed_nodes: SecondaryMap<NodeId, String>,
     pub outputs_dropdown_choices: Vec<PulseValueType>,
 
-    #[cfg_attr(feature = "persistence", serde(skip))]
     pub save_file_path: Option<PathBuf>,
     #[cfg_attr(feature = "persistence", serde(skip))]
     pub bindings: GraphBindings,

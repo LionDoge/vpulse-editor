@@ -62,11 +62,13 @@ impl PulseGraphEditor {
     // perform a save including including some cleanup
     fn perform_save(&mut self, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
         let dest_path;
+        // remove the path on manual save (we don't use serde skip because we want to save it within autosaves)
+        let save_path = self.user_state.save_file_path.take();
         if let Some(filepath) = filepath {
             dest_path = filepath;
         } else {
             // if no filepath is provided, assume the one in saved state
-            if let Some(filepath) = &self.user_state.save_file_path {
+            if let Some(filepath) = save_path.as_ref() {
                 dest_path = filepath;
             } else {
                 return Err(anyhow!(
@@ -75,6 +77,8 @@ impl PulseGraphEditor {
             }
         }
         self.save_graph(dest_path)?;
+        // restore the path info to memory.
+        self.user_state.save_file_path = save_path;
         Ok(())
     }
     // promts user to choose a file to save the graph to and remembers the location for saving.

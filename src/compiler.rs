@@ -946,7 +946,9 @@ fn traverse_nodes_and_populate<'a>(
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::EntFire => {
-            let reg_entity = get_register!("entity", PulseValueType::DOMAIN_ENTITY_NAME);
+            let reg_entity_name = get_register!("entity", PulseValueType::DOMAIN_ENTITY_NAME);
+            // optional for using entity handle instead of name.
+            let reg_entity = get_register!("entityHandle", PulseValueType::PVAL_EHANDLE(None));
             let input_value =
                 get_constant_graph_input_value!(graph, current_node, "input", try_to_string);
             // this one might be empty, but we want to use it for OutputConnection if we know it at compile time.
@@ -968,36 +970,47 @@ fn traverse_nodes_and_populate<'a>(
                     .clone()
                     .try_to_string()
                     .unwrap();
-                break 'checkParmValue !val.is_empty();
+                !val.is_empty()
             };
 
             let mut reg_param = None;
             if param_value_exists {
                 reg_param = get_register!("value", PulseValueType::PVAL_STRING(None));
             }
-
-            // add invoke binding for FireAtName cell
-            let register_map = reg_map_setup_inputs!("TargetName", reg_entity, "pParam", reg_param);
             let cell = CPulseCell_Step_EntFire::new(input_value.clone().into());
-            add_cell_and_invoking(
-                graph_def,
-                Box::from(cell),
-                register_map,
-                target_chunk,
-                "FireAtName".into(),
-            );
-            let output_connection = OutputConnection::new(
-                String::from("Step_EntFire:-1"),
-                entity_name_static_value,
-                input_value.clone(),
-                if param_value_exists {
-                    String::from("param")
-                } else {
-                    String::default()
-                },
-            );
-            graph_def.add_output_connection(output_connection);
 
+            let port_ehandle = current_node.get_input("entityHandle")?;
+            if graph.connection(port_ehandle).is_some() {
+                let register_map = reg_map_setup_inputs!("hTarget", reg_entity, "pParam", reg_param);
+                add_cell_and_invoking(
+                    graph_def,
+                    Box::from(cell),
+                    register_map,
+                    target_chunk,
+                    "Run".into(),
+                );
+            } else {
+                // add invoke binding for FireAtName cell
+                let register_map = reg_map_setup_inputs!("TargetName", reg_entity_name, "pParam", reg_param);
+                add_cell_and_invoking(
+                    graph_def,
+                    Box::from(cell),
+                    register_map,
+                    target_chunk,
+                    "FireAtName".into(),
+                );
+                let output_connection = OutputConnection::new(
+                    String::from("Step_EntFire:-1"),
+                    entity_name_static_value,
+                    input_value.clone(),
+                    if param_value_exists {
+                        String::from("param")
+                    } else {
+                        String::default()
+                    },
+                );
+                graph_def.add_output_connection(output_connection);
+            }
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::ConcatString => {

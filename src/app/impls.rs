@@ -623,6 +623,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::EntFire => {
                 input_action(graph);
                 input_entityname(graph, "entity");
+                input_ehandle(graph, "entityHandle");
                 input_string(graph, "input", InputParamKind::ConstantOnly);
                 input_string(graph, "value", InputParamKind::ConnectionOrConstant);
                 output_action(graph, "outAction");

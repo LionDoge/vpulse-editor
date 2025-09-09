@@ -97,10 +97,16 @@ impl PulseGraphEditor {
                 self.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
             }
         }
-        let nodes = &mut self.state.graph.nodes;
         let mut sound_event_nodes = vec![];
-        for (node_id, node) in nodes.iter_mut() {
-            match node.user_data.template {
+        let mut entfire_nodes = vec![];
+        let mut call_func_nodes = vec![];
+        for node_id in self.state.graph.iter_nodes().collect::<Vec<_>>() {
+            let node = match self.state.graph.nodes.get_mut(node_id) {
+                Some(node) => node,
+                None => continue,
+            };
+            let template = node.user_data.template;
+            match template {
                 // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
                 PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                     if let Some(binding) = self.user_state.get_library_binding_from_index(&binding) {
@@ -122,6 +128,31 @@ impl PulseGraphEditor {
                     // can't do it here because of borrow checker
                     if node.get_input("soundEventType").is_err() {
                         sound_event_nodes.push(node_id);
+                    }
+                }
+                // v0.3.1 Added entity handle input to EntFire
+                PulseNodeTemplate::EntFire => {
+                    if node.get_input("entityHandle").is_err() {
+                        entfire_nodes.push(node_id);
+                    }
+                }
+                // v0.3.1 Added Async fire mode to Call Node for functions
+                PulseNodeTemplate::CallNode => {
+                    if node.get_input("Async").is_err() {
+                        let target_node_id = node
+                            .get_input("nodeId")
+                            .ok()
+                            .and_then(|input_id| {
+                                self.state.graph.get_input(input_id).value().clone().try_node_id().ok()
+                            });
+
+                        if let Some(target_node_id) = target_node_id {
+                            if let Some(target_node) = self.state.graph.nodes.get(target_node_id) {
+                                if target_node.user_data.template == PulseNodeTemplate::Function {
+                                    call_func_nodes.push(node_id);
+                                }
+                            }
+                        }
                     }
                 }
                 _ => (),
@@ -158,6 +189,26 @@ impl PulseGraphEditor {
             if let Some(input_id) = input_id {
                 node.inputs.insert(0,("ActionIn".to_string(), input_id));
             }
+        }
+        for node_id in entfire_nodes {
+            self.state.graph.add_input_param(
+                node_id,
+                "entityHandle".to_string(),
+                PulseDataType::EHandle,
+                PulseGraphValueType::EHandle,
+                InputParamKind::ConnectionOnly,
+                true,
+            );
+        }
+        for node_id in call_func_nodes {
+            self.state.graph.add_input_param(
+                node_id,
+                "Async".to_string(),
+                PulseDataType::Bool,
+                PulseGraphValueType::Bool { value: false },
+                InputParamKind::ConstantOnly,
+                true,
+            );
         }
         // this fills out the default domain and subdomain if they're not set at launch time
         if self.user_state.graph_domain.is_empty() {

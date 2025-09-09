@@ -223,8 +223,8 @@ impl PulseGraphEditor {
             self.user_state.graph_subtype = "PVAL_EHANDLE:point_pulse".to_string();
         }
     }
-    fn load_graph(&mut self, filepath: PathBuf) -> Result<(), anyhow::Error> {
-        let contents = fs::read_to_string(&filepath)?;
+    fn load_graph(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        let contents = fs::read_to_string(filepath)?;
         let loaded_graph: PulseGraphEditor = ron::from_str(&contents).map_err(|e| {
             anyhow::anyhow!(
                 "Failed to parse file: {}",
@@ -234,7 +234,7 @@ impl PulseGraphEditor {
         self.state = loaded_graph.state;
         self.user_state.load_from(loaded_graph.user_state);
         // we don't serialize file path since the file could be moved between save/open.
-        self.user_state.save_file_path = Some(filepath);
+        self.user_state.save_file_path = Some(filepath.clone());
         self.verify_compat();
         Ok(())
     }
@@ -918,6 +918,7 @@ impl PulseGraphEditor {
         } else {
             "<UNSAVED>".to_string()
         };
+        println!("{}", file_name);
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(
             format!("{APP_NAME} - {}", file_name)
         ));
@@ -973,6 +974,19 @@ impl PulseGraphEditor {
         grph.verify_compat();
         grph
     }
+
+    fn handle_open_file(&mut self, filepath: &PathBuf) -> anyhow::Result<()> {
+        if let Err(e) = self.load_graph(filepath) {
+            MessageDialog::new()
+                .set_level(rfd::MessageLevel::Error)
+                .set_title("Load failed")
+                .set_buttons(rfd::MessageButtons::Ok)
+                .set_description(e.to_string())
+                .show();
+            return Err(e);
+        }
+        Ok(())
+    }   
 }
 
 // assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)
@@ -1078,6 +1092,7 @@ impl eframe::App for PulseGraphEditor {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
+        
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
         if self.current_modal_dialog.is_open {
@@ -1170,18 +1185,25 @@ impl eframe::App for PulseGraphEditor {
                     let chosen_file = FileDialog::new()
                         .add_filter("Pulse Graph Editor State", &["ron"])
                         .pick_file();
-                    if let Some(filepath) = chosen_file {
-                        if let Err(e) = self.load_graph(filepath) {
-                            MessageDialog::new()
-                                .set_level(rfd::MessageLevel::Error)
-                                .set_title("Load failed")
-                                .set_buttons(rfd::MessageButtons::Ok)
-                                .set_description(e.to_string())
-                                .show();
-                        } else {
+                    if let Some(filepath) = &chosen_file {
+                        if self.handle_open_file(filepath).is_ok() {
                             self.update_titlebar(ctx);
                         }
                     }
+                }
+                let mut should_update_title = false;
+                ctx.input(|i| {
+                    if let Some(dropped_file) = i.raw.dropped_files.first() {
+                        if let Some(path) = &dropped_file.path {
+                            if self.handle_open_file(path).is_ok() {
+                                // defer title update after handling the DND event, otherwise we freeze due to Windows OLE bug.
+                                should_update_title = true;
+                            }
+                        }
+                    }
+                });
+                if should_update_title {
+                    self.update_titlebar(ctx);
                 }
                 if ui.button("New").clicked()
                     && !self.state.graph.nodes.is_empty() {

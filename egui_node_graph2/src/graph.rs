@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 /// A node inside the [`Graph`]. Nodes have input and output parameters, stored
 /// as ids. They also contain a custom `NodeData` struct with whatever data the
 /// user wants to store per-node.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct Node<NodeData> {
     pub id: NodeId,
@@ -20,7 +20,7 @@ pub struct Node<NodeData> {
 
 /// The three kinds of input params. These describe how the graph must behave
 /// with respect to inline widgets and connections for this parameter.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum InputParamKind {
     /// No constant value can be set. Only incoming connections can produce it
@@ -43,7 +43,7 @@ fn shown_inline_default() -> bool {
 /// The `DataType` generic parameter is used to restrict the range of input
 /// connections for this parameter, and the `ValueType` is use to represent the
 /// data for the inline widget (i.e. constant) value.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct InputParam<DataType, ValueType> {
     pub id: InputId,
@@ -68,7 +68,7 @@ pub struct InputParam<DataType, ValueType> {
 /// data that the node produces. Output parameters can be linked to the input
 /// parameters of other nodes. Unlike an [`InputParam`], output parameters
 /// cannot have a constant inline value.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct OutputParam<DataType> {
     pub id: OutputId,

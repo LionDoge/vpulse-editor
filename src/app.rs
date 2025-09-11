@@ -4,8 +4,10 @@ mod help;
 pub mod types;
 mod migrations;
 
+use std::time::UNIX_EPOCH;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
+use eframe::egui::util::undoer::Undoer;
 use eframe::egui::Button;
 use eframe::egui::TextStyle;
 use eframe::egui::Vec2;
@@ -14,6 +16,7 @@ use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
 use eframe::egui::{self, ComboBox, Modal, Id, RichText};
 use egui_node_graph2::*;
+use std::sync::Arc;
 use crate::bindings::*;
 use crate::compiler::compile_graph;
 use crate::pulsetypes::*;
@@ -22,7 +25,7 @@ use crate::utils::get_node_ids_connected_to_output;
 use types::*;
 
 static APP_NAME: &str = "Pulse Graph Editor";
-#[derive(Default)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum ModalWindowType {
     #[default]
@@ -30,14 +33,14 @@ pub enum ModalWindowType {
     ConfirmSave
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct ModalWindow {
     pub window_type: ModalWindowType,
     pub is_open: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
     #[cfg_attr(feature = "persistence", serde(default))]
@@ -49,6 +52,23 @@ pub struct PulseGraphEditor {
     editor_config: EditorConfig,
     #[serde(skip)]
     current_modal_dialog: ModalWindow,
+    #[serde(skip)]
+    undoer: Undoer<Arc<Self>>,
+}
+
+fn slotmap_eq <K: slotmap::Key, T: PartialEq>(a: &slotmap::SlotMap<K, T>, b: &slotmap::SlotMap<K, T>) -> bool {
+    a.len() == b.len() && a.iter().all(|(key, value)| b.get(key) == Some(value))
+}
+
+impl PartialEq for PulseGraphEditor {
+    fn eq(&self, other: &Self) -> bool {
+        self.state.graph.connections == other.state.graph.connections &&
+        self.state.node_positions == other.state.node_positions &&
+        slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
+        slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
+        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs) &&
+        self.user_state == other.user_state
+    }
 }
 
 impl PulseGraphEditor {
@@ -1548,6 +1568,12 @@ impl eframe::App for PulseGraphEditor {
                             self.update_library_binding_params(&node_id, &binding);
                         }
                     }
+                    self.undoer.feed_state(
+                        std::time::SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .expect("time went backwards")
+                            .as_secs_f64(), 
+                    &Arc::new(self.clone()));
                 }
                 NodeResponse::ConnectEventEnded { output, input: _ , input_hook: _} => {
                     let graph = &self.state.graph;

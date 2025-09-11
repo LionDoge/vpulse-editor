@@ -17,7 +17,7 @@ pub struct PulseVariable {
     pub default_value_buffer: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct OutputDefinition {
     pub name: String,
     pub typ: PulseValueType,

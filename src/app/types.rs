@@ -9,7 +9,7 @@ use crate::bindings::{GraphBindings, FunctionBinding, EventBinding};
 /// The NodeData holds a custom data struct inside each node. It's useful to
 /// store additional information that doesn't live in parameters. For this
 /// example, the node data stores the template (i.e. the "type") of the node.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
@@ -67,7 +67,7 @@ pub enum PulseDataType {
 /// this library makes no attempt to check this consistency. For instance, it is
 /// up to the user code in this example to make sure no parameter is created
 /// with a DataType of Scalar and a ValueType of Vec2.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseGraphValueType {
     Vec2 {
@@ -232,6 +232,7 @@ pub enum PulseGraphResponse {
 /// The graph 'global' state. This state struct is passed around to the node and
 /// parameter drawing callbacks. The contents of this struct are entirely up to
 /// the user. For this example, we use it to keep track of the 'active' node.
+#[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
     #[cfg_attr(feature = "persistence", serde(skip))]

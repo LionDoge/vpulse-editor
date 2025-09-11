@@ -75,6 +75,23 @@ pub struct GraphBindings {
     pub hooks: Vec<HookBinding>,
 }
 
+// stub used for Undo functionality, there's no need to clone these.
+impl Clone for GraphBindings {
+    fn clone(&self) -> Self {
+        GraphBindings {
+            gamefunctions: Vec::default(),
+            events: Vec::default(),
+            hooks: Vec::default(),
+        }
+    }
+}
+
+impl PartialEq for GraphBindings {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
 fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     if let Some(param_list) = params {
         for param in param_list.iter_mut() {

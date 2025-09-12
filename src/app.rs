@@ -1180,6 +1180,7 @@ impl eframe::App for PulseGraphEditor {
                             .set_description(e.to_string())
                             .show();
                     }
+                    self.update_titlebar(ctx);
                 }
                 if ui.button("Open").clicked() {
                     let chosen_file = FileDialog::new()

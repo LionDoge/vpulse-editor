@@ -840,7 +840,7 @@ impl KV3Serialize for CPulseCell_Inflow_EntOutputHandler {
                 m_nEditorNodeID = -1
                 m_EntryChunk = {}
                 m_RegisterMap = {}
-                m_SourceEntity = {}
+                m_SourceEntity = \"{}\"
                 m_SourceOutput = \"{}\"
                 m_ExpectedParamType = \"{}\"
             }}

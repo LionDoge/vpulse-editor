@@ -908,6 +908,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "delegate"
+version = "0.13.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6178a82cf56c836a3ba61a7935cdb1c49bfaa6fa4327cd5bf554a503087de26b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "der"
 version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3070,6 +3081,7 @@ name = "pulseedit"
 version = "0.3.1"
 dependencies = [
  "anyhow",
+ "delegate",
  "eframe",
  "egui-file-dialog",
  "egui_node_graph2",

@@ -27,6 +27,7 @@ open = "5.3.2"
 smol = "2.0.2"
 strum = "0.27.2"
 strum_macros = "0.27.2"
+delegate = "0.13.4"
 
 [build-dependencies]
 embed-resource = "3.0.5"

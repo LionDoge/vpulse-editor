@@ -976,15 +976,14 @@ impl PulseGraphEditor {
     }
 
     fn feed_undo_state(&mut self) {
-            // let arc_self = Arc::new(self.clone());
-            // self.undoer.feed_state(
-            //     std::time::SystemTime::now()
-            //         .duration_since(UNIX_EPOCH)
-            //         .expect("time went backwards")
-            //         .as_secs_f64(), 
-            //     &arc_self
-            // );
-        }
+        self.undoer.feed_state(
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time went backwards")
+                .as_secs_f64(), 
+            &self.full_state
+        );
+    }
 }
 
 impl PulseGraphEditor{
@@ -1272,6 +1271,11 @@ impl eframe::App for PulseGraphEditor {
                         self.current_modal_dialog.is_open = true;
                         self.current_modal_dialog.window_type = ModalWindowType::ConfirmSave;
                     }
+                if ui.button("Undo").clicked()
+                    || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::Z))
+                {
+                    self.undoer.undo(&self.full_state);
+                }
                 if !ctx.wants_keyboard_input() 
                     && ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::D)) {
                     let selected_nodes: Vec<_> = self.state().selected_nodes.to_vec();

@@ -2147,7 +2147,7 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(node) = graph.nodes.get(node_id) {
                 let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
                 let remote_chunk_or_cell =
-                    traverse_function_entry(graph, node, graph_def, graph_state).unwrap();
+                    traverse_function_entry(graph, node, graph_def, graph_state)?;
 
                 match node.user_data.template {
                     PulseNodeTemplate::Function => {

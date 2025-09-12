@@ -1550,20 +1550,14 @@ fn traverse_nodes_and_populate<'a>(
             }
         }
         PulseNodeTemplate::CompareIf => {
-            let reg_cond = get_connection_only_graph_input_value!(
-                graph,
-                current_node,
-                "condition",
-                graph_def,
-                graph_state,
-                target_chunk
-            );
+            let reg_cond = get_register!("condition", PulseValueType::PVAL_BOOL)
+                .ok_or(anyhow!("CompareIf node: Failed to get 'condition' register"))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_jump_cond =
                 instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
-            chunk.add_instruction(instr_jump_cond);
+            graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_cond);
             let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
-            let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
+            let jump_false_instr_id = graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_false).unwrap();
             // instruction set for the true condition (if exists)
             graph_run_next_actions_no_return!(
                 graph,
@@ -1589,12 +1583,9 @@ fn traverse_nodes_and_populate<'a>(
                 "False"
             ) {
                 // if no actions were run, we still need to add an empty instruction, so we can jump to it.
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                chunk.add_instruction(Instruction::default());
+                graph_def.add_chunk_instruction(target_chunk as usize, Instruction::default());
             }
-            // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
             let ending_instr_id = chunk.get_last_instruction_id() + 1;
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
             if let Some(instr_jump_false) = instr_jump_false {
@@ -1614,6 +1605,15 @@ fn traverse_nodes_and_populate<'a>(
                     jump_end_instr_id
                 );
             }
+
+            graph_run_next_actions_no_return!(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "Either"
+            );
         }
         PulseNodeTemplate::ForLoop => {
             if output_id.is_some() {

@@ -543,7 +543,7 @@ pub fn compile_graph(
             anyhow::bail!("Graph compile failed: {}", e);
         }
     }
-    let data = graph_def.serialize();
+    let data = kv3::to_string(&graph_def.serialize());
     let _ = fs::create_dir_all(file_dir).map_err(|e| {
         anyhow!(
             "Graph compile failed: Failed to create output directory: {}",

@@ -26,6 +26,7 @@ pub trait WidgetValueTrait: Default {
         ui: &mut egui::Ui,
         user_state: &mut Self::UserState,
         node_data: &Self::NodeData,
+        input_id: InputId,
     ) -> Vec<Self::Response>;
 
     /// This method will be called for each input parameter with a widget with a connected
@@ -42,6 +43,7 @@ pub trait WidgetValueTrait: Default {
         ui: &mut egui::Ui,
         _user_state: &mut Self::UserState,
         _node_data: &Self::NodeData,
+        _input_id: InputId,
     ) -> Vec<Self::Response> {
         ui.label(param_name);
 

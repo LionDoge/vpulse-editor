@@ -25,7 +25,6 @@ impl PulseGraphState {
     // }
 
     pub fn load_from(&mut self, other: PulseGraphState) {
-        self.added_parameters = other.added_parameters;
         self.public_outputs = other.public_outputs;
         self.variables = other.variables;
         self.exposed_nodes = other.exposed_nodes;
@@ -413,6 +412,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             custom_named_outputs: Default::default(),
             input_hint_text: None,
             custom_output_type: None,
+            added_parameters: Vec::new(),
         }
     }
 
@@ -1184,14 +1184,23 @@ impl WidgetValueTrait for PulseGraphValueType {
     fn value_widget(
         &mut self,
         param_name: &str,
-        _node_id: NodeId,
+        node_id: NodeId,
         ui: &mut egui::Ui,
-        _user_state: &mut PulseGraphState,
-        _node_data: &PulseNodeData,
+        user_state: &mut PulseGraphState,
+        node_data: &PulseNodeData,
+        input_id: InputId,
     ) -> Vec<PulseGraphResponse> {
         // This trait is used to tell the library which UI to display for the
         // inline parameter widgets.
         let mut responses = vec![];
+        if node_data.added_parameters.contains(&input_id) {
+            // if this is a user added parameter, we want to show a remove button
+            ui.horizontal(|ui| {
+                if ui.button("X").clicked() {
+                    responses.push(PulseGraphResponse::RemoveCustomInputParam(node_id, input_id));
+                }
+            });
+        }
         match self {
             PulseGraphValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
@@ -1266,18 +1275,18 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::InternalOutputName { prevvalue: _, value } => {
                 ui.horizontal(|ui| {
                     ui.label("Output");
-                    ComboBox::from_id_salt(("outch", _node_id))
+                    ComboBox::from_id_salt(("outch", node_id))
                         .width(0.0)
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
-                            for outputparam in _user_state.public_outputs.iter() {
+                            for outputparam in user_state.public_outputs.iter() {
                                 if ui.selectable_value(
                                     value,
                                     outputparam.name.clone(),
                                     outputparam.name.clone(),
                                 ).clicked() {
                                     responses.push(PulseGraphResponse::ChangeOutputParamType(
-                                        _node_id,
+                                        node_id,
                                         value.to_string(),
                                     ));
                                 }
@@ -1288,17 +1297,17 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::InternalVariableName { prevvalue: _, value } => {
                 ui.horizontal(|ui| {
                     ui.label("Variable");
-                    ComboBox::from_id_salt(("varch", _node_id))
+                    ComboBox::from_id_salt(("varch", node_id))
                         .width(0.0)
                         .selected_text(value.clone())
                         .show_ui(ui, |ui| {
-                            for var in _user_state.variables.iter() {
+                            for var in user_state.variables.iter() {
                                 if ui.selectable_value(value, var.name.clone(), var.name.clone()).clicked() {
                                     responses.push(PulseGraphResponse::ChangeVariableParamType(
-                                        _node_id,
+                                        node_id,
                                         value.to_string(),
                                     ));
-                                    responses.push(PulseGraphResponse::UpdatePolymorphicTypes(_node_id));
+                                    responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
                                 }
                             }
                         });
@@ -1309,7 +1318,7 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::Typ { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    let type_list: Vec<PulseValueType> = match &_node_data.template {
+                    let type_list: Vec<PulseValueType> = match &node_data.template {
                         PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
                         PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
                         PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),
@@ -1317,15 +1326,15 @@ impl WidgetValueTrait for PulseGraphValueType {
                     };
                     let callback = |new_type: PulseValueType| {
                         responses.push(PulseGraphResponse::ChangeParamType(
-                            _node_id,
+                            node_id,
                             param_name.to_string(),
                             new_type,
                         ));
-                        responses.push(PulseGraphResponse::UpdatePolymorphicTypes(_node_id));
+                        responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
                     };
                     type_selection_widget(
                         ui,
-                        (_node_id, param_name),
+                        (node_id, param_name),
                         value,
                         type_list,
                         callback
@@ -1335,16 +1344,16 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::EventBindingChoice { value } => {
                 ui.horizontal(|ui| {
                     ui.label("Event");
-                    ComboBox::from_id_salt(_node_id)
+                    ComboBox::from_id_salt(node_id)
                         .width(0.0)
                         .selected_text(
-                            &_user_state
+                            &user_state
                                 .get_event_binding_from_index(value)
                                 .unwrap()
                                 .displayname,
                         )
                         .show_ui(ui, |ui| {
-                            for (idx, event) in _user_state.bindings.events.iter().enumerate() {
+                            for (idx, event) in user_state.bindings.events.iter().enumerate() {
                                 let str = event.displayname.as_str();
                                 if ui
                                     .selectable_value::<EventBindingIndex>(
@@ -1355,7 +1364,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                                     .clicked()
                                 {
                                     responses.push(PulseGraphResponse::ChangeEventBinding(
-                                        _node_id,
+                                        node_id,
                                         event.clone(),
                                     ));
                                 }
@@ -1367,16 +1376,16 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::HookBindingChoice { value } => {
                 ui.horizontal(|ui| {
                     ui.label("Hook");
-                    ComboBox::from_id_salt((param_name, _node_id))
+                    ComboBox::from_id_salt((param_name, node_id))
                         .width(0.0)
                         .selected_text(
-                            &_user_state
+                            &user_state
                                 .get_hook_binding_from_index(value)
                                 .unwrap()
                                 .displayname,
                         )
                         .show_ui(ui, |ui| {
-                            for (idx, hook) in _user_state.bindings.hooks.iter().enumerate() {
+                            for (idx, hook) in user_state.bindings.hooks.iter().enumerate() {
                                 let str = hook.displayname.as_str();
                                 ui.selectable_value::<HookBindingIndex>(
                                     value,
@@ -1391,18 +1400,18 @@ impl WidgetValueTrait for PulseGraphValueType {
                 ui.horizontal(|ui| {
                     ui.label("Node");
                     let node_name = match node {
-                        Some(n) => _user_state
+                        Some(n) => user_state
                             .exposed_nodes
                             .get(*n)
                             .map(|s| s.as_str())
                             .unwrap_or("-- CHOOSE --"),
                         None => "-- CHOOSE --",
                     };
-                    ComboBox::from_id_salt(_node_id)
+                    ComboBox::from_id_salt(node_id)
                         .width(0.0)
                         .selected_text(node_name)
                         .show_ui(ui, |ui| {
-                            for node_pair in _user_state.exposed_nodes.iter() {
+                            for node_pair in user_state.exposed_nodes.iter() {
                                 let str: &str = node_pair.1.as_str();
                                 if ui
                                     .selectable_value::<Option<NodeId>>(
@@ -1413,7 +1422,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                                     .clicked()
                                 {
                                     responses.push(PulseGraphResponse::ChangeRemoteNodeId(
-                                        _node_id,
+                                        node_id,
                                         node_pair.0,
                                     ));
                                 }
@@ -1427,7 +1436,7 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::SchemaEnum { enum_type, value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ComboBox::from_id_salt((_node_id, param_name))
+                    ComboBox::from_id_salt((node_id, param_name))
                         .width(0.0)
                         .selected_text(value.get_ui_name())
                         .show_ui(ui, |ui| {
@@ -1478,7 +1487,7 @@ impl WidgetValueTrait for PulseGraphValueType {
             PulseGraphValueType::GeneralEnumChoice { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ComboBox::from_id_salt((_node_id, param_name))
+                    ComboBox::from_id_salt((node_id, param_name))
                         .width(0.0)
                         .selected_text(value.to_str_ui())
                         .show_ui(ui, |ui| {
@@ -1532,7 +1541,7 @@ impl NodeDataTrait for PulseNodeData {
         &self,
         ui: &mut egui::Ui,
         node_id: NodeId,
-        _graph: &Graph<PulseNodeData, PulseDataType, PulseGraphValueType>,
+        graph: &Graph<PulseNodeData, PulseDataType, PulseGraphValueType>,
         _user_state: &mut Self::UserState,
     ) -> Vec<NodeResponse<PulseGraphResponse, PulseNodeData>>
     where
@@ -1545,55 +1554,42 @@ impl NodeDataTrait for PulseNodeData {
 
         let mut responses = vec![];
         // add param to event handler node.
-        let node = _graph.nodes.get(node_id).unwrap();
-        if node.user_data.template == PulseNodeTemplate::IntSwitch {
-            let param = node.get_input("caselabel").expect(
-                "caselabel is not defined for IntSwitch node, this is a programming error!",
-            );
-            let param_value = _graph
-                .get_input(param)
-                .value()
-                .clone()
-                .try_to_scalar()
-                .unwrap()
-                .round() as i32;
-            if ui.button("Add parameter").clicked() {
-                let param_name = format!("{param_value}");
-                responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
-                    node_id,
-                    param_name.clone(),
-                    PulseDataType::Action,
-                )));
-                //user_state.add_node_custom_param(param_name, node_id);
+        let node = graph.nodes.get(node_id).unwrap();
+        match node.user_data.template {
+            PulseNodeTemplate::IntSwitch => {
+                let param = node.get_input("caselabel").expect(
+                    "caselabel is not defined for IntSwitch node, this is a programming error!",
+                );
+                let param_value = graph
+                    .get_input(param)
+                    .value()
+                    .clone()
+                    .try_to_scalar()
+                    .unwrap()
+                    .round() as i32;
+                if ui.button("Add parameter").clicked() {
+                    let param_name = format!("{param_value}");
+                    responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
+                        node_id,
+                        param_name.clone(),
+                        PulseDataType::Action,
+                    )));
+                }
             }
+            PulseNodeTemplate::NewArray => {
+                if ui.button("Add element").clicked() {
+                    responses.push(NodeResponse::User(PulseGraphResponse::AddCustomInputParam(
+                        node_id,
+                        "element".to_string(),
+                        PulseDataType::String,
+                        PulseGraphValueType::String { value: Default::default() },
+                        InputParamKind::ConstantOnly,
+                        true,
+                    )));
+                }
+            }
+            _ => { /* no custom bottom ui */ }
         }
-
-        // if matches!(node.user_data.template, PulseNodeTemplate::CellPublicMethod) {
-        //     ui.horizontal(|ui| {
-        //         let id = egui::Id::new(("custom_choice", node_id));
-        //         let mut selected_val = ui.ctx().memory_mut(|mem| {
-        //             mem.data
-        //                 .get_temp_mut_or_insert_with(id, || PulseValueType::PVAL_INT(None)).clone()
-        //             });
-        //         type_selection_widget(
-        //             ui,
-        //             node_id,
-        //             &mut selected_val,
-        //             PulseValueType::get_variable_supported_types(),
-        //             |_| {}
-        //         );
-        //         if ui.button("Add output").clicked() {
-        //             responses.push(NodeResponse::User(PulseGraphResponse::AddOutputParam(
-        //                 node_id,
-        //                 "test".to_string(),
-        //                 PulseDataType::String,
-        //             )));
-        //         }
-        //         ui.memory_mut(|mem| {
-        //             mem.data.insert_temp(id, selected_val);
-        //         });
-        //     });
-        // }
         responses
     }
 

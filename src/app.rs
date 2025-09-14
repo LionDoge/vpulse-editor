@@ -1496,6 +1496,38 @@ impl eframe::App for PulseGraphEditor {
                                 datatype,
                             );
                         }
+                        PulseGraphResponse::AddCustomInputParam(
+                            node_id,
+                            name,
+                            datatype,
+                            valuetype,
+                            paramkind,
+                            autoindex
+                        ) => {
+                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters;
+                            let idx = param_list.len();
+                            let name = if autoindex {
+                                format!("{name}{}", idx)
+                            } else {
+                                name
+                            };
+                            let input_id = self.state.graph.add_input_param(
+                                node_id,
+                                name,
+                                datatype,
+                                valuetype,
+                                paramkind,
+                                true
+                            );
+                            self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters.push(input_id);
+                        }
+                        PulseGraphResponse::RemoveCustomInputParam(node_id, input_id) => {
+                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters;
+                            if let Some(pos) = param_list.iter().position(|x| *x == input_id) {
+                                param_list.remove(pos);
+                            }
+                            self.state.graph.remove_input_param(input_id);
+                        }
                         PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                             // node that supports adding parameters is removing one
                             let param = self

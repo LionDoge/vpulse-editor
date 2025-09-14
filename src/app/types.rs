@@ -19,6 +19,7 @@ pub struct PulseNodeData {
     pub input_hint_text: Option<Cow<'static, str>>,
     // used for polymorphic output types
     pub custom_output_type: Option<PulseValueType>,
+    pub added_parameters: Vec<InputId>,
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -218,6 +219,9 @@ pub enum PulseNodeTemplate {
 #[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
     AddOutputParam(NodeId, String, PulseDataType),
+    // autoindex (bool) will automatically append the last element index + 1 to the provided name
+    AddCustomInputParam(NodeId, String, PulseDataType, PulseGraphValueType, InputParamKind, bool),
+    RemoveCustomInputParam(NodeId, InputId),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
@@ -234,8 +238,6 @@ pub enum PulseGraphResponse {
 /// the user. For this example, we use it to keep track of the 'active' node.
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
-    #[cfg_attr(feature = "persistence", serde(skip))]
-    pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
     pub exposed_nodes: SecondaryMap<NodeId, String>,
@@ -254,7 +256,6 @@ pub struct PulseGraphState {
 impl Default for PulseGraphState {
     fn default() -> Self {
         PulseGraphState {
-            added_parameters: SecondaryMap::new(),
             public_outputs: Vec::new(),
             variables: Vec::new(),
             exposed_nodes: SecondaryMap::new(),

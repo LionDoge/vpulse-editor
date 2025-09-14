@@ -1193,312 +1193,312 @@ impl WidgetValueTrait for PulseGraphValueType {
         // This trait is used to tell the library which UI to display for the
         // inline parameter widgets.
         let mut responses = vec![];
-        if node_data.added_parameters.contains(&input_id) {
-            // if this is a user added parameter, we want to show a remove button
-            ui.horizontal(|ui| {
+        ui.horizontal(|ui| {
+            if node_data.added_parameters.contains(&input_id) {
+                // if this is a user added parameter, we want to show a remove button
                 if ui.button("X").clicked() {
                     responses.push(PulseGraphResponse::RemoveCustomInputParam(node_id, input_id));
                 }
-            });
-        }
-        match self {
-            PulseGraphValueType::Scalar { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.add(DragValue::new(value));
-                });
             }
-            PulseGraphValueType::String { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.text_edit_singleline(value)
-                });
-            }
-            PulseGraphValueType::Bool { value } => {
-                ui.horizontal(|ui| {
-                    ui.checkbox(value, param_name);
-                });
-            }
-            PulseGraphValueType::Vec2 { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.add(DragValue::new(&mut value.x));
-                    ui.add(DragValue::new(&mut value.y));
-                });
-            }
-            PulseGraphValueType::Vec3 {value} 
-            | PulseGraphValueType::Vec3Local { value }
-            | PulseGraphValueType::QAngle { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.add(DragValue::new(&mut value.x));
-                    ui.add(DragValue::new(&mut value.y));
-                    ui.add(DragValue::new(&mut value.z));
-                });
-            }
-            PulseGraphValueType::Vec4 { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.add(DragValue::new(&mut value.x));
-                    ui.add(DragValue::new(&mut value.y));
-                    ui.add(DragValue::new(&mut value.z));
-                    ui.add(DragValue::new(&mut value.w));
-                });
-            }
-            PulseGraphValueType::Color { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.color_edit_button_rgba_unmultiplied(value);
-                });
-            }
-            PulseGraphValueType::Action => {
-                ui.label(format!("Action {param_name}"));
-            }
-            PulseGraphValueType::EHandle => {
-                ui.label(format!("EHandle {param_name}"));
-            }
-            PulseGraphValueType::SndEventHandle => {
-                ui.label(format!("SNDEVT {param_name}"));
-            }
-            PulseGraphValueType::SoundEventName { value } => {
-                ui.horizontal(|ui| {
+            match self {
+                PulseGraphValueType::Scalar { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.add(DragValue::new(value));
+                    });
+                }
+                PulseGraphValueType::String { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.text_edit_singleline(value)
+                    });
+                }
+                PulseGraphValueType::Bool { value } => {
+                    ui.horizontal(|ui| {
+                        ui.checkbox(value, param_name);
+                    });
+                }
+                PulseGraphValueType::Vec2 { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.add(DragValue::new(&mut value.x));
+                        ui.add(DragValue::new(&mut value.y));
+                    });
+                }
+                PulseGraphValueType::Vec3 {value} 
+                | PulseGraphValueType::Vec3Local { value }
+                | PulseGraphValueType::QAngle { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.add(DragValue::new(&mut value.x));
+                        ui.add(DragValue::new(&mut value.y));
+                        ui.add(DragValue::new(&mut value.z));
+                    });
+                }
+                PulseGraphValueType::Vec4 { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.add(DragValue::new(&mut value.x));
+                        ui.add(DragValue::new(&mut value.y));
+                        ui.add(DragValue::new(&mut value.z));
+                        ui.add(DragValue::new(&mut value.w));
+                    });
+                }
+                PulseGraphValueType::Color { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.color_edit_button_rgba_unmultiplied(value);
+                    });
+                }
+                PulseGraphValueType::Action => {
+                    ui.label(format!("Action {param_name}"));
+                }
+                PulseGraphValueType::EHandle => {
+                    ui.label(format!("EHandle {param_name}"));
+                }
+                PulseGraphValueType::SndEventHandle => {
                     ui.label(format!("SNDEVT {param_name}"));
-                    ui.text_edit_singleline(value);
-                });
-            }
-            PulseGraphValueType::EntityName { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ui.text_edit_singleline(value);
-                });
-            }
-            PulseGraphValueType::InternalOutputName { prevvalue: _, value } => {
-                ui.horizontal(|ui| {
-                    ui.label("Output");
-                    ComboBox::from_id_salt(("outch", node_id))
-                        .width(0.0)
-                        .selected_text(value.clone())
-                        .show_ui(ui, |ui| {
-                            for outputparam in user_state.public_outputs.iter() {
-                                if ui.selectable_value(
-                                    value,
-                                    outputparam.name.clone(),
-                                    outputparam.name.clone(),
-                                ).clicked() {
-                                    responses.push(PulseGraphResponse::ChangeOutputParamType(
-                                        node_id,
-                                        value.to_string(),
-                                    ));
-                                }
-                            }
-                        });
-                });
-            }
-            PulseGraphValueType::InternalVariableName { prevvalue: _, value } => {
-                ui.horizontal(|ui| {
-                    ui.label("Variable");
-                    ComboBox::from_id_salt(("varch", node_id))
-                        .width(0.0)
-                        .selected_text(value.clone())
-                        .show_ui(ui, |ui| {
-                            for var in user_state.variables.iter() {
-                                if ui.selectable_value(value, var.name.clone(), var.name.clone()).clicked() {
-                                    responses.push(PulseGraphResponse::ChangeVariableParamType(
-                                        node_id,
-                                        value.to_string(),
-                                    ));
-                                    responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
-                                }
-                            }
-                        });
-                });
-            }
-            // NOTE: Available types in the combobox are defined by the node template type.
-            // We only want to allow some types to be selected depending on the context.
-            PulseGraphValueType::Typ { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    let type_list: Vec<PulseValueType> = match &node_data.template {
-                        PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
-                        PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
-                        PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),
-                        _ => PulseValueType::get_variable_supported_types(),
-                    };
-                    let callback = |new_type: PulseValueType| {
-                        responses.push(PulseGraphResponse::ChangeParamType(
-                            node_id,
-                            param_name.to_string(),
-                            new_type,
-                        ));
-                        responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
-                    };
-                    type_selection_widget(
-                        ui,
-                        (node_id, param_name),
-                        value,
-                        type_list,
-                        callback
-                    );
-                });
-            }
-            PulseGraphValueType::EventBindingChoice { value } => {
-                ui.horizontal(|ui| {
-                    ui.label("Event");
-                    ComboBox::from_id_salt(node_id)
-                        .width(0.0)
-                        .selected_text(
-                            &user_state
-                                .get_event_binding_from_index(value)
-                                .unwrap()
-                                .displayname,
-                        )
-                        .show_ui(ui, |ui| {
-                            for (idx, event) in user_state.bindings.events.iter().enumerate() {
-                                let str = event.displayname.as_str();
-                                if ui
-                                    .selectable_value::<EventBindingIndex>(
+                }
+                PulseGraphValueType::SoundEventName { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("SNDEVT {param_name}"));
+                        ui.text_edit_singleline(value);
+                    });
+                }
+                PulseGraphValueType::EntityName { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.text_edit_singleline(value);
+                    });
+                }
+                PulseGraphValueType::InternalOutputName { prevvalue: _, value } => {
+                    ui.horizontal(|ui| {
+                        ui.label("Output");
+                        ComboBox::from_id_salt(("outch", node_id))
+                            .width(0.0)
+                            .selected_text(value.clone())
+                            .show_ui(ui, |ui| {
+                                for outputparam in user_state.public_outputs.iter() {
+                                    if ui.selectable_value(
                                         value,
-                                        EventBindingIndex(idx),
-                                        str,
-                                    )
-                                    .clicked()
-                                {
-                                    responses.push(PulseGraphResponse::ChangeEventBinding(
-                                        node_id,
-                                        event.clone(),
-                                    ));
+                                        outputparam.name.clone(),
+                                        outputparam.name.clone(),
+                                    ).clicked() {
+                                        responses.push(PulseGraphResponse::ChangeOutputParamType(
+                                            node_id,
+                                            value.to_string(),
+                                        ));
+                                    }
                                 }
-                            }
-                        });
-                });
-            }
-            PulseGraphValueType::LibraryBindingChoice { value: _ } => { /* hidden */ }
-            PulseGraphValueType::HookBindingChoice { value } => {
-                ui.horizontal(|ui| {
-                    ui.label("Hook");
-                    ComboBox::from_id_salt((param_name, node_id))
-                        .width(0.0)
-                        .selected_text(
-                            &user_state
-                                .get_hook_binding_from_index(value)
-                                .unwrap()
-                                .displayname,
-                        )
-                        .show_ui(ui, |ui| {
-                            for (idx, hook) in user_state.bindings.hooks.iter().enumerate() {
-                                let str = hook.displayname.as_str();
-                                ui.selectable_value::<HookBindingIndex>(
-                                    value,
-                                    HookBindingIndex(idx),
-                                    str,
-                                );
-                            }
-                        });
-                });
-            }
-            PulseGraphValueType::NodeChoice { node } => {
-                ui.horizontal(|ui| {
-                    ui.label("Node");
-                    let node_name = match node {
-                        Some(n) => user_state
-                            .exposed_nodes
-                            .get(*n)
-                            .map(|s| s.as_str())
-                            .unwrap_or("-- CHOOSE --"),
-                        None => "-- CHOOSE --",
-                    };
-                    ComboBox::from_id_salt(node_id)
-                        .width(0.0)
-                        .selected_text(node_name)
-                        .show_ui(ui, |ui| {
-                            for node_pair in user_state.exposed_nodes.iter() {
-                                let str: &str = node_pair.1.as_str();
-                                if ui
-                                    .selectable_value::<Option<NodeId>>(
-                                        node,
-                                        Some(node_pair.0),
-                                        str,
-                                    )
-                                    .clicked()
-                                {
-                                    responses.push(PulseGraphResponse::ChangeRemoteNodeId(
-                                        node_id,
-                                        node_pair.0,
-                                    ));
+                            });
+                    });
+                }
+                PulseGraphValueType::InternalVariableName { prevvalue: _, value } => {
+                    ui.horizontal(|ui| {
+                        ui.label("Variable");
+                        ComboBox::from_id_salt(("varch", node_id))
+                            .width(0.0)
+                            .selected_text(value.clone())
+                            .show_ui(ui, |ui| {
+                                for var in user_state.variables.iter() {
+                                    if ui.selectable_value(value, var.name.clone(), var.name.clone()).clicked() {
+                                        responses.push(PulseGraphResponse::ChangeVariableParamType(
+                                            node_id,
+                                            value.to_string(),
+                                        ));
+                                        responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
+                                    }
                                 }
-                            }
-                        });
-                });
+                            });
+                    });
+                }
+                // NOTE: Available types in the combobox are defined by the node template type.
+                // We only want to allow some types to be selected depending on the context.
+                PulseGraphValueType::Typ { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        let type_list: Vec<PulseValueType> = match &node_data.template {
+                            PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
+                            PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
+                            PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),
+                            _ => PulseValueType::get_variable_supported_types(),
+                        };
+                        let callback = |new_type: PulseValueType| {
+                            responses.push(PulseGraphResponse::ChangeParamType(
+                                node_id,
+                                param_name.to_string(),
+                                new_type,
+                            ));
+                            responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
+                        };
+                        type_selection_widget(
+                            ui,
+                            (node_id, param_name),
+                            value,
+                            type_list,
+                            callback
+                        );
+                    });
+                }
+                PulseGraphValueType::EventBindingChoice { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label("Event");
+                        ComboBox::from_id_salt(node_id)
+                            .width(0.0)
+                            .selected_text(
+                                &user_state
+                                    .get_event_binding_from_index(value)
+                                    .unwrap()
+                                    .displayname,
+                            )
+                            .show_ui(ui, |ui| {
+                                for (idx, event) in user_state.bindings.events.iter().enumerate() {
+                                    let str = event.displayname.as_str();
+                                    if ui
+                                        .selectable_value::<EventBindingIndex>(
+                                            value,
+                                            EventBindingIndex(idx),
+                                            str,
+                                        )
+                                        .clicked()
+                                    {
+                                        responses.push(PulseGraphResponse::ChangeEventBinding(
+                                            node_id,
+                                            event.clone(),
+                                        ));
+                                    }
+                                }
+                            });
+                    });
+                }
+                PulseGraphValueType::LibraryBindingChoice { value: _ } => { /* hidden */ }
+                PulseGraphValueType::HookBindingChoice { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label("Hook");
+                        ComboBox::from_id_salt((param_name, node_id))
+                            .width(0.0)
+                            .selected_text(
+                                &user_state
+                                    .get_hook_binding_from_index(value)
+                                    .unwrap()
+                                    .displayname,
+                            )
+                            .show_ui(ui, |ui| {
+                                for (idx, hook) in user_state.bindings.hooks.iter().enumerate() {
+                                    let str = hook.displayname.as_str();
+                                    ui.selectable_value::<HookBindingIndex>(
+                                        value,
+                                        HookBindingIndex(idx),
+                                        str,
+                                    );
+                                }
+                            });
+                    });
+                }
+                PulseGraphValueType::NodeChoice { node } => {
+                    ui.horizontal(|ui| {
+                        ui.label("Node");
+                        let node_name = match node {
+                            Some(n) => user_state
+                                .exposed_nodes
+                                .get(*n)
+                                .map(|s| s.as_str())
+                                .unwrap_or("-- CHOOSE --"),
+                            None => "-- CHOOSE --",
+                        };
+                        ComboBox::from_id_salt(node_id)
+                            .width(0.0)
+                            .selected_text(node_name)
+                            .show_ui(ui, |ui| {
+                                for node_pair in user_state.exposed_nodes.iter() {
+                                    let str: &str = node_pair.1.as_str();
+                                    if ui
+                                        .selectable_value::<Option<NodeId>>(
+                                            node,
+                                            Some(node_pair.0),
+                                            str,
+                                        )
+                                        .clicked()
+                                    {
+                                        responses.push(PulseGraphResponse::ChangeRemoteNodeId(
+                                            node_id,
+                                            node_pair.0,
+                                        ));
+                                    }
+                                }
+                            });
+                    });
+                }
+                PulseGraphValueType::Any => {
+                    ui.label(format!("Any {param_name}"));
+                }
+                PulseGraphValueType::SchemaEnum { enum_type, value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ComboBox::from_id_salt((node_id, param_name))
+                            .width(0.0)
+                            .selected_text(value.get_ui_name())
+                            .show_ui(ui, |ui| {
+                                for choice in enum_type.get_all_types_as_enums().iter() {
+                                    let str = choice.get_ui_name();
+                                    ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
+                                }
+                            });
+                    });
+                }
+                PulseGraphValueType::CommentBox { value } => {
+                    let available_width = ui.available_width().max(100.0);
+                    // same background as node, for less busy look.
+                    ui.style_mut().visuals.extreme_bg_color = Color32::from_black_alpha(0);
+                    ui.add_sized(
+                        [available_width, 20.0], // width, height
+                        egui::TextEdit::multiline(value)
+                            .desired_rows(2)
+                            .desired_width(available_width)
+                    );
+                }
+                // Transforms are made from MakeTransform node, so they are not editable directly.
+                PulseGraphValueType::Transform => {
+                    ui.label(format!("Transform {param_name}"));
+                }
+                PulseGraphValueType::TransformWorldspace => {
+                    ui.label(format!("Transform (world) {param_name}"));
+                }
+                PulseGraphValueType::Resource { resource_type, value } => {
+                    ui.horizontal(|ui| {
+                        if let Some(resource_type) = resource_type {
+                            ui.label(format!("Resource {param_name} ({resource_type})"));
+                        } else {
+                            ui.label(format!("Resource {param_name}"));
+                        }
+                        ui.text_edit_singleline(value);
+                    });
+                }
+                PulseGraphValueType::GameTime => {
+                    ui.label(format!("Game Time {param_name}"));
+                }
+                PulseGraphValueType::Array => {
+                    ui.label(format!("Array {param_name}"));
+                }
+                PulseGraphValueType::TypeSafeInteger { integer_type } => {
+                    ui.label(&**integer_type);
+                }
+                PulseGraphValueType::GeneralEnumChoice { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ComboBox::from_id_salt((node_id, param_name))
+                            .width(0.0)
+                            .selected_text(value.to_str_ui())
+                            .show_ui(ui, |ui| {
+                                for choice in value.get_all_choices().iter() {
+                                    let str = choice.to_str_ui();
+                                    ui.selectable_value::<GeneralEnumChoice>(value, choice.clone(), str);
+                                }
+                            });
+                    });
+                }
             }
-            PulseGraphValueType::Any => {
-                ui.label(format!("Any {param_name}"));
-            }
-            PulseGraphValueType::SchemaEnum { enum_type, value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ComboBox::from_id_salt((node_id, param_name))
-                        .width(0.0)
-                        .selected_text(value.get_ui_name())
-                        .show_ui(ui, |ui| {
-                            for choice in enum_type.get_all_types_as_enums().iter() {
-                                let str = choice.get_ui_name();
-                                ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
-                            }
-                        });
-                });
-            }
-            PulseGraphValueType::CommentBox { value } => {
-                let available_width = ui.available_width().max(100.0);
-                // same background as node, for less busy look.
-                ui.style_mut().visuals.extreme_bg_color = Color32::from_black_alpha(0);
-                ui.add_sized(
-                    [available_width, 20.0], // width, height
-                    egui::TextEdit::multiline(value)
-                        .desired_rows(2)
-                        .desired_width(available_width)
-                );
-            }
-            // Transforms are made from MakeTransform node, so they are not editable directly.
-            PulseGraphValueType::Transform => {
-                ui.label(format!("Transform {param_name}"));
-            }
-            PulseGraphValueType::TransformWorldspace => {
-                ui.label(format!("Transform (world) {param_name}"));
-            }
-            PulseGraphValueType::Resource { resource_type, value } => {
-                ui.horizontal(|ui| {
-                    if let Some(resource_type) = resource_type {
-                        ui.label(format!("Resource {param_name} ({resource_type})"));
-                    } else {
-                        ui.label(format!("Resource {param_name}"));
-                    }
-                    ui.text_edit_singleline(value);
-                });
-            }
-            PulseGraphValueType::GameTime => {
-                ui.label(format!("Game Time {param_name}"));
-            }
-            PulseGraphValueType::Array => {
-                ui.label(format!("Array {param_name}"));
-            }
-            PulseGraphValueType::TypeSafeInteger { integer_type } => {
-                ui.label(&**integer_type);
-            }
-            PulseGraphValueType::GeneralEnumChoice { value } => {
-                ui.horizontal(|ui| {
-                    ui.label(param_name);
-                    ComboBox::from_id_salt((node_id, param_name))
-                        .width(0.0)
-                        .selected_text(value.to_str_ui())
-                        .show_ui(ui, |ui| {
-                            for choice in value.get_all_choices().iter() {
-                                let str = choice.to_str_ui();
-                                ui.selectable_value::<GeneralEnumChoice>(value, choice.clone(), str);
-                            }
-                        });
-                });
-            }
-        }
+        });
         // This allows you to return your responses from the inline widgets.
         responses
     }

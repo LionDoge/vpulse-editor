@@ -222,6 +222,10 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
         &self.inputs[input]
     }
 
+    pub fn get_input_mut(&mut self, input: InputId) -> &mut InputParam<DataType, ValueType> {
+        self.inputs.get_mut(input).expect("Input should exist")
+    }
+
     pub fn try_get_output(&self, output: OutputId) -> Option<&OutputParam<DataType>> {
         self.outputs.get(output)
     }

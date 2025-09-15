@@ -1579,7 +1579,7 @@ impl NodeDataTrait for PulseNodeData {
                             graph_types.0,
                             graph_types.1,
                             InputParamKind::ConstantOnly,
-                            true,
+                            false,
                         )));
                     }
                 }

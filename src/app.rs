@@ -507,6 +507,15 @@ impl PulseGraphEditor {
                     InputParamKind::ConnectionOrConstant,
                 );
             }
+            PulseNodeTemplate::NewArray => {
+                let types = pulse_value_type_to_node_types(&new_type.unwrap_or_default());
+                let inputs = node.user_data.added_parameters.clone();
+                for inp in inputs {
+                    let param = self.state.graph.get_input_mut(inp);
+                    param.typ = types.0.clone();
+                    param.value = types.1.clone();
+                }
+            }
             _ => {}
         }
     }
@@ -1527,11 +1536,6 @@ impl eframe::App for PulseGraphEditor {
                                 param_list.remove(pos);
                             }
                             self.state.graph.remove_input_param(input_id);
-                        }
-                        PulseGraphResponse::ChangeCustomInputParamType(input_id, datatype, valuetype) => {
-                            let input_data = self.state.graph.get_input_mut(input_id);
-                            input_data.typ = datatype;
-                            input_data.value = valuetype;
                         }
                         PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                             // node that supports adding parameters is removing one

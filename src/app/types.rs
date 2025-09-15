@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::{path::PathBuf, borrow::Cow};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
@@ -15,11 +16,15 @@ pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
     #[serde(skip)]
     #[allow(dead_code)]
-    pub custom_named_outputs: EmptyStruct,
+    pub custom_named_outputs: PhantomData<()>, // deprecated (left for compatibility)
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub added_parameters: PhantomData<()>, // deprecated (left for compatibility)
     pub input_hint_text: Option<Cow<'static, str>>,
     // used for polymorphic output types
     pub custom_output_type: Option<PulseValueType>,
-    pub added_parameters: Vec<InputId>,
+    #[serde(default)]
+    pub added_inputs: Vec<InputId>,
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -305,8 +310,3 @@ pub type MyEditorState = GraphEditorState<
     PulseNodeTemplate,
     PulseGraphState,
 >;
-
-// compatibility shenanigans
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct EmptyStruct; 

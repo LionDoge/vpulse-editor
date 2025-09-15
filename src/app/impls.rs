@@ -410,9 +410,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         PulseNodeData {
             template: *self,
             custom_named_outputs: Default::default(),
+            added_parameters: Default::default(),
             input_hint_text: None,
             custom_output_type: None,
-            added_parameters: Vec::new(),
+            added_inputs: Vec::new(),
         }
     }
 
@@ -1184,7 +1185,7 @@ impl WidgetValueTrait for PulseGraphValueType {
         // inline parameter widgets.
         let mut responses = vec![];
         ui.horizontal(|ui| {
-            if node_data.added_parameters.contains(&input_id) {
+            if node_data.added_inputs.contains(&input_id) {
                 // if this is a user added parameter, we want to show a remove button
                 if ui.button("X").clicked() {
                     responses.push(PulseGraphResponse::RemoveCustomInputParam(node_id, input_id));

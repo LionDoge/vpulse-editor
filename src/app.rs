@@ -509,7 +509,7 @@ impl PulseGraphEditor {
             }
             PulseNodeTemplate::NewArray => {
                 let types = pulse_value_type_to_node_types(&new_type.unwrap_or_default());
-                let inputs = node.user_data.added_parameters.clone();
+                let inputs = node.user_data.added_inputs.clone();
                 for inp in inputs {
                     let param = self.state.graph.get_input_mut(inp);
                     param.typ = types.0.clone();
@@ -1513,7 +1513,7 @@ impl eframe::App for PulseGraphEditor {
                             paramkind,
                             autoindex
                         ) => {
-                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters;
+                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_inputs;
                             let idx = param_list.len();
                             let name = if autoindex {
                                 format!("{name}{}", idx)
@@ -1528,10 +1528,10 @@ impl eframe::App for PulseGraphEditor {
                                 paramkind,
                                 true
                             );
-                            self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters.push(input_id);
+                            self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_inputs.push(input_id);
                         }
                         PulseGraphResponse::RemoveCustomInputParam(node_id, input_id) => {
-                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_parameters;
+                            let param_list = &mut self.state.graph.nodes.get_mut(node_id).unwrap().user_data.added_inputs;
                             if let Some(pos) = param_list.iter().position(|x| *x == input_id) {
                                 param_list.remove(pos);
                             }

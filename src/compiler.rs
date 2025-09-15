@@ -88,40 +88,6 @@ macro_rules! get_constant_graph_input_value {
 }
 pub(crate) use get_constant_graph_input_value;
 
-macro_rules! get_connection_only_graph_input_value {
-    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {{
-        let input_id = $node.get_input($input).map_err(|e| {
-            anyhow::anyhow!(e).context(format!(
-                "Can't get input port {} node {:?}",
-                $input, $node.user_data.template
-            ))
-        })?;
-        let connection = $graph.connection(input_id);
-        let result: i32 = if let Some(connection) = connection {
-            let param = $graph.get_output(connection);
-            let out_node = $graph.nodes.get(param.node).ok_or(
-                anyhow!("Can't find input value of {}", $input).context(format!(
-                    "Get constant input value for node {:?}",
-                    $node.user_data.template
-                )),
-            )?;
-            traverse_nodes_and_populate(
-                $graph,
-                out_node,
-                $graph_def,
-                $graph_state,
-                $target_chunk,
-                &Some(connection),
-                &None,
-            )?
-        } else {
-            -1
-        };
-        result
-    }};
-}
-pub(crate) use get_connection_only_graph_input_value;
-
 // Create a register map and add it's inputs by passing in pairs of string and identifiers containing the value.
 // reg_opt_val is expected to be an Optional and if it's None it won't be added to the register map
 macro_rules! reg_map_setup_inputs {
@@ -1719,7 +1685,8 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::WhileLoop => {
             let is_dowhile_loop =
                 get_constant_graph_input_value!(graph, current_node, "do-while", try_to_bool);
-
+            let reg_condition = get_register!("condition", PulseValueType::PVAL_BOOL)
+                .ok_or(anyhow!("WhileLoop node: Failed to get 'condition' register"))?;
             if !is_dowhile_loop {
                 // While loop:
                 // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
@@ -1735,14 +1702,7 @@ fn traverse_nodes_and_populate<'a>(
                     .unwrap()
                     .get_last_instruction_id()
                     + 1;
-                let reg_condition = get_connection_only_graph_input_value!(
-                    graph,
-                    current_node,
-                    "condition",
-                    graph_def,
-                    graph_state,
-                    target_chunk
-                );
+                
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond = instruction_templates::jump_cond(
                     reg_condition,
@@ -1789,14 +1749,6 @@ fn traverse_nodes_and_populate<'a>(
                     "loopAction"
                 );
                 // next do all the condition check instructions
-                let reg_condition = get_connection_only_graph_input_value!(
-                    graph,
-                    current_node,
-                    "condition",
-                    graph_def,
-                    graph_state,
-                    target_chunk
-                );
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 // jump back if condition is true
                 let instr_jump_cond =

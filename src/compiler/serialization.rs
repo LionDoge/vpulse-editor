@@ -404,7 +404,33 @@ pub enum PulseConstant {
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
     Resource(Option<String>, String), // (resource_type, value)
-    Array(PulseValueType, String), // raw KV3 array content
+    Array(PulseValueType, Vec<PulseConstant>), // raw KV3 array content
+}
+impl PulseConstant {
+    fn serialize_value(&self) -> Value {
+        match self {
+            PulseConstant::String(value) => Value::String(value.clone()),
+            PulseConstant::SoundEventName(value) => Value::Flag("soundevent".into(), Value::String(value.clone()).into()),
+            PulseConstant::Float(value) => Value::Number((*value).into()),
+            PulseConstant::Integer(value) => Value::Number((*value).into()),
+            PulseConstant::Vec2(value) => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into())]),
+            PulseConstant::Vec3(value)
+            | PulseConstant::Vec3Local(value)
+            | PulseConstant::QAngle(value) 
+                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into())]),
+            PulseConstant::Vec4(value) 
+                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into()), Value::Number(value.w.into())]),
+            PulseConstant::Color_RGB(value) 
+                => Value::Array(vec![Value::Number(value[0].into()), Value::Number(value[1].into()), Value::Number(value[2].into())]),
+            PulseConstant::Bool(value) => Value::Bool(*value),
+            PulseConstant::SchemaEnum(_, value) => Value::String(value.to_str().to_string()),
+            PulseConstant::Resource(_, value) => Value::Flag("resource".into(), Value::String(value.clone()).into()),
+            PulseConstant::Array(_, value) => {
+                let values = value.iter().map(|v| v.serialize_value()).collect();
+                Value::Array(values)
+            }
+        }
+    }
 }
 impl KV3Serialize for PulseConstant {
     fn serialize(&self) -> Value {
@@ -432,25 +458,7 @@ impl KV3Serialize for PulseConstant {
                 format!("PVAL_ARRAY:{}", typ)
             }
         };
-        let val = match self {
-            PulseConstant::String(value) => Value::String(value.clone()),
-            PulseConstant::SoundEventName(value) => Value::Flag("soundevent".into(), Value::String(value.clone()).into()),
-            PulseConstant::Float(value) => Value::Number((*value).into()),
-            PulseConstant::Integer(value) => Value::Number((*value).into()),
-            PulseConstant::Vec2(value) => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into())]),
-            PulseConstant::Vec3(value)
-            | PulseConstant::Vec3Local(value)
-            | PulseConstant::QAngle(value) 
-                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into())]),
-            PulseConstant::Vec4(value) 
-                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into()), Value::Number(value.w.into())]),
-            PulseConstant::Color_RGB(value) 
-                => Value::Array(vec![Value::Number(value[0].into()), Value::Number(value[1].into()), Value::Number(value[2].into())]),
-            PulseConstant::Bool(value) => Value::Bool(*value),
-            PulseConstant::SchemaEnum(_, value) => Value::String(value.to_str().to_string()),
-            PulseConstant::Resource(_, value) => Value::Flag("resource".into(), Value::String(value.clone()).into()),
-            PulseConstant::Array(_, value) => todo!("Replace implementation for Array node to work per value basis")
-        };
+        let val = self.serialize_value();
         Value::Object(vec![
             (ObjectKey::Identifier("m_Type".into()), Value::String(typ_str)),
             (ObjectKey::Identifier("m_Value".into()), val),

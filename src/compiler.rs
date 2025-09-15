@@ -10,7 +10,7 @@ use crate::app::types::{
     PulseNodeTemplate,
 };
 use crate::pulsetypes::*;
-use crate::typing::get_preffered_inputparamkind_from_type;
+use crate::typing::{get_preffered_inputparamkind_from_type, get_pulse_constant_from_graph_value};
 use crate::typing::PulseValueType;
 use crate::utils::*;
 use serialization::*;
@@ -659,19 +659,15 @@ fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: Option<&InputId>)
 // can choose if the generated value from the input will be reused, or if it should always be evaluated as new
 // as a new input (depends on the task of the node really)
 #[allow(clippy::too_many_arguments)]
-fn get_input_register_or_create_constant(
+fn get_input_register_or_create_constant_from_id(
     graph: &PulseGraph,
-    current_node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
     chunk_id: i32,
-    input_name: &str,
+    input_id: InputId,
     value_type: PulseValueType,
     always_reevaluate: bool,
 ) -> anyhow::Result<Option<i32>> {
-    let input_id = current_node.get_input(input_name).map_err(|e| {
-        anyhow::anyhow!(e).context(format!("failed to find input {input_name} in node {:?}", &current_node.user_data.template))
-    })?;
     let connection_to_input: Option<OutputId> = graph.connection(input_id);
     let target_register: i32;
     // if we find a connection, then traverse to that node, whatever happens we should get a register id back.
@@ -706,7 +702,7 @@ fn get_input_register_or_create_constant(
                 get_preffered_inputparamkind_from_type(&value_type),
                 InputParamKind::ConnectionOnly
             ) {
-                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {input_name}");
+                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {:?}", input_id);
                 return Ok(None);
             }
             let new_constant_id = graph_def.get_current_constant_id() + 1;
@@ -826,20 +822,12 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
-                PulseValueType::PVAL_ARRAY(typ) =>
-                {
-                    instruction =
-                        instruction_templates::get_const(new_constant_id, target_register);
-                    let res = input_param.value().clone().try_to_string()?;
-                    chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Array(*typ, res));
-                }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
                     return Ok(None);
                 }
                 _ => {
-                    println!("Warning: Unsupported constant value type for input - None will be returned {input_name}: {value_type}");
+                    println!("Warning: Unsupported constant value type for input - None will be returned {:?}: {value_type}", input_id);
                     return Ok(None);
                     // if we don't know the type, we can't create a constant for it.
                 }
@@ -848,6 +836,31 @@ fn get_input_register_or_create_constant(
         }
     }
     Ok(Some(target_register))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn get_input_register_or_create_constant(
+    graph: &PulseGraph,
+    current_node: &Node<PulseNodeData>,
+    graph_def: &mut PulseGraphDef,
+    graph_state: &PulseGraphState,
+    chunk_id: i32,
+    name: &str,
+    value_type: PulseValueType,
+    always_reevaluate: bool,
+) -> anyhow::Result<Option<i32>> {
+    let input_id = current_node.get_input(name).map_err(|e| {
+        anyhow::anyhow!(e).context(format!("failed to find input {name} in node {:?}", &current_node.user_data.template))
+    })?;
+    get_input_register_or_create_constant_from_id(
+        graph,
+        graph_def,
+        graph_state,
+        chunk_id,
+        input_id,
+        value_type,
+        always_reevaluate,
+    )
 }
 
 // recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.
@@ -2270,19 +2283,22 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let array_contents = get_constant_graph_input_value!(
-                graph,
-                current_node,
-                "Array contents",
-                try_to_string
-            );
             let arr_type = get_constant_graph_input_value!(
                 graph,
                 current_node,
                 "arrayType",
                 try_pulse_type
             );
-            let const_id = graph_def.add_constant(PulseConstant::Array(arr_type.clone(), format!("[{array_contents}]")));
+            let mut constants = vec![];
+            for input_id in current_node.input_ids().skip(1) /* skip the array type choser */ {
+                let value = graph.get_input(input_id).value().clone();
+                let constant = get_pulse_constant_from_graph_value(value).map_err(|e| {
+                    anyhow::anyhow!(format!("MakeArray node doesn't support constant values for type of {}. \
+                    Please remove all initial elements and add them at runtime with the 'Array Append' node, or change the type - {e}", arr_type.get_ui_name()))
+                })?;
+                constants.push(constant);
+            }
+            let const_id = graph_def.add_constant(PulseConstant::Array(arr_type.clone(), constants));
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
 

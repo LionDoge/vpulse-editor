@@ -420,7 +420,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
     fn build_node(
         &self,
         graph: &mut Graph<Self::NodeData, Self::DataType, Self::ValueType>,
-        _user_state: &mut Self::UserState,
+        user_state: &mut Self::UserState,
         node_id: NodeId,
     ) {
         // The nodes are created empty by default. This function needs to take
@@ -603,7 +603,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         };
 
         let mut make_referencable = || {
-            _user_state.exposed_nodes.insert(node_id, String::default());
+            user_state.exposed_nodes.insert(node_id, String::default());
         };
         match self {
             PulseNodeTemplate::CellPublicMethod => {
@@ -1000,16 +1000,6 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::NewArray => {
                 input_typ(graph, "arrayType", PulseValueType::PVAL_INT(None));
-                graph.add_input_param(
-                    node_id,
-                    "Array contents".to_string(),
-                    PulseDataType::String,
-                    PulseGraphValueType::String {
-                        value: "1, 2, 3".to_string(),
-                    },
-                    InputParamKind::ConstantOnly,
-                    true,
-                );
                 output_array(graph, "out");
             }
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
@@ -1577,15 +1567,21 @@ impl NodeDataTrait for PulseNodeData {
                 }
             }
             PulseNodeTemplate::NewArray => {
-                if ui.button("Add element").clicked() {
-                    responses.push(NodeResponse::User(PulseGraphResponse::AddCustomInputParam(
-                        node_id,
-                        "element".to_string(),
-                        PulseDataType::String,
-                        PulseGraphValueType::String { value: Default::default() },
-                        InputParamKind::ConstantOnly,
-                        true,
-                    )));
+                let inp = graph.nodes.get(node_id).unwrap().get_input("arrayType").expect(
+                    "arrayType is not defined for NewArray node, this is a programming error!",
+                );
+                if let Ok(typ) = graph.get_input(inp).value().clone().try_pulse_type() {
+                    if ui.button("Add element").clicked() {
+                        let graph_types = pulse_value_type_to_node_types(&typ);
+                        responses.push(NodeResponse::User(PulseGraphResponse::AddCustomInputParam(
+                            node_id,
+                            Default::default(),
+                            graph_types.0,
+                            graph_types.1,
+                            InputParamKind::ConstantOnly,
+                            true,
+                        )));
+                    }
                 }
             }
             _ => { /* no custom bottom ui */ }

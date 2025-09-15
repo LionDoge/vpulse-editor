@@ -1528,6 +1528,11 @@ impl eframe::App for PulseGraphEditor {
                             }
                             self.state.graph.remove_input_param(input_id);
                         }
+                        PulseGraphResponse::ChangeCustomInputParamType(input_id, datatype, valuetype) => {
+                            let input_data = self.state.graph.get_input_mut(input_id);
+                            input_data.typ = datatype;
+                            input_data.value = valuetype;
+                        }
                         PulseGraphResponse::RemoveOutputParam(node_id, name) => {
                             // node that supports adding parameters is removing one
                             let param = self

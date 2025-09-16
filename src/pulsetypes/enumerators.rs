@@ -95,6 +95,135 @@ pub enum HitGroup {
     Count,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum AILOD {
+    #[default]
+    High,
+    Medium,
+    Low,
+    VeryLow,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum NPCSTATE {
+    #[default]
+    Idle,
+    Alert,
+    Combat,
+    Dead,
+    Inert,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum PulseNPCCondition {
+    #[default]
+    SeePlayer,
+    LostPlayer,
+    HearPlayer,
+    PlayerPushing,
+    NoPrimaryAmmo,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum NPCFollowFormation {
+    #[default]
+    Default,
+    CloseCircle,
+    WideCircle,
+    MediumCircle,
+    Sidekick,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum AIStrafing {
+    #[default]
+    Disabled,
+    Enabled,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum AIVolumetricEventType {
+    #[default]
+    Combat,
+    Player,
+    Danger,
+    BulletImpact,
+    PhysicsDanger,
+    MoveAway,
+    PlayerVehicle,
+    GlassBreak,
+    PhysicsObject,
+    WarnFriends,
+    GunFire,
+    Explosion,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum DamageTypes {
+    #[default]
+    Generic,
+    Crush,
+    Bullet,
+    Slash,
+    Burn,
+    Vehicle,
+    Fall,
+    Blast,
+    Club,
+    Shock,
+    Sonic,
+    EnergyBeam,
+    Buckshot,
+    Drown,
+    Poison,
+    Radiation,
+    DrownRecover,
+    Acid,
+    Physgun,
+    Dissolve,
+    BlastSurface,
+    Headshot,
+    Crit,
+    Buffed,
+    Dot,
+    GroundAura,
+    Lethal,
+    Dangerzone,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum StanceType {
+    #[default]
+    Default,
+    Crouching,
+    Prone,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum SharedMovementGait {
+    #[default]
+    Slow,
+    Medium,
+    Fast,
+    VeryFast,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum ChoreoLookAtSpeed {
+    #[default]
+    Slow,
+    Medium,
+    Fast,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, VariantArray)]
+pub enum ChoreoLookAtMode {
+    #[default]
+    Chest,
+    Head,
+    EyesOnly,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SchemaEnumType {
     CursorCancelPriority,
@@ -103,6 +232,17 @@ pub enum SchemaEnumType {
     ParticleAttachment,
     BaseExplosionTypes,
     HitGroup,
+    AILOD,
+    NPCSTATE,
+    PulseNPCCondition,
+    NPCFollowFormation,
+    AIStrafing,
+    AIVolumetricEventType,
+    DamageTypes,
+    StanceType,
+    SharedMovementGait,
+    ChoreoLookAtSpeed,
+    ChoreoLookAtMode,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -113,6 +253,17 @@ pub enum SchemaEnumValue {
     ParticleAttachment(ParticleAttachment),
     BaseExplosionTypes(BaseExplosionTypes),
     HitGtoup(HitGroup),
+    AILOD(AILOD),
+    NPCSTATE(NPCSTATE),
+    PulseNPCCondition(PulseNPCCondition),
+    NPCFollowFormation(NPCFollowFormation),
+    AIStrafing(AIStrafing),
+    AIVolumetricEventType(AIVolumetricEventType),
+    DamageTypes(DamageTypes),
+    StanceType(StanceType),
+    SharedMovementGait(SharedMovementGait),
+    ChoreoLookAtSpeed(ChoreoLookAtSpeed),
+    ChoreoLookAtMode(ChoreoLookAtMode),
 }
 
 impl FromStr for SchemaEnumType {
@@ -125,6 +276,17 @@ impl FromStr for SchemaEnumType {
             "ParticleAttachment_t" => Ok(SchemaEnumType::ParticleAttachment),
             "BaseExplosionTypes_t" => Ok(SchemaEnumType::BaseExplosionTypes),
             "HitGroup_t" => Ok(SchemaEnumType::HitGroup),
+            "AILOD_t" => Ok(SchemaEnumType::AILOD),
+            "NPC_STATE" => Ok(SchemaEnumType::NPCSTATE),
+            "PulseNPCCondition_t" => Ok(SchemaEnumType::PulseNPCCondition),
+            "NPCFollowFormation_t" => Ok(SchemaEnumType::NPCFollowFormation),
+            "AI_Strafing_t" => Ok(SchemaEnumType::AIStrafing),
+            "AI_VolumetricEventType_t" => Ok(SchemaEnumType::AIVolumetricEventType),
+            "DamageTypes_t" => Ok(SchemaEnumType::DamageTypes),
+            "StanceType_t" => Ok(SchemaEnumType::StanceType),
+            "SharedMovementGait_t" => Ok(SchemaEnumType::SharedMovementGait),
+            "ChoreoLookAtSpeed_t" => Ok(SchemaEnumType::ChoreoLookAtSpeed),
+            "ChoreoLookAtMode_t" => Ok(SchemaEnumType::ChoreoLookAtMode),
             _ => Err(anyhow::anyhow!(
                 "Unknown SchemaEnumType: {}",
                 s
@@ -172,6 +334,72 @@ impl SchemaEnumType {
                     .map(|&v| SchemaEnumValue::HitGtoup(v))
                     .collect()
             }
+            SchemaEnumType::AILOD => {
+                AILOD::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::AILOD(v))
+                    .collect()
+            }
+            SchemaEnumType::NPCSTATE => {
+                NPCSTATE::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::NPCSTATE(v))
+                    .collect()
+            }
+            SchemaEnumType::PulseNPCCondition => {
+                PulseNPCCondition::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::PulseNPCCondition(v))
+                    .collect()
+            }
+            SchemaEnumType::NPCFollowFormation => {
+                NPCFollowFormation::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::NPCFollowFormation(v))
+                    .collect()
+            }
+            SchemaEnumType::AIStrafing => {
+                AIStrafing::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::AIStrafing(v))
+                    .collect()
+            }
+            SchemaEnumType::AIVolumetricEventType => {
+                AIVolumetricEventType::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::AIVolumetricEventType(v))
+                    .collect()
+            }
+            SchemaEnumType::DamageTypes => {
+                DamageTypes::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::DamageTypes(v))
+                    .collect()
+            }
+            SchemaEnumType::StanceType => {
+                StanceType::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::StanceType(v))
+                    .collect()
+            }
+            SchemaEnumType::SharedMovementGait => {
+                SharedMovementGait::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::SharedMovementGait(v))
+                    .collect()
+            }
+            SchemaEnumType::ChoreoLookAtSpeed => {
+                ChoreoLookAtSpeed::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::ChoreoLookAtSpeed(v))
+                    .collect()
+            }
+            SchemaEnumType::ChoreoLookAtMode => {
+                ChoreoLookAtMode::VARIANTS
+                    .iter()
+                    .map(|&v| SchemaEnumValue::ChoreoLookAtMode(v))
+                    .collect()
+            }
         }
     }
     pub fn to_str(self) -> &'static str {
@@ -182,6 +410,17 @@ impl SchemaEnumType {
             SchemaEnumType::ParticleAttachment => "ParticleAttachment_t",
             SchemaEnumType::BaseExplosionTypes => "BaseExplosionTypes_t",
             SchemaEnumType::HitGroup => "HitGroup_t",
+            SchemaEnumType::AILOD => "AILOD_t",
+            SchemaEnumType::NPCSTATE => "NPC_STATE",
+            SchemaEnumType::PulseNPCCondition => "PulseNPCCondition_t",
+            SchemaEnumType::NPCFollowFormation => "NPCFollowFormation_t",
+            SchemaEnumType::AIStrafing => "AI_Strafing_t",
+            SchemaEnumType::AIVolumetricEventType => "AI_VolumetricEventType_t",
+            SchemaEnumType::DamageTypes => "DamageTypes_t",
+            SchemaEnumType::StanceType => "StanceType_t",
+            SchemaEnumType::SharedMovementGait => "SharedMovementGait_t",
+            SchemaEnumType::ChoreoLookAtSpeed => "ChoreoLookAtSpeed_t",
+            SchemaEnumType::ChoreoLookAtMode => "ChoreoLookAtMode_t",
         }
     }
     pub fn to_str_ui(self) -> &'static str {
@@ -192,6 +431,17 @@ impl SchemaEnumType {
             SchemaEnumType::ParticleAttachment => "Particle Attachment",
             SchemaEnumType::BaseExplosionTypes => "Base Explosion Types",
             SchemaEnumType::HitGroup => "Hit Group",
+            SchemaEnumType::AILOD => "AILOD_t",
+            SchemaEnumType::NPCSTATE => "NPC_STATE",
+            SchemaEnumType::PulseNPCCondition => "Pulse NPC Conditions",
+            SchemaEnumType::NPCFollowFormation => "NPC Follow Formations",
+            SchemaEnumType::AIStrafing => "AI Strafing",
+            SchemaEnumType::AIVolumetricEventType => "AI Volumetric Event Types",
+            SchemaEnumType::DamageTypes => "Damage Types",
+            SchemaEnumType::StanceType => "Stance Type",
+            SchemaEnumType::SharedMovementGait => "Shared Movement Gait",
+            SchemaEnumType::ChoreoLookAtSpeed => "Choreo LookAt Speed",
+            SchemaEnumType::ChoreoLookAtMode => "Choreo LookAt Move",
         }
     }
 }
@@ -205,6 +455,17 @@ impl SchemaEnumValue {
             SchemaEnumValue::ParticleAttachment(value) => value.to_str_ui(),
             SchemaEnumValue::BaseExplosionTypes(value) => value.to_str_ui(),
             SchemaEnumValue::HitGtoup(value) => value.to_str_ui(),
+            SchemaEnumValue::AILOD(value) => value.to_str_ui(),
+            SchemaEnumValue::NPCSTATE(value) => value.to_str_ui(),
+            SchemaEnumValue::PulseNPCCondition(value) => value.to_str_ui(),
+            SchemaEnumValue::NPCFollowFormation(value) => value.to_str_ui(),
+            SchemaEnumValue::AIStrafing(value) => value.to_str_ui(),
+            SchemaEnumValue::AIVolumetricEventType(value) => value.to_str_ui(),
+            SchemaEnumValue::DamageTypes(value) => value.to_str_ui(),
+            SchemaEnumValue::StanceType(value) => value.to_str_ui(),
+            SchemaEnumValue::SharedMovementGait(value) => value.to_str_ui(),
+            SchemaEnumValue::ChoreoLookAtSpeed(value) => value.to_str_ui(),
+            SchemaEnumValue::ChoreoLookAtMode(value) => value.to_str_ui(),
         }
     }
     pub fn to_str(&self) -> &'static str {
@@ -215,6 +476,17 @@ impl SchemaEnumValue {
             SchemaEnumValue::ParticleAttachment(value) => value.to_str(),
             SchemaEnumValue::BaseExplosionTypes(value) => value.to_str(),
             SchemaEnumValue::HitGtoup(value) => value.to_str(),
+            SchemaEnumValue::AILOD(value) => value.to_str(),
+            SchemaEnumValue::NPCSTATE(value) => value.to_str(),
+            SchemaEnumValue::PulseNPCCondition(value) => value.to_str(),
+            SchemaEnumValue::NPCFollowFormation(value) => value.to_str(),
+            SchemaEnumValue::AIStrafing(value) => value.to_str(),
+            SchemaEnumValue::AIVolumetricEventType(value) => value.to_str(),
+            SchemaEnumValue::DamageTypes(value) => value.to_str(),
+            SchemaEnumValue::StanceType(value) => value.to_str(),
+            SchemaEnumValue::SharedMovementGait(value) => value.to_str(),
+            SchemaEnumValue::ChoreoLookAtSpeed(value) => value.to_str(),
+            SchemaEnumValue::ChoreoLookAtMode(value) => value.to_str(),
         }
     }
     pub fn default_from_type(typ: &SchemaEnumType) -> Self {
@@ -231,6 +503,28 @@ impl SchemaEnumValue {
                 SchemaEnumValue::BaseExplosionTypes(BaseExplosionTypes::default()),
             SchemaEnumType::HitGroup =>
                 SchemaEnumValue::HitGtoup(HitGroup::default()),
+            SchemaEnumType::AILOD => 
+                SchemaEnumValue::AILOD(AILOD::default()),
+            SchemaEnumType::NPCSTATE => 
+                SchemaEnumValue::NPCSTATE(NPCSTATE::default()),
+            SchemaEnumType::PulseNPCCondition => 
+                SchemaEnumValue::PulseNPCCondition(PulseNPCCondition::default()),
+            SchemaEnumType::NPCFollowFormation => 
+                SchemaEnumValue::NPCFollowFormation(NPCFollowFormation::default()),
+            SchemaEnumType::AIStrafing => 
+                SchemaEnumValue::AIStrafing(AIStrafing::default()),
+            SchemaEnumType::AIVolumetricEventType => 
+                SchemaEnumValue::AIVolumetricEventType(AIVolumetricEventType::default()),
+            SchemaEnumType::DamageTypes => 
+                SchemaEnumValue::DamageTypes(DamageTypes::default()),
+            SchemaEnumType::StanceType => 
+                SchemaEnumValue::StanceType(StanceType::default()),
+            SchemaEnumType::SharedMovementGait => 
+                SchemaEnumValue::SharedMovementGait(SharedMovementGait::default()),
+            SchemaEnumType::ChoreoLookAtSpeed => 
+                SchemaEnumValue::ChoreoLookAtSpeed(ChoreoLookAtSpeed::default()),
+            SchemaEnumType::ChoreoLookAtMode => 
+                SchemaEnumValue::ChoreoLookAtMode(ChoreoLookAtMode::default()),
         }
     }
 }
@@ -397,6 +691,275 @@ impl PulseEnumTrait for HitGroup {
     }
     fn to_str_ui(&self) -> &'static str {
         self.to_str()
+    }
+}
+
+impl PulseEnumTrait for AILOD {
+    fn to_str(self) -> &'static str {
+        match self {
+            AILOD::High => "eHigh",
+            AILOD::Medium => "eMedium",
+            AILOD::Low => "eLow",
+            AILOD::VeryLow => "eVeryLow",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            AILOD::High => "High",
+            AILOD::Medium => "Medium",
+            AILOD::Low => "Low",
+            AILOD::VeryLow => "Very Low",
+        }
+    }
+}
+
+impl PulseEnumTrait for NPCSTATE {
+    fn to_str(self) -> &'static str {
+        match self {
+            NPCSTATE::Idle => "NPC_STATE_IDLE",
+            NPCSTATE::Alert => "NPC_STATE_ALERT",
+            NPCSTATE::Combat => "NPC_STATE_COMBAT",
+            NPCSTATE::Dead => "NPC_STATE_DEAD",
+            NPCSTATE::Inert => "NPC_STATE_INERT",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            NPCSTATE::Idle => "Idle",
+            NPCSTATE::Alert => "Alert",
+            NPCSTATE::Combat => "Combat",
+            NPCSTATE::Dead => "Dead",
+            NPCSTATE::Inert => "Inert",
+        }
+    }
+}
+
+impl PulseEnumTrait for PulseNPCCondition {
+    fn to_str(self) -> &'static str {
+        match self {
+            PulseNPCCondition::SeePlayer => "COND_SEE_PLAYER",
+            PulseNPCCondition::LostPlayer => "COND_LOST_PLAYER",
+            PulseNPCCondition::HearPlayer => "COND_HEAR_PLAYER",
+            PulseNPCCondition::PlayerPushing => "COND_PLAYER_PUSHING",
+            PulseNPCCondition::NoPrimaryAmmo => "COND_NO_PRIMARY_AMMO",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            PulseNPCCondition::SeePlayer => "Can See the Player",
+            PulseNPCCondition::LostPlayer => "Lost Sight of the Player",
+            PulseNPCCondition::HearPlayer => "Can Hear the Player",
+            PulseNPCCondition::PlayerPushing => "Is Being Pushed by the Player",
+            PulseNPCCondition::NoPrimaryAmmo => "No Primary Ammo",
+        }
+    }
+}
+
+impl PulseEnumTrait for NPCFollowFormation {
+    fn to_str(self) -> &'static str {
+        match self {
+            NPCFollowFormation::Default => "Default",
+            NPCFollowFormation::CloseCircle => "CloseCircle",
+            NPCFollowFormation::WideCircle => "WideCircle",
+            NPCFollowFormation::MediumCircle => "MediumCircle",
+            NPCFollowFormation::Sidekick => "Sidekick",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            NPCFollowFormation::Default => "Default",
+            NPCFollowFormation::CloseCircle => "Close Circle",
+            NPCFollowFormation::WideCircle => "Wide Circle",
+            NPCFollowFormation::MediumCircle => "Medium Circle",
+            NPCFollowFormation::Sidekick => "Sidekick",
+        }
+    }
+}
+
+impl PulseEnumTrait for AIStrafing {
+    fn to_str(self) -> &'static str {
+        match self {
+            AIStrafing::Disabled => "eDisabled",
+            AIStrafing::Enabled => "eEnabled",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            AIStrafing::Disabled => "Disabled ( Face Path )",
+            AIStrafing::Enabled => "Enabled ( Face Target )",
+        }
+    }
+}
+
+impl PulseEnumTrait for StanceType {
+    fn to_str(self) -> &'static str {
+        match self {
+            StanceType::Default => "STANCE_DEFAULT",
+            StanceType::Crouching => "STANCE_CROUCHING",
+            StanceType::Prone => "STANCE_PRONE",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            StanceType::Default => "Default",
+            StanceType::Crouching => "Crouching",
+            StanceType::Prone => "Prone",
+        }
+    }
+}
+
+impl PulseEnumTrait for AIVolumetricEventType {
+    fn to_str(self) -> &'static str {
+        match self {
+            AIVolumetricEventType::Combat => "eCombat",
+            AIVolumetricEventType::Player => "ePlayer",
+            AIVolumetricEventType::Danger => "eDanger",
+            AIVolumetricEventType::BulletImpact => "eBulletImpact",
+            AIVolumetricEventType::PhysicsDanger => "ePhysicsDanger",
+            AIVolumetricEventType::MoveAway => "eMoveAway",
+            AIVolumetricEventType::PlayerVehicle => "ePlayerVehicle",
+            AIVolumetricEventType::GlassBreak => "eGlassBreak",
+            AIVolumetricEventType::PhysicsObject => "ePhysicsObject",
+            AIVolumetricEventType::WarnFriends => "eWarnFriends",
+            AIVolumetricEventType::GunFire => "eGunfire",
+            AIVolumetricEventType::Explosion => "eExplosion",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            AIVolumetricEventType::Combat => "Combat",
+            AIVolumetricEventType::Player => "Player",
+            AIVolumetricEventType::Danger => "Danger",
+            AIVolumetricEventType::BulletImpact => "Bullet Impact",
+            AIVolumetricEventType::PhysicsDanger => "Physics Danger",
+            AIVolumetricEventType::MoveAway => "Move Away",
+            AIVolumetricEventType::PlayerVehicle => "Player Vehicle",
+            AIVolumetricEventType::GlassBreak => "Glass Break",
+            AIVolumetricEventType::PhysicsObject => "Physics Object",
+            AIVolumetricEventType::WarnFriends => "Warn Friends",
+            AIVolumetricEventType::GunFire => "Gunfire",
+            AIVolumetricEventType::Explosion => "Explosion",
+        }
+    }
+}
+
+impl PulseEnumTrait for DamageTypes {
+    fn to_str(self) -> &'static str {
+        match self {
+            DamageTypes::Generic => "DMG_GENERIC",
+            DamageTypes::Crush => "DMG_CRUSH",
+            DamageTypes::Bullet => "DMG_BULLET",
+            DamageTypes::Slash => "DMG_SLASH",
+            DamageTypes::Burn => "DMG_BURN",
+            DamageTypes::Vehicle => "DMG_VEHICLE",
+            DamageTypes::Fall => "DMG_FALL",
+            DamageTypes::Blast => "DMG_BLAST",
+            DamageTypes::Club => "DMG_CLUB",
+            DamageTypes::Shock => "DMG_SHOCK",
+            DamageTypes::Sonic => "DMG_SONIC",
+            DamageTypes::EnergyBeam => "DMG_ENERGYBEAM",
+            DamageTypes::Buckshot => "DMG_BUCKSHOT",
+            DamageTypes::Drown => "DMG_DROWN",
+            DamageTypes::Poison => "DMG_POISON",
+            DamageTypes::Radiation => "DMG_RADIATION",
+            DamageTypes::DrownRecover => "DMG_DROWNRECOVER",
+            DamageTypes::Acid => "DMG_ACID",
+            DamageTypes::Physgun => "DMG_PHYSGUN",
+            DamageTypes::Dissolve => "DMG_DISSOLVE",
+            DamageTypes::BlastSurface => "DMG_BLAST_SURFACE",
+            DamageTypes::Headshot => "DMG_HEADSHOT",
+            DamageTypes::Crit => "DMG_CRIT",
+            DamageTypes::Buffed => "DMG_BUFFED",
+            DamageTypes::Dot => "DMG_DOT",
+            DamageTypes::GroundAura => "DMG_GROUND_AURA",
+            DamageTypes::Lethal => "DMG_LETHAL",
+            DamageTypes::Dangerzone => "DMG_DANGERZONE",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            DamageTypes::Generic => "Generic",
+            DamageTypes::Crush => "Crush",
+            DamageTypes::Bullet => "Bullet",
+            DamageTypes::Slash => "Slash",
+            DamageTypes::Burn => "Burn",
+            DamageTypes::Vehicle => "Vehicle",
+            DamageTypes::Fall => "Fall",
+            DamageTypes::Blast => "Blast",
+            DamageTypes::Club => "Club",
+            DamageTypes::Shock => "Shock",
+            DamageTypes::Sonic => "Sonic",
+            DamageTypes::EnergyBeam => "Energy Beam",
+            DamageTypes::Buckshot => "Buckshot",
+            DamageTypes::Drown => "Drown",
+            DamageTypes::Poison => "Poison",
+            DamageTypes::Radiation => "Radiation",
+            DamageTypes::DrownRecover => "DrownRecover",
+            DamageTypes::Acid => "Acid",
+            DamageTypes::Physgun => "Physgun",
+            DamageTypes::Dissolve => "Dissolve",
+            DamageTypes::BlastSurface => "Blast Surface",
+            DamageTypes::Headshot => "Headshot",
+            DamageTypes::Crit => "Crit",
+            DamageTypes::Buffed => "Buffed",
+            DamageTypes::Dot => "Dot",
+            DamageTypes::GroundAura => "Ground Aura",
+            DamageTypes::Lethal => "Lethal",
+            DamageTypes::Dangerzone => "Danger Zone",
+        }
+    }
+}
+
+impl PulseEnumTrait for SharedMovementGait {
+    fn to_str(self) -> &'static str {
+        match self {
+            SharedMovementGait::Slow => "eSlow",
+            SharedMovementGait::Medium => "eMedium",
+            SharedMovementGait::Fast => "eFast",
+            SharedMovementGait::VeryFast => "eVeryFast",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            SharedMovementGait::Slow => "Slow",
+            SharedMovementGait::Medium => "Medium",
+            SharedMovementGait::Fast => "Fast",
+            SharedMovementGait::VeryFast => "Very Fast",
+        }
+    }
+}
+
+impl PulseEnumTrait for ChoreoLookAtSpeed {
+    fn to_str(self) -> &'static str {
+        match self {
+            ChoreoLookAtSpeed::Slow => "eSlow",
+            ChoreoLookAtSpeed::Medium => "eMedium",
+            ChoreoLookAtSpeed::Fast => "eFast",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            ChoreoLookAtSpeed::Slow => "Slow",
+            ChoreoLookAtSpeed::Medium => "Medium",
+            ChoreoLookAtSpeed::Fast => "Fast",
+        }
+    }
+}
+
+impl PulseEnumTrait for ChoreoLookAtMode {
+    fn to_str(self) -> &'static str {
+        match self {
+            ChoreoLookAtMode::Chest => "eChest",
+            ChoreoLookAtMode::Head => "eHead",
+            ChoreoLookAtMode::EyesOnly => "eEyesOnly",
+        }
+    }
+    fn to_str_ui(&self) -> &'static str {
+        match self {
+            ChoreoLookAtMode::Chest => "Chest",
+            ChoreoLookAtMode::Head => "Head",
+            ChoreoLookAtMode::EyesOnly => "Eyes Only",
+        }
     }
 }
 

@@ -831,7 +831,6 @@ impl KV3Serialize for PulseGraphDef {
             ],
         ),
             Box::new(Value::Object(vec![
-                (ObjectKey::Identifier("generic_data_type".into()), Value::String("Vpulse".into())),
                 (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize()).collect())),
                 (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
                 (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),

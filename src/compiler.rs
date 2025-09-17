@@ -2290,8 +2290,8 @@ fn traverse_nodes_and_populate<'a>(
                 try_pulse_type
             );
             let mut constants = vec![];
-            for input_id in current_node.input_ids().skip(1) /* skip the array type choser */ {
-                let value = graph.get_input(input_id).value().clone();
+            for input_id in current_node.user_data.added_inputs.iter() {
+                let value = graph.get_input(*input_id).value().clone();
                 let constant = get_pulse_constant_from_graph_value(value).map_err(|e| {
                     anyhow::anyhow!(format!("MakeArray node doesn't support constant values for type of {}. \
                     Please remove all initial elements and add them at runtime with the 'Array Append' node, or change the type - {e}", arr_type.get_ui_name()))

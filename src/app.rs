@@ -105,6 +105,7 @@ impl PulseGraphEditor {
         let mut sound_event_nodes = vec![];
         let mut entfire_nodes = vec![];
         let mut call_func_nodes = vec![];
+        let mut listen_entity_output_nodes = vec![];
         for node_id in self.state.graph.iter_nodes().collect::<Vec<_>>() {
             let node = match self.state.graph.nodes.get_mut(node_id) {
                 Some(node) => node,
@@ -153,8 +154,10 @@ impl PulseGraphEditor {
 
                         if let Some(target_node_id) = target_node_id {
                             if let Some(target_node) = self.state.graph.nodes.get(target_node_id) {
-                                if target_node.user_data.template == PulseNodeTemplate::Function {
-                                    call_func_nodes.push(node_id);
+                                match target_node.user_data.template {
+                                    PulseNodeTemplate::Function => { call_func_nodes.push(node_id); },
+                                    PulseNodeTemplate::ListenForEntityOutput => { listen_entity_output_nodes.push(node_id); },
+                                    _ => {}
                                 }
                             }
                         }
@@ -214,6 +217,12 @@ impl PulseGraphEditor {
                 InputParamKind::ConstantOnly,
                 true,
             );
+        }
+        for node_id in listen_entity_output_nodes {
+            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
+            if let Ok(o) = node.get_output("outAction") { 
+                self.state.graph.remove_output_param(o);
+            }
         }
         // this fills out the default domain and subdomain if they're not set at launch time
         if self.user_state.graph_domain.is_empty() {
@@ -611,6 +620,7 @@ impl PulseGraphEditor {
         let node = self.state.graph.nodes.get_mut(*node_id).unwrap();
         // remove all inputs
         let input_ids: Vec<_> = node.input_ids().collect();
+        let output_ids: Vec<_> = node.output_ids().collect();
         let input_node_chooser = node
             .get_input("nodeId")
             .expect("Expected 'Call Node' node to have 'nodeId' input param");
@@ -619,6 +629,9 @@ impl PulseGraphEditor {
             if input != input_node_chooser {
                 self.state.graph.remove_input_param(input);
             }
+        }
+        for output in output_ids {
+            self.state.graph.remove_output_param(output);
         }
         if let Some(reference_node) = self.state.graph.nodes.get(*node_id_refrence) {
             let reference_node_template = reference_node.user_data.template;
@@ -665,6 +678,11 @@ impl PulseGraphEditor {
                         InputParamKind::ConstantOnly,
                         true,
                     );
+                    self.state.graph.add_output_param(
+                        *node_id,
+                        "outAction".into(),
+                        PulseDataType::Action,
+                    );
                 }
                 PulseNodeTemplate::Timeline => {
                     self.state.graph.add_input_param(
@@ -682,6 +700,11 @@ impl PulseGraphEditor {
                         PulseGraphValueType::Action,
                         InputParamKind::ConnectionOnly,
                         true,
+                    );
+                    self.state.graph.add_output_param(
+                        *node_id,
+                        "outAction".into(),
+                        PulseDataType::Action,
                     );
                 }
                 _ => {

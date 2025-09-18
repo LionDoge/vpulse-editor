@@ -80,6 +80,22 @@
                 "type": "PVAL_ARRAY:PVAL_EHANDLE"
             }
         ]
+    },
+    {
+        "displayname": "OnStartMatchmaking",
+        "libname": "CCitadelPointPulseAPI::OnStartMatchmaking"
+    },
+    {
+        "displayname": "OnStopMatchmaking",
+        "libname": "CCitadelPointPulseAPI::OnStopMatchmaking"
+    },
+    {
+        "displayname": "OnHideoutLobbyChanged",
+        "libname": "CCitadelPointPulseAPI::OnHideoutLobbyChanged"
+    },
+    {
+        "displayname": "OnHideoutOwnerHeroReleaseVoteStatusUpdated",
+        "libname": "CCitadelPointPulseAPI::OnHideoutOwnerHeroReleaseVoteStatusUpdated"
     }
 
     ],
@@ -858,6 +874,18 @@
             {
                 "name": "retval",
                 "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Is Wingman",
+        "libname": "CCSPointPulseAPI::GetIsWingman",
+        "description": "Get if the current match is a Wingman match.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
             }
         ]
     },
@@ -4552,6 +4580,154 @@
             {
                 "name": "retval",
                 "type": "PVAL_FLOAT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Fast Cooldowns Enabled",
+        "libname": "CCitadelPointPulseAPI::GetFastCooldownsEnabled",
+        "description": "Get if Fast Cooldowns are enabled.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Fast Cooldowns Enabled",
+        "libname": "CCitadelPointPulseAPI::SetFastCooldownsEnabled",
+        "description": "Enable or disable Fast Cooldowns.",
+        "inparams": [
+            {
+                "name": "bEnabled",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Fast Stamina Enabled",
+        "libname": "CCitadelPointPulseAPI::GetFastStaminaEnabled",
+        "description": "Get if Fast Stamina is enabled.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Set Fast Stamina Enabled",
+        "libname": "CCitadelPointPulseAPI::SetFastStaminaEnabled",
+        "description": "Enable or disable Fast Stamina.",
+        "inparams": [
+            {
+                "name": "bEnabled",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Hideout Owner Has Seasonal Award",
+        "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward",
+        "description": "Get if the owner for the hideout achieved a seasonal award.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Hideout Owner Hero Release Votes Cast Total",
+        "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseVotesCastTotal",
+        "description": "Get the hideout owner's number of total hero release votes cast.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Hideout Member Count",
+        "libname": "CCitadelPointPulseAPI::HideoutMemberCount",
+        "description": "Get the number of players in the hideout lobby.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_INT"
+            }
+        ]
+    },
+    {
+        "type": "action",
+        "displayname": "Drop Powerup (citadel_item_powerup_spawner)",
+        "libname": "CCitadel_PickupItemSpawnerAPI::DropPowerup",
+        "description": "Drop one of the spawner's configured powerups.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:citadel_item_powerup_spawner"
+            }           
+        ] 
+    },
+    {
+        "type": "action",
+        "displayname": "Set AI LOD",
+        "libname": "CAI_BaseNPCAPI::SetAILOD",
+        "description": "Set the LOD of this NPC. Accepted values are 'eLow', 'eMedium', 'eHigh",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:base_npc"
+            },
+            {
+                "name": "nLOD",
+                "type": "PVAL_SCHEMA_ENUM:AILOD_t"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get NPC State",
+        "libname": "CAI_BaseNPCAPI::GetNPCState",
+        "description": "Returns the NPC_STATE of the given NPC.",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:base_npc"
+            }       
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_SCHEMA_ENUM:NPC_STATE"
+            }
+        ]
+    },
+    {
+        "type": "value",
+        "displayname": "Get Sensed Events",
+        "libname": "CAI_VolumetricEventSensorAPI::GetSensedEvents",
+        "description": "Returns all currently sensed events",
+        "inparams": [
+            {
+                "name": "_Target",
+                "type": "PVAL_EHANDLE:ai_volumetric_event_sensor"
+            }       
+        ],
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_TYPESAFE_INT:AI_VolumetricEventHandle_t"
             }
         ]
     }

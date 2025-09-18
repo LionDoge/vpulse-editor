@@ -879,6 +879,18 @@
     },
     {
         "type": "value",
+        "displayname": "Get Is Wingman",
+        "libname": "CCSPointPulseAPI::GetIsWingman",
+        "description": "Get if the current match is a Wingman match.",
+        "outparams": [
+            {
+                "name": "retval",
+                "type": "PVAL_BOOL"
+            }
+        ]
+    },
+    {
+        "type": "value",
         "displayname": "Get CT Score",
         "libname": "CCSPointPulseAPI::GetCTScore",
         "description": "Get the number of rounds won by CTs.",

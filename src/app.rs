@@ -88,8 +88,8 @@ impl PartialEq for FullGraphState {
         self.state.node_positions == other.state.node_positions &&
         slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
         slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
-        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs) &&
-        self.user_state == other.user_state
+        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs)
+        //self.user_state == other.user_state
     }
 }
 
@@ -1153,9 +1153,15 @@ impl eframe::App for PulseGraphEditor {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
-        
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
+        self.undoer.feed_state(
+            std::time::SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("time went backwards")
+                .as_secs_f64(), 
+            &self.full_state
+        );
         if self.current_modal_dialog.is_open {
             let modal = Modal::new(Id::new("MainModal")).show(ctx, |ui| {
                 match self.current_modal_dialog.window_type {
@@ -1272,9 +1278,10 @@ impl eframe::App for PulseGraphEditor {
                         self.current_modal_dialog.window_type = ModalWindowType::ConfirmSave;
                     }
                 if ui.button("Undo").clicked()
-                    || ctx.input(|i| i.modifiers.command && i.key_pressed(egui::Key::Z))
                 {
-                    self.undoer.undo(&self.full_state);
+                    if let Some(prev_state) = self.undoer.undo(&self.full_state) {
+                        self.full_state = prev_state.clone();
+                    }
                 }
                 if !ctx.wants_keyboard_input() 
                     && ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::D)) {

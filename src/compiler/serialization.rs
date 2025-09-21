@@ -1,9 +1,9 @@
 #![allow(non_camel_case_types)]
 #![allow(nonstandard_style)]
 
+use kv3::{Metadata, ObjectKey, Value};
 use std::borrow::Cow;
 use egui_node_graph2::{InputId, NodeId, OutputId};
-use indoc::formatdoc;
 use slotmap::SecondaryMap;
 use crate::{
     pulsetypes::*,
@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub trait KV3Serialize {
-    fn serialize(&self) -> String;
+    fn serialize(&self) -> Value;
 }
 pub struct PulseRuntimeArgument {
     pub name: String,
@@ -20,42 +20,28 @@ pub struct PulseRuntimeArgument {
 }
 
 impl KV3Serialize for PulseRuntimeArgument {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_Name = \"{}\"
-                m_Description = \"{}\"
-                m_Type = \"{}\"
-            }}
-            "
-            , self.name, self.description, self.typ
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
+            (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(self.typ.clone())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Inflow_Method {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Inflow_Method\"
-                m_nEditorNodeID = -1
-                m_EntryChunk = {}
-                m_RegisterMap = {}
-                m_MethodName = \"{}\"
-                m_Description = \"{}\"
-                m_bIsPublic = true
-                m_ReturnType = \"PVAL_VOID\"
-                m_Args =
-                [
-                    {}
-                ]
-            }}
-            "
-            , self.entry_chunk, self.register_map.serialize(), self.name, self.description
-            , self.args.iter().map(|arg| arg.serialize()).collect::<Vec<String>>().join(",\n\n")
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_Method".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_MethodName".into()), Value::String(self.name.clone())),
+            (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
+            (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
+            (ObjectKey::Identifier("m_ReturnType".into()), Value::String("PVAL_VOID".into())),
+            (ObjectKey::Identifier("m_Args".into()), Value::Array(self.args.iter().map(|arg| arg.serialize()).collect())),
+        ])
     }
 }
 
@@ -72,19 +58,14 @@ impl CPulseCell_Inflow_Method {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_EventHandler {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Inflow_EventHandler\"
-                m_nEditorNodeID = -1
-                m_EntryChunk = {}
-                m_RegisterMap = {}
-                m_EventName = \"{}\"
-            }}
-            "
-            , self.entry_chunk, self.register_map.serialize(), self.event_name
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_EventHandler".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_EventName".into()), Value::String(self.event_name.to_string())),
+        ])
     }
 }
 impl CPulseCell_Inflow_EventHandler {
@@ -101,22 +82,16 @@ impl CPulseCell_Inflow_EventHandler {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_Wait {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Inflow_Wait\"
-                m_nEditorNodeID = -1
-                m_WakeResume = 
-                {{
-                    m_SourceOutflowName = \"m_WakeResume\"
-                    m_nDestChunk = {}
-                    m_nInstruction = {}
-                }}
-            }}
-            "
-            , self.dest_chunk, self.instruction
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_Wait".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_WakeResume".into()), Value::Object(vec![
+                (ObjectKey::Identifier("m_SourceOutflowName".into()), Value::String("m_WakeResume".into())),
+                (ObjectKey::Identifier("m_nDestChunk".into()), Value::Number(self.dest_chunk.into())),
+                (ObjectKey::Identifier("m_nInstruction".into()), Value::Number(self.instruction.into())),
+            ])),
+        ])
     }
 }
 impl CPulseCell_Inflow_Wait {
@@ -129,79 +104,55 @@ impl CPulseCell_Inflow_Wait {
 }
 
 impl KV3Serialize for CPulseCell_Step_EntFire {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Step_EntFire\"
-                m_nEditorNodeID = -1
-                m_Input = \"{}\"
-            }}
-            "
-            , self.input
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_EntFire".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_Input".into()), Value::String(self.input.to_string())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Step_DebugLog {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Step_DebugLog\"
-                m_nEditorNodeID = -1
-            }}
-            "
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_DebugLog".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Step_PublicOutput {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Step_PublicOutput\"
-                m_nEditorNodeID = -1
-                m_OutputIndex = {}
-            }}
-            "
-            , self.output_idx
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_PublicOutput".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_OutputIndex".into()), Value::Number(self.output_idx.into()))
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Inflow_GraphHook {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Inflow_GraphHook\"
-                m_nEditorNodeID = -1
-                m_EntryChunk = {}
-                m_RegisterMap = {}
-                m_HookName = \"{}\"
-            }}
-            "
-            , self.entry_chunk, self.register_map.serialize(), self.hook_name
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_GraphHook".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_HookName".into()), Value::String(self.hook_name.to_string())),
+        ])
     }
 }
 
 impl KV3Serialize for Register {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_nReg = {}
-                m_Type = \"{}\"
-                m_OriginName = \"0:null\"
-                m_nWrittenByInstruction = {}
-                m_nLastReadByInstruction = -1
-            }}
-            "
-            , self.num, self.reg_type, self.written_by_instruction
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_nReg".into()), Value::Number(self.num.into())),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(self.reg_type.clone())),
+            (ObjectKey::Identifier("m_OriginName".into()), Value::String("0:null".into())),
+            (ObjectKey::Identifier("m_nWrittenByInstruction".into()), Value::Number(self.written_by_instruction.into())),
+            (ObjectKey::Identifier("m_nLastReadByInstruction".into()), Value::Number(-1f64)),
+        ])
     }
 }
 
@@ -227,44 +178,29 @@ impl RegisterMap {
 }
 
 impl KV3Serialize for RegisterMap {
-    fn serialize(&self) -> String {
-        let inparams_str: String = if !self.inparams.is_empty() {
-            formatdoc!(
-                "{{
-                    {}
-                }}",
-                self.inparams
-                    .iter()
-                    .map(|(name, num)| format!("{name} = {num}"))
-                    .collect::<Vec<String>>()
-                    .join("\n")
-            )
-        } else {
-            String::from("null")
-        };
-        let outparams_str: String = if !self.outparams.is_empty() {
-            formatdoc!(
-                "{{
-                    {}
-                }}",
-                self.outparams
-                    .iter()
-                    .map(|(name, num)| format!("{name} = {num}"))
-                    .collect::<Vec<String>>()
-                    .join("\n")
-            )
-        } else {
-            String::from("null")
-        };
-        formatdoc! {
-            "
-            {{
-                m_Inparams = {}
-                m_Outparams = {}
-            }}
-            "
-            , inparams_str, outparams_str
+    fn serialize(&self) -> Value {
+        fn map_params(params: &Vec<(Cow<'_, str>, i32)>) -> Value {
+            let param_list = params
+                .iter()
+                .map(|(name, num)| 
+                    (ObjectKey::Identifier(name.to_string()), Value::Number((*num).into())))
+                .collect::<Vec<(ObjectKey, Value)>>();
+            Value::Object(param_list)
         }
+        let inparams_value: Value = if !self.inparams.is_empty() {
+            map_params(&self.inparams)
+        } else {
+            Value::Null
+        };
+        let outparams_value: Value = if !self.outparams.is_empty() {
+            map_params(&self.outparams)
+        } else {
+            Value::Null
+        };
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Inparams".into()), inparams_value),
+            (ObjectKey::Identifier("m_Outparams".into()), outparams_value),
+        ])
     }
 }
 
@@ -301,28 +237,21 @@ impl Default for Instruction {
     }
 }
 impl KV3Serialize for Instruction {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_nCode = \"{}\"
-                m_nVar = {}
-                m_nReg0 = {}
-                m_nReg1 = {}
-                m_nReg2 = {}
-                m_nInvokeBindingIndex = {}
-                m_nChunk = {}
-                m_nDestInstruction = {}
-                m_nCallInfoIndex = {}
-                m_nConstIdx = {}
-                m_nDomainValueIdx = {}
-                m_nBlackboardReferenceIdx = {}
-            }}
-            "
-            , self.code, self.var, self.reg0, self.reg1, self.reg2,
-             self.invoke_binding_index, self.chunk, self.dest_instruction,
-            self.call_info_index, self.const_idx, self.domain_value_idx, self.blackboard_reference_idx
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_nCode".into()), Value::String(self.code.clone())),
+            (ObjectKey::Identifier("m_nVar".into()), Value::Number(self.var.into())),
+            (ObjectKey::Identifier("m_nReg0".into()), Value::Number(self.reg0.into())),
+            (ObjectKey::Identifier("m_nReg1".into()), Value::Number(self.reg1.into())),
+            (ObjectKey::Identifier("m_nReg2".into()), Value::Number(self.reg2.into())),
+            (ObjectKey::Identifier("m_nInvokeBindingIndex".into()), Value::Number(self.invoke_binding_index.into())),
+            (ObjectKey::Identifier("m_nChunk".into()), Value::Number(self.chunk.into())),
+            (ObjectKey::Identifier("m_nDestInstruction".into()), Value::Number(self.dest_instruction.into())),
+            (ObjectKey::Identifier("m_nCallInfoIndex".into()), Value::Number(self.call_info_index.into())),
+            (ObjectKey::Identifier("m_nConstIdx".into()), Value::Number(self.const_idx.into())),
+            (ObjectKey::Identifier("m_nDomainValueIdx".into()), Value::Number(self.domain_value_idx.into())),
+            (ObjectKey::Identifier("m_nBlackboardReferenceIdx".into()), Value::Number(self.blackboard_reference_idx.into())),
+        ])
     }
 }
 
@@ -356,28 +285,12 @@ impl PulseChunk {
     }
 }
 impl KV3Serialize for PulseChunk {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_Instructions = 
-                [
-                    {}
-                ]
-                m_Registers = 
-                [
-                    {}
-                ]
-                m_InstructionEditorIDs = 
-                [
-                    {}
-                ]
-            }}
-            "
-            , self.instructions.iter().map(|instruction| instruction.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.registers.iter().map(|register| register.serialize()).collect::<Vec<String>>().join(",\n\n")
-            , self.instruction_editor_ids.iter().map(|id| id.to_string()).collect::<Vec<String>>().join(",\n\n")
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Instructions".into()), Value::Array(self.instructions.iter().map(|instruction| instruction.serialize()).collect())),
+            (ObjectKey::Identifier("m_Registers".into()), Value::Array(self.registers.iter().map(|register| register.serialize()).collect())),
+            (ObjectKey::Identifier("m_InstructionEditorIDs".into()), Value::Array(self.instruction_editor_ids.iter().map(|id| Value::Number((*id).into())).collect())),
+        ])
     }
 }
 
@@ -390,19 +303,14 @@ pub struct InvokeBinding {
 }
 
 impl KV3Serialize for InvokeBinding {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_RegisterMap = {}
-                m_FuncName = \"{}\"
-                m_nCellIndex = {}
-                m_nSrcChunk = {}
-                m_nSrcInstruction = {}
-            }}
-            "
-            , self.register_map.serialize(), self.func_name, self.cell_index, self.src_chunk, self.src_instruction
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_FuncName".into()), Value::String(self.func_name.to_string())),
+            (ObjectKey::Identifier("m_nCellIndex".into()), Value::Number(self.cell_index.into())),
+            (ObjectKey::Identifier("m_nSrcChunk".into()), Value::Number(self.src_chunk.into())),
+            (ObjectKey::Identifier("m_nSrcInstruction".into()), Value::Number(self.src_instruction.into())),
+        ])
     }
 }
 
@@ -414,17 +322,12 @@ pub struct DomainValue {
     pub required_runtime_type: Cow<'static, str>,
 }
 impl KV3Serialize for DomainValue {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_nType = \"{}\"
-                m_Value = \"{}\"
-                m_RequiredRuntimeType = \"{}\"
-            }}
-            "
-            , self.typ, self.value, self.required_runtime_type
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_nType".into()), Value::String(self.typ.to_string())),
+            (ObjectKey::Identifier("m_Value".into()), Value::String(self.value.to_string())),
+            (ObjectKey::Identifier("m_RequiredRuntimeType".into()), Value::String(self.required_runtime_type.to_string())),
+        ])
     }
 }
 
@@ -450,33 +353,23 @@ impl OutputConnection {
     }
 }
 impl KV3Serialize for OutputConnection {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_SourceOutput = \"{}\"
-                m_TargetEntity = \"{}\"
-                m_TargetInput = \"{}\"
-                m_Param = \"{}\"
-            }}
-            "
-            , self.source_output, self.target_entity, self.target_input, self.param
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_SourceOutput".into()), Value::String(self.source_output.clone())),
+            (ObjectKey::Identifier("m_TargetEntity".into()), Value::String(self.target_entity.clone())),
+            (ObjectKey::Identifier("m_TargetInput".into()), Value::String(self.target_input.clone())),
+            (ObjectKey::Identifier("m_Param".into()), Value::String(self.param.clone())),
+        ])
     }
 }
 
 impl KV3Serialize for OutputDefinition {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_Name = \"{}\"
-                m_Description = \"\"
-                m_ParamType = \"{}\"
-            }}
-            "
-            , self.name, self.typ.to_string()
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
+            (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
+            (ObjectKey::Identifier("m_ParamType".into()), Value::String(self.typ.to_string())),
+        ])
     }
 }
 
@@ -511,111 +404,117 @@ pub enum PulseConstant {
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
     Resource(Option<String>, String), // (resource_type, value)
-    Array(PulseValueType, String), // raw KV3 array content
+    Array(PulseValueType, Vec<PulseConstant>), // raw KV3 array content
 }
-impl KV3Serialize for PulseConstant {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_Type = \"{}\"
-                m_Value = {}
-            }}
-            "
-            ,
-            match self {
-                PulseConstant::String(_) => "PVAL_STRING".to_string(),
-                PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
-                PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
-                PulseConstant::Integer(_) => "PVAL_INT".to_string(),
-                PulseConstant::Vec2(_) => "PVAL_VEC2".to_string(),
-                PulseConstant::Vec3(_) => "PVAL_VEC3_WORLDSPACE".to_string(),
-                PulseConstant::Vec4(_) => "PVAL_VEC4".to_string(),
-                PulseConstant::QAngle(_) => "PVAL_QANGLE".to_string(),
-                PulseConstant::Vec3Local(_) =>  "PVAL_VEC3".to_string(),
-                PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
-                PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
-                PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
-                PulseConstant::Resource(resource_type, _) => {
-                    if let Some(resource_type) = resource_type {
-                        format!("PVAL_RESOURCE:{resource_type}")
-                    } else {
-                        "PVAL_RESOURCE".to_string()
-                    }
-                }
-                PulseConstant::Array(typ, _) => {
-                    format!("PVAL_ARRAY:{}", typ)
-                }
-            },
-            match self {
-                PulseConstant::String(value) => format!("\"{value}\""),
-                PulseConstant::SoundEventName(value) => format!("soundevent:\"{value}\""),
-                PulseConstant::Float(value) => format!("{value:.8}"),
-                PulseConstant::Integer(value) => value.to_string(),
-                PulseConstant::Vec2(value) => format!("[{:.3}, {:.3}]", value.x, value.y),
-                PulseConstant::Vec3(value)
-                | PulseConstant::Vec3Local(value)
-                | PulseConstant::QAngle(value) => format!("[{:.3}, {:.3}, {:.3}]", value.x, value.y, value.z),
-                PulseConstant::Vec4(value) => format!("[{:.3}, {:.3}, {:.3}, {:.3}]", value.x, value.y, value.z, value.w),
-                PulseConstant::Color_RGB(value) => format!("[{}, {}, {}]", value[0], value[1], value[2]),
-                PulseConstant::Bool(value) => value.to_string(),
-                PulseConstant::SchemaEnum(_, value) => format!("\"{}\"", value.to_str()),
-                PulseConstant::Resource(_, value) => format!("resource:\"{value}\""),
-                PulseConstant::Array(_, value) => value.clone(), // raw KV3 array content
+impl PulseConstant {
+    fn serialize_value(&self) -> Value {
+        match self {
+            PulseConstant::String(value) => Value::String(value.clone()),
+            PulseConstant::SoundEventName(value) => Value::Flag("soundevent".into(), Value::String(value.clone()).into()),
+            PulseConstant::Float(value) => Value::Number((*value).into()),
+            PulseConstant::Integer(value) => Value::Number((*value).into()),
+            PulseConstant::Vec2(value) => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into())]),
+            PulseConstant::Vec3(value)
+            | PulseConstant::Vec3Local(value)
+            | PulseConstant::QAngle(value) 
+                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into())]),
+            PulseConstant::Vec4(value) 
+                => Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into()), Value::Number(value.w.into())]),
+            PulseConstant::Color_RGB(value) 
+                => Value::Array(vec![Value::Number(value[0].into()), Value::Number(value[1].into()), Value::Number(value[2].into())]),
+            PulseConstant::Bool(value) => Value::Bool(*value),
+            PulseConstant::SchemaEnum(_, value) => Value::String(value.to_str().to_string()),
+            PulseConstant::Resource(_, value) => Value::Flag("resource".into(), Value::String(value.clone()).into()),
+            PulseConstant::Array(_, value) => {
+                let values = value.iter().map(|v| v.serialize_value()).collect();
+                Value::Array(values)
             }
         }
     }
 }
+impl KV3Serialize for PulseConstant {
+    fn serialize(&self) -> Value {
+        let typ_str =  match self {
+            PulseConstant::String(_) => "PVAL_STRING".to_string(),
+            PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
+            PulseConstant::Float(_) => "PVAL_FLOAT".to_string(),
+            PulseConstant::Integer(_) => "PVAL_INT".to_string(),
+            PulseConstant::Vec2(_) => "PVAL_VEC2".to_string(),
+            PulseConstant::Vec3(_) => "PVAL_VEC3_WORLDSPACE".to_string(),
+            PulseConstant::Vec4(_) => "PVAL_VEC4".to_string(),
+            PulseConstant::QAngle(_) => "PVAL_QANGLE".to_string(),
+            PulseConstant::Vec3Local(_) =>  "PVAL_VEC3".to_string(),
+            PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
+            PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
+            PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
+            PulseConstant::Resource(resource_type, _) => {
+                if let Some(resource_type) = resource_type {
+                    format!("PVAL_RESOURCE:{resource_type}")
+                } else {
+                    "PVAL_RESOURCE".to_string()
+                }
+            }
+            PulseConstant::Array(typ, _) => {
+                format!("PVAL_ARRAY:{}", typ)
+            }
+        };
+        let val = self.serialize_value();
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Type".into()), Value::String(typ_str)),
+            (ObjectKey::Identifier("m_Value".into()), val),
+        ])
+    }
+}
 
 impl KV3Serialize for PulseVariable {
-    fn serialize(&self) -> String {
+    fn serialize(&self) -> Value {
         // convert default values to KV3 literal string.
-        let literal = match &self.typ_and_default_value {
+        let default_value = match &self.typ_and_default_value {
             PulseValueType::PVAL_STRING(value) => {
                 if let Some(value) = value {
-                    format!("\"{value}\"")
+                    Value::String(value.clone())
                 } else {
-                    String::from("")
+                    Value::Null
                 }
             }
             PulseValueType::PVAL_RESOURCE(_, value) => {
                 if let Some(value) = value {
-                    format!("resource:\"{value}\"")
+                    Value::Flag("resource".to_string(), Value::String(value.clone()).into())
                 } else {
-                    String::from("")
+                    Value::Null
                 }
             }
             PulseValueType::PVAL_FLOAT(value) 
-            | PulseValueType::PVAL_GAMETIME(value) => format!("{:.6}", value.unwrap_or_default()),
-            PulseValueType::PVAL_INT(value) => format!("{:?}", value.unwrap_or_default()),
+            | PulseValueType::PVAL_GAMETIME(value) => Value::Number(value.unwrap_or_default().into()),
+            PulseValueType::PVAL_INT(value) => Value::Number(value.unwrap_or_default().into()),
             PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
-                format!("{:?}", value.unwrap_or_default())
+                Value::Number(value.unwrap_or_default().into())
             }
             PulseValueType::PVAL_VEC2(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.6}, {:.6}]", val.x, val.y)
+                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into())])
             }
             PulseValueType::PVAL_VEC3(value)
             | PulseValueType::PVAL_VEC3_LOCAL(value)
             | PulseValueType::PVAL_QANGLE(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.6}, {:.6}, {:.6}]", val.x, val.y, val.z)
+                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into())])
             }
             PulseValueType::PVAL_VEC4(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{:.6}, {:.6}, {:.6}, {:.6}]", val.x, val.y, val.z, val.w)
+                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into()), Value::Number(val.w.into())])
             }
             PulseValueType::PVAL_COLOR_RGB(value) => {
                 let val = value.unwrap_or_default();
-                format!("[{}, {}, {}]", val.x, val.y, val.z)
+                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into())])
             }
-            
-            PulseValueType::PVAL_BOOL_VALUE(value) => value.unwrap_or_default().to_string(),
-            PulseValueType::PVAL_BOOL => String::from("false"), // default value for bool is false
-            PulseValueType::PVAL_SNDEVT_NAME(val) => val.clone().unwrap_or_default(),
-            PulseValueType::PVAL_SCHEMA_ENUM(en) => {
-                format!("\"{}\"", en.to_str())
-            }
+            PulseValueType::PVAL_BOOL_VALUE(value) 
+                => Value::Bool(value.unwrap_or_default()),
+            PulseValueType::PVAL_BOOL => Value::Bool(false), // default value for bool is false
+            PulseValueType::PVAL_SNDEVT_NAME(val) 
+                => Value::Flag("soundevent".into(), Value::String(val.clone().unwrap_or_default()).into()),
+            PulseValueType::PVAL_SCHEMA_ENUM(en) 
+                => Value::String(en.to_str().to_string()),
 
             PulseValueType::PVAL_TRANSFORM(_)
             | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
@@ -625,80 +524,55 @@ impl KV3Serialize for PulseVariable {
             | PulseValueType::PVAL_SNDEVT_GUID(_)
             | PulseValueType::PVAL_ACT
             | PulseValueType::PVAL_ANY
-            | PulseValueType::PVAL_ARRAY(_) => String::from("null"),
-            _ => String::from("null"), // Other types don't have a default value
+            | PulseValueType::PVAL_ARRAY(_) => Value::Null,
+            _ => Value::Null, // Other types don't have a default value
         };
-        formatdoc! {"
-            {{
-                m_Name = \"{}\"
-                m_Description = \"\"
-                m_Type = \"{}\"
-                m_DefaultValue = {}
-                m_nKeysSource = \"PRIVATE\"
-                m_bIsPublic = true
-                m_bIsPublicBlackboardVariable = false
-                m_bIsObservable = false
-                m_nEditorNodeID = -1
-            }}
-            "
-            , self.name, self.typ_and_default_value.to_string(), literal
-        }
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
+            (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(self.typ_and_default_value.to_string())),
+            (ObjectKey::Identifier("m_DefaultValue".into()), default_value),
+            (ObjectKey::Identifier("m_nKeysSource".into()), Value::String("PRIVATE".into())),
+            (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
+            (ObjectKey::Identifier("m_bIsPublicBlackboardVariable".into()), Value::Bool(false)),
+            (ObjectKey::Identifier("m_bIsObservable".into()), Value::Bool(false)),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64))
+        ])
     }
 }
 
 impl KV3Serialize for OutflowConnection {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_SourceOutflowName = \"{}\"
-                m_nDestChunk = {}
-                m_nInstruction = {}
-                {}
-            }}
-            "
-            , self.outflow_name, self.dest_chunk, self.dest_instruction
-            , if let Some(register_map) = &self.register_map {
-                format!("m_OutflowRegisterMap = {}", register_map.serialize())
-            } else {
-                String::default()
-            }
+    fn serialize(&self) -> Value {
+        let mut params = vec![
+            (ObjectKey::Identifier("m_SourceOutflowName".into()), Value::String(self.outflow_name.to_string())),
+            (ObjectKey::Identifier("m_nDestChunk".into()), Value::Number(self.dest_chunk.into())),
+            (ObjectKey::Identifier("m_nInstruction".into()), Value::Number(self.dest_instruction.into())),
+        ];
+        if let Some(register_map) = &self.register_map {
+            params.push((ObjectKey::Identifier("m_OutflowRegisterMap".into()), register_map.serialize()));   
         }
+        Value::Object(params)
     }
 }
 
 impl KV3Serialize for CPulseCell_Outflow_IntSwitch {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Outflow_IntSwitch\"
-                m_nEditorNodeID = -1
-                m_DefaultCaseOutflow = {}
-                m_CaseOutflows = 
-                [
-                    {}
-                ]
-            }}
-            "
-            , self.default_outflow.serialize()
-            , self.ouflows.iter().map(|outflow| outflow.serialize()).collect::<Vec<String>>().join(",\n\n")
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Outflow_IntSwitch".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_DefaultCaseOutflow".into()), self.default_outflow.serialize()),
+            (ObjectKey::Identifier("m_CaseOutflows".into()), Value::Array(self.ouflows.iter().map(|outflow| outflow.serialize()).collect())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_SoundEventStart {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_SoundEventStart\"
-                m_nEditorNodeID = -1
-                m_Type = \"{}\"
-            }}
-            "
-            , self.typ.to_str()
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_SoundEventStart".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(self.typ.to_str().to_string())),
+        ])
     }
 }
 
@@ -711,146 +585,94 @@ pub struct CallInfo {
 }
 
 impl KV3Serialize for CallInfo {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_PortName = \"{}\"
-                m_nEditorNodeID = -1
-                m_RegisterMap = {}
-                m_nCallMethodID = {}
-                m_nSrcChunk = {}
-                m_nSrcInstruction = {}
-            }}
-            ",
-            self.port_name,
-            self.register_map.serialize(),
-            self.call_method_id, self.src_chunk,
-            self.src_instruction
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_PortName".into()), Value::String(self.port_name.to_string())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_nCallMethodID".into()), Value::Number(self.call_method_id.into())),
+            (ObjectKey::Identifier("m_nSrcChunk".into()), Value::Number(self.src_chunk.into())),
+            (ObjectKey::Identifier("m_nSrcInstruction".into()), Value::Number(self.src_instruction.into())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Outflow_ListenForEntityOutput\"
-                m_nEditorNodeID = -1
-                m_OnFired = {}
-                m_OnCanceled = {}
-                m_strEntityOutput = \"{}\"
-                m_strEntityOutputParam = \"{}\"
-                m_bListenUntilCanceled = {}
-            }}
-            "
-            , self.outflow_onfired.serialize()
-            , self.outflow_oncanceled.serialize()
-            , self.entity_output, self.entity_output_param, self.listen_until_canceled
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Outflow_ListenForEntityOutput".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_OnFired".into()), self.outflow_onfired.serialize()),
+            (ObjectKey::Identifier("m_OnCanceled".into()), self.outflow_oncanceled.serialize()),
+            (ObjectKey::Identifier("m_strEntityOutput".into()), Value::String(self.entity_output.clone())),
+            (ObjectKey::Identifier("m_strEntityOutputParam".into()), Value::String(self.entity_output_param.clone())),
+            (ObjectKey::Identifier("m_bListenUntilCanceled".into()), Value::Bool(self.listen_until_canceled)),
+        ])
     }
 }
 
 impl KV3Serialize for TimelineEvent {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                m_flTimeFromPrevious = {:.6}
-                m_bPauseForPreviousEvents = {:.6}
-                m_bCallModeSync = {}
-                m_EventOutflow = {}
-            }}
-            "
-            , self.time_from_previous, self.pause_for_previous_events, self.call_mode_sync, self.event_outflow.serialize()
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_flTimeFromPrevious".into()), Value::Number(self.time_from_previous.into())),
+            (ObjectKey::Identifier("m_bPauseForPreviousEvents".into()), Value::Number(self.pause_for_previous_events.into())),
+            (ObjectKey::Identifier("m_bCallModeSync".into()), Value::Bool(self.call_mode_sync)),
+            (ObjectKey::Identifier("m_EventOutflow".into()), self.event_outflow.serialize()),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Timeline {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Timeline\"
-                m_nEditorNodeID = -1
-                m_OnFinished = {}
-                m_bWaitForChildOutflows = {}
-                m_TimelineEvents = 
-                [
-                    {}
-                ]
-            }}
-            "
-            , self.outflow_onfinished.serialize()
-            , self.wait_for_child_outflows
-            , self.timeline_events.iter().map(|event| event.serialize()).collect::<Vec<String>>().join(",\n\n")
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Timeline".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_OnFinished".into()), self.outflow_onfinished.serialize()),
+            (ObjectKey::Identifier("m_bWaitForChildOutflows".into()), Value::Bool(self.wait_for_child_outflows)),
+            (ObjectKey::Identifier("m_TimelineEvents".into()), Value::Array(self.timeline_events.iter().map(|event| event.serialize()).collect())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Step_SetAnimGraphParam\"
-                m_nEditorNodeID = -1
-                m_ParamName = \"{}\"
-            }}
-            "
-            , self.param_name
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_SetAnimGraphParam".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_ParamName".into()), Value::String(self.param_name.to_string())),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Value_RandomInt {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Value_RandomInt\"
-                m_nEditorNodeID = -1
-            }}
-            "
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Value_RandomInt".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Value_RandomFloat {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Value_RandomFloat\"
-                m_nEditorNodeID = -1
-            }}
-            "
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Value_RandomFloat".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+        ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Inflow_EntOutputHandler {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {{
-                _class = \"CPulseCell_Inflow_EntOutputHandler\"
-                m_nEditorNodeID = -1
-                m_EntryChunk = {}
-                m_RegisterMap = {}
-                m_SourceEntity = {}
-                m_SourceOutput = \"{}\"
-                m_ExpectedParamType = \"{}\"
-            }}
-            "
-            , self.entry_chunk
-            , self.register_map.serialize()
-            , self.source_entity
-            , self.source_output
-            , self.expected_param_type.to_string()
-        }
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_EntOutputHandler".into())),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
+            (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_SourceEntity".into()), Value::String(self.source_entity.clone())),
+            (ObjectKey::Identifier("m_SourceOutput".into()), Value::String(self.source_output.clone())),
+            (ObjectKey::Identifier("m_ExpectedParamType".into()), Value::String(self.expected_param_type.to_string())),
+        ])
     }
 }
 
@@ -992,74 +814,40 @@ impl PulseGraphDef {
     }
 }
 
-#[cfg(feature = "nongame_asset_build")]
-const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vpulse12:version{354e36cb-dbe4-41c0-8fe3-2279dd194022} -->\n";
-#[cfg(not(feature = "nongame_asset_build"))]
-const PULSE_KV3_HEADER: &str = "<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->\n";
 impl KV3Serialize for PulseGraphDef {
-    fn serialize(&self) -> String {
-        formatdoc! {
-            "
-            {PULSE_KV3_HEADER}
-            {{
-                generic_data_type = \"Vpulse\"
-                m_Cells = 
-                [
-                    {}
-                ]
-                m_DomainIdentifier = \"{}\"
-                m_DomainSubType = \"{}\"
-                m_ParentMapName = \"{}\"
-                m_ParentXmlName = \"{}\"
-                m_vecGameBlackboards = []
-                m_BlackboardReferences = []
-                m_Chunks = 
-                [
-                    {}
-                ]
-                m_DomainValues = 
-                [
-                    {}
-                ]
-                m_Vars =
-                [
-                    {}
-                ]
-                m_Constants = 
-                [
-                    {}
-                ]
-                m_PublicOutputs = 
-                [
-                    {}
-                ]
-                m_OutputConnections = 
-                [
-                    {}
-                ]
-                m_InvokeBindings = 
-                [
-                    {}
-                ]
-                m_CallInfos = 
-                [
-                    {}
-                ]
-            }}
-            "
-            , self.cells.iter().map(|cell| {
-                cell.serialize()
-            }).collect::<Vec<_>>().join(",\n\n")
-            , self.graph_domain, self.graph_subtype
-            , self.map_name, self.xml_name
-            , self.chunks.iter().map(|chunk| chunk.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.variables.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.constants.iter().map(|constant| constant.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.public_outputs.iter().map(|variable| variable.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.bindings.iter().map(|binding| binding.serialize()).collect::<Vec<_>>().join(",\n\n")
-            , self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect::<Vec<_>>().join(",\n\n")
-        }
+    fn serialize(&self) -> Value {
+        Value::File(kv3::Header(
+            vec![
+                Metadata {
+                    key: "encoding".into(),
+                    value: "text".into(),
+                    version: "e21c7f3c-8a33-41c5-9977-a76d3a32aa0d".into()
+                },
+                Metadata {
+                    key: "format".into(),
+                    value: "generic".into(),
+                    version: "7412167c-06e9-4698-aff2-e63eb59037e7".into()
+                },
+            ],
+        ),
+            Box::new(Value::Object(vec![
+                (ObjectKey::Identifier("generic_data_type".into()), Value::String("Vpulse".into())),
+                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize()).collect())),
+                (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
+                (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),
+                (ObjectKey::Identifier("m_ParentMapName".into()), Value::String(self.map_name.to_string())),
+                (ObjectKey::Identifier("m_ParentXmlName".into()), Value::String(self.xml_name.to_string())),
+                (ObjectKey::Identifier("m_vecGameBlackboards".into()), Value::Array(vec![])),
+                (ObjectKey::Identifier("m_BlackboardReferences".into()), Value::Array(vec![])),
+                (ObjectKey::Identifier("m_Chunks".into()), Value::Array(self.chunks.iter().map(|chunk| chunk.serialize()).collect())),
+                (ObjectKey::Identifier("m_DomainValues".into()), Value::Array(self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect())),
+                (ObjectKey::Identifier("m_Vars".into()), Value::Array(self.variables.iter().map(|variable| variable.serialize()).collect())),
+                (ObjectKey::Identifier("m_Constants".into()), Value::Array(self.constants.iter().map(|constant| constant.serialize()).collect())),
+                (ObjectKey::Identifier("m_PublicOutputs".into()), Value::Array(self.public_outputs.iter().map(|variable| variable.serialize()).collect())),
+                (ObjectKey::Identifier("m_OutputConnections".into()), Value::Array(self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect())),
+                (ObjectKey::Identifier("m_InvokeBindings".into()), Value::Array(self.bindings.iter().map(|binding| binding.serialize()).collect())),
+                (ObjectKey::Identifier("m_CallInfos".into()), Value::Array(self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect())),
+            ]))
+        )
     }
 }

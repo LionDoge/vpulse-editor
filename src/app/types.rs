@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::{path::PathBuf, borrow::Cow};
 use serde::{Deserialize, Serialize};
 use slotmap::SecondaryMap;
@@ -15,10 +16,15 @@ pub struct PulseNodeData {
     pub template: PulseNodeTemplate,
     #[serde(skip)]
     #[allow(dead_code)]
-    pub custom_named_outputs: EmptyStruct,
+    pub custom_named_outputs: PhantomData<()>, // deprecated (left for compatibility)
+    #[serde(skip)]
+    #[allow(dead_code)]
+    pub added_parameters: PhantomData<()>, // deprecated (left for compatibility)
     pub input_hint_text: Option<Cow<'static, str>>,
     // used for polymorphic output types
     pub custom_output_type: Option<PulseValueType>,
+    #[serde(default)]
+    pub added_inputs: Vec<InputId>,
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -218,6 +224,9 @@ pub enum PulseNodeTemplate {
 #[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
     AddOutputParam(NodeId, String, PulseDataType),
+    // autoindex (bool) will automatically append the last element index + 1 to the provided name
+    AddCustomInputParam(NodeId, String, PulseDataType, PulseGraphValueType, InputParamKind, bool),
+    RemoveCustomInputParam(NodeId, InputId),
     RemoveOutputParam(NodeId, String),
     ChangeOutputParamType(NodeId, String),
     ChangeVariableParamType(NodeId, String),
@@ -235,8 +244,6 @@ pub enum PulseGraphResponse {
 #[derive(Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphState {
-    #[cfg_attr(feature = "persistence", serde(skip))]
-    pub added_parameters: SecondaryMap<NodeId, Vec<String>>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
     pub exposed_nodes: SecondaryMap<NodeId, String>,
@@ -255,7 +262,6 @@ pub struct PulseGraphState {
 impl Default for PulseGraphState {
     fn default() -> Self {
         PulseGraphState {
-            added_parameters: SecondaryMap::new(),
             public_outputs: Vec::new(),
             variables: Vec::new(),
             exposed_nodes: SecondaryMap::new(),
@@ -305,8 +311,3 @@ pub type MyEditorState = GraphEditorState<
     PulseNodeTemplate,
     PulseGraphState,
 >;
-
-// compatibility shenanigans
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct EmptyStruct; 

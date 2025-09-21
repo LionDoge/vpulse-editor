@@ -31,7 +31,7 @@ pulse_graph =
 	m_Ext = "vpulse"
 	m_IconLg = "game:tools/images/assettypes/javascript_lg.png"
 	m_IconSm = "game:tools/images/assettypes/javascript_sm.png"
-	m_CompilerIdentifier = "CompileVData"
+	m_CompilerIdentifier = "CompileKV3"
 	m_Blocks = 
 	[
 		{

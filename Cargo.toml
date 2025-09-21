@@ -1,6 +1,6 @@
 [package]
 name = "pulseedit"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2021"
 rust-version = "1.87"
 build = "src/build.rs"
@@ -13,7 +13,6 @@ crate-type = ["rlib"]
 eframe = "0.32.1"
 anyhow = "1.0"
 serde = { version = "1.0.219", features = ["derive"] }
-indoc = "2.0.5"
 image = "0.24.3"
 slotmap = "1.0.7"
 egui-file-dialog = "0.8.0"
@@ -28,6 +27,7 @@ smol = "2.0.2"
 strum = "0.27.2"
 strum_macros = "0.27.2"
 delegate = "0.13.4"
+keyvalues3 = "1.1.0"
 
 [build-dependencies]
 embed-resource = "3.0.5"

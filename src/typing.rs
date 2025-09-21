@@ -1,6 +1,7 @@
 use std::{fmt, fmt::Display, str::FromStr};
 use serde::{Deserialize, Serialize};
 use egui_node_graph2::InputParamKind;
+use crate::compiler::serialization::PulseConstant;
 use crate::pulsetypes::{SchemaEnumType, SchemaEnumValue};
 use crate::app::types::{PulseDataType, PulseGraphValueType};
 
@@ -535,5 +536,28 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         PulseValueType::PVAL_BOOL
         | PulseValueType::PVAL_BOOL_VALUE(_)
         | PulseValueType::PVAL_SCHEMA_ENUM(_) => InputParamKind::ConstantOnly,
+    }
+}
+
+pub fn get_pulse_constant_from_graph_value(typ: PulseGraphValueType) -> anyhow::Result<PulseConstant> {
+    match typ {
+        PulseGraphValueType::Scalar { value } => Ok(PulseConstant::Float(value)),
+        PulseGraphValueType::String { value } => Ok(PulseConstant::String(value)),
+        PulseGraphValueType::Vec3 { value } => Ok(PulseConstant::Vec3(value)),
+        PulseGraphValueType::Vec3Local { value } => Ok(PulseConstant::Vec3Local(value)),
+        PulseGraphValueType::Color { value } => Ok(PulseConstant::Color_RGB(value)),
+        PulseGraphValueType::Bool { value } => Ok(PulseConstant::Bool(value)),
+        PulseGraphValueType::SoundEventName { value } => Ok(PulseConstant::SoundEventName(value)),
+        PulseGraphValueType::SchemaEnum { enum_type, value } => {
+            Ok(PulseConstant::SchemaEnum(enum_type, value))
+        }
+        PulseGraphValueType::Vec2 { value } => Ok(PulseConstant::Vec2(value)),
+        PulseGraphValueType::Vec4 { value } => Ok(PulseConstant::Vec4(value)),
+        PulseGraphValueType::QAngle { value } => Ok(PulseConstant::QAngle(value)),
+        PulseGraphValueType::Resource {
+            resource_type,
+            value,
+        } => Ok(PulseConstant::Resource(resource_type, value)),
+        _ => Err(anyhow::anyhow!("Unsupported constant value type for {:?}", typ)),
     }
 }

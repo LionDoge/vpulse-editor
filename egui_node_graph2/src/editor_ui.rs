@@ -747,6 +747,7 @@ where
                                 ui,
                                 user_state,
                                 &self.graph[self.node_id].user_data,
+                                param_id,
                             );
 
                             responses.extend(node_responses.into_iter().map(NodeResponse::User));
@@ -757,6 +758,7 @@ where
                                 ui,
                                 user_state,
                                 &self.graph[self.node_id].user_data,
+                                param_id,
                             );
 
                             responses.extend(node_responses.into_iter().map(NodeResponse::User));

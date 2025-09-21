@@ -44,7 +44,7 @@ pub fn help_hover_text<'a>(template: PulseNodeTemplate, _user_state: &PulseGraph
         PulseNodeTemplate::CallNode => "Allows to call remote nodes from anywhere. For example a 'Function'.",
         PulseNodeTemplate::ListenForEntityOutput => "Listens to an output from the provided entity in the current map, causing an action if it gets triggered. Also provides the activator entity handle.",
         PulseNodeTemplate::Timeline => "Runs actions in a sequential order with a delay between each action.",
-        PulseNodeTemplate::NewArray => "Creates a new array with the provided contents. The contents should be a comma-separated list of values, it will be interpreted as raw KeyValues3 array content.",
+        PulseNodeTemplate::NewArray => "Creates a new array of the provided type. You can also add initial values if applicable to the type - ones that are producable at compile time. Otherwise manually append elements.",
         // PulseNodeTemplate::LibraryBindingAssigned { binding } => {
         //     let binding = user_state.get_library_binding_from_index(&binding);
         //     if let Some(binding) = binding {

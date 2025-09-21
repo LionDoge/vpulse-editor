@@ -10,7 +10,7 @@ use crate::app::types::{
     PulseNodeTemplate,
 };
 use crate::pulsetypes::*;
-use crate::typing::get_preffered_inputparamkind_from_type;
+use crate::typing::{get_preffered_inputparamkind_from_type, get_pulse_constant_from_graph_value};
 use crate::typing::PulseValueType;
 use crate::utils::*;
 use serialization::*;
@@ -87,40 +87,6 @@ macro_rules! get_constant_graph_input_value {
     }};
 }
 pub(crate) use get_constant_graph_input_value;
-
-macro_rules! get_connection_only_graph_input_value {
-    ($graph:ident, $node: ident, $input:literal, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {{
-        let input_id = $node.get_input($input).map_err(|e| {
-            anyhow::anyhow!(e).context(format!(
-                "Can't get input port {} node {:?}",
-                $input, $node.user_data.template
-            ))
-        })?;
-        let connection = $graph.connection(input_id);
-        let result: i32 = if let Some(connection) = connection {
-            let param = $graph.get_output(connection);
-            let out_node = $graph.nodes.get(param.node).ok_or(
-                anyhow!("Can't find input value of {}", $input).context(format!(
-                    "Get constant input value for node {:?}",
-                    $node.user_data.template
-                )),
-            )?;
-            traverse_nodes_and_populate(
-                $graph,
-                out_node,
-                $graph_def,
-                $graph_state,
-                $target_chunk,
-                &Some(connection),
-                &None,
-            )?
-        } else {
-            -1
-        };
-        result
-    }};
-}
-pub(crate) use get_connection_only_graph_input_value;
 
 // Create a register map and add it's inputs by passing in pairs of string and identifiers containing the value.
 // reg_opt_val is expected to be an Optional and if it's None it won't be added to the register map
@@ -543,7 +509,7 @@ pub fn compile_graph(
             anyhow::bail!("Graph compile failed: {}", e);
         }
     }
-    let data = graph_def.serialize();
+    let data = kv3::to_string(&graph_def.serialize());
     let _ = fs::create_dir_all(file_dir).map_err(|e| {
         anyhow!(
             "Graph compile failed: Failed to create output directory: {}",
@@ -693,19 +659,15 @@ fn try_find_input_mapping(graph_def: &PulseGraphDef, input_id: Option<&InputId>)
 // can choose if the generated value from the input will be reused, or if it should always be evaluated as new
 // as a new input (depends on the task of the node really)
 #[allow(clippy::too_many_arguments)]
-fn get_input_register_or_create_constant(
+fn get_input_register_or_create_constant_from_id(
     graph: &PulseGraph,
-    current_node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
     chunk_id: i32,
-    input_name: &str,
+    input_id: InputId,
     value_type: PulseValueType,
     always_reevaluate: bool,
 ) -> anyhow::Result<Option<i32>> {
-    let input_id = current_node.get_input(input_name).map_err(|e| {
-        anyhow::anyhow!(e).context(format!("failed to find input {input_name} in node {:?}", &current_node.user_data.template))
-    })?;
     let connection_to_input: Option<OutputId> = graph.connection(input_id);
     let target_register: i32;
     // if we find a connection, then traverse to that node, whatever happens we should get a register id back.
@@ -740,7 +702,7 @@ fn get_input_register_or_create_constant(
                 get_preffered_inputparamkind_from_type(&value_type),
                 InputParamKind::ConnectionOnly
             ) {
-                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {input_name}");
+                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {:?}", input_id);
                 return Ok(None);
             }
             let new_constant_id = graph_def.get_current_constant_id() + 1;
@@ -860,20 +822,12 @@ fn get_input_register_or_create_constant(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
-                PulseValueType::PVAL_ARRAY(typ) =>
-                {
-                    instruction =
-                        instruction_templates::get_const(new_constant_id, target_register);
-                    let res = input_param.value().clone().try_to_string()?;
-                    chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Array(*typ, res));
-                }
                 // Having a constant value for these doesn't make sense.
                 PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
                     return Ok(None);
                 }
                 _ => {
-                    println!("Warning: Unsupported constant value type for input - None will be returned {input_name}: {value_type}");
+                    println!("Warning: Unsupported constant value type for input - None will be returned {:?}: {value_type}", input_id);
                     return Ok(None);
                     // if we don't know the type, we can't create a constant for it.
                 }
@@ -882,6 +836,31 @@ fn get_input_register_or_create_constant(
         }
     }
     Ok(Some(target_register))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn get_input_register_or_create_constant(
+    graph: &PulseGraph,
+    current_node: &Node<PulseNodeData>,
+    graph_def: &mut PulseGraphDef,
+    graph_state: &PulseGraphState,
+    chunk_id: i32,
+    name: &str,
+    value_type: PulseValueType,
+    always_reevaluate: bool,
+) -> anyhow::Result<Option<i32>> {
+    let input_id = current_node.get_input(name).map_err(|e| {
+        anyhow::anyhow!(e).context(format!("failed to find input {name} in node {:?}", &current_node.user_data.template))
+    })?;
+    get_input_register_or_create_constant_from_id(
+        graph,
+        graph_def,
+        graph_state,
+        chunk_id,
+        input_id,
+        value_type,
+        always_reevaluate,
+    )
 }
 
 // recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.
@@ -1550,20 +1529,14 @@ fn traverse_nodes_and_populate<'a>(
             }
         }
         PulseNodeTemplate::CompareIf => {
-            let reg_cond = get_connection_only_graph_input_value!(
-                graph,
-                current_node,
-                "condition",
-                graph_def,
-                graph_state,
-                target_chunk
-            );
+            let reg_cond = get_register!("condition", PulseValueType::PVAL_BOOL)
+                .ok_or(anyhow!("CompareIf node: Failed to get 'condition' register"))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_jump_cond =
                 instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
-            chunk.add_instruction(instr_jump_cond);
+            graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_cond);
             let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
-            let jump_false_instr_id = chunk.add_instruction(instr_jump_false);
+            let jump_false_instr_id = graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_false).unwrap();
             // instruction set for the true condition (if exists)
             graph_run_next_actions_no_return!(
                 graph,
@@ -1589,12 +1562,9 @@ fn traverse_nodes_and_populate<'a>(
                 "False"
             ) {
                 // if no actions were run, we still need to add an empty instruction, so we can jump to it.
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                chunk.add_instruction(Instruction::default());
+                graph_def.add_chunk_instruction(target_chunk as usize, Instruction::default());
             }
-            // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // for now we just return. But we could have a 3rd port, that executes actions after doing the one in the chosen condition.
             let ending_instr_id = chunk.get_last_instruction_id() + 1;
             let instr_jump_false = chunk.get_instruction_from_id_mut(jump_false_instr_id);
             if let Some(instr_jump_false) = instr_jump_false {
@@ -1614,6 +1584,15 @@ fn traverse_nodes_and_populate<'a>(
                     jump_end_instr_id
                 );
             }
+
+            graph_run_next_actions_no_return!(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "Either"
+            );
         }
         PulseNodeTemplate::ForLoop => {
             if output_id.is_some() {
@@ -1719,7 +1698,8 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::WhileLoop => {
             let is_dowhile_loop =
                 get_constant_graph_input_value!(graph, current_node, "do-while", try_to_bool);
-
+            let reg_condition = get_register!("condition", PulseValueType::PVAL_BOOL)
+                .ok_or(anyhow!("WhileLoop node: Failed to get 'condition' register"))?;
             if !is_dowhile_loop {
                 // While loop:
                 // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
@@ -1735,14 +1715,7 @@ fn traverse_nodes_and_populate<'a>(
                     .unwrap()
                     .get_last_instruction_id()
                     + 1;
-                let reg_condition = get_connection_only_graph_input_value!(
-                    graph,
-                    current_node,
-                    "condition",
-                    graph_def,
-                    graph_state,
-                    target_chunk
-                );
+                
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond = instruction_templates::jump_cond(
                     reg_condition,
@@ -1789,14 +1762,6 @@ fn traverse_nodes_and_populate<'a>(
                     "loopAction"
                 );
                 // next do all the condition check instructions
-                let reg_condition = get_connection_only_graph_input_value!(
-                    graph,
-                    current_node,
-                    "condition",
-                    graph_def,
-                    graph_state,
-                    target_chunk
-                );
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 // jump back if condition is true
                 let instr_jump_cond =
@@ -2147,7 +2112,7 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(node) = graph.nodes.get(node_id) {
                 let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
                 let remote_chunk_or_cell =
-                    traverse_function_entry(graph, node, graph_def, graph_state).unwrap();
+                    traverse_function_entry(graph, node, graph_def, graph_state)?;
 
                 match node.user_data.template {
                     PulseNodeTemplate::Function => {
@@ -2318,19 +2283,22 @@ fn traverse_nodes_and_populate<'a>(
             if reg_out > -1 {
                 return Ok(reg_out);
             }
-            let array_contents = get_constant_graph_input_value!(
-                graph,
-                current_node,
-                "Array contents",
-                try_to_string
-            );
             let arr_type = get_constant_graph_input_value!(
                 graph,
                 current_node,
                 "arrayType",
                 try_pulse_type
             );
-            let const_id = graph_def.add_constant(PulseConstant::Array(arr_type.clone(), format!("[{array_contents}]")));
+            let mut constants = vec![];
+            for input_id in current_node.user_data.added_inputs.iter() {
+                let value = graph.get_input(*input_id).value().clone();
+                let constant = get_pulse_constant_from_graph_value(value).map_err(|e| {
+                    anyhow::anyhow!(format!("MakeArray node doesn't support constant values for type of {}. \
+                    Please remove all initial elements and add them at runtime with the 'Array Append' node, or change the type - {e}", arr_type.get_ui_name()))
+                })?;
+                constants.push(constant);
+            }
+            let const_id = graph_def.add_constant(PulseConstant::Array(arr_type.clone(), constants));
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
 

@@ -115,7 +115,7 @@ impl PulseGraphEditor {
             match template {
                 // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
                 PulseNodeTemplate::LibraryBindingAssigned { binding } => {
-                    if let Some(binding) = self.user_state.get_library_binding_from_index(&binding) {
+                    if let Some(binding) = self.user_state.bindings.find_function_by_id(binding) {
                         if binding.inparams.is_none() {
                             continue;
                         }
@@ -791,7 +791,9 @@ impl PulseGraphEditor {
                 }
             }
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
-                let binding = &self.user_state.bindings.gamefunctions[binding.0];
+                let binding = self.user_state.bindings
+                    .find_function_by_id(binding)
+                    .ok_or(anyhow::anyhow!("Library binding node can't find saved binding {:?}! Likely the bindings file is not correct.", binding))?;
                 let new_type = if let Some(typ) = source_type {
                     Some(typ)
                 } else {
@@ -989,7 +991,7 @@ impl PulseGraphEditor {
             grph.editor_config = cfg_res.unwrap_or_default();
         }
 
-        let bindings = load_bindings(std::path::Path::new("bindings_cs2.json"));
+        let bindings = load_bindings(std::path::Path::new("bindings.json"));
         match bindings {
             Ok(bindings) => {
                 grph.user_state.bindings = bindings;
@@ -997,7 +999,7 @@ impl PulseGraphEditor {
             Err(e) => {
                 MessageDialog::new()
                     .set_level(rfd::MessageLevel::Error)
-                    .set_title("Failed to load bindings for CS2")
+                    .set_title("Failed to load Pulse bindings")
                     .set_buttons(rfd::MessageButtons::Ok)
                     .set_description(e.to_string())
                     .show();
@@ -1104,7 +1106,7 @@ pub fn has_polymorhpic_dependent_return(
         | PulseNodeTemplate::GetVar
         | PulseNodeTemplate::ForEach => true,
         PulseNodeTemplate::LibraryBindingAssigned { binding: idx } => {
-            let binding = match user_state.get_library_binding_from_index(idx) {
+            let binding = match user_state.bindings.find_function_by_id(*idx) {
                 Some(binding) => binding,
                 None => return false,
             };
@@ -1607,8 +1609,7 @@ impl eframe::App for PulseGraphEditor {
                     // if the node is a library binding, then update the parameters
                     if let PulseNodeTemplate::LibraryBindingAssigned { binding } 
                         = self.state.graph.nodes.get(node_id).unwrap().user_data.template {
-                        let binding_index = binding;
-                        let binding_opt = self.user_state.get_library_binding_from_index(&binding_index).cloned();
+                        let binding_opt = self.user_state.bindings.find_function_by_id(binding).cloned();
                         if let Some(binding) = binding_opt {
                             self.update_library_binding_params(&node_id, &binding);
                         }

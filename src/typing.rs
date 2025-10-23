@@ -24,14 +24,14 @@ impl fmt::Display for PulseTypeError {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct LibraryBindingIndex(pub usize);
+pub struct LibraryBindingIndex(pub u32);
 impl Display for LibraryBindingIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "LibraryBindingIndex({})", self.0)
     }
 }
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct EventBindingIndex(pub usize);
+pub struct EventBindingIndex(pub u32);
 impl Display for EventBindingIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "EventBindingIndex({})", self.0)
@@ -39,7 +39,7 @@ impl Display for EventBindingIndex {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct HookBindingIndex(pub usize);
+pub struct HookBindingIndex(pub u32);
 impl Display for HookBindingIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "HookBindingIndex({})", self.0)

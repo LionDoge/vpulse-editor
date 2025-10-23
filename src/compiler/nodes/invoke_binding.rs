@@ -29,7 +29,7 @@ pub fn compile_node(
         "binding",
         try_library_binding
     );
-    let binding = graph_state.get_library_binding_from_index(&binding_idx);
+    let binding = graph_state.bindings.find_function_by_id(binding_idx);
     if binding.is_none() {
         anyhow::bail!(
             "InvokeLibraryBinding node: Failed to find library binding with index {}",
@@ -88,7 +88,7 @@ pub fn compile_node(
             // looking for the outputid matching the parameter name
             // this should be setup on the UI side, if not, then it's a programming error
             let current_output_id = current_node.get_output(&param.name).map_err(|e| {
-                anyhow::anyhow!(e).context("\n Failed in LibraryBinding node. Mismatch between UI and ParamInfo")
+                anyhow::anyhow!(e).context("\nFunction Binding: Mismatch between UI and definition. This is likely caused by mismatched references.")
             })?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let ret_type = if binding.polymorphic_return.is_some() {

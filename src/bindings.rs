@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-use crate::typing::{try_string_to_pulsevalue, PulseValueType};
+use crate::typing::{try_string_to_pulsevalue, EventBindingIndex, HookBindingIndex, LibraryBindingIndex, PulseValueType};
 use serde::{Deserialize, Serialize};
-use serde_json::from_str;
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize))]
@@ -34,6 +33,7 @@ pub struct ParamInfo {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 //#[cfg_attr(feature = "persistence", derive(Serialize))]
 pub struct FunctionBinding {
+    pub id: LibraryBindingIndex,
     #[serde(rename = "type")]
     pub typ: LibraryBindingType,
     pub displayname: String,
@@ -54,15 +54,17 @@ impl FunctionBinding {
         self.outparams.as_ref()?.iter().find(|p| p.name == name)
     }
 }
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct EventBinding {
+    pub id: EventBindingIndex,
     pub displayname: String,
     pub libname: String,
     pub inparams: Option<Vec<ParamInfo>>,
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Default)]
+#[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct HookBinding {
+    pub id: HookBindingIndex,
     pub displayname: String,
     pub libname: String,
     pub description: Option<String>,
@@ -73,6 +75,32 @@ pub struct GraphBindings {
     pub gamefunctions: Vec<FunctionBinding>,
     pub events: Vec<EventBinding>,
     pub hooks: Vec<HookBinding>,
+}
+
+impl GraphBindings {
+    pub fn find_function_by_libname(&self, libname: &str) -> Option<&FunctionBinding> {
+        self.gamefunctions.iter().find(|f| f.libname == libname)
+    }
+
+    pub fn find_event_by_libname(&self, libname: &str) -> Option<&EventBinding> {
+        self.events.iter().find(|e| e.libname == libname)
+    }
+
+    pub fn find_hook_by_libname(&self, libname: &str) -> Option<&HookBinding> {
+        self.hooks.iter().find(|h| h.libname == libname)
+    }
+
+    pub fn find_function_by_id(&self, id: LibraryBindingIndex) -> Option<&FunctionBinding> {
+        self.gamefunctions.iter().find(|f| f.id == id)
+    }
+
+    pub fn find_event_by_id(&self, id: EventBindingIndex) -> Option<&EventBinding> {
+        self.events.iter().find(|e| e.id == id)
+    }
+
+    pub fn find_hook_by_id(&self, id: HookBindingIndex) -> Option<&HookBinding> {
+        self.hooks.iter().find(|h| h.id == id)
+    }
 }
 
 fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
@@ -90,7 +118,8 @@ fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
 
 pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
     let json = std::fs::read_to_string(filepath)?;
-    let mut bindings = from_str::<GraphBindings>(&json)?;
+    let mut deserializer = serde_json::Deserializer::from_str(&json);
+    let mut bindings: GraphBindings = serde_path_to_error::deserialize(&mut deserializer)?;
     for binding in bindings.gamefunctions.iter_mut() {
         process_params(&mut binding.inparams)?;
         process_params(&mut binding.outparams)?;

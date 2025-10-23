@@ -232,8 +232,8 @@ fn traverse_event_cell(
         .get(input_id)
         .ok_or(anyhow!("Can't find input value").context("Traverse event cell node"))?;
     let event_binding_id = input_param.value.clone().try_event_binding_id()?;
-    let event_binding = _graph_state
-        .get_event_binding_from_index(&event_binding_id)
+    let event_binding = _graph_state.bindings
+        .find_event_by_id(event_binding_id)
         .ok_or_else(|| anyhow::anyhow!("Event binding with id {} not found", event_binding_id))?;
     // create new pulse cell node.
     let chunk_id = graph_def.create_chunk();
@@ -280,8 +280,8 @@ fn traverse_graphhook_cell(
     _graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
     let hook_id = get_constant_graph_input_value!(graph, node, "hook", try_hook_binding);
-    let hook = _graph_state
-        .get_hook_binding_from_index(&hook_id)
+    let hook = _graph_state.bindings
+        .find_hook_by_id(hook_id)
         .ok_or_else(|| anyhow::anyhow!("Hook binding with id {} not found", hook_id))?;
     let chunk_id = graph_def.create_chunk();
     let cell_hook =
@@ -2668,7 +2668,7 @@ fn make_library_call(
     mut reg_map: RegisterMap, 
     chunk_id: i32
 ) -> anyhow::Result<RegisterMap> {
-    let func = graph_state.find_library_binding_by_name(&name).ok_or(anyhow!(
+    let func = graph_state.bindings.find_function_by_libname(&name).ok_or(anyhow!(
         "Failed to find library binding with name: {}",
         name
     ))?;

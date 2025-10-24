@@ -1334,7 +1334,7 @@ fn traverse_nodes_and_populate<'a>(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
                 register_map,
-                func_name: "Run".into(),
+                func_name: "CPulseCell_Step_DebugLog::Run".into(),
                 cell_index: graph_def.cells.len() as i32 - 1,
                 src_chunk: target_chunk,
                 src_instruction: chunk.get_last_instruction_id() + 1,

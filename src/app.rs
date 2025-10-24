@@ -107,6 +107,13 @@ impl PulseGraphEditor {
         let mut entfire_nodes = vec![];
         let mut call_func_nodes = vec![];
         let mut listen_entity_output_nodes = vec![];
+        struct QueuedAddParams {
+            node_id: NodeId,
+            param_name: String,
+            types: (PulseDataType, PulseGraphValueType),
+            connection_type: InputParamKind,
+        }
+        let mut queued_add_params: Vec<QueuedAddParams> = vec![];
         for node_id in self.state.graph.iter_nodes().collect::<Vec<_>>() {
             let node = match self.state.graph.nodes.get_mut(node_id) {
                 Some(node) => node,
@@ -114,18 +121,31 @@ impl PulseGraphEditor {
             };
             let template = node.user_data.template;
             match template {
-                // verify that all existing library binding nodes have correct parameter names, in case they have been updated between sessions.
+                // verify that all existing library binding nodes have correct parameters, in case they have been updated between sessions.
+                // NOTE: this does not remove any parameters from the node, they would be just ignored.
                 PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                     if let Some(binding) = self.user_state.bindings.find_function_by_id(binding) {
                         if binding.inparams.is_none() {
                             continue;
                         }
-                        let nodes = node.inputs.iter_mut().filter(|input| {
+                        let mut inputs = node.inputs.iter_mut().filter(|input| {
                             let nam_lowercase = input.0.to_lowercase();
                             !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
-                        });
-                        for (input, param) in nodes.zip(binding.inparams.as_ref().unwrap().iter()) {
-                            input.0 = param.name.clone();
+                        }).collect::<Vec<_>>();
+
+                        for (idx, param) in binding.inparams.as_ref().unwrap().iter().enumerate() {
+                            if idx < inputs.len() {
+                                // Safety: we checked the length above
+                                inputs[idx].0 = param.name.clone();
+                            } else {
+                                // quque up missing parameters to be added after the loop to avoid borrow checker issues
+                                queued_add_params.push(QueuedAddParams { 
+                                    node_id,
+                                    param_name: param.name.clone(),
+                                    types: pulse_value_type_to_node_types(&param.pulsetype),
+                                    connection_type: get_preffered_inputparamkind_from_type(&param.pulsetype) 
+                                });
+                            }
                         }
                     }
                 }
@@ -224,6 +244,17 @@ impl PulseGraphEditor {
             if let Ok(o) = node.get_output("outAction") { 
                 self.state.graph.remove_output_param(o);
             }
+        }
+
+        for param in queued_add_params {
+            self.state.graph.add_input_param(
+                param.node_id,
+                param.param_name,
+                param.types.0,
+                param.types.1,
+                param.connection_type,
+                true,
+            );
         }
         // this fills out the default domain and subdomain if they're not set at launch time
         if self.user_state.graph_domain.is_empty() {

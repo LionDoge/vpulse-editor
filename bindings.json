@@ -1327,6 +1327,14 @@
                 {
                     "name": "nGroup",
                     "type": "PVAL_SCHEMA_ENUM:PulseCollisionGroup_t"
+                },
+                {
+                    "name": "bSphereTrace",
+                    "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "flSphereRadius",
+                    "type": "PVAL_FLOAT"
                 }
             ],
             "outparams": [
@@ -2819,6 +2827,14 @@
                 {
                     "name": "hIgnoreEntity",
                     "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "bSphereTrace",
+                    "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "flSphereRadius",
+                    "type": "PVAL_FLOAT"
                 }
             ],
             "outparams": [
@@ -2845,6 +2861,14 @@
                 },
                 {
                     "name": "fLength",
+                    "type": "PVAL_FLOAT"
+                },
+                {
+                    "name": "bSphereTrace",
+                    "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "flSphereRadius",
                     "type": "PVAL_FLOAT"
                 }
             ],
@@ -2885,6 +2909,14 @@
                 {
                     "name": "nGroup",
                     "type": "PVAL_SCHEMA_ENUM:PulseCollisionGroup_t"
+                },
+                {
+                    "name": "bSphereTrace",
+                    "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "flSphereRadius",
+                    "type": "PVAL_FLOAT"
                 }
             ],
             "outparams": [
@@ -4956,6 +4988,264 @@
                 {
                     "name": "retval",
                     "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 224,
+            "type": "value",
+            "displayname": "Get Abs Angles (Entity Handle)",
+            "libname": "CBaseEntityAPI::GetAbsAngles",
+            "description": "Get the world orientation of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_QANGLE"
+                }
+            ]
+        },
+        {
+            "id": 225,
+            "type": "value",
+            "displayname": "Get Local Angles (Entity Handle)",
+            "libname": "CBaseEntityAPI::GetLocalAngles",
+            "description": "Get the local orientation of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_QANGLE"
+                }
+            ]
+        },
+        {
+            "id": 226,
+            "type": "value",
+            "displayname": "Get Abs Scale (Entity Handle)",
+            "libname": "CBaseEntityAPI::GetAbsScale",
+            "description": "Get the world scale of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 227,
+            "type": "value",
+            "displayname": "Get Local Scale (Entity Handle)",
+            "libname": "CBaseEntityAPI::GetLocalScale",
+            "description": "Get the local scale of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 228,
+            "type": "action",
+            "displayname": "Set Abs Angles (Entity Handle)",
+            "libname": "CBaseEntityAPI::SetAbsAngles",
+            "description": "Set the world orientation of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "angles",
+                    "type": "PVAL_QANGLE"
+                }
+            ]
+        },
+        {
+            "id": 229,
+            "type": "action",
+            "displayname": "Set Abs Scale (Entity Handle)",
+            "libname": "CBaseEntityAPI::SetAbsScale",
+            "description": "Set the world scale of this entity.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "flScale",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 230,
+            "type": "action",
+            "displayname": "Set Local Angles (Entity Handle)",
+            "libname": "CBaseEntityAPI::SetLocalAngles",
+            "description": "Set the local orientation of this entity. Use when you have a parent.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "angles",
+                    "type": "PVAL_QANGLE"
+                }
+            ]
+        },
+        {
+            "id": 231,
+            "type": "action",
+            "displayname": "Set Local Origin (Entity Handle)",
+            "libname": "CBaseEntityAPI::SetLocalOrigin",
+            "description": "Set the local origin of this entity. Use when you have a parent.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "vPos",
+                    "type": "PVAL_VEC3"
+                }
+            ]
+        },
+        {
+            "id": 232,
+            "type": "action",
+            "displayname": "Set Local Scale (Entity Handle)",
+            "libname": "CBaseEntityAPI::SetLocalScale",
+            "description": "Set the local scale of this entity. Use when you have a parent.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "flScale",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 233,
+            "type": "action",
+            "displayname": "Destructible Hit Group Destroy Up To Damage Level (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::DestructibleHitGroupDestroyUpToDamageLevel",
+            "description": "Destroy a destructible hit group up to a certain damage level.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                },
+                {
+                    "name": "nHitGroup",
+                    "type": "PVAL_SCHEMA_ENUM:HitGroup_t"
+                },
+                {
+                    "name": "nDamageLevel",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 234,
+            "type": "value",
+            "displayname": "Get Render Alpha (basemodelentitye)",
+            "libname": "CBaseModelEntityAPI::GetRenderAlpha",
+            "description": "Get object render alpha (0-255)",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 235,
+            "type": "value",
+            "displayname": "Get Render Color (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::GetRenderColor",
+            "description": "Get object render color (Alpha is ignored)",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_COLOR_RGB"
+                }
+            ]
+        },
+        {
+            "id": 236,
+            "type": "value",
+            "displayname": "Make Angle From Forward Vector",
+            "libname": "CPulseMathlib::MakeAngleFromForwardVector",
+            "description": "Make an Angle from a Forward Vector",
+            "inparams": [
+                {
+                    "name": "vForward",
+                    "type": "PVAL_VEC3"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_QANGLE"
+                }
+            ]
+        },
+        {
+            "id": 237,
+            "type": "value",
+            "displayname": "Get Entity Debug String",
+            "libname": "CPulseServerFuncs::GetEntityDebugString",
+            "description": "Get a debug string identifying the entity. Safe for null entities. This string cannot be used for looking up the entity. Should not be used for anything except logging.",
+            "inparams": [
+                {
+                    "name": "hEnt",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_STRING"
                 }
             ]
         }

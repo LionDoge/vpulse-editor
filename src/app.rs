@@ -40,7 +40,8 @@ pub struct ModalWindow {
 #[derive(Default)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub struct PulseGraphEditor {
-    #[cfg_attr(feature = "persistence", serde(default))]
+    #[cfg_attr(feature = "persistence", serde(skip))]
+    #[allow(unused)]
     version: FileVersion,
     state: MyEditorState,
     user_state: PulseGraphState,

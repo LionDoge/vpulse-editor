@@ -1115,7 +1115,7 @@ dependencies = [
  "percent-encoding",
  "profiling",
  "raw-window-handle",
- "ron 0.10.1",
+ "ron",
  "serde",
  "static_assertions",
  "wasm-bindgen",
@@ -1154,7 +1154,7 @@ dependencies = [
  "log",
  "nohash-hasher",
  "profiling",
- "ron 0.10.1",
+ "ron",
  "serde",
  "smallvec",
  "unicode-segmentation",
@@ -3127,7 +3127,7 @@ dependencies = [
  "open",
  "rand 0.8.5",
  "rfd",
- "ron 0.11.0",
+ "ron",
  "self_update",
  "serde",
  "serde_json",
@@ -3475,19 +3475,6 @@ name = "ron"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "beceb6f7bf81c73e73aeef6dd1356d9a1b2b4909e1f0fc3e59b034f9572d7b7f"
-dependencies = [
- "base64",
- "bitflags 2.9.1",
- "serde",
- "serde_derive",
- "unicode-ident",
-]
-
-[[package]]
-name = "ron"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db09040cc89e461f1a265139777a2bde7f8d8c67c4936f700c63ce3e2904d468"
 dependencies = [
  "base64",
  "bitflags 2.9.1",

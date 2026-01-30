@@ -6,6 +6,7 @@ use super::types::*;
 use crate::typing::*;
 use super::help;
 use crate::pulsetypes::*;
+use crate::bindings::FunctionBinding;
 
 impl Default for PulseGraphValueType {
     fn default() -> Self {
@@ -16,20 +17,15 @@ impl Default for PulseGraphValueType {
 }
 
 impl PulseGraphState {
-    // pub fn add_node_custom_param(&mut self, param_name: String, node_id: NodeId) {
-    //     if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
-    //         vec_params.push(param_name);
-    //     } else {
-    //         self.added_parameters.insert(node_id, vec![param_name]);
-    //     }
-    // }
-
     pub fn load_from(&mut self, other: PulseGraphState) {
         self.public_outputs = other.public_outputs;
         self.variables = other.variables;
         self.exposed_nodes = other.exposed_nodes;
         self.outputs_dropdown_choices = other.outputs_dropdown_choices;
         // rewrite everything but the save file path and bindings
+    }
+    pub fn get_library_binding_from_index(&self, index: LibraryBindingIndex) -> Option<&FunctionBinding> {
+        self.bindings.find_function_by_id(index)
     }
 }
 

@@ -104,8 +104,8 @@
         },
         {
             "id": 10,
-            "displayname": "(deadlock) OnHideoutOwnerHeroReleaseVoteStatusUpdated",
-            "libname": "CCitadelPointPulseAPI::OnHideoutOwnerHeroReleaseVoteStatusUpdated"
+            "displayname": "(deadlock) OnHideoutOwnerHeroReleaseVoteTallyUpdated",
+            "libname": "CCitadelPointPulseAPI::OnHideoutOwnerHeroReleaseVoteTallyUpdated"
         }
     ],
     "gamefunctions": [
@@ -619,7 +619,7 @@
             "inparams": [
                 {
                     "name": "_Target",
-                    "type": "PVAL_EHANDLE"
+                    "type": "PVAL_EHANDLE:baseanimgraph"
                 },
                 {
                     "name": "pSequenceName",
@@ -1652,7 +1652,7 @@
         {
             "id": 70,
             "type": "action",
-            "displayname": "filter_multi: Add Filter",
+            "displayname": "Add Filter (filter_multi)",
             "libname": "CFilterMultipleAPI::AddFilter",
             "description": "Add the named entity to the filter list",
             "inparams": [
@@ -1669,7 +1669,7 @@
         {
             "id": 71,
             "type": "action",
-            "displayname": "filter_multi: Remove Filter",
+            "displayname": "Remove Filter (filter_multi)",
             "libname": "CFilterMultipleAPI::RemoveFilter",
             "description": "Remove the named entity from the filter list",
             "inparams": [
@@ -1830,7 +1830,7 @@
         {
             "id": 78,
             "type": "action",
-            "displayname": "point_template: Force Spawn At Location",
+            "displayname": "Force Spawn At Location (point_template)",
             "libname": "CPointTemplateAPI::ForceSpawnAtLocation",
             "description": "Tells the point_template entity to ForceSpawn and return the first entity that matches the name (wildcard)",
             "inparams": [
@@ -1857,7 +1857,7 @@
         {
             "id": 79,
             "type": "value",
-            "displayname": "point_template: Force Spawn Return Entities",
+            "displayname": "Force Spawn Return Entities (point_template)",
             "libname": "CPointTemplateAPI::ForceSpawnReturnEntities",
             "description": "Tells the point_template entity to ForceSpawn and return the all the entities spawned",
             "polymorphic_return": "_:to_subtype",
@@ -1881,7 +1881,7 @@
         {
             "id": 80,
             "type": "action",
-            "displayname": "point_template: Delete Created Spawn Groups",
+            "displayname": "Delete Created Spawn Groups (point_template)",
             "libname": "CPointTemplateAPI::DeleteCreatedSpawnGroups",
             "description": "Deletes all spawn groups created by the template. Only works if you use asynchronous spawn and INSERT_INTO_NEWLY_CREATED_SPAWN_GROUP.",
             "inparams": [
@@ -1894,7 +1894,7 @@
         {
             "id": 81,
             "type": "value",
-            "displayname": "phys_motor: Get Actual Speed",
+            "displayname": "Get Actual Speed (phys_motor)",
             "libname": "CPhysMotorAPI::GetActualSpeed",
             "description": "Get the current rotation speed (deg/s) of the attached object about the motor's axis. May differ from the motor's target speed.",
             "inparams": [
@@ -1913,7 +1913,7 @@
         {
             "id": 82,
             "type": "action",
-            "displayname": "phys_motor: Set Spin Up Time",
+            "displayname": "Set Spin Up Time (phys_motor)",
             "libname": "CPhysMotorAPI::SetSpinUpTime",
             "description": "Sets the time the motor takes to spin up to a greater target speed when it's on.",
             "inparams": [
@@ -1930,7 +1930,7 @@
         {
             "id": 83,
             "type": "action",
-            "displayname": "phys_motor: Set Spin Down Time",
+            "displayname": "Set Spin Down Time (phys_motor)",
             "libname": "CPhysMotorAPI::SetSpinDownTime",
             "description": "Sets the time the motor takes to spin down to a lesser target speed when it's on.",
             "inparams": [
@@ -1947,7 +1947,7 @@
         {
             "id": 84,
             "type": "action",
-            "displayname": "phys_motor: Set System Inertia Scale",
+            "displayname": "Set System Inertia Scale (phys_motor)",
             "libname": "CPhysMotorAPI::SetSystemInertiaScale",
             "description": "Sets the inertia scale on the motor, which affects the maximum amount of torque it can generate (this will also affect the actual time the motor takes to spin up or spin down).",
             "inparams": [
@@ -1964,7 +1964,7 @@
         {
             "id": 85,
             "type": "action",
-            "displayname": "point_teleport: Teleport",
+            "displayname": "Teleport (point_teleport)",
             "libname": "CPointTeleportAPI::Teleport",
             "description": "Teleport the target entity.",
             "inparams": [
@@ -1977,7 +1977,7 @@
         {
             "id": 86,
             "type": "action",
-            "displayname": "point_teleport: Teleport Entity",
+            "displayname": "Teleport Entity (point_teleport)",
             "libname": "CPointTeleportAPI::TeleportEntity",
             "description": "Teleport the entity specified by the parameter override. Use this to teleport an entity other than the one specified in the Entity To Teleport field.",
             "inparams": [
@@ -1994,7 +1994,7 @@
         {
             "id": 87,
             "type": "action",
-            "displayname": "point_teleport: Teleport To Current Pos",
+            "displayname": "Teleport To Current Pos (point_teleport)",
             "libname": "CPointTeleportAPI::TeleportToCurrentPos",
             "description": "Teleport the target entity to wherever the point_teleport entity is currently. The Teleport input teleports to the initial position of the point_teleport, so this input was added to avoid breaking old content.",
             "inparams": [
@@ -2007,7 +2007,7 @@
         {
             "id": 88,
             "type": "action",
-            "displayname": "point_teleport: Teleport Entity To Current Pos",
+            "displayname": "Teleport Entity To Current Pos (point_teleport)",
             "libname": "CPointTeleportAPI::TeleportEntityToCurrentPos",
             "description": "Teleport the entity specified by the parameter override to wherever the point_teleport entity is currently. The Teleport input teleports to the current position of the point_teleport",
             "inparams": [
@@ -2024,7 +2024,7 @@
         {
             "id": 89,
             "type": "action",
-            "displayname": "logic_relay: Enable",
+            "displayname": "Enable (logic_relay)",
             "libname": "CLogicRelayAPI::Enable",
             "description": "Enable this entity.",
             "inparams": [
@@ -2037,7 +2037,7 @@
         {
             "id": 90,
             "type": "action",
-            "displayname": "logic_relay: Enable Refire",
+            "displayname": "Enable Refire (logic_relay)",
             "libname": "CLogicRelayAPI::EnableRefire",
             "description": "",
             "inparams": [
@@ -2050,7 +2050,7 @@
         {
             "id": 91,
             "type": "action",
-            "displayname": "logic_relay: Disable",
+            "displayname": "Disable (logic_relay)",
             "libname": "CLogicRelayAPI::Disable",
             "description": "Disable this entity.",
             "inparams": [
@@ -2063,7 +2063,7 @@
         {
             "id": 92,
             "type": "action",
-            "displayname": "logic_relay: Toggle",
+            "displayname": "Toggle (logic_relay)",
             "libname": "CLogicRelayAPI::Toggle",
             "description": "Toggle the relay between enabled and disabled.",
             "inparams": [
@@ -2076,7 +2076,7 @@
         {
             "id": 93,
             "type": "action",
-            "displayname": "logic_relay: Trigger",
+            "displayname": "Trigger (logic_relay)",
             "libname": "CLogicRelayAPI::Trigger",
             "description": "Trigger the relay, causing its OnTrigger output to fire if it is enabled.",
             "inparams": [
@@ -2089,7 +2089,7 @@
         {
             "id": 94,
             "type": "action",
-            "displayname": "logic_relay: Cancel Pending",
+            "displayname": "Cancel Pending (logic_relay)",
             "libname": "CLogicRelayAPI::CancelPending",
             "description": "Cancel any events fired by this relay that are currently pending in the I/O event queue.",
             "inparams": [
@@ -2102,7 +2102,7 @@
         {
             "id": 95,
             "type": "value",
-            "displayname": "func_mover: Get Current Mover Speed",
+            "displayname": "Get Current Mover Speed (func_mover)",
             "libname": "CFuncMoverAPI::GetCurrentMoverSpeed",
             "description": "Get the provided movers current speed (units per second)",
             "inparams": [
@@ -3161,7 +3161,7 @@
         {
             "id": 138,
             "type": "value",
-            "displayname": "path_simple: Get Closest T Value To Entity",
+            "displayname": "Get Closest T Value To Entity (path_simple)",
             "libname": "CPathSimpleAPI::GetClosestTValueToEntity",
             "description": "Compute the closest T value on the path relative to the entity provided. (0.0 to 1.0 float value that defines the point along the spline)",
             "inparams": [
@@ -3184,7 +3184,7 @@
         {
             "id": 139,
             "type": "value",
-            "displayname": "path_simple: Get Closest Pos To Entity",
+            "displayname": "Get Closest Pos To Entity (path_simple)",
             "libname": "CPathSimpleAPI::GetClosestPosToEntity",
             "description": "Compute the closest position on the path relative to the entity provided. (world space vector)",
             "inparams": [
@@ -3207,7 +3207,7 @@
         {
             "id": 140,
             "type": "value",
-            "displayname": "path_simple: Get Closest Dir To Entity",
+            "displayname": "Get Closest Dir To Entity (path_simple)",
             "libname": "CPathSimpleAPI::GetClosestDirToEntity",
             "description": "Compute the closest direction along the path relative to the entity provided. (world space vector)",
             "inparams": [
@@ -3230,7 +3230,7 @@
         {
             "id": 141,
             "type": "value",
-            "displayname": "path_simple: Get Pos At T Value",
+            "displayname": "Get Pos At T Value (path_simple)",
             "libname": "CPathSimpleAPI::GetPosAtTValue",
             "description": "Compute the position at the provided T Value of the spline. (world space vector)",
             "inparams": [
@@ -3253,7 +3253,7 @@
         {
             "id": 142,
             "type": "value",
-            "displayname": "path_simple: Get Dir At T Value",
+            "displayname": "Get Dir At T Value (path_simple)",
             "libname": "CPathSimpleAPI::GetDirAtTValue",
             "description": "Compute the Direction along the spline at the provided T Value of the spline. (world space vector)",
             "inparams": [
@@ -3276,7 +3276,7 @@
         {
             "id": 143,
             "type": "action",
-            "displayname": "path_simple: Set Entity At T Value",
+            "displayname": "Set Entity At T Value (path_simple)",
             "libname": "CPathSimpleAPI::SetEntityAtTValue",
             "description": "Set entity to the position of the provided T value of the spline (world space vector)",
             "inparams": [
@@ -3297,7 +3297,7 @@
         {
             "id": 144,
             "type": "value",
-            "displayname": "path_simple: Get Distance Between Entities Along Path",
+            "displayname": "Get Distance Between Entities Along Path (path_simple)",
             "libname": "CPathSimpleAPI::GetDistanceBetweenEntitiesAlongPath",
             "description": "Compute the distance along the path between provided Entity A and Entity B",
             "inparams": [
@@ -4874,9 +4874,9 @@
         {
             "id": 216,
             "type": "value",
-            "displayname": "(deadlock) Get Hideout Owner Has Seasonal Award",
-            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward",
-            "description": "Get if the owner for the hideout achieved a seasonal award.",
+            "displayname": "(deadlock) Get Hideout Owner Has Seasonal Award 2024",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward2024",
+            "description": "Get if the owner for the hideout achieved a seasonal award for 2024.",
             "outparams": [
                 {
                     "name": "retval",
@@ -5176,7 +5176,7 @@
         {
             "id": 234,
             "type": "value",
-            "displayname": "Get Render Alpha (basemodelentitye)",
+            "displayname": "Get Render Alpha (basemodelentity)",
             "libname": "CBaseModelEntityAPI::GetRenderAlpha",
             "description": "Get object render alpha (0-255)",
             "inparams": [
@@ -5248,20 +5248,124 @@
                     "type": "PVAL_STRING"
                 }
             ]
+        },
+        {
+            "id": 238,
+            "type": "value",
+            "displayname": "Strings Are Equal Case Sensitive",
+            "libname": "CPulseMathlib::StringsAreEqualCaseSensitive",
+            "description": "Compare strings with case sensitivity, in contrast to normal string equality which is case-insensitive",
+            "inparams": [
+                {
+                    "name": "a",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "b",
+                    "type": "PVAL_STRING"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 239,
+            "type": "value",
+            "displayname": "(deadlock) Get Hideout Owner Has Seasonal Award 2025",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward2025",
+            "description": "Get if the owner for the hideout achieved a seasonal award for 2025.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 240,
+            "type": "value",
+            "displayname": "(deadlock) Get Hideout Owner Hero Release August2025 Votes Cast Total",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
+            "description": "Get the hideout owner's number of total hero release votes cast.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 241,
+            "type": "value",
+            "displayname": "(deadlock) Get Is Spawning Enabled (info_trooper_spawn)",
+            "libname": "CCitadel_InfoTrooperSpawnAPI::GetIsSpawningEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_trooper_spawn"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 242,
+            "type": "action",
+            "displayname": "(deadlock) Set Spawning Enabled (info_trooper_spawn)",
+            "libname": "CCitadel_InfoTrooperSpawnAPI::SetSpawningEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_trooper_spawn"
+                },
+                {
+                    "name": "bSpawningEnabled",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 243,
+            "type": "value",
+            "displayname": "(deadlock) Get Hideout Owner Hero Release August2025 Votes Cast Total",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
+            "description": "",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
         }
     ],
     "hooks": [
         {
             "id": 0,
-            "libname": "CPulseGraphInstance_ServerEntity::InitialActivate",
-            "displayname": "Initial Activate",
-            "description": "Called when the parent entity is activated as it initially spawned"
+            "libname": "CPulseGraphInstance_ServerEntity::GraphStart",
+            "displayname": "GraphStart",
+            "description": "Called a short time after the parent entity has been activated. Equivalent to OnMapSpawn in logic_auto, and happens after the player is spawned. You can access !player from this hook."
         },
         {
             "id": 1,
             "libname": "CPulseGraphInstance_ServerEntity::Think",
             "displayname": "Think",
             "description": "Called when the parent entity has been told to think via SetNextThink"
+        },
+        {
+            "id": 2,
+            "libname": "CPulseGraphInstance_ServerEntity::BeforeGraphStart",
+            "displayname": "BeforeGraphStart",
+            "description": "Called when the parent entity is created. WARNING: This happens BEFORE the player is spawned. You cannot access !player from this hook. Use 'GraphStart' if you need !player."
         }
     ]
 }

@@ -450,6 +450,12 @@ fn traverse_ent_output_cell(
         "outputName",
         try_to_string
     );
+    graph_def.create_domain_value(
+        "ENTITY_NAME".into(),
+        entity_name.clone().into(),
+        "".into(),
+        "PVAL_EHANDLE".into()
+    );
     // TODO: implement passing the output parameter
     let expected_param_type = PulseValueType::PVAL_VOID;
     // let expected_param_type = get_constant_graph_input_value!(

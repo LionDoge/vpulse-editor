@@ -24,7 +24,8 @@ pub fn help_hover_text<'a>(template: PulseNodeTemplate, user_state: &'a PulseGra
         PulseNodeTemplate::FireOutput => "Fires an entity output from the graph entity which can be handled by the game \
             Look at the left of the window to add custom outputs".into(),
         PulseNodeTemplate::GraphHook => "(Entry point) fires action when game requests the graph to perform an action".into(),
-        PulseNodeTemplate::Convert => "Converts between value types. NOTE: Not all conversions are supported".into(),
+        PulseNodeTemplate::Convert => "Converts between value types. NOTE: Not all conversions are supported, prefer dedicated nodes if they exist like: 'String to entity name'.
+In the future this may be automated by this node.".into(),
         PulseNodeTemplate::ForLoop => "A ranged loop with an index, the range is inclusive of the 'to' value.".into(),
         PulseNodeTemplate::WhileLoop => "A while loop: runs an action until the given condition evaluates as false. \
              Use 'Compare Output' node to feed the condition port.".into(),

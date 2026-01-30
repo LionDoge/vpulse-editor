@@ -297,7 +297,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GraphHook => "Graph Hook".into(),
             PulseNodeTemplate::GetGameTime => "Get game time".into(),
             PulseNodeTemplate::SetNextThink => "Set next think".into(),
-            PulseNodeTemplate::Convert => "Convert".into(),
+            PulseNodeTemplate::Convert => "Cast".into(),
             PulseNodeTemplate::ForLoop => "For loop".into(),
             PulseNodeTemplate::WhileLoop => "While loop".into(),
             PulseNodeTemplate::StringToEntityName => "String to entity name".into(),
@@ -327,7 +327,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 )
             }
             PulseNodeTemplate::GetArrayElement => "Get array element".into(),
-            PulseNodeTemplate::ScaleVector => "Scale vector".into(),
+            PulseNodeTemplate::ScaleVector => "Scale/invert vector".into(),
             PulseNodeTemplate::ReturnValue => "Return value".into(),
             PulseNodeTemplate::ForEach => "For each".into(),
             PulseNodeTemplate::And => "And".into(),

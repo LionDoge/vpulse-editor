@@ -255,11 +255,27 @@ impl KV3Serialize for Instruction {
     }
 }
 
+pub struct InstructionDebugInfo {
+    flowNodeId: i32,
+    valueNodeId: i32,
+    sequencePointName: Cow<'static, str>,
+}
+
+impl KV3Serialize for InstructionDebugInfo {
+    fn serialize(&self) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_nFlowNodeID".into()), Value::Number(self.flowNodeId.into())),
+            (ObjectKey::Identifier("m_nValueNodeID".into()), Value::Number(self.valueNodeId.into())),
+            (ObjectKey::Identifier("m_SequencePointName".into()), Value::String(self.sequencePointName.to_string())),
+        ])
+    }
+}
+
 #[derive(Default)]
 pub struct PulseChunk {
     instructions: Vec<Instruction>,
     registers: Vec<Register>,
-    pub instruction_editor_ids: Vec<i32>,
+    instruction_debug_infos: Vec<InstructionDebugInfo>,
 }
 impl PulseChunk {
     pub fn add_register(&mut self, reg_type: String, written_by_instruction: i32) -> i32 {
@@ -270,7 +286,15 @@ impl PulseChunk {
     }
     pub fn add_instruction(&mut self, instruction: Instruction) -> i32 {
         self.instructions.push(instruction);
-        self.instruction_editor_ids.push(-1);
+        // Official graphs have different sequence point names depending on the context,
+        // This is a dummy one, as logging methods would just crash otherwise.
+        self.instruction_debug_infos.push({
+            InstructionDebugInfo {
+                flowNodeId: -1,
+                valueNodeId: -1,
+                sequencePointName: "m_StepPoint".into(),
+            }
+        });
         self.instructions.len() as i32 - 1
     }
     pub fn get_last_instruction_id(&self) -> i32 {
@@ -289,7 +313,7 @@ impl KV3Serialize for PulseChunk {
         Value::Object(vec![
             (ObjectKey::Identifier("m_Instructions".into()), Value::Array(self.instructions.iter().map(|instruction| instruction.serialize()).collect())),
             (ObjectKey::Identifier("m_Registers".into()), Value::Array(self.registers.iter().map(|register| register.serialize()).collect())),
-            (ObjectKey::Identifier("m_InstructionEditorIDs".into()), Value::Array(self.instruction_editor_ids.iter().map(|id| Value::Number((*id).into())).collect())),
+            (ObjectKey::Identifier("m_InstructionDebugInfos".into()), Value::Array(self.instruction_debug_infos.iter().map(|info| info.serialize()).collect())),
         ])
     }
 }
@@ -831,7 +855,6 @@ impl KV3Serialize for PulseGraphDef {
             ],
         ),
             Box::new(Value::Object(vec![
-                (ObjectKey::Identifier("generic_data_type".into()), Value::String("Vpulse".into())),
                 (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize()).collect())),
                 (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
                 (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),

@@ -6,6 +6,7 @@ use super::types::*;
 use crate::typing::*;
 use super::help;
 use crate::pulsetypes::*;
+use crate::bindings::FunctionBinding;
 
 impl Default for PulseGraphValueType {
     fn default() -> Self {
@@ -16,20 +17,15 @@ impl Default for PulseGraphValueType {
 }
 
 impl PulseGraphState {
-    // pub fn add_node_custom_param(&mut self, param_name: String, node_id: NodeId) {
-    //     if let Some(vec_params) = self.added_parameters.get_mut(node_id) {
-    //         vec_params.push(param_name);
-    //     } else {
-    //         self.added_parameters.insert(node_id, vec![param_name]);
-    //     }
-    // }
-
     pub fn load_from(&mut self, other: PulseGraphState) {
         self.public_outputs = other.public_outputs;
         self.variables = other.variables;
         self.exposed_nodes = other.exposed_nodes;
         self.outputs_dropdown_choices = other.outputs_dropdown_choices;
         // rewrite everything but the save file path and bindings
+    }
+    pub fn get_library_binding_from_index(&self, index: LibraryBindingIndex) -> Option<&FunctionBinding> {
+        self.bindings.find_function_by_id(index)
     }
 }
 
@@ -301,20 +297,20 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GraphHook => "Graph Hook".into(),
             PulseNodeTemplate::GetGameTime => "Get game time".into(),
             PulseNodeTemplate::SetNextThink => "Set next think".into(),
-            PulseNodeTemplate::Convert => "Convert".into(),
+            PulseNodeTemplate::Convert => "Cast".into(),
             PulseNodeTemplate::ForLoop => "For loop".into(),
             PulseNodeTemplate::WhileLoop => "While loop".into(),
             PulseNodeTemplate::StringToEntityName => "String to entity name".into(),
             PulseNodeTemplate::InvokeLibraryBinding => "Invoke library binding".into(),
             PulseNodeTemplate::FindEntitiesWithin => "Find entities within".into(),
             PulseNodeTemplate::IsValidEntity => "Is valid entity".into(),
-            PulseNodeTemplate::CompareOutput => "Compare output".into(),
+            PulseNodeTemplate::CompareOutput => "Compare".into(),
             PulseNodeTemplate::CompareIf => "If".into(),
             PulseNodeTemplate::IntSwitch => "Int Switch".into(),
             PulseNodeTemplate::SoundEventStart => "Sound event start".into(),
             PulseNodeTemplate::Function => "Function".into(),
             PulseNodeTemplate::CallNode => "Call node".into(),
-            PulseNodeTemplate::ListenForEntityOutput => "Listen for output".into(),
+            PulseNodeTemplate::ListenForEntityOutput => "Listen for entity output".into(),
             PulseNodeTemplate::Timeline => "Timeline".into(),
             PulseNodeTemplate::Comment => "Comment".into(),
             PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param".into(),
@@ -326,10 +322,12 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::NewArray => "Make Array".into(),
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 // TODO: Setup proper lifetimes so we don't have to clone
-                _user_state.get_library_binding_from_index(binding).unwrap().displayname.clone().into()
+                _user_state.bindings.find_function_by_id(*binding)
+                    .map_or("[INVALID]".into(), |f| f.displayname.clone().into()
+                )
             }
             PulseNodeTemplate::GetArrayElement => "Get array element".into(),
-            PulseNodeTemplate::ScaleVector => "Scale vector".into(),
+            PulseNodeTemplate::ScaleVector => "Scale/invert vector".into(),
             PulseNodeTemplate::ReturnValue => "Return value".into(),
             PulseNodeTemplate::ForEach => "For each".into(),
             PulseNodeTemplate::And => "And".into(),
@@ -1128,7 +1126,8 @@ impl NodeTemplateIter for AllMyNodeTemplates {
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
-                binding: LibraryBindingIndex(i),
+                // ! If we skip an ID in the actual bindings list then it could cause problems!
+                binding: LibraryBindingIndex(i as u32),
             }),
         );
         templates
@@ -1337,18 +1336,17 @@ impl WidgetValueTrait for PulseGraphValueType {
                         ComboBox::from_id_salt(node_id)
                             .width(0.0)
                             .selected_text(
-                                &user_state
-                                    .get_event_binding_from_index(value)
-                                    .unwrap()
-                                    .displayname,
+                                user_state.bindings
+                                    .find_event_by_id(*value)
+                                    .map_or("[INVALID]", |e| e.displayname.as_str())
                             )
                             .show_ui(ui, |ui| {
-                                for (idx, event) in user_state.bindings.events.iter().enumerate() {
+                                for event in user_state.bindings.events.iter() {
                                     let str = event.displayname.as_str();
                                     if ui
                                         .selectable_value::<EventBindingIndex>(
                                             value,
-                                            EventBindingIndex(idx),
+                                            event.id,
                                             str,
                                         )
                                         .clicked()
@@ -1369,17 +1367,16 @@ impl WidgetValueTrait for PulseGraphValueType {
                         ComboBox::from_id_salt((param_name, node_id))
                             .width(0.0)
                             .selected_text(
-                                &user_state
-                                    .get_hook_binding_from_index(value)
-                                    .unwrap()
-                                    .displayname,
+                                user_state.bindings
+                                    .find_hook_by_id(*value)
+                                    .map_or("[INVALID]", |h| h.displayname.as_str())
                             )
                             .show_ui(ui, |ui| {
-                                for (idx, hook) in user_state.bindings.hooks.iter().enumerate() {
+                                for hook in user_state.bindings.hooks.iter() {
                                     let str = hook.displayname.as_str();
                                     ui.selectable_value::<HookBindingIndex>(
                                         value,
-                                        HookBindingIndex(idx),
+                                        hook.id,
                                         str,
                                     );
                                 }
@@ -1677,28 +1674,6 @@ impl NodeDataTrait for PulseNodeData {
             ui.label(param_name);
         });
         responses
-    }
-}
-
-use crate::bindings::{EventBinding, FunctionBinding, HookBinding};
-impl PulseGraphState {
-    pub fn get_library_binding_from_index(
-        &self,
-        idx: &LibraryBindingIndex,
-    ) -> Option<&FunctionBinding> {
-        self.bindings.gamefunctions.get(idx.0)
-    }
-    pub fn get_event_binding_from_index(&self, idx: &EventBindingIndex) -> Option<&EventBinding> {
-        self.bindings.events.get(idx.0)
-    }
-    pub fn get_hook_binding_from_index(&self, idx: &HookBindingIndex) -> Option<&HookBinding> {
-        self.bindings.hooks.get(idx.0)
-    }
-    pub fn find_library_binding_by_name(
-        &self,
-        name: &str,
-    ) -> Option<&FunctionBinding> {
-        self.bindings.gamefunctions.iter().find(|b| b.libname == name)
     }
 }
 

@@ -38,7 +38,6 @@ macro_rules! graph_next_action {
         }
     };
 }
-pub(crate) use graph_next_action;
 
 macro_rules! graph_run_next_actions_no_return {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident, $action_name:expr) => {{
@@ -103,7 +102,6 @@ macro_rules! reg_map_setup_inputs {
         }
     }
 }
-pub(crate) use reg_map_setup_inputs;
 
 // process all inflow nodes and logic chain.
 // returns false if no inflow node was processed
@@ -232,8 +230,8 @@ fn traverse_event_cell(
         .get(input_id)
         .ok_or(anyhow!("Can't find input value").context("Traverse event cell node"))?;
     let event_binding_id = input_param.value.clone().try_event_binding_id()?;
-    let event_binding = _graph_state
-        .get_event_binding_from_index(&event_binding_id)
+    let event_binding = _graph_state.bindings
+        .find_event_by_id(event_binding_id)
         .ok_or_else(|| anyhow::anyhow!("Event binding with id {} not found", event_binding_id))?;
     // create new pulse cell node.
     let chunk_id = graph_def.create_chunk();
@@ -280,8 +278,8 @@ fn traverse_graphhook_cell(
     _graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
     let hook_id = get_constant_graph_input_value!(graph, node, "hook", try_hook_binding);
-    let hook = _graph_state
-        .get_hook_binding_from_index(&hook_id)
+    let hook = _graph_state.bindings
+        .find_hook_by_id(hook_id)
         .ok_or_else(|| anyhow::anyhow!("Hook binding with id {} not found", hook_id))?;
     let chunk_id = graph_def.create_chunk();
     let cell_hook =
@@ -451,6 +449,12 @@ fn traverse_ent_output_cell(
         node,
         "outputName",
         try_to_string
+    );
+    graph_def.create_domain_value(
+        "ENTITY_NAME".into(),
+        entity_name.clone().into(),
+        "".into(),
+        "PVAL_EHANDLE".into()
     );
     // TODO: implement passing the output parameter
     let expected_param_type = PulseValueType::PVAL_VOID;
@@ -912,7 +916,7 @@ fn traverse_nodes_and_populate<'a>(
                 Box::from(cell),
                 register_map,
                 target_chunk,
-                "Wait".into(),
+                "CPulseCell_Inflow_Wait::Wait".into(),
             );
             // early return.
             let instr_ret_void = Instruction {
@@ -966,7 +970,7 @@ fn traverse_nodes_and_populate<'a>(
                     Box::from(cell),
                     register_map,
                     target_chunk,
-                    "Run".into(),
+                    "CPulseCell_Step_EntFire::Run".into(),
                 );
             } else {
                 // add invoke binding for FireAtName cell
@@ -976,7 +980,7 @@ fn traverse_nodes_and_populate<'a>(
                     Box::from(cell),
                     register_map,
                     target_chunk,
-                    "FireAtName".into(),
+                    "CPulseCell_Step_EntFire::FireAtName".into(),
                 );
                 let output_connection = OutputConnection::new(
                     String::from("Step_EntFire:-1"),
@@ -1334,7 +1338,7 @@ fn traverse_nodes_and_populate<'a>(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
                 register_map,
-                func_name: "Run".into(),
+                func_name: "CPulseCell_Step_DebugLog::Run".into(),
                 cell_index: graph_def.cells.len() as i32 - 1,
                 src_chunk: target_chunk,
                 src_instruction: chunk.get_last_instruction_id() + 1,
@@ -1371,7 +1375,7 @@ fn traverse_nodes_and_populate<'a>(
                 let reg_map = reg_map_setup_inputs!("Param", reg_param);
                 let binding = InvokeBinding {
                     register_map: reg_map,
-                    func_name: "Run".into(),
+                    func_name: "CPulseCell_Step_PublicOutput::Run".into(),
                     cell_index: graph_def.cells.len() as i32 - 1,
                     src_chunk: target_chunk,
                     src_instruction: chunk.get_last_instruction_id() + 1,
@@ -1944,7 +1948,7 @@ fn traverse_nodes_and_populate<'a>(
             let mut outflow_connections = vec![];
             // the cell id will need to be adjusted later after we process all the cases and construct the cell itself.
             let cell_binding_id =
-                add_cell_invoke_binding(graph_def, register_map, target_chunk, "Run".into(), -1);
+                add_cell_invoke_binding(graph_def, register_map, target_chunk, "CPulseCell_Outflow_IntSwitch::Run".into(), -1);
             let mut instructions_jump_end = vec![];
             for out in current_node.outputs.iter() {
                 if out.0.parse::<i32>().is_err() {
@@ -2096,7 +2100,7 @@ fn traverse_nodes_and_populate<'a>(
                 Box::new(cell),
                 register_map,
                 target_chunk,
-                "Run".into(),
+                "CPulseCell_SoundEventStart::Run".into(),
             );
             
             if output_id.is_some() {
@@ -2177,7 +2181,7 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 RegisterMap::default(),
                 target_chunk,
-                "Start".into(),
+                "CPulseCell_Timeline::Start".into(),
                 cell_id as i32,
             );
             // traverse all connected actions, they will be in the same chunk separated by returns, as it seems to be the way that it's done officially.
@@ -2240,7 +2244,13 @@ fn traverse_nodes_and_populate<'a>(
                 "pParamValue",
                 reg_param_value
             );
-            add_cell_and_invoking(graph_def, Box::new(cell), reg_map, target_chunk, "Run".into());
+            add_cell_and_invoking(
+                graph_def,
+                Box::new(cell),
+                reg_map,
+                target_chunk,
+                "CPulseCell_Step_SetAnimGraphParam::Run".into()
+            );
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
         }
         PulseNodeTemplate::ConstantBool => {
@@ -2613,7 +2623,13 @@ fn traverse_nodes_and_populate<'a>(
                 reg_max
             );
             reg_map.add_outparam("retval".into(), reg_out);
-            add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomInt), reg_map, target_chunk, "Eval".into());
+            add_cell_and_invoking(
+                graph_def, 
+                Box::from(CPulseCell_Value_RandomInt), 
+                reg_map, 
+                target_chunk, 
+                "CPulseCell_Value_RandomInt::Eval".into()
+            );
             return Ok(reg_out);
         }
         PulseNodeTemplate::RandomFloat => {
@@ -2632,7 +2648,13 @@ fn traverse_nodes_and_populate<'a>(
                 reg_max
             );
             reg_map.add_outparam("retval".into(), reg_out);
-            add_cell_and_invoking(graph_def, Box::from(CPulseCell_Value_RandomFloat), reg_map, target_chunk, "Eval".into());
+            add_cell_and_invoking(
+                graph_def, 
+                Box::from(CPulseCell_Value_RandomFloat),
+                reg_map, 
+                target_chunk, 
+                "CPulseCell_Value_RandomFloat::Eval".into()
+            );
             return Ok(reg_out);
         }
         _ => todo!(
@@ -2650,7 +2672,7 @@ fn make_library_call(
     mut reg_map: RegisterMap, 
     chunk_id: i32
 ) -> anyhow::Result<RegisterMap> {
-    let func = graph_state.find_library_binding_by_name(&name).ok_or(anyhow!(
+    let func = graph_state.bindings.find_function_by_libname(&name).ok_or(anyhow!(
         "Failed to find library binding with name: {}",
         name
     ))?;

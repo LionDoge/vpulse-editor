@@ -274,12 +274,6 @@ impl Default for PulseGraphState {
     }
 }
 
-// Compare this snippet from src/instruction_templates.rs:
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
-pub struct CustomOutputInfo {
-    pub name: String,
-    pub data: PulseValueType,
-}
 pub struct AllMyNodeTemplates {
     pub game_function_count: usize,
 }

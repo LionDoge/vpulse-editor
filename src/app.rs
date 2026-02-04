@@ -8,7 +8,7 @@ use delegate::delegate;
 use std::time::UNIX_EPOCH;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
-use eframe::egui::util::undoer::Undoer;
+use eframe::egui::util::undoer::{Settings, Undoer};
 use eframe::egui::Button;
 use eframe::egui::TextStyle;
 use eframe::egui::Vec2;
@@ -1029,6 +1029,11 @@ impl PulseGraphEditor{
             .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
             .unwrap_or_default();
 
+        grph.undoer = Undoer::with_settings(Settings {
+            max_undos: 100, // TODO: make it configurable
+            stable_time: 0.2,
+            auto_save_interval: 60.0,
+        });
         grph.update_titlebar(&cc.egui_ctx);
         #[cfg(feature = "nongame_asset_build")] {
             let cfg_res: anyhow::Result<EditorConfig> = {
@@ -1310,7 +1315,9 @@ impl eframe::App for PulseGraphEditor {
                         self.current_modal_dialog.is_open = true;
                         self.current_modal_dialog.window_type = ModalWindowType::ConfirmSave;
                     }
-                if ui.button("Undo").clicked()
+                if ui.button("Undo").clicked() || ctx.input(|i| {
+                        i.modifiers.command && i.key_pressed(egui::Key::Z)
+                    })
                 {
                     if let Some(prev_state) = self.undoer.undo(&self.full_state) {
                         self.full_state = prev_state.clone();

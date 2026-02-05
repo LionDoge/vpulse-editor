@@ -29,7 +29,7 @@ strum_macros = "0.27.2"
 delegate = "0.13.4"
 keyvalues3 = "1.1.0"
 serde_path_to_error = "0.1.20"
-gui_panic_handler = "0.1.0"
+arboard = "3.6.1"
 
 [build-dependencies]
 embed-resource = "3.0.5"

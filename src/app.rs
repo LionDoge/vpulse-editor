@@ -328,7 +328,11 @@ impl PulseGraphEditor {
     }
    
     fn load_graph(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
-        self.full_state.load_state(filepath)
+        let res = self.full_state.load_state(filepath);
+        if res.is_ok() {
+            self.undoer = Self::get_new_undoer();
+        }
+        res
     }
     fn new_graph(&mut self, ctx: &egui::Context) {
         self.full_state.state = MyEditorState::default();
@@ -1087,11 +1091,7 @@ impl PulseGraphEditor{
             full_state: cc.storage
                 .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
                 .unwrap_or_default(),
-            undoer: Undoer::with_settings(Settings {
-                max_undos: 100,
-                stable_time: 0.2,
-                auto_save_interval: 30.0,
-            }),
+            undoer: Self::get_new_undoer(),
             current_modal_dialog: ModalWindow::default(),
             version: FileVersion::default(),
         };
@@ -1146,7 +1146,15 @@ impl PulseGraphEditor{
             return Err(e);
         }
         Ok(())
-    }   
+    }
+
+    fn get_new_undoer() -> Undoer<FullGraphState> {
+        Undoer::with_settings(Settings {
+            max_undos: 100,
+            stable_time: 0.2,
+            auto_save_interval: 30.0,
+        })
+    }
 }
 
 // assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)

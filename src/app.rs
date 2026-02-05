@@ -1059,27 +1059,21 @@ impl PulseGraphEditor {
     fn do_undo(&mut self) {
         // workaround to preserve pan/zoom state from resetting on undo.
         let pan_zoom = self.state().pan_zoom.clone();
-        // node positions - should be a TEMP fix!!
-        let node_positions = self.full_state.state.node_positions.clone();
         if let Some(state) = self.undoer.undo(&self.full_state) {
             self.full_state = state.clone();
         }
         self.state_mut().pan_zoom = pan_zoom;
         self.state_mut().connection_in_progress = None;
-        self.full_state.state.node_positions = node_positions;
     }
 
     fn do_redo(&mut self) {
         // workaround to preserve pan/zoom state from resetting on redo.
         let pan_zoom = self.state().pan_zoom.clone();
-        // node positions - should be a TEMP fix!!
-        let node_positions = self.full_state.state.node_positions.clone();
         if let Some(state) = self.undoer.redo(&self.full_state) {
             self.full_state = state.clone();
         }
         self.state_mut().pan_zoom = pan_zoom;
         self.state_mut().connection_in_progress = None;
-        self.full_state.state.node_positions = node_positions;
     }
 }
 

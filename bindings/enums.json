@@ -1,0 +1,24 @@
+[
+    {
+        "name": "PulseCursorCancelPriority_t",
+        "name_ui": "PulseCursorCancelPriority",
+        "variants": [
+            {
+                "name": "None",
+                "name_ui": "Keep running normally."
+            },
+            {
+                "name": "CancelOnSucceeded",
+                "name_ui": "Kill after current node."
+            },
+            {
+                "name": "SoftCancel",
+                "name_ui": "Kill elegantly."
+            },
+            {
+                "name": "HardCancel",
+                "name_ui": "Kill immediately."
+            }
+        ]
+    }
+]

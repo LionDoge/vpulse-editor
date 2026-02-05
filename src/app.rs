@@ -1096,7 +1096,8 @@ impl PulseGraphEditor{
             grph.editor_config = cfg_res.unwrap_or_default();
         }
 
-        let bindings = load_bindings(std::path::Path::new("bindings.json"));
+        let bindings = load_bindings(
+            std::path::Path::new("bindings.json"), std::path::Path::new("bindings/enums.json"));
         match bindings {
             Ok(bindings) => {
                 grph.user_state_mut().bindings = bindings;

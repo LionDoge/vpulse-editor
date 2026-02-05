@@ -75,6 +75,7 @@ pub struct GraphBindings {
     pub gamefunctions: Vec<FunctionBinding>,
     pub events: Vec<EventBinding>,
     pub hooks: Vec<HookBinding>,
+    pub enums: Vec<EnumInfo>,
 }
 
 impl GraphBindings {
@@ -106,11 +107,7 @@ impl GraphBindings {
 // stub used for Undo functionality, there's no need to clone these.
 impl Clone for GraphBindings {
     fn clone(&self) -> Self {
-        GraphBindings {
-            gamefunctions: Vec::default(),
-            events: Vec::default(),
-            hooks: Vec::default(),
-        }
+        GraphBindings::default()
     }
 }
 
@@ -133,7 +130,7 @@ fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
+pub fn load_bindings(filepath: &std::path::Path, filepath_enums: &std::path::Path) -> anyhow::Result<GraphBindings> {
     let json = std::fs::read_to_string(filepath)?;
     let mut deserializer = serde_json::Deserializer::from_str(&json);
     let mut bindings: GraphBindings = serde_path_to_error::deserialize(&mut deserializer)?;
@@ -144,6 +141,10 @@ pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings
     for binding in bindings.events.iter_mut() {
         process_params(&mut binding.inparams)?;
     }
+
+    let json_enums = std::fs::read_to_string(filepath_enums)?;
+    let mut deserializer_enums = serde_json::Deserializer::from_str(&json_enums);
+    bindings.enums = serde_path_to_error::deserialize(&mut deserializer_enums)?;
     Ok(bindings)
 }
 
@@ -169,4 +170,15 @@ where
         "to_subtype" => Ok(Some(PolimorphicTypeInfo::ToSubtype(param_name))),
         _ => Ok(None),
     }
+}
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+pub struct EnumInfo {
+    pub name: String,
+    pub name_ui: String,
+    pub variants: Vec<EnumVariantInfo>,
+}
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+pub struct EnumVariantInfo {
+    pub name: String,
+    pub name_ui: String,
 }

@@ -2765,6 +2765,10 @@
                     "type": "PVAL_SCHEMA_ENUM:BaseExplosionTypes_t"
                 },
                 {
+                    "name": "pszExplosionType",
+                    "type": "PVAL_STRING"
+                },
+                {
                     "name": "sExpSoundName",
                     "type": "PVAL_SNDEVT_NAME"
                 },
@@ -5340,6 +5344,71 @@
             "displayname": "(deadlock) Get Hideout Owner Hero Release August2025 Votes Cast Total",
             "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
             "description": "",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 244,
+            "type": "action",
+            "displayname": "(modifier) Add New Modifier",
+            "libname": "CPulseServerFuncs::AddNewModifier",
+            "description": "Adds a modifier to the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "hCaster",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 245,
+            "type": "action",
+            "displayname": "(modifier) Remove Modifier",
+            "libname": "CPulseServerFuncs::RemoveModifier",
+            "description": "Removes the modifier from the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "hCaster",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+        "id": 246,
+            "type": "value",
+            "displayname": "(modifier) Has Modifier",
+            "libname": "CPulseServerFuncs::HasModifier",
+            "description": "Returns true if the entity has the modifier, false otherwise",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ],
             "outparams": [
                 {
                     "name": "retval",

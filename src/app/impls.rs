@@ -7,6 +7,7 @@ use crate::typing::*;
 use super::help;
 use crate::pulsetypes::*;
 use crate::bindings::FunctionBinding;
+use crate::app::help::help_hover_text;
 
 impl Default for PulseGraphValueType {
     fn default() -> Self {
@@ -402,6 +403,16 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         // It's okay to delegate this to node_finder_label if you don't want to
         // show different names in the node finder and the node itself.
         self.node_finder_label(user_state).into()
+    }
+
+    fn node_finder_description<'a>(&'a self, user_state: &'a Self::UserState) -> Option<Cow<'a, str>> {
+        //Cow::Owned().into_owned())
+        let text = help_hover_text(*self, user_state);
+        if !text.is_empty() {
+            Some(text)
+        } else {
+            None
+        }
     }
 
     fn user_data(&self, _user_state: &mut Self::UserState) -> Self::NodeData {

@@ -272,6 +272,9 @@ pub trait NodeTemplateTrait: Clone {
     /// Returns a descriptive name for the node kind, used in the graph.
     fn node_graph_label(&self, user_state: &mut Self::UserState) -> String;
 
+    /// Returns a description that's displayed upon hovering the chosen node kind.
+    fn node_finder_description<'a>(&'a self, user_state: &'a Self::UserState) -> Option<std::borrow::Cow<'a, str>>;
+
     /// Returns the user data for this node kind.
     fn user_data(&self, user_state: &mut Self::UserState) -> Self::NodeData;
 

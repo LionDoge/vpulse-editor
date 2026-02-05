@@ -590,7 +590,7 @@ fn draw_connection(
     color: Color32,
 ) {
     let connection_stroke = egui::Stroke {
-        width: 5.0 * pan_zoom.zoom,
+        width: 3.0 * pan_zoom.zoom,
         color,
     };
 

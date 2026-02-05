@@ -1353,11 +1353,26 @@ impl eframe::App for PulseGraphEditor {
                         self.current_modal_dialog.is_open = true;
                         self.current_modal_dialog.window_type = ModalWindowType::ConfirmSave;
                     }
-                if ui.button("Undo").clicked() || ctx.input(|i| {
+
+                if ui.add_enabled(
+                    self.undoer.has_undo(&self.full_state), egui::Button::new("⟲")
+                    ).clicked() ||
+                    ctx.input(|i| {
                         i.modifiers.command && i.key_pressed(egui::Key::Z)
                     })
                 {
                     if let Some(prev_state) = self.undoer.undo(&self.full_state) {
+                        self.full_state = prev_state.clone();
+                    }
+                }
+                else if ui.add_enabled(
+                    self.undoer.has_redo(&self.full_state), egui::Button::new("⟳")
+                    ).clicked() ||
+                    ctx.input(|i| {
+                        i.modifiers.command && i.key_pressed(egui::Key::Y)
+                    })
+                {
+                    if let Some(prev_state) = self.undoer.redo(&self.full_state) {
                         self.full_state = prev_state.clone();
                     }
                 }

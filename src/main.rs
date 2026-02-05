@@ -11,6 +11,18 @@ use std::sync::Arc;
 fn main() {
     let d = eframe::icon_data::from_png_bytes(include_bytes!("../icon.png"))
         .expect("The icon data must be valid");
+
+    use gui_panic_handler::AppInfo;
+    gui_panic_handler::register(AppInfo {
+        name: "Pulse Graph Editor",
+        additional_text: "The editor has crashed, if this happens consistently please report along with relevant information.",
+        links: vec![],
+        report_bug_url: Some(gui_panic_handler::GitHubBugReporter::new(
+            String::from("LionDoge"),
+            String::from("vpulse-editor"),
+        )),
+    });
+
     use eframe::egui::ViewportBuilder;
     let mut options = eframe::NativeOptions {
         viewport: ViewportBuilder::default(),

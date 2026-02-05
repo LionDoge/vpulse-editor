@@ -335,6 +335,7 @@ impl PulseGraphEditor {
         res
     }
     fn new_graph(&mut self, ctx: &egui::Context) {
+        self.undoer = Self::get_new_undoer();
         self.full_state.state = MyEditorState::default();
         self.user_state_mut().load_from(PulseGraphState::default());
         self.user_state_mut().save_file_path = None;

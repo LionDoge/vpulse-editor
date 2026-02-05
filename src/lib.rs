@@ -9,6 +9,7 @@ mod compiler;
 mod pulsetypes;
 mod typing;
 mod utils;
+mod compat;
 pub use app::PulseGraphEditor;
 // ----------------------------------------------------------------------------
 // When compiling for web:

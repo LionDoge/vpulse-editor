@@ -60,97 +60,37 @@ impl FullGraphState {
     pub fn user_state_mut(&mut self) -> &mut PulseGraphState {
         &mut self.user_state
     }
-}
 
-#[derive(Default, Clone)]
-#[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct PulseGraphEditor {
-    #[cfg_attr(feature = "persistence", serde(skip))]
-    #[allow(unused)]
-    version: FileVersion,
-    #[cfg_attr(feature = "persistence", serde(flatten))]
-    full_state: FullGraphState,
-    #[cfg(feature = "nongame_asset_build")]
-    #[serde(skip)]
-    editor_config: EditorConfig,
-    #[serde(skip)]
-    current_modal_dialog: ModalWindow,
-    #[serde(skip)]
-    undoer: Undoer<FullGraphState>,
-}
-
-fn slotmap_eq <K: slotmap::Key, T: PartialEq>(a: &slotmap::SlotMap<K, T>, b: &slotmap::SlotMap<K, T>) -> bool {
-    a.len() == b.len() && a.iter().all(|(key, value)| b.get(key) == Some(value))
-}
-
-impl PartialEq for FullGraphState {
-    fn eq(&self, other: &Self) -> bool {
-        self.state.graph.connections == other.state.graph.connections &&
-        self.state.node_positions == other.state.node_positions &&
-        slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
-        slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
-        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs)
-        //self.user_state == other.user_state
+    pub fn load_state(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        let contents = fs::read_to_string(filepath)?;
+        let loaded_graph: FullGraphState = ron::from_str(&contents).map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse file: {}",
+                e.to_string()
+            )
+        })?;
+        *self = loaded_graph;
+        self.user_state.save_file_path = Some(filepath.clone());
+        self.verify_compat();
+        Ok(())
     }
-}
 
-impl PulseGraphEditor {
-    delegate! {
-        to self.full_state {
-            pub fn state(&self) -> &MyEditorState;
-            pub fn state_mut(&mut self) -> &mut MyEditorState;
-            pub fn user_state(&self) -> &PulseGraphState;
-            pub fn user_state_mut(&mut self) -> &mut PulseGraphState;
-        }
-    }
     fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
-        let res = ron::ser::to_string_pretty::<PulseGraphEditor>(
+        let res = ron::ser::to_string_pretty::<FullGraphState>(
             self,
             ron::ser::PrettyConfig::default(),
         )?;
         fs::write(filepath, res)?;
         Ok(())
     }
-    // perform a save including including some cleanup
-    fn perform_save(&mut self, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
-        let dest_path;
-        // remove the path on manual save (we don't use serde skip because we want to save it within autosaves)
-        let save_path = self.full_state.user_state.save_file_path.take();
-        if let Some(filepath) = filepath {
-            dest_path = filepath;
-        } else {
-            // if no filepath is provided, assume the one in saved state
-            if let Some(filepath) = save_path.as_ref() {
-                dest_path = filepath;
-            } else {
-                return Err(anyhow!(
-                    "No file path provided for saving the graph. This should not happen"
-                ));
-            }
-        }
-        self.save_graph(dest_path)?;
-        // restore the path info to memory.
-        self.full_state.user_state.save_file_path = save_path;
-        Ok(())
-    }
-    // promts user to choose a file to save the graph to and remembers the location for saving.
-    fn dialog_change_save_file(&mut self) -> bool {
-        let chosen_file = FileDialog::new()
-            .add_filter("Pulse Graph Editor State", &["ron"])
-            .save_file();
-        let did_pick = chosen_file.as_ref().is_some(); // if not, the user cancelled so we should note that
-        if did_pick {
-            self.full_state.user_state.save_file_path = chosen_file;
-        }
-        did_pick
-    }
-    // Applies some corrections if some data is missing or changed for files saved in older versions
+
+     // Applies some corrections if some data is missing or changed for files saved in older versions
     pub fn verify_compat(&mut self) {
         // v0.1.1 introduces a SecondaryMap node_sizes in GraphEditorState
         // make sure that it is populated with every existing node.
-        if self.state().node_sizes.is_empty() {
-            for node in self.full_state.state.graph.nodes.iter() {
-                self.full_state.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
+        if self.state.node_sizes.is_empty() {
+            for node in self.state.graph.nodes.iter() {
+                self.state.node_sizes.insert(node.0, egui::vec2(200.0, 200.0));
             }
         }
         let mut sound_event_nodes = vec![];
@@ -164,8 +104,8 @@ impl PulseGraphEditor {
             connection_type: InputParamKind,
         }
         let mut queued_add_params: Vec<QueuedAddParams> = vec![];
-        for node_id in self.full_state.state.graph.iter_nodes().collect::<Vec<_>>() {
-            let node = match self.full_state.state.graph.nodes.get_mut(node_id) {
+        for node_id in self.state.graph.iter_nodes().collect::<Vec<_>>() {
+            let node = match self.state.graph.nodes.get_mut(node_id) {
                 Some(node) => node,
                 None => continue,
             };  
@@ -174,7 +114,7 @@ impl PulseGraphEditor {
                 // verify that all existing library binding nodes have correct parameters, in case they have been updated between sessions.
                 // NOTE: this does not remove any parameters from the node, they would be just ignored.
                 PulseNodeTemplate::LibraryBindingAssigned { binding } => {
-                    if let Some(binding) = self.full_state.user_state.bindings.find_function_by_id(binding) {
+                    if let Some(binding) = self.user_state.bindings.find_function_by_id(binding) {
                         if binding.inparams.is_none() {
                             continue;
                         }
@@ -238,7 +178,7 @@ impl PulseGraphEditor {
             }
         }
         for node_id in sound_event_nodes {
-            self.state_mut().graph.add_input_param(
+            self.state.graph.add_input_param(
                 node_id,
                 "soundEventType".to_string(),
                 PulseDataType::GeneralEnum,
@@ -249,7 +189,7 @@ impl PulseGraphEditor {
                 true,
             );
             // TODO: would be good to have some publically accessible simplifications for adding common inputs
-            self.state_mut().graph.add_input_param(
+            self.state.graph.add_input_param(
                 node_id,
                 "ActionIn".to_string(),
                 PulseDataType::Action,
@@ -257,9 +197,9 @@ impl PulseGraphEditor {
                 InputParamKind::ConnectionOnly,
                 true,
             );
-            self.state_mut().graph.add_output_param(node_id, "outAction".to_string(), PulseDataType::Action);
+            self.state.graph.add_output_param(node_id, "outAction".to_string(), PulseDataType::Action);
             // all of this below is just to move the input action to the top, since the library doesn't really make that easy.
-            let node = self.state_mut().graph.nodes.get_mut(node_id).unwrap();
+            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
             let mut input_id = None;
             node.inputs.retain(|input| {
                 input_id = Some(input.1);
@@ -270,7 +210,7 @@ impl PulseGraphEditor {
             }
         }
         for node_id in entfire_nodes {
-            self.state_mut().graph.add_input_param(
+            self.state.graph.add_input_param(
                 node_id,
                 "entityHandle".to_string(),
                 PulseDataType::EHandle,
@@ -280,7 +220,7 @@ impl PulseGraphEditor {
             );
         }
         for node_id in call_func_nodes {
-            self.state_mut().graph.add_input_param(
+            self.state.graph.add_input_param(
                 node_id,
                 "Async".to_string(),
                 PulseDataType::Bool,
@@ -290,14 +230,14 @@ impl PulseGraphEditor {
             );
         }
         for node_id in listen_entity_output_nodes {
-            let node = self.state_mut().graph.nodes.get_mut(node_id).unwrap();
+            let node = self.state.graph.nodes.get_mut(node_id).unwrap();
             if let Ok(o) = node.get_output("outAction") { 
-                self.state_mut().graph.remove_output_param(o);
+                self.state.graph.remove_output_param(o);
             }
         }
 
         for param in queued_add_params {
-            self.state_mut().graph.add_input_param(
+            self.state.graph.add_input_param(
                 param.node_id,
                 param.param_name,
                 param.types.0,
@@ -308,27 +248,89 @@ impl PulseGraphEditor {
         }
 
         // this fills out the default domain and subdomain if they're not set at launch time
-        if self.user_state().graph_domain.is_empty() {
-            self.user_state_mut().graph_domain = "ServerEntity".to_string();
+        if self.user_state.graph_domain.is_empty() {
+            self.user_state.graph_domain = "ServerEntity".to_string();
         }
-        if self.user_state().graph_subtype.is_empty() {
-            self.user_state_mut().graph_subtype = "PVAL_EHANDLE:point_pulse".to_string();
+        if self.user_state.graph_subtype.is_empty() {
+            self.user_state.graph_subtype = "PVAL_EHANDLE:point_pulse".to_string();
         }
     }
-    fn load_graph(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
-        let contents = fs::read_to_string(filepath)?;
-        let loaded_graph: PulseGraphEditor = ron::from_str(&contents).map_err(|e| {
-            anyhow::anyhow!(
-                "Failed to parse file: {}",
-                e.to_string()
-            )
-        })?;
-        self.full_state.state = loaded_graph.full_state.state;
-        self.user_state_mut().load_from(loaded_graph.full_state.user_state);
-        // we don't serialize file path since the file could be moved between save/open.
-        self.user_state_mut().save_file_path = Some(filepath.clone());
-        self.verify_compat();
+}
+
+#[derive(Default, Clone)]
+pub struct PulseGraphEditor {
+    #[allow(unused)]
+    version: FileVersion,
+    full_state: FullGraphState,
+    #[cfg(feature = "nongame_asset_build")]
+    editor_config: EditorConfig,
+    current_modal_dialog: ModalWindow,
+    undoer: Undoer<FullGraphState>,
+}
+
+fn slotmap_eq <K: slotmap::Key, T: PartialEq>(a: &slotmap::SlotMap<K, T>, b: &slotmap::SlotMap<K, T>) -> bool {
+    a.len() == b.len() && a.iter().all(|(key, value)| b.get(key) == Some(value))
+}
+
+impl PartialEq for FullGraphState {
+    fn eq(&self, other: &Self) -> bool {
+        self.state.graph.connections == other.state.graph.connections &&
+        self.state.node_positions == other.state.node_positions &&
+        slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
+        slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
+        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs)
+        //self.user_state == other.user_state
+    }
+}
+
+impl PulseGraphEditor {
+    delegate! {
+        to self.full_state {
+            pub fn state(&self) -> &MyEditorState;
+            pub fn state_mut(&mut self) -> &mut MyEditorState;
+            pub fn user_state(&self) -> &PulseGraphState;
+            pub fn user_state_mut(&mut self) -> &mut PulseGraphState;
+        }
+    }
+    fn save_graph(&self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        self.full_state.save_graph(filepath)
+    }
+    // perform a save including including some cleanup
+    fn perform_save(&mut self, filepath: Option<&PathBuf>) -> anyhow::Result<()> {
+        let dest_path;
+        // remove the path on manual save (we don't use serde skip because we want to save it within autosaves)
+        let save_path = self.full_state.user_state.save_file_path.take();
+        if let Some(filepath) = filepath {
+            dest_path = filepath;
+        } else {
+            // if no filepath is provided, assume the one in saved state
+            if let Some(filepath) = save_path.as_ref() {
+                dest_path = filepath;
+            } else {
+                return Err(anyhow!(
+                    "No file path provided for saving the graph. This should not happen"
+                ));
+            }
+        }
+        self.save_graph(dest_path)?;
+        // restore the path info to memory.
+        self.full_state.user_state.save_file_path = save_path;
         Ok(())
+    }
+    // promts user to choose a file to save the graph to and remembers the location for saving.
+    fn dialog_change_save_file(&mut self) -> bool {
+        let chosen_file = FileDialog::new()
+            .add_filter("Pulse Graph Editor State", &["ron"])
+            .save_file();
+        let did_pick = chosen_file.as_ref().is_some(); // if not, the user cancelled so we should note that
+        if did_pick {
+            self.full_state.user_state.save_file_path = chosen_file;
+        }
+        did_pick
+    }
+   
+    fn load_graph(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        self.full_state.load_state(filepath)
     }
     fn new_graph(&mut self, ctx: &egui::Context) {
         self.full_state.state = MyEditorState::default();
@@ -1057,18 +1059,19 @@ impl PulseGraphEditor{
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        
-        #[cfg(feature = "persistence")]
-        let mut grph: PulseGraphEditor = cc
-            .storage
-            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
-            .unwrap_or_default();
+        let mut grph = Self {
+            full_state: cc.storage
+                .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
+                .unwrap_or_default(),
+            undoer: Undoer::with_settings(Settings {
+                max_undos: 100,
+                stable_time: 0.2,
+                auto_save_interval: 60.0,
+            }),
+            current_modal_dialog: ModalWindow::default(),
+            version: FileVersion::default(),
+        };
 
-        grph.undoer = Undoer::with_settings(Settings {
-            max_undos: 100, // TODO: make it configurable
-            stable_time: 0.2,
-            auto_save_interval: 60.0,
-        });
         grph.update_titlebar(&cc.egui_ctx);
         #[cfg(feature = "nongame_asset_build")] {
             let cfg_res: anyhow::Result<EditorConfig> = {
@@ -1104,7 +1107,7 @@ impl PulseGraphEditor{
                     .show();
             }
         };
-        grph.verify_compat();
+        grph.full_state.verify_compat();
         grph
     }
 
@@ -1220,7 +1223,7 @@ impl eframe::App for PulseGraphEditor {
     /// If the persistence function is enabled,
     /// Called by the frame work to save state before shutdown.
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, PERSISTENCE_KEY, &self);
+        eframe::set_value(storage, PERSISTENCE_KEY, &self.full_state);
     }
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.

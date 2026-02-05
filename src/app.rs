@@ -275,11 +275,9 @@ fn slotmap_eq <K: slotmap::Key, T: PartialEq>(a: &slotmap::SlotMap<K, T>, b: &sl
 impl PartialEq for FullGraphState {
     fn eq(&self, other: &Self) -> bool {
         self.state.graph.connections == other.state.graph.connections &&
-        self.state.node_positions == other.state.node_positions &&
         slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
         slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
         slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs)
-        //self.user_state == other.user_state
     }
 }
 
@@ -1053,6 +1051,26 @@ impl PulseGraphEditor {
             &self.full_state
         );
     }
+
+    fn do_undo(&mut self) {
+        // workaround to preserve pan/zoom state from resetting on undo.
+        let pan_zoom = self.state().pan_zoom.clone();
+        if let Some(state) = self.undoer.undo(&self.full_state) {
+            self.full_state = state.clone();
+        }
+        self.state_mut().pan_zoom = pan_zoom;
+        self.state_mut().connection_in_progress = None;
+    }
+
+    fn do_redo(&mut self) {
+        // workaround to preserve pan/zoom state from resetting on redo.
+        let pan_zoom = self.state().pan_zoom.clone();
+        if let Some(state) = self.undoer.redo(&self.full_state) {
+            self.full_state = state.clone();
+        }
+        self.state_mut().pan_zoom = pan_zoom;
+        self.state_mut().connection_in_progress = None;
+    }
 }
 
 impl PulseGraphEditor{
@@ -1066,7 +1084,7 @@ impl PulseGraphEditor{
             undoer: Undoer::with_settings(Settings {
                 max_undos: 100,
                 stable_time: 0.2,
-                auto_save_interval: 60.0,
+                auto_save_interval: 30.0,
             }),
             current_modal_dialog: ModalWindow::default(),
             version: FileVersion::default(),
@@ -1361,9 +1379,7 @@ impl eframe::App for PulseGraphEditor {
                         i.modifiers.command && i.key_pressed(egui::Key::Z)
                     })
                 {
-                    if let Some(prev_state) = self.undoer.undo(&self.full_state) {
-                        self.full_state = prev_state.clone();
-                    }
+                    self.do_undo();
                 }
                 else if ui.add_enabled(
                     self.undoer.has_redo(&self.full_state), egui::Button::new("⟳")
@@ -1372,9 +1388,7 @@ impl eframe::App for PulseGraphEditor {
                         i.modifiers.command && i.key_pressed(egui::Key::Y)
                     })
                 {
-                    if let Some(prev_state) = self.undoer.redo(&self.full_state) {
-                        self.full_state = prev_state.clone();
-                    }
+                    self.do_redo();
                 }
                 if !ctx.wants_keyboard_input() 
                     && ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::D)) {

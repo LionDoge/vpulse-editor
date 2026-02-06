@@ -268,19 +268,6 @@ pub struct PulseGraphEditor {
     undoer: Undoer<FullGraphState>,
 }
 
-fn slotmap_eq <K: slotmap::Key, T: PartialEq>(a: &slotmap::SlotMap<K, T>, b: &slotmap::SlotMap<K, T>) -> bool {
-    a.len() == b.len() && a.iter().all(|(key, value)| b.get(key) == Some(value))
-}
-
-impl PartialEq for FullGraphState {
-    fn eq(&self, other: &Self) -> bool {
-        self.state.graph.connections == other.state.graph.connections &&
-        slotmap_eq(&self.state.graph.nodes, &other.state.graph.nodes) &&
-        slotmap_eq(&self.state.graph.inputs, &other.state.graph.inputs) &&
-        slotmap_eq(&self.state.graph.outputs, &other.state.graph.outputs)
-    }
-}
-
 impl PulseGraphEditor {
     delegate! {
         to self.full_state {
@@ -1060,20 +1047,24 @@ impl PulseGraphEditor {
     fn do_undo(&mut self) {
         // workaround to preserve pan/zoom state from resetting on undo.
         let pan_zoom = self.state().pan_zoom.clone();
+        let current_file = self.user_state().save_file_path.clone();
         if let Some(state) = self.undoer.undo(&self.full_state) {
             self.full_state = state.clone();
         }
         self.state_mut().pan_zoom = pan_zoom;
+        self.user_state_mut().save_file_path = current_file;
         self.state_mut().connection_in_progress = None;
     }
 
     fn do_redo(&mut self) {
         // workaround to preserve pan/zoom state from resetting on redo.
         let pan_zoom = self.state().pan_zoom.clone();
+        let current_file = self.user_state().save_file_path.clone();
         if let Some(state) = self.undoer.redo(&self.full_state) {
             self.full_state = state.clone();
         }
         self.state_mut().pan_zoom = pan_zoom;
+        self.user_state_mut().save_file_path = current_file;
         self.state_mut().connection_in_progress = None;
     }
 }

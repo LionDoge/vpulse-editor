@@ -9,9 +9,7 @@ use std::time::UNIX_EPOCH;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
 use eframe::egui::util::undoer::{Settings, Undoer};
-use eframe::egui::Button;
-use eframe::egui::TextStyle;
-use eframe::egui::Vec2;
+use eframe::egui::{Button, TextStyle, Vec2};
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
@@ -69,7 +67,8 @@ impl FullGraphState {
                 e.to_string()
             )
         })?;
-        *self = loaded_graph;
+        self.state = loaded_graph.state;
+        self.user_state.load_from(loaded_graph.user_state);
         self.user_state.save_file_path = Some(filepath.clone());
         self.verify_compat();
         Ok(())
@@ -1048,8 +1047,17 @@ impl PulseGraphEditor {
         // workaround to preserve pan/zoom state from resetting on undo.
         let pan_zoom = self.state().pan_zoom.clone();
         let current_file = self.user_state().save_file_path.clone();
+        // I hate this, but the library changes node positions for zoom purposes, if we don't save/restore it like that then nodes can get all messed up.
+        let old_node_positions = self.full_state.state.node_positions.clone();
+
         if let Some(state) = self.undoer.undo(&self.full_state) {
             self.full_state = state.clone();
+        }
+
+        for (node_id, pos) in self.full_state.state.node_positions.iter_mut() {
+            if old_node_positions.contains_key(node_id) {
+                *pos = old_node_positions[node_id];
+            }
         }
         self.state_mut().pan_zoom = pan_zoom;
         self.user_state_mut().save_file_path = current_file;
@@ -1060,8 +1068,16 @@ impl PulseGraphEditor {
         // workaround to preserve pan/zoom state from resetting on redo.
         let pan_zoom = self.state().pan_zoom.clone();
         let current_file = self.user_state().save_file_path.clone();
+        let old_node_positions = self.full_state.state.node_positions.clone();
+
         if let Some(state) = self.undoer.redo(&self.full_state) {
             self.full_state = state.clone();
+        }
+
+        for (node_id, pos) in self.full_state.state.node_positions.iter_mut() {
+            if old_node_positions.contains_key(node_id) {
+                *pos = old_node_positions[node_id];
+            }
         }
         self.state_mut().pan_zoom = pan_zoom;
         self.user_state_mut().save_file_path = current_file;

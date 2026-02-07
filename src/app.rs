@@ -1044,42 +1044,19 @@ impl PulseGraphEditor {
     }
 
     fn do_undo(&mut self) {
-        // workaround to preserve pan/zoom state from resetting on undo.
-        let pan_zoom = self.state().pan_zoom.clone();
         let current_file = self.user_state().save_file_path.clone();
-        // I hate this, but the library changes node positions for zoom purposes, if we don't save/restore it like that then nodes can get all messed up.
-        let old_node_positions = self.full_state.state.node_positions.clone();
-
         if let Some(state) = self.undoer.undo(&self.full_state) {
             self.full_state = state.clone();
         }
-
-        for (node_id, pos) in self.full_state.state.node_positions.iter_mut() {
-            if old_node_positions.contains_key(node_id) {
-                *pos = old_node_positions[node_id];
-            }
-        }
-        self.state_mut().pan_zoom = pan_zoom;
         self.user_state_mut().save_file_path = current_file;
         self.state_mut().connection_in_progress = None;
     }
 
     fn do_redo(&mut self) {
-        // workaround to preserve pan/zoom state from resetting on redo.
-        let pan_zoom = self.state().pan_zoom.clone();
         let current_file = self.user_state().save_file_path.clone();
-        let old_node_positions = self.full_state.state.node_positions.clone();
-
         if let Some(state) = self.undoer.redo(&self.full_state) {
             self.full_state = state.clone();
         }
-
-        for (node_id, pos) in self.full_state.state.node_positions.iter_mut() {
-            if old_node_positions.contains_key(node_id) {
-                *pos = old_node_positions[node_id];
-            }
-        }
-        self.state_mut().pan_zoom = pan_zoom;
         self.user_state_mut().save_file_path = current_file;
         self.state_mut().connection_in_progress = None;
     }

@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - '*'
+    paths-ignore:
+      - 'examples/**'
+      - 'README.md'
+      - 'LICENSE.txt'
+      - 'reference_img/**'
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'examples/**'
+      - 'README.md'
+      - 'LICENSE.txt'
+      - 'reference_img/**'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --release --verbose --target-dir target
+
+    - name: Copy files
+      run: |
+        mkdir build
+        copy target\release\*.exe build\
+        copy bindings.json build\
+
+    - uses: actions/upload-artifact@v6
+      with:
+        name: release-windows
+        path: build/
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Package
+        run: |
+          version=`echo $GITHUB_REF | sed "s/refs\/tags\///"`
+          cd ./release-windows/
+          zip -r ../pulsedit-${version}-w64.zip *
+          cd -
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GHUB_SECRET }}
+          file: pulsedit-*
+          tag: ${{ github.ref }}
+          file_glob: true

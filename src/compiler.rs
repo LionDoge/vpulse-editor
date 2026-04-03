@@ -108,7 +108,7 @@ macro_rules! reg_map_setup_inputs {
 fn traverse_inflow_nodes(
     graph: &PulseGraph,
     graph_def: &mut PulseGraphDef,
-    _graph_state: &PulseGraphState,
+    graph_state: &PulseGraphState,
 ) -> anyhow::Result<bool> {
     let mut processed: bool = false;
     // add a empty method at the start, otherwise async calls don't work
@@ -125,19 +125,19 @@ fn traverse_inflow_nodes(
         match data.user_data.template {
             PulseNodeTemplate::EventHandler => {
                 processed = true;
-                traverse_event_cell(graph, data, graph_def, _graph_state)?;
+                traverse_event_cell(graph, data, graph_def, graph_state)?;
             }
             PulseNodeTemplate::CellPublicMethod => {
                 processed = true;
-                traverse_entry_cell(graph, data, graph_def, _graph_state)?;
+                traverse_method_cell(graph, data, graph_def, graph_state)?;
             }
             PulseNodeTemplate::GraphHook => {
                 processed = true;
-                traverse_graphhook_cell(graph, data, graph_def, _graph_state)?;
+                traverse_graphhook_cell(graph, data, graph_def, graph_state)?;
             }
             PulseNodeTemplate::EntOutputHandler => {
                 processed = true;
-                traverse_ent_output_cell(graph, data, graph_def, _graph_state)?;
+                traverse_ent_output_cell(graph, data, graph_def, graph_state)?;
             }
             _ => {}
         }
@@ -220,7 +220,7 @@ fn traverse_event_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-    _graph_state: &PulseGraphState,
+    graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
     let input_id = node
         .get_input("event")
@@ -230,7 +230,7 @@ fn traverse_event_cell(
         .get(input_id)
         .ok_or(anyhow!("Can't find input value").context("Traverse event cell node"))?;
     let event_binding_id = input_param.value.clone().try_event_binding_id()?;
-    let event_binding = _graph_state.bindings
+    let event_binding = graph_state.bindings
         .find_event_by_id(event_binding_id)
         .ok_or_else(|| anyhow::anyhow!("Event binding with id {} not found", event_binding_id))?;
     // create new pulse cell node.
@@ -260,7 +260,7 @@ fn traverse_event_cell(
             graph,
             connected_node,
             graph_def,
-            _graph_state,
+            graph_state,
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),
@@ -275,10 +275,10 @@ fn traverse_graphhook_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-    _graph_state: &PulseGraphState,
+    graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
     let hook_id = get_constant_graph_input_value!(graph, node, "hook", try_hook_binding);
-    let hook = _graph_state.bindings
+    let hook = graph_state.bindings
         .find_hook_by_id(hook_id)
         .ok_or_else(|| anyhow::anyhow!("Hook binding with id {} not found", hook_id))?;
     let chunk_id = graph_def.create_chunk();
@@ -291,7 +291,7 @@ fn traverse_graphhook_cell(
             graph,
             connected_node,
             graph_def,
-            _graph_state,
+            graph_state,
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),
@@ -308,7 +308,7 @@ fn traverse_function_entry(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-    _graph_state: &PulseGraphState,
+    graph_state: &PulseGraphState,
 ) -> anyhow::Result<i32> {
     let existing_entrypoint = graph_def
         .traversed_entrypoints
@@ -374,7 +374,7 @@ fn traverse_function_entry(
             graph,
             node,
             graph_def,
-            _graph_state,
+            graph_state,
             chunk_id,
             "outAction"
         );
@@ -387,11 +387,11 @@ fn traverse_function_entry(
     }
 }
 
-fn traverse_entry_cell(
+fn traverse_method_cell(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
-    _graph_state: &PulseGraphState,
+    graph_state: &PulseGraphState,
 ) -> anyhow::Result<()> {
     let mut cell_method = CPulseCell_Inflow_Method::default();
     let chunk_id = graph_def.create_chunk();
@@ -420,7 +420,7 @@ fn traverse_entry_cell(
             graph,
             connected_node,
             graph_def,
-            _graph_state,
+            graph_state,
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),

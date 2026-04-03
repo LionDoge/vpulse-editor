@@ -58,6 +58,10 @@ impl FullGraphState {
     pub fn user_state_mut(&mut self) -> &mut PulseGraphState {
         &mut self.user_state
     }
+    pub fn load_from_state(&mut self, state: FullGraphState) {
+        self.state = state.state;
+        self.user_state.load_from(state.user_state);
+    }
 
     pub fn load_state(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
         let contents = fs::read_to_string(filepath)?;
@@ -1044,21 +1048,17 @@ impl PulseGraphEditor {
     }
 
     fn do_undo(&mut self) {
-        let current_file = self.user_state().save_file_path.clone();
         if let Some(state) = self.undoer.undo(&self.full_state) {
-            self.full_state = state.clone();
+            self.full_state.load_from_state(state.clone());
+            self.state_mut().connection_in_progress = None;
         }
-        self.user_state_mut().save_file_path = current_file;
-        self.state_mut().connection_in_progress = None;
     }
 
     fn do_redo(&mut self) {
-        let current_file = self.user_state().save_file_path.clone();
-        if let Some(state) = self.undoer.redo(&self.full_state) {
-            self.full_state = state.clone();
+        if let Some(state) = self.undoer.undo(&self.full_state) {
+            self.full_state.load_from_state(state.clone());
+            self.state_mut().connection_in_progress = None;
         }
-        self.user_state_mut().save_file_path = current_file;
-        self.state_mut().connection_in_progress = None;
     }
 }
 

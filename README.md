@@ -1,12 +1,15 @@
 # An unofficial Pulse graph editor
-"Pulse" is an in-development system for visual scripting in newer Source 2 engine games that is. Dota 2, CS2, and Deadlock right now.
-There's no official tooling for creating these files, so this tool is supposed to serve as a temporary solution. As you will soon find out it's not perfect, and I didn't really intend it to be, as it's meant to be used as experimentation.
+"Pulse" is an in-development system for visual scripting in newer Source 2 engine games that is. Dota 2, CS2, and Deadlock.
+There's no official tooling for creating these files, so this tool is supposed to serve as a temporary solution, it doesn't implement every feature. It's supposed to just "work" not necessairly to "work well"
 
 This tool is intended to work for Counter-Strike 2, as other games have barely any use for Pulse graphs. This might change in the future.
 This tool has only been tested on Windows 10 and 11 currently, support for Linux might come in the future.
 
 > [!NOTE]
-> The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Counter-Strike 2 or other Source 2 games, not everything is very well documented, as things are likely to change often. The tool is not perfect, and game updates may, **and probably will** break existing compiled graphs, which will be required to be compiled by a newer version of this software once available. It is probably a good idea to not be strongly dependent on systems that are still in development, if you can't handle possible breakages in the future.
+> The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Source 2 games, not everything is very well documented, as things are likely to change often. The tool is not perfect, and game updates may, **and probably will** break existing compiled graphs, which will be required to be compiled by a newer version of this software once available. You have been warned, do not be surprised if things can break randomly after updates.
+
+> [!IMPORTANT]
+> When developing for Deadlock, and using CSDK, some things may work differently than in the official game. This is because the game engine version is usually out of date, and Pulse definitions, and structure can update very often, so there might be some discrepancies!
 
 # Game setup
 Some initial setup inside the game files is required to make working with Pulse graphs way easier.
@@ -14,7 +17,7 @@ Some initial setup inside the game files is required to make working with Pulse 
 **NOTE:** These files don't interfer with VAC, it's possible to play normally with these modifications. Also, these modifications might disappear after game updates, and certainly will disappear when verifying game files!
 
 ## FGD setup
-Go to `game/csgo/csgo.fgd` and add these lines, somewhere after all the imports and exports and all that..
+Go to `game/<mod>/<mod>.fgd` and add these lines, preferably at the very bottom.
 ```
 @PointClass base(Targetname) tags( Logic ) iconsprite("editor/point_pulse.vmat") = point_pulse : "An entity that acts as a container for pulse graphs"
 [
@@ -44,7 +47,7 @@ pulse_graph =
 This allows for Pulse graphs to be compiled properly, and to be displayed in the asset browser.
 
 ## Manual compile
-You need to have rust tooling installed first. Use cargo to build the tool with `cargo build --release`. Once finished it should be output to 'target/release/pulseedit.exe' directory, you'll only need the executable, and the bindings file ('bindings_cs2.json') next to the executable.
+You need to have rust tooling installed first. Use cargo to build the tool with `cargo build --release`. Once finished it should be output to 'target/release/pulseedit.exe' directory, you'll only need the executable, and the bindings file ('bindings.json') next to the executable.
 
 ## Pre-built release
 Download the newest version from [releases](https://github.com/LionDoge/vpulse-editor/releases). It includes almost everything needed to run the tool. Once unpacked, just run the pulseedit executable.
@@ -72,7 +75,7 @@ One continous flow from one entry point is refered to as a 'Chunk'. It's good to
 ## Using the graph in a map
 First make sure you have saved the file inside the approperiate content directory for your addon (explained above) and that the graph is compiled (click 'Compile' in top left of the window). If no errors appear then the compile was succesful.
 
-Add a `point_pulse` entity to your map (make sure that FGD is setup properly!). Also make sure to give it a name for easier testing. The entity needs to be refered to the proper script path i.e. where the graph file is saved and compiled. The file path is relative to the current addon directory. If you have a pulse file in `content/csgo_addons/ADDONNAME/scripts/vscripts/`. You need to input `scripts/vscripts/graph.vpulse` in the 'Graph path' key - Note the .vpulse extension here.
+Add a `point_pulse` entity to your map (make sure that FGD is setup properly!). Also make sure to give it a name for easier testing. The entity needs to be refered to the proper script path i.e. where the graph file is saved and compiled. The file path is relative to the current addon directory. If you have a pulse file in `content/ADDONS_DIR/ADDONNAME/scripts/vscripts/`. You need to input `scripts/vscripts/graph.vpulse` in the 'Graph path' key - Note the .vpulse extension here.
 
 Now compile the map. If you replicated the example pictured above, you should be able to use `ent_fire point_pulse_name Method` to run the method. You should see a console output from the debug logs. You can now modify the graph further and apply the changes instantly by clicking 'Compile'. The game will reload the graph automatically introducing new changes. You can also interact with the graph by using regular entity I/O system. Note however that Hammer will not recognize the input names created within the graph, and will color them red, it doesn't matter and it still should work in the game.
 
@@ -95,7 +98,7 @@ Examples can be found in the 'examples' directory.
 - `inputs` basic introduction to using public methods 
     - 'RunMe' method for a very basic print
     - 'DebugText string' method that accepts a string argument for what to display on a entity named 'dynprop' that is a *prop_dynamic* (needs to be setup properly in Hammer.)
-    - 'OnRoundStart' event that prints the current round number to the console when a new round starts.
+    - 'OnRoundStart' event that prints the current round number to the console when a new round starts in CS2.
 
 - `entities` Shows basic interaction with entities: Entity handles, and using EntFire.
     - 'GetHeightAboveWorld' will print height above the world of a entity named 'btn' that is a *func_button*
@@ -109,7 +112,7 @@ Examples can be found in the 'examples' directory.
 
 - `remote_nodes_listen_entity_output` Shows examples of so called 'remote nodes' that can be reused. Think like a function in a programming language. It also shows an example of listening to an output from an entity and using the activator handle. In this scenario pressing a *func_button* named `btn` will deal 10 damage to the activator once the listening starts after firing 'StartButtonListen'.
 
-- `radio` Is an example of a 'radio' that can switch between different music with the 'NextSong' method, it also demonstrates how to play sounds, and change their parameters while they're playing. In this 'VolumeUp' and 'VolumeDown' inputs can be used to adjust the volume of a playing song. This is also a good demonstration of how to use operations and conditional checks. NOTE: To hear the songs you need to turn up 'Main menu music volume' in the game's settings, since the example songs are used from music kits.
+- `radio` Is an example of a muisc player that can switch between different music with the 'NextSong' method, it also demonstrates how to play sounds, and change their parameters while they're playing. In this 'VolumeUp' and 'VolumeDown' inputs can be used to adjust the volume of a playing song. This is also a good demonstration of how to use operations and conditional checks. NOTE: This example is using default music in CS2 - To hear the songs you need to turn up 'Main menu music volume' in the game's settings, since the example songs are used from music kits.
 
 ## Why make this?
-Pulse is an in=dev system, suggesting that it could still undergo changes wasting the effort of writing this app. The release of an official editor would also make this useless, so why bother spending time on it? Well, I like challenge and reverse engineering components of software, not only that, but I noticed that Pulse could do much more than any other possible scripting/map making methods. Granted, it still doesn't open up that much possibilities, but at least some more than was possible before, so this project is not totally useless! This project was also started as part of my Rust programmiourse at university, the only other ideas I had were ones that would be one and done, so I decided to pick something that I could also continue. So here we are! All of this wng cas possible due to my weird obsessions.
+Pulse is an in-dev system, suggesting that it could still undergo changes wasting the effort of writing this app. The release of an official editor would also make this useless, so why bother spending time on it? Well, I like challenge and reverse engineering components of software, not only that, but I noticed that Pulse could do much more than any other possible scripting/map making methods. Granted, it still doesn't open up that much possibilities, but at least some more than was possible before, so this project is not totally useless! This project was also started as part of my Rust programmiourse at university, the only other ideas I had were ones that would be one and done, so I decided to pick something that I could also continue.

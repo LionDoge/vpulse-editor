@@ -328,7 +328,7 @@ fn traverse_function_entry(
                 let mut reg_map = RegisterMap::default();
                 reg_map.add_outparam("pActivator".into(), reg_id_activator);
                 let outflow_onfired = OutflowConnection {
-                    outflow_name: "OnFired".into(),
+                    outflow_name: "m_OnFired".into(),
                     dest_chunk: chunk_id,
                     dest_instruction: 0,
                     register_map: Some(reg_map),

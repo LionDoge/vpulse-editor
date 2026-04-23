@@ -2,7 +2,7 @@
     "events": [
         {
             "id": 0,
-            "displayname": "OnRoundStart",
+            "displayname": "(CS2) OnRoundStart",
             "libname": "CCSPointPulseAPI::OnRoundStart",
             "inparams": [
                 {
@@ -13,12 +13,12 @@
         },
         {
             "id": 1,
-            "displayname": "OnRoundFreezeEnd",
+            "displayname": "(CS2) OnRoundFreezeEnd",
             "libname": "CCSPointPulseAPI::OnRoundFreezeEnd"
         },
         {
             "id": 2,
-            "displayname": "OnRoundEnd",
+            "displayname": "(CS2) OnRoundEnd",
             "libname": "CCSPointPulseAPI::OnRoundEnd",
             "inparams": [
                 {
@@ -106,6 +106,11 @@
             "id": 10,
             "displayname": "(deadlock) OnHideoutOwnerHeroReleaseVoteTallyUpdated",
             "libname": "CCitadelPointPulseAPI::OnHideoutOwnerHeroReleaseVoteTallyUpdated"
+        },
+        {
+            "id": 11,
+            "displayname": "(deadlock) OnStreetBrawlEnterState",
+            "libname": "CCitadelPointPulseAPI::OnStreetBrawlEnterState"
         }
     ],
     "gamefunctions": [
@@ -487,12 +492,16 @@
                 {
                     "name": "bSnapObjectPositions",
                     "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "pOptionalLocationEnt",
+                    "type": "PVAL_EHANDLE"
                 }
             ],
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_EHANDLE"
+                    "type": "PVAL_EHANDLE:phys_constraint"
                 }
             ]
         },
@@ -546,12 +555,16 @@
                 {
                     "name": "bSnapObjectPositions",
                     "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "pOptionalLocationEnt",
+                    "type": "PVAL_EHANDLE"
                 }
             ],
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_EHANDLE"
+                    "type": "PVAL_EHANDLE:phys_ballsocket"
                 }
             ]
         },
@@ -601,12 +614,16 @@
                 {
                     "name": "bSnapObjectPositions",
                     "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "pOptionalLocationEnt",
+                    "type": "PVAL_EHANDLE"
                 }
             ],
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_EHANDLE"
+                    "type": "PVAL_EHANDLE:phys_hinge"
                 }
             ]
         },
@@ -909,7 +926,7 @@
         {
             "id": 34,
             "type": "value",
-            "displayname": "Get Rounds Played This Phase",
+            "displayname": "(CS2) Get Rounds Played This Phase",
             "libname": "CCSPointPulseAPI::GetRoundsPlayedThisPhase",
             "description": "Get the round number of the current half. Starts at 0.",
             "outparams": [
@@ -922,7 +939,7 @@
         {
             "id": 35,
             "type": "value",
-            "displayname": "Get CT Score",
+            "displayname": "(CS2) Get CT Score",
             "libname": "CCSPointPulseAPI::GetCTScore",
             "description": "Get the number of rounds won by CTs.",
             "outparams": [
@@ -935,7 +952,7 @@
         {
             "id": 36,
             "type": "value",
-            "displayname": "Get T Score",
+            "displayname": "(CS2) Get T Score",
             "libname": "CCSPointPulseAPI::GetTScore",
             "description": "Get the number of rounds won by Ts.",
             "outparams": [
@@ -948,7 +965,7 @@
         {
             "id": 37,
             "type": "value",
-            "displayname": "Get Score To End Match",
+            "displayname": "(CS2) Get Score To End Match",
             "libname": "CCSPointPulseAPI::GetScoreToEndMatch",
             "description": "Get the number of round wins needed to win the match. This number goes up each time a match enters overtime.",
             "outparams": [
@@ -1129,7 +1146,7 @@
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_INT"
+                    "type": "PVAL_TYPESAFE_INT:CPlayerSlot"
                 }
             ]
         },
@@ -1148,7 +1165,7 @@
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_INT"
+                    "type": "PVAL_BOOL"
                 }
             ]
         },
@@ -2759,10 +2776,6 @@
                 {
                     "name": "flDamage",
                     "type": "PVAL_FLOAT"
-                },
-                {
-                    "name": "explosionType",
-                    "type": "PVAL_SCHEMA_ENUM:BaseExplosionTypes_t"
                 },
                 {
                     "name": "pszExplosionType",
@@ -4986,7 +4999,7 @@
             "id": 223,
             "type": "value",
             "displayname": "Get Is Wingman",
-            "libname": "CCSPointPulseAPI::GetIsWingman",
+            "libname": "(CS2) CCSPointPulseAPI::GetIsWingman",
             "description": "Get if the current match is a Wingman match.",
             "outparams": [
                 {
@@ -5159,9 +5172,9 @@
         {
             "id": 233,
             "type": "action",
-            "displayname": "Destructible Hit Group Destroy Up To Damage Level (basemodelentity)",
-            "libname": "CBaseModelEntityAPI::DestructibleHitGroupDestroyUpToDamageLevel",
-            "description": "Destroy a destructible hit group up to a certain damage level.",
+            "displayname": "Destructible Hit Group Destroy (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::DestructibleHitGroupDestroy",
+            "description": "Destroy a destructible hit group. Damage level of -1 means all damage levels, otherwise specify the last one you want to blow up.",
             "inparams": [
                 {
                     "name": "_Target",
@@ -5394,7 +5407,7 @@
             ]
         },
         {
-        "id": 246,
+            "id": 246,
             "type": "value",
             "displayname": "(modifier) Has Modifier",
             "libname": "CPulseServerFuncs::HasModifier",
@@ -5413,6 +5426,284 @@
                 {
                     "name": "retval",
                     "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 247,
+            "type": "action",
+            "displayname": "Break Joint By Name (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::BreakJointByName",
+            "description": "Destroy this joint by Name",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                },
+                {
+                    "name": "pJointName",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 248,
+            "type": "value",
+            "displayname": "Get Joint Limit Angles (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::GetJointLimitAngles",
+            "description": "Returns the joint limit angles.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                },
+                {
+                    "name": "pJointName",
+                    "type": "PVAL_STRING"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                },
+                {
+                    "name": "MinAngle",
+                    "type": "PVAL_FLOAT"
+                },
+                {
+                    "name": "MaxAngle",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 249,
+            "type": "action",
+            "displayname": "Set Joint Limit Angles (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::SetJointLimitAngles",
+            "description": "Sets the joint limit angles. Only valid for prismatic and revolute joints.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                },
+                {
+                    "name": "pJointName",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "flMinAngle",
+                    "type": "PVAL_FLOAT"
+                },
+                {
+                    "name": "flMaxAngle",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 250,
+            "type": "action",
+            "displayname": "Set Joint Limit Enabled (basemodelentity)",
+            "libname": "CBaseModelEntityAPI::SetJointLimitEnabled",
+            "description": "Enables/disables the joint limit. Only valid for prismatic and revolute joints.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:basemodelentity"
+                },
+                {
+                    "name": "pJointName",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "bEnabled",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 251,
+            "type": "action",
+            "displayname": "Set Mover Face Entity (func_mover)",
+            "libname": "CFuncMoverAPI::SetMoverFaceEntity",
+            "description": "Set the movers face entity",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_mover"
+                },
+                {
+                    "name": "hFaceEntity",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 252,
+            "type": "value",
+            "displayname": "Get Relay Interface Sources (point_prefab)",
+            "libname": "CPointPrefabAPI::GetRelayInterfaceSources",
+            "description": "Get all of the point_pulse entities which compose our procedural relay interface",
+            "polymorphic_return": "entityType:to_subtype",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_prefab"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_ARRAY:PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 253,
+            "type": "value",
+            "displayname": "Array Find Element Matching",
+            "libname": "CPulseArraylib::ArrayFindElementMatching",
+            "description": "Find first element 'a' which compare equal to 'element' and return its index.",
+            "inparams": [
+                {
+                    "name": "a",
+                    "type": "PVAL_EHANDLE:point_prefab"
+                },
+                {
+                    "name": "element",
+                    "type": "PVAL_VARIANT",
+                    "polymorphic_arg": "a:typeparam"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 254,
+            "type": "value",
+            "displayname": "Length Vector2 D",
+            "libname": "CPulseMathlib::LengthVector2D",
+            "description": "Length (magnitude) of Vector2D",
+            "inparams": [
+                {
+                    "name": "a",
+                    "type": "PVAL_VEC2"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 255,
+            "type": "value",
+            "displayname": "String Length",
+            "libname": "CPulseMathlib::StringLength",
+            "description": "Count the number of codepoints in the string (unicode-aware). If you want rendered glyphs, you probably want to consider using Panorama.",
+            "inparams": [
+                {
+                    "name": "strValue",
+                    "type": "PVAL_STRING"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 256,
+            "type": "value",
+            "displayname": "Count Entities Of Type In Array",
+            "libname": "CPulseServerFuncs::CountEntitiesOfTypeInArray",
+            "description": "Count the number of entities of a given type in an array.",
+            "inparams": [
+                {
+                    "name": "entityType",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "entityArray",
+                    "type": "PVAL_ARRAY:PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 257,
+            "type": "value",
+            "displayname": "Find Entity",
+            "libname": "CPulseServerFuncs::FindEntity",
+            "description": "Search for a chosen type of entity by name. If multiple entities have the same name, only one will be returned. Keywords: get",
+            "polymorphic_return": "entityType:to_subtype",
+            "inparams": [
+                {
+                    "name": "entityType",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "entityName",
+                    "type": "PVAL_STRING"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 258,
+            "type": "value",
+            "displayname": "Get Entity Below Entity",
+            "libname": "CPulseServerFuncs::GetEntityBelowEntity",
+            "description": "Get the entity below the provided entity. null if no entity found",
+            "inparams": [
+                {
+                    "name": "hEnt",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 259,
+            "type": "value",
+            "displayname": "Get Entity Eye Position",
+            "libname": "CPulseServerFuncs::GetEntityEyePosition",
+            "description": "Get the eye position of an entity.",
+            "inparams": [
+                {
+                    "name": "hEnt",
+                    "type": "PVAL_EHANDLE"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_VEC3_WORLDSPACE"
                 }
             ]
         }

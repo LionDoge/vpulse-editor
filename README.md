@@ -2,14 +2,13 @@
 "Pulse" is an in-development system for visual scripting in newer Source 2 engine games that is. Dota 2, CS2, and Deadlock.
 There's no official tooling for creating these files, so this tool is supposed to serve as a temporary solution, it doesn't implement every feature. It's supposed to just "work" not necessairly to "work well"
 
-This tool is intended to work for Counter-Strike 2, as other games have barely any use for Pulse graphs. This might change in the future.
 This tool has only been tested on Windows 10 and 11 currently, support for Linux might come in the future.
 
 > [!NOTE]
 > The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Source 2 games, not everything is very well documented, as things are likely to change often. The tool is not perfect, and game updates may, **and probably will** break existing compiled graphs, which will be required to be compiled by a newer version of this software once available. You have been warned, do not be surprised if things can break randomly after updates.
 
 > [!IMPORTANT]
-> When developing for Deadlock, and using CSDK, some things may work differently than in the official game. This is because the game engine version is usually out of date, and Pulse definitions, and structure can update very often, so there might be some discrepancies!
+> When developing for Deadlock, and using CSDK, some things may work differently than in the official game. This is because the game engine version is usually out of date, and Pulse definitions, and structure can update very often, so there may be some discrepancies!
 
 # Game setup
 Some initial setup inside the game files is required to make working with Pulse graphs way easier.

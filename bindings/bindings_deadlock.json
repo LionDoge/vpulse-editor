@@ -1,0 +1,265 @@
+{
+    "events": [
+        {
+            "id": 7,
+            "displayname": "OnStartMatchmaking",
+            "libname": "CCitadelPointPulseAPI::OnStartMatchmaking"
+        },
+        {
+            "id": 8,
+            "displayname": "OnStopMatchmaking",
+            "libname": "CCitadelPointPulseAPI::OnStopMatchmaking"
+        },
+        {
+            "id": 9,
+            "displayname": "OnHideoutLobbyChanged",
+            "libname": "CCitadelPointPulseAPI::OnHideoutLobbyChanged"
+        },
+        {
+            "id": 10,
+            "displayname": "OnHideoutOwnerHeroReleaseVoteTallyUpdated",
+            "libname": "CCitadelPointPulseAPI::OnHideoutOwnerHeroReleaseVoteTallyUpdated"
+        },
+        {
+            "id": 11,
+            "displayname": "OnStreetBrawlEnterState",
+            "libname": "CCitadelPointPulseAPI::OnStreetBrawlEnterState"
+        }
+    ],
+    "gamefunctions": [
+        {
+            "id": 239,
+            "type": "value",
+            "displayname": "Get Hideout Owner Has Seasonal Award 2025",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward2025",
+            "description": "Get if the owner for the hideout achieved a seasonal award for 2025.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 240,
+            "type": "value",
+            "displayname": "Get Hideout Owner Hero Release August2025 Votes Cast Total",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
+            "description": "Get the hideout owner's number of total hero release votes cast.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 241,
+            "type": "value",
+            "displayname": "Get Is Spawning Enabled (info_trooper_spawn)",
+            "libname": "CCitadel_InfoTrooperSpawnAPI::GetIsSpawningEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_trooper_spawn"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 242,
+            "type": "action",
+            "displayname": "Set Spawning Enabled (info_trooper_spawn)",
+            "libname": "CCitadel_InfoTrooperSpawnAPI::SetSpawningEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_trooper_spawn"
+                },
+                {
+                    "name": "bSpawningEnabled",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 243,
+            "type": "value",
+            "displayname": "Get Hideout Owner Hero Release August2025 Votes Cast Total",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
+            "description": "",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 212,
+            "type": "value",
+            "displayname": "Get Fast Cooldowns Enabled",
+            "libname": "CCitadelPointPulseAPI::GetFastCooldownsEnabled",
+            "description": "Get if Fast Cooldowns are enabled.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 213,
+            "type": "action",
+            "displayname": "Set Fast Cooldowns Enabled",
+            "libname": "CCitadelPointPulseAPI::SetFastCooldownsEnabled",
+            "description": "Enable or disable Fast Cooldowns.",
+            "inparams": [
+                {
+                    "name": "bEnabled",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 214,
+            "type": "value",
+            "displayname": "Get Fast Stamina Enabled",
+            "libname": "CCitadelPointPulseAPI::GetFastStaminaEnabled",
+            "description": "Get if Fast Stamina is enabled.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 215,
+            "type": "action",
+            "displayname": "Set Fast Stamina Enabled",
+            "libname": "CCitadelPointPulseAPI::SetFastStaminaEnabled",
+            "description": "Enable or disable Fast Stamina.",
+            "inparams": [
+                {
+                    "name": "bEnabled",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 216,
+            "type": "value",
+            "displayname": "Get Hideout Owner Has Seasonal Award 2024",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHasSeasonalAward2024",
+            "description": "Get if the owner for the hideout achieved a seasonal award for 2024.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 217,
+            "type": "value",
+            "displayname": "Get Hideout Owner Hero Release Votes Cast Total",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseVotesCastTotal",
+            "description": "Get the hideout owner's number of total hero release votes cast.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 218,
+            "type": "value",
+            "displayname": "Hideout Member Count",
+            "libname": "CCitadelPointPulseAPI::HideoutMemberCount",
+            "description": "Get the number of players in the hideout lobby.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 219,
+            "type": "action",
+            "displayname": "Drop Powerup (citadel_item_powerup_spawner)",
+            "libname": "CCitadel_PickupItemSpawnerAPI::DropPowerup",
+            "description": "Drop one of the spawner's configured powerups.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_item_powerup_spawner"
+                }
+            ]
+        },
+        {
+            "id": 220,
+            "type": "action",
+            "displayname": "Set AI LOD",
+            "libname": "CAI_BaseNPCAPI::SetAILOD",
+            "description": "Set the LOD of this NPC. Accepted values are 'eLow', 'eMedium', 'eHigh",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                },
+                {
+                    "name": "nLOD",
+                    "type": "PVAL_SCHEMA_ENUM:AILOD_t"
+                }
+            ]
+        },
+        {
+            "id": 221,
+            "type": "value",
+            "displayname": "Get NPC State",
+            "libname": "CAI_BaseNPCAPI::GetNPCState",
+            "description": "Returns the NPC_STATE of the given NPC.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_SCHEMA_ENUM:NPC_STATE"
+                }
+            ]
+        },
+        {
+            "id": 222,
+            "type": "value",
+            "displayname": "Get Sensed Events",
+            "libname": "CAI_VolumetricEventSensorAPI::GetSensedEvents",
+            "description": "Returns all currently sensed events",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_volumetric_event_sensor"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_TYPESAFE_INT:AI_VolumetricEventHandle_t"
+                }
+            ]
+        }
+    ]
+}

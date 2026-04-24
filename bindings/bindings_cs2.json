@@ -1,0 +1,102 @@
+{
+    "events": [
+        {
+            "id": 0,
+            "displayname": "OnRoundStart",
+            "libname": "CCSPointPulseAPI::OnRoundStart",
+            "inparams": [
+                {
+                    "name": "nRoundNumber",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 1,
+            "displayname": "OnRoundFreezeEnd",
+            "libname": "CCSPointPulseAPI::OnRoundFreezeEnd"
+        },
+        {
+            "id": 2,
+            "displayname": "OnRoundEnd",
+            "libname": "CCSPointPulseAPI::OnRoundEnd",
+            "inparams": [
+                {
+                    "name": "nWinner",
+                    "type": "PVAL_INT"
+                },
+                {
+                    "name": "nReason",
+                    "type": "PVAL_INT"
+                }
+            ]
+        }
+    ],
+    "gamefunctions": [
+        {
+            "id": 34,
+            "type": "value",
+            "displayname": "Get Rounds Played This Phase",
+            "libname": "CCSPointPulseAPI::GetRoundsPlayedThisPhase",
+            "description": "Get the round number of the current half. Starts at 0.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 35,
+            "type": "value",
+            "displayname": "Get CT Score",
+            "libname": "CCSPointPulseAPI::GetCTScore",
+            "description": "Get the number of rounds won by CTs.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 36,
+            "type": "value",
+            "displayname": "Get T Score",
+            "libname": "CCSPointPulseAPI::GetTScore",
+            "description": "Get the number of rounds won by Ts.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 37,
+            "type": "value",
+            "displayname": "Get Score To End Match",
+            "libname": "CCSPointPulseAPI::GetScoreToEndMatch",
+            "description": "Get the number of round wins needed to win the match. This number goes up each time a match enters overtime.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 223,
+            "type": "value",
+            "displayname": "Get Is Wingman",
+            "libname": "CCSPointPulseAPI::GetIsWingman",
+            "description": "Get if the current match is a Wingman match.",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        }
+    ]
+}

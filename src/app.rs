@@ -1096,8 +1096,7 @@ impl PulseGraphEditor{
             grph.editor_config = cfg_res.unwrap_or_default();
         }
 
-        let bindings = load_bindings(
-            std::path::Path::new("bindings.json"), std::path::Path::new("bindings/enums.json"));
+        let bindings = load_bindings(std::path::Path::new("bindings/bindings_manifest.json"));
         match bindings {
             Ok(bindings) => {
                 grph.user_state_mut().bindings = bindings;
@@ -1105,7 +1104,7 @@ impl PulseGraphEditor{
             Err(e) => {
                 MessageDialog::new()
                     .set_level(rfd::MessageLevel::Error)
-                    .set_title("Failed to load Pulse bindings")
+                    .set_title("Failed to load Pulse bindings manifest")
                     .set_buttons(rfd::MessageButtons::Ok)
                     .set_description(e.to_string())
                     .show();

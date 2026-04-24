@@ -1,0 +1,18 @@
+{
+    "shared_bindings_file": "bindings/bindings_shared.json",
+    "enums_file": "bindings/enums.json",
+    "bindings_list": [
+        {
+            "name": "Counter-Strike 2",
+            "mod_name": "csgo",
+            "name_prefix": "CS2",
+            "bindings_file": "bindings/bindings_cs2.json"
+        },
+        {
+            "name": "Deadlock",
+            "mod_name": "citadel",
+            "name_prefix": "Deadlock",
+            "bindings_file": "bindings/bindings_deadlock.json"
+        }
+    ]
+}

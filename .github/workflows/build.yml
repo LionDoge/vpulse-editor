@@ -35,7 +35,7 @@ jobs:
       run: |
         mkdir build
         copy target\release\*.exe build\
-        copy bindings.json build\
+        xcopy bindings\ build\bindings\ /S /E /I
 
     - uses: actions/upload-artifact@v6
       with:

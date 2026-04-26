@@ -812,11 +812,25 @@ fn get_input_register_or_create_constant_from_id(
                     graph_def.add_constant(PulseConstant::Bool(input_value));
                 }
                 PulseValueType::PVAL_SCHEMA_ENUM(_) => {
+                    anyhow::bail!("Legacy type, we shouldn't be here anymore!")
+                }
+                PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
-                    let input_typ_and_value = input_param.value().clone().try_enum()?;
-                    chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::SchemaEnum(input_typ_and_value.0, input_typ_and_value.1));
+
+                    // TODO: get rid of the older type, as we should run migrations instead of supporting both.
+                    if let Ok(old_enum) = input_param.value().clone().try_enum_old() {
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::SchemaEnum(old_enum.0, old_enum.1));
+                    } else {
+                        let (enum_idx, enum_val_idx) = input_param.value().clone().try_enum()?;
+                        let binding_enum = graph_state.bindings.find_enum_by_id(enum_idx)
+                            .ok_or_else(|| anyhow::anyhow!("Enum binding with id {} not found", enum_idx))?;
+                        let enum_val = binding_enum.get_variant_by_id(enum_val_idx)
+                            .ok_or_else(|| anyhow::anyhow!("Enum variant with id {} not found in enum {}", enum_val_idx, binding_enum.name))?;
+                        chunk.add_instruction(instruction);
+                        graph_def.add_constant(PulseConstant::SchemaEnumValue(binding_enum.name.clone(), enum_val.name.clone()));
+                    }
                 }
                 PulseValueType::PVAL_RESOURCE(_, _) =>
                 {

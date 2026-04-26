@@ -1,7 +1,127 @@
 [
     {
+        "id": 0,
+        "name": "DamageTypes_t",
+        "name_ui": "Damage Types",
+        "variants": [
+            {
+                "name": "DMG_GENERIC",
+                "name_ui": "Generic"
+            },
+            {
+                "name": "DMG_CRUSH",
+                "name_ui": "Crush"
+            },
+            {
+                "name": "DMG_BULLET",
+                "name_ui": "Bullet"
+            },
+            {
+                "name": "DMG_SLASH",
+                "name_ui": "Slash"
+            },
+            {
+                "name": "DMG_BURN",
+                "name_ui": "Burn"
+            },
+            {
+                "name": "DMG_VEHICLE",
+                "name_ui": "Vehicle"
+            },
+            {
+                "name": "DMG_FALL",
+                "name_ui": "Fall"
+            },
+            {
+                "name": "DMG_BLAST",
+                "name_ui": "Blast"
+            },
+            {
+                "name": "DMG_CLUB",
+                "name_ui": "Club"
+            },
+            {
+                "name": "DMG_SHOCK",
+                "name_ui": "Shock"
+            },
+            {
+                "name": "DMG_SONIC",
+                "name_ui": "Sonic"
+            },
+            {
+                "name": "DMG_ENERGYBEAM",
+                "name_ui": "Energy Beam"
+            },
+            {
+                "name": "DMG_BUCKSHOT",
+                "name_ui": "Buckshot"
+            },
+            {
+                "name": "DMG_DROWN",
+                "name_ui": "Drown"
+            },
+            {
+                "name": "DMG_POISON",
+                "name_ui": "Poison"
+            },
+            {
+                "name": "DMG_RADIATION",
+                "name_ui": "Radiation"
+            },
+            {
+                "name": "DMG_DROWNRECOVER",
+                "name_ui": "DrownRecover"
+            },
+            {
+                "name": "DMG_ACID",
+                "name_ui": "Acid"
+            },
+            {
+                "name": "DMG_PHYSGUN",
+                "name_ui": "Physgun"
+            },
+            {
+                "name": "DMG_DISSOLVE",
+                "name_ui": "Dissolve"
+            },
+            {
+                "name": "DMG_BLAST_SURFACE",
+                "name_ui": "Blast Surface"
+            },
+            {
+                "name": "DMG_HEADSHOT",
+                "name_ui": "Headshot"
+            },
+            {
+                "name": "DMG_CRIT",
+                "name_ui": "Crit"
+            },
+            {
+                "name": "DMG_BUFFED",
+                "name_ui": "Buffed"
+            },
+            {
+                "name": "DMG_DOT",
+                "name_ui": "Dot"
+            },
+            {
+                "name": "DMG_GROUND_AURA",
+                "name_ui": "Ground Aura"
+            },
+            {
+                "name": "DMG_LETHAL",
+                "name_ui": "Lethal"
+            },
+            {
+                "name": "DMG_DANGERZONE",
+                "name_ui": "Danger Zone"
+            }
+        ]
+    },
+    {
+        "id": 1,
         "name": "PulseCursorCancelPriority_t",
-        "name_ui": "PulseCursorCancelPriority",
+        "name_ui": "Cursor Cancel Priority",
         "variants": [
             {
                 "name": "None",
@@ -18,6 +138,642 @@
             {
                 "name": "HardCancel",
                 "name_ui": "Kill immediately."
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "PulseTraceContents_t",
+        "name_ui": "Trace Contents",
+        "variants": [
+            {
+                "name": "STATIC_LEVEL",
+                "name_ui": "Static Level"
+            },
+            {
+                "name": "SOLID",
+                "name_ui": "Solid"
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "PulseCollisionGroup_t",
+        "name_ui": "Collision Group",
+        "variants": [
+            {
+                "name": "DEFAULT",
+                "name_ui": "Default"
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "name": "ParticleAttachment_t",
+        "name_ui": "Particle Attachment",
+        "variants": [
+            {
+                "name": "PATTACH_ABSORIGIN",
+                "name_ui": "Absolute Origin"
+            },
+            {
+                "name": "PATTACH_ABSORIGIN_FOLLOW",
+                "name_ui": "Absolute Origin Follow"
+            },
+            {
+                "name": "PATTACH_CUSTOMORIGIN",
+                "name_ui": "Absolute Custom Origin"
+            },
+            {
+                "name": "PATTACH_CUSTOMORIGIN_FOLLOW",
+                "name_ui": "Absolute Custom Origin Follow"
+            },
+            {
+                "name": "PATTACH_POINT",
+                "name_ui": "Point"
+            },
+            {
+                "name": "PATTACH_POINT_FOLLOW",
+                "name_ui": "Point Follow"
+            },
+            {
+                "name": "PATTACH_EYES_FOLLOW",
+                "name_ui": "Eyes Follow"
+            },
+            {
+                "name": "PATTACH_OVERHEAD_FOLLOW",
+                "name_ui": "Overhead Follow"
+            },
+            {
+                "name": "PATTACH_WORLDORIGIN",
+                "name_ui": "World Origin"
+            },
+            {
+                "name": "PATTACH_ROOTBONE_FOLLOW",
+                "name_ui": "Root Bone Follow"
+            },
+            {
+                "name": "PATTACH_RENDERORIGIN_FOLLOW",
+                "name_ui": "Render Origin Follow"
+            },
+            {
+                "name": "PATTACH_MAIN_VIEW",
+                "name_ui": "Main View"
+            },
+            {
+                "name": "PATTACH_WATERWAKE",
+                "name_ui": "Water Wake"
+            },
+            {
+                "name": "PATTACH_CENTER_FOLLOW",
+                "name_ui": "Center Follow"
+            },
+            {
+                "name": "PATTACH_CUSTOM_GAME_STATE_1",
+                "name_ui": "Custom Game State 1"
+            },
+            {
+                "name": "PATTACH_HEALTHBAR",
+                "name_ui": "Health Bar"
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "name": "BaseExplosionTypes_t",
+        "name_ui": "Base Explosion Types",
+        "variants": [
+            {
+                "name": "EXPLOSION_TYPE_DEFAULT",
+                "name_ui": "Default"
+            },
+            {
+                "name": "EXPLOSION_TYPE_GRENADE",
+                "name_ui": "Grenade"
+            },
+            {
+                "name": "EXPLOSION_TYPE_MOLOTOV",
+                "name_ui": "Molotov"
+            },
+            {
+                "name": "EXPLOSION_TYPE_FIREWORKS",
+                "name_ui": "Fireworks"
+            },
+            {
+                "name": "EXPLOSION_TYPE_GASCAN",
+                "name_ui": "Gascan"
+            },
+            {
+                "name": "EXPLOSION_TYPE_GASCYLINDER",
+                "name_ui": "Gascan Cylinder"
+            },
+            {
+                "name": "EXPLOSION_TYPE_EXPLOSIVEBARREL",
+                "name_ui": "Explosive Barrel"
+            },
+            {
+                "name": "EXPLOSION_TYPE_ELECTRICAL",
+                "name_ui": "Electrical"
+            },
+            {
+                "name": "EXPLOSION_TYPE_EMP",
+                "name_ui": "EMP"
+            },
+            {
+                "name": "EXPLOSION_TYPE_SHRAPNEL",
+                "name_ui": "Shrapnel"
+            },
+            {
+                "name": "EXPLOSION_TYPE_SMOKEGRENADE",
+                "name_ui": "Smoke Grenade"
+            },
+            {
+                "name": "EXPLOSION_TYPE_FLASHBANG",
+                "name_ui": "Flashbang"
+            },
+            {
+                "name": "EXPLOSION_TYPE_TRIPMINE",
+                "name_ui": "Tripmine"
+            },
+            {
+                "name": "EXPLOSION_TYPE_ICE",
+                "name_ui": "Ice"
+            },
+            {
+                "name": "EXPLOSION_TYPE_NONE",
+                "name_ui": "None"
+            },
+            {
+                "name": "EXPLOSION_TYPE_CUSTOM",
+                "name_ui": "Custom"
+            }
+        ]
+    },
+    {
+        "id": 6,
+        "name": "HitGroup_t",
+        "name_ui": "Hit Group",
+        "variants": [
+            {
+                "name": "HITGROUP_INVALID",
+                "name_ui": "HITGROUP_INVALID"
+            },
+            {
+                "name": "HITGROUP_GENERIC",
+                "name_ui": "HITGROUP_GENERIC"
+            },
+            {
+                "name": "HITGROUP_HEAD",
+                "name_ui": "HITGROUP_HEAD"
+            },
+            {
+                "name": "HITGROUP_CHEST",
+                "name_ui": "HITGROUP_CHEST"
+            },
+            {
+                "name": "HITGROUP_STOMACH",
+                "name_ui": "HITGROUP_STOMACH"
+            },
+            {
+                "name": "HITGROUP_LEFTARM",
+                "name_ui": "HITGROUP_LEFTARM"
+            },
+            {
+                "name": "HITGROUP_RIGHTARM",
+                "name_ui": "HITGROUP_RIGHTARM"
+            },
+            {
+                "name": "HITGROUP_LEFTLEG",
+                "name_ui": "HITGROUP_LEFTLEG"
+            },
+            {
+                "name": "HITGROUP_RIGHTLEG",
+                "name_ui": "HITGROUP_RIGHTLEG"
+            },
+            {
+                "name": "HITGROUP_NECK",
+                "name_ui": "HITGROUP_NECK"
+            },
+            {
+                "name": "HITGROUP_UNUSED",
+                "name_ui": "HITGROUP_UNUSED"
+            },
+            {
+                "name": "HITGROUP_GEAR",
+                "name_ui": "HITGROUP_GEAR"
+            },
+            {
+                "name": "HITGROUP_SPECIAL",
+                "name_ui": "HITGROUP_SPECIAL"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_FRONT_LEFT_LEG_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_FRONT_LEFT_LEG_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_FRONT_RIGHT_LEG_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_FRONT_RIGHT_LEG_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_REAR_LEFT_LEG_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_REAR_LEFT_LEG_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_REAR_RIGHT_LEG_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_REAR_RIGHT_LEG_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_HEAD_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_HEAD_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_T2_BOSS_BACK_WEAKPOINT",
+                "name_ui": "HITGROUP_T2_BOSS_BACK_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_DRONE_BOSS_DRONE_WEAKPOINT",
+                "name_ui": "HITGROUP_DRONE_BOSS_DRONE_WEAKPOINT"
+            },
+            {
+                "name": "HITGROUP_HEAD_NO_RESIST",
+                "name_ui": "HITGROUP_HEAD_NO_RESIST"
+            },
+            {
+                "name": "HITGROUP_COUNT",
+                "name_ui": "HITGROUP_COUNT"
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "name": "AILOD_t",
+        "name_ui": "AILOD_t",
+        "variants": [
+            {
+                "name": "eHigh",
+                "name_ui": "High"
+            },
+            {
+                "name": "eMedium",
+                "name_ui": "Medium"
+            },
+            {
+                "name": "eLow",
+                "name_ui": "Low"
+            },
+            {
+                "name": "eVeryLow",
+                "name_ui": "Very Low"
+            }
+        ]
+    },
+    {
+        "id": 8,
+        "name": "NPC_STATE",
+        "name_ui": "NPC_STATE",
+        "variants": [
+            {
+                "name": "NPC_STATE_IDLE",
+                "name_ui": "Idle"
+            },
+            {
+                "name": "NPC_STATE_ALERT",
+                "name_ui": "Alert"
+            },
+            {
+                "name": "NPC_STATE_COMBAT",
+                "name_ui": "Combat"
+            },
+            {
+                "name": "NPC_STATE_DEAD",
+                "name_ui": "Dead"
+            },
+            {
+                "name": "NPC_STATE_INERT",
+                "name_ui": "Inert"
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "name": "PulseNPCCondition_t",
+        "name_ui": "Pulse NPC Conditions",
+        "variants": [
+            {
+                "name": "COND_SEE_PLAYER",
+                "name_ui": "Can See the Player"
+            },
+            {
+                "name": "COND_LOST_PLAYER",
+                "name_ui": "Lost Sight of the Player"
+            },
+            {
+                "name": "COND_HEAR_PLAYER",
+                "name_ui": "Can Hear the Player"
+            },
+            {
+                "name": "COND_PLAYER_PUSHING",
+                "name_ui": "Is Being Pushed by the Player"
+            },
+            {
+                "name": "COND_NO_PRIMARY_AMMO",
+                "name_ui": "No Primary Ammo"
+            }
+        ]
+    },
+    {
+        "id": 10,
+        "name": "NPCFollowFormation_t",
+        "name_ui": "NPC Follow Formations",
+        "variants": [
+            {
+                "name": "Default",
+                "name_ui": "Default"
+            },
+            {
+                "name": "CloseCircle",
+                "name_ui": "Close Circle"
+            },
+            {
+                "name": "WideCircle",
+                "name_ui": "Wide Circle"
+            },
+            {
+                "name": "MediumCircle",
+                "name_ui": "Medium Circle"
+            },
+            {
+                "name": "Sidekick",
+                "name_ui": "Sidekick"
+            }
+        ]
+    },
+    {
+        "id": 11,
+        "name": "AI_Strafing_t",
+        "name_ui": "AI Strafing",
+        "variants": [
+            {
+                "name": "eDisabled",
+                "name_ui": "Disabled ( Face Path )"
+            },
+            {
+                "name": "eEnabled",
+                "name_ui": "Enabled ( Face Target )"
+            }
+        ]
+    },
+    {
+        "id": 12,
+        "name": "AI_VolumetricEventType_t",
+        "name_ui": "AI Volumetric Event Types",
+        "variants": [
+            {
+                "name": "eCombat",
+                "name_ui": "Combat"
+            },
+            {
+                "name": "ePlayer",
+                "name_ui": "Player"
+            },
+            {
+                "name": "eDanger",
+                "name_ui": "Danger"
+            },
+            {
+                "name": "eBulletImpact",
+                "name_ui": "Bullet Impact"
+            },
+            {
+                "name": "ePhysicsDanger",
+                "name_ui": "Physics Danger"
+            },
+            {
+                "name": "eMoveAway",
+                "name_ui": "Move Away"
+            },
+            {
+                "name": "ePlayerVehicle",
+                "name_ui": "Player Vehicle"
+            },
+            {
+                "name": "eGlassBreak",
+                "name_ui": "Glass Break"
+            },
+            {
+                "name": "ePhysicsObject",
+                "name_ui": "Physics Object"
+            },
+            {
+                "name": "eWarnFriends",
+                "name_ui": "Warn Friends"
+            },
+            {
+                "name": "eGunfire",
+                "name_ui": "Gunfire"
+            },
+            {
+                "name": "eExplosion",
+                "name_ui": "Explosion"
+            }
+        ]
+    },
+    {
+        "id": 13,
+        "name": "DamageTypes_t",
+        "name_ui": "Damage Types",
+        "variants": [
+            {
+                "name": "DMG_GENERIC",
+                "name_ui": "Generic"
+            },
+            {
+                "name": "DMG_CRUSH",
+                "name_ui": "Crush"
+            },
+            {
+                "name": "DMG_BULLET",
+                "name_ui": "Bullet"
+            },
+            {
+                "name": "DMG_SLASH",
+                "name_ui": "Slash"
+            },
+            {
+                "name": "DMG_BURN",
+                "name_ui": "Burn"
+            },
+            {
+                "name": "DMG_VEHICLE",
+                "name_ui": "Vehicle"
+            },
+            {
+                "name": "DMG_FALL",
+                "name_ui": "Fall"
+            },
+            {
+                "name": "DMG_BLAST",
+                "name_ui": "Blast"
+            },
+            {
+                "name": "DMG_CLUB",
+                "name_ui": "Club"
+            },
+            {
+                "name": "DMG_SHOCK",
+                "name_ui": "Shock"
+            },
+            {
+                "name": "DMG_SONIC",
+                "name_ui": "Sonic"
+            },
+            {
+                "name": "DMG_ENERGYBEAM",
+                "name_ui": "Energy Beam"
+            },
+            {
+                "name": "DMG_BUCKSHOT",
+                "name_ui": "Buckshot"
+            },
+            {
+                "name": "DMG_DROWN",
+                "name_ui": "Drown"
+            },
+            {
+                "name": "DMG_POISON",
+                "name_ui": "Poison"
+            },
+            {
+                "name": "DMG_RADIATION",
+                "name_ui": "Radiation"
+            },
+            {
+                "name": "DMG_DROWNRECOVER",
+                "name_ui": "DrownRecover"
+            },
+            {
+                "name": "DMG_ACID",
+                "name_ui": "Acid"
+            },
+            {
+                "name": "DMG_PHYSGUN",
+                "name_ui": "Physgun"
+            },
+            {
+                "name": "DMG_DISSOLVE",
+                "name_ui": "Dissolve"
+            },
+            {
+                "name": "DMG_BLAST_SURFACE",
+                "name_ui": "Blast Surface"
+            },
+            {
+                "name": "DMG_HEADSHOT",
+                "name_ui": "Headshot"
+            },
+            {
+                "name": "DMG_CRIT",
+                "name_ui": "Crit"
+            },
+            {
+                "name": "DMG_BUFFED",
+                "name_ui": "Buffed"
+            },
+            {
+                "name": "DMG_DOT",
+                "name_ui": "Dot"
+            },
+            {
+                "name": "DMG_GROUND_AURA",
+                "name_ui": "Ground Aura"
+            },
+            {
+                "name": "DMG_LETHAL",
+                "name_ui": "Lethal"
+            },
+            {
+                "name": "DMG_DANGERZONE",
+                "name_ui": "Danger Zone"
+            }
+        ]
+    },
+    {
+        "id": 14,
+        "name": "StanceType_t",
+        "name_ui": "Stance Type",
+        "variants": [
+            {
+                "name": "STANCE_DEFAULT",
+                "name_ui": "Default"
+            },
+            {
+                "name": "STANCE_CROUCHING",
+                "name_ui": "Crouching"
+            },
+            {
+                "name": "STANCE_PRONE",
+                "name_ui": "Prone"
+            }
+        ]
+    },
+    {
+        "id": 15,
+        "name": "SharedMovementGait_t",
+        "name_ui": "Shared Movement Gait",
+        "variants": [
+            {
+                "name": "eSlow",
+                "name_ui": "Slow"
+            },
+            {
+                "name": "eMedium",
+                "name_ui": "Medium"
+            },
+            {
+                "name": "eFast",
+                "name_ui": "Fast"
+            },
+            {
+                "name": "eVeryFast",
+                "name_ui": "Very Fast"
+            }
+        ]
+    },
+    {
+        "id": 16,
+        "name": "ChoreoLookAtSpeed_t",
+        "name_ui": "Choreo LookAt Speed",
+        "variants": [
+            {
+                "name": "eSlow",
+                "name_ui": "Slow"
+            },
+            {
+                "name": "eMedium",
+                "name_ui": "Medium"
+            },
+            {
+                "name": "eFast",
+                "name_ui": "Fast"
+            }
+        ]
+    },
+    {
+        "id": 17,
+        "name": "ChoreoLookAtMode_t",
+        "name_ui": "Choreo LookAt Move",
+        "variants": [
+            {
+                "name": "eChest",
+                "name_ui": "Chest"
+            },
+            {
+                "name": "eHead",
+                "name_ui": "Head"
+            },
+            {
+                "name": "eEyesOnly",
+                "name_ui": "Eyes Only"
             }
         ]
     }

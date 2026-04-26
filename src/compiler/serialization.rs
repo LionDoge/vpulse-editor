@@ -427,6 +427,7 @@ pub enum PulseConstant {
     Color_RGB([f32; 4]),
     Bool(bool),
     SchemaEnum(SchemaEnumType, SchemaEnumValue),
+    SchemaEnumValue(String, String),
     Resource(Option<String>, String), // (resource_type, value)
     Array(PulseValueType, Vec<PulseConstant>), // raw KV3 array content
 }
@@ -448,6 +449,7 @@ impl PulseConstant {
                 => Value::Array(vec![Value::Number(value[0].into()), Value::Number(value[1].into()), Value::Number(value[2].into())]),
             PulseConstant::Bool(value) => Value::Bool(*value),
             PulseConstant::SchemaEnum(_, value) => Value::String(value.to_str().to_string()),
+            PulseConstant::SchemaEnumValue(_, value) => Value::String(value.clone()),
             PulseConstant::Resource(_, value) => Value::Flag("resource".into(), Value::String(value.clone()).into()),
             PulseConstant::Array(_, value) => {
                 let values = value.iter().map(|v| v.serialize_value()).collect();
@@ -471,6 +473,7 @@ impl KV3Serialize for PulseConstant {
             PulseConstant::Color_RGB(_) => "PVAL_COLOR_RGB".to_string(),
             PulseConstant::Bool(_) => "PVAL_BOOL".to_string(),
             PulseConstant::SchemaEnum(typ, _) => format!("PVAL_SCHEMA_ENUM:{}", typ.to_str()),
+            PulseConstant::SchemaEnumValue(typ_str, _) => format!("PVAL_SCHEMA_ENUM:{}", typ_str),
             PulseConstant::Resource(resource_type, _) => {
                 if let Some(resource_type) = resource_type {
                     format!("PVAL_RESOURCE:{resource_type}")

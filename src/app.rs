@@ -1104,7 +1104,7 @@ impl PulseGraphEditor{
             Err(e) => {
                 MessageDialog::new()
                     .set_level(rfd::MessageLevel::Error)
-                    .set_title("Failed to load Pulse bindings manifest")
+                    .set_title("Failed to load Pulse bindings")
                     .set_buttons(rfd::MessageButtons::Ok)
                     .set_description(e.to_string())
                     .show();

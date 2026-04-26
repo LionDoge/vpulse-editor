@@ -181,9 +181,17 @@ impl PulseGraphValueType {
         }
     }
 
-    pub fn try_enum(self) -> anyhow::Result<(SchemaEnumType, SchemaEnumValue)> {
+    pub fn try_enum_old(self) -> anyhow::Result<(SchemaEnumType, SchemaEnumValue)> {
         if let PulseGraphValueType::SchemaEnum { enum_type, value } = self {
             Ok((enum_type, value))
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to schema enum (old format)", self)
+        }
+    }
+
+    pub fn try_enum(self) -> anyhow::Result<(EnumBindingIndex, EnumBindingValueIndex)> {
+        if let PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } = self {
+            Ok((enum_type, enum_variant))
         } else {
             anyhow::bail!("Invalid cast from {:?} to schema enum", self)
         }
@@ -593,6 +601,21 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 InputParamKind::ConstantOnly,
                 true,
             );
+        };
+        let input_enum = |graph: &mut PulseGraph, name: &str, enum_type: &str| {
+            if let Some(enum_type) = user_state.bindings.find_enum_by_name(enum_type) {
+                graph.add_input_param(
+                    node_id,
+                    name.to_string(),
+                    PulseDataType::SchemaEnum,
+                    PulseGraphValueType::SchemaEnumChoice { 
+                        enum_type: enum_type.id, 
+                        enum_variant: EnumBindingValueIndex(0),
+                    },
+                    InputParamKind::ConstantOnly,
+                    true,
+                );
+            }
         };
         let output_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
@@ -1450,6 +1473,26 @@ impl WidgetValueTrait for PulseGraphValueType {
                                     ui.selectable_value::<SchemaEnumValue>(value, choice.clone(), str);
                                 }
                             });
+                    });
+                }
+                PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        if let Some(binding_enum) = user_state.bindings.find_enum_by_id(*enum_type) {
+                            let variant_str = binding_enum
+                                .get_variant_by_id(*enum_variant)
+                                .map_or("[INVALID]", |variant| variant.name_ui.as_str());
+                            ComboBox::from_id_salt((node_id, param_name))
+                            .width(0.0)
+                            .selected_text(variant_str)
+                            .show_ui(ui, |ui| {
+                                for (idx, variant) in binding_enum.variants.iter().enumerate() {
+                                    ui.selectable_value::<EnumBindingValueIndex>(
+                                        enum_variant, EnumBindingValueIndex(idx), variant.name_ui.clone()
+                                    );
+                                }
+                            });
+                        }
                     });
                 }
                 PulseGraphValueType::CommentBox { value } => {

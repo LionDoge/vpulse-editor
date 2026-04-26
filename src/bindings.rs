@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::{bindings, typing::{EventBindingIndex, HookBindingIndex, LibraryBindingIndex, PulseValueType, try_string_to_pulsevalue}};
+use crate::typing::{EnumBindingIndex, EnumBindingValueIndex, EventBindingIndex, HookBindingIndex, LibraryBindingIndex, PulseValueType, try_string_to_pulsevalue};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone, PartialEq)]
@@ -70,6 +70,7 @@ pub struct HookBinding {
     pub description: Option<String>,
 }
 
+pub type EnumBindings = Vec<BindingEnum>;
 #[derive(Deserialize, Debug, Default)]
 pub struct GraphBindings {
     // Allow defaults, as not all games have to define everything
@@ -80,7 +81,7 @@ pub struct GraphBindings {
      #[serde(default)]
     pub hooks: Vec<HookBinding>,
     #[serde(default)]
-    pub enums: Vec<EnumInfo>,
+    pub enums: EnumBindings,
 }
 
 #[derive(Deserialize, Debug)]
@@ -123,6 +124,14 @@ impl GraphBindings {
         self.hooks.iter().find(|h| h.id == id)
     }
 
+    pub fn find_enum_by_name(&self, name: &str) -> Option<&BindingEnum> {
+        self.enums.iter().find(|e| e.name == name)
+    }
+
+    pub fn find_enum_by_id(&self, id: EnumBindingIndex) -> Option<&BindingEnum> {
+        self.enums.iter().find(|e| e.id == id)
+    }
+
     fn append_from(&mut self, other: &mut GraphBindings) {
         self.gamefunctions.append(&mut other.gamefunctions);
         self.events.append(&mut other.events);
@@ -143,11 +152,11 @@ impl PartialEq for GraphBindings {
     }
 }
 
-fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
+fn process_params(enum_bindings: &EnumBindings, params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     if let Some(param_list) = params {
         for param in param_list.iter_mut() {
             // deliberately panic to signify invalid data in bindings
-            param.pulsetype = try_string_to_pulsevalue(&param.typ).map_err(|err| {
+            param.pulsetype = try_string_to_pulsevalue(enum_bindings, &param.typ).map_err(|err| {
                 anyhow::anyhow!("Invalid PulseValueType in bindings: {}: {}", param.typ, err)
             })?;
             param.typ.clear();
@@ -156,16 +165,17 @@ fn process_params(params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn load_game_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
+// enum bindings are required to process the proper types
+fn load_game_bindings(enum_bindings: &EnumBindings, filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
     let json = std::fs::read_to_string(filepath)?;
     let mut deserializer = serde_json::Deserializer::from_str(&json);
     let mut bindings: GraphBindings = serde_path_to_error::deserialize(&mut deserializer)?;
     for binding in bindings.gamefunctions.iter_mut() {
-        process_params(&mut binding.inparams)?;
-        process_params(&mut binding.outparams)?;
+        process_params(enum_bindings, &mut binding.inparams)?;
+        process_params(enum_bindings, &mut binding.outparams)?;
     }
     for binding in bindings.events.iter_mut() {
-        process_params(&mut binding.inparams)?;
+        process_params(enum_bindings, &mut binding.inparams)?;
     }
     
     Ok(bindings)
@@ -175,11 +185,15 @@ pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings
     let json = std::fs::read_to_string(filepath)?;
     let mut deserializer = serde_json::Deserializer::from_str(&json);
     let bindings_manifest: BindingsManifest = serde_path_to_error::deserialize(&mut deserializer)?;
+
+    let json_enums = std::fs::read_to_string(&bindings_manifest.enums_file)?;
+    let mut deserializer_enums = serde_json::Deserializer::from_str(&json_enums);
+    let enums = serde_path_to_error::deserialize(&mut deserializer_enums)?;
     
     // load shared first, combine others, this might change in the future, if we only want to load for a given game.
-    let mut all_bindings = load_game_bindings(std::path::Path::new(&bindings_manifest.shared_bindings_file))?;
+    let mut all_bindings = load_game_bindings(&enums, std::path::Path::new(&bindings_manifest.shared_bindings_file))?;
     for game_binding_manifest in bindings_manifest.bindings_list.iter() {
-        let mut game_bindings = load_game_bindings(std::path::Path::new(&game_binding_manifest.bindings_file))?;
+        let mut game_bindings = load_game_bindings(&enums, std::path::Path::new(&game_binding_manifest.bindings_file))?;
         // For now add game prefix to displayname
         for func in game_bindings.gamefunctions.iter_mut() {
             func.displayname = format!("({}) {}", game_binding_manifest.name_prefix, func.displayname);
@@ -193,9 +207,7 @@ pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings
         all_bindings.append_from(&mut game_bindings);
     }
 
-    let json_enums = std::fs::read_to_string(&bindings_manifest.enums_file)?;
-    let mut deserializer_enums = serde_json::Deserializer::from_str(&json_enums);
-    all_bindings.enums = serde_path_to_error::deserialize(&mut deserializer_enums)?;
+    all_bindings.enums = enums;
     Ok(all_bindings)
 }
 
@@ -222,14 +234,22 @@ where
         _ => Ok(None),
     }
 }
-#[derive(Deserialize, Debug, Clone, PartialEq)]
-pub struct EnumInfo {
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+pub struct BindingEnum {
+    pub id: EnumBindingIndex,
     pub name: String,
     pub name_ui: String,
-    pub variants: Vec<EnumVariantInfo>,
+    #[serde(skip_serializing)]
+    pub variants: Vec<EnumVariant>,
+}
+
+impl BindingEnum {
+    pub fn get_variant_by_id(&self, id: EnumBindingValueIndex) -> Option<&EnumVariant> {
+        self.variants.get(id.0)
+    }
 }
 #[derive(Deserialize, Debug, Clone, PartialEq)]
-pub struct EnumVariantInfo {
+pub struct EnumVariant {
     pub name: String,
     pub name_ui: String,
 }

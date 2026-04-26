@@ -130,9 +130,14 @@ pub enum PulseGraphValueType {
         node: Option<NodeId>,
     },
     Any,
+    /* Deprecated version, left for compatibility with old saved graphs, any older ones should migrate to SchemaEnumChoice */
     SchemaEnum {
         enum_type: SchemaEnumType,
         value: SchemaEnumValue,
+    },
+    SchemaEnumChoice {
+        enum_type: EnumBindingIndex,
+        enum_variant: EnumBindingValueIndex,
     },
     CommentBox {value: String},
     Vec4 {

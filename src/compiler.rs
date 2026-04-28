@@ -871,6 +871,13 @@ fn get_input_register_or_create_constant(
         value_type,
         always_reevaluate,
     )
+    .map_err(|res| {
+        if matches!(res, CompileError::Generic(_)) {
+            CompileError::Node(current_node.id, res.to_string())
+        } else {
+            res
+        }
+    })
 }
 
 // recurse along connected nodes, and generate instructions, cells, and bindings depending on the node type.

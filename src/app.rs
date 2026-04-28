@@ -863,7 +863,13 @@ impl PulseGraphEditor {
                         self.state_mut().graph.get_output_mut(out_id).typ = pulse_value_type_to_node_types(inner).0;
                         Some((**inner).clone())
                     } else {
-                        panic!("GetArrayElement/ForEach node expected source type to be an array, but it was not. This is a bug!");
+                        rfd::MessageDialog::new()
+                            .set_title("Type update warning")
+                            .set_description(format!("Expected array type from source node, but got {source_type} The node setup might not work correctly in this state."))
+                            .set_buttons(rfd::MessageButtons::Ok)
+                            .set_level(rfd::MessageLevel::Warning)
+                            .show();
+                        None
                     }
                 } else {
                     None

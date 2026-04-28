@@ -1246,6 +1246,7 @@ impl eframe::App for PulseGraphEditor {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
         let mut prepended_responses: Vec<NodeResponse<PulseGraphResponse, PulseNodeData>> = vec![];
+        let mut center_on_node: Option<NodeId> = None;
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
         self.undoer.feed_state(
@@ -1296,6 +1297,8 @@ impl eframe::App for PulseGraphEditor {
                     {
                         if let CompileError::Node(node_id, _) = e {
                             prepended_responses.push(NodeResponse::ChangeSelectionColor(node_id, Some(egui::Color32::RED)));
+                            self.state_mut().reset_zoom(ui);
+                            center_on_node = Some(node_id);
                         }
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)
@@ -1654,14 +1657,30 @@ impl eframe::App for PulseGraphEditor {
 
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
-                self.full_state.state.draw_graph_editor(
+                let graph_response = self.full_state.state.draw_graph_editor(
                     ui,
                     AllMyNodeTemplates {
                         game_function_count: self.user_state().bindings.gamefunctions.len()
                     },
                     &mut self.full_state.user_state,
                     prepended_responses,
-                )
+                );
+
+                if let Some(node_id) = center_on_node.take() {
+                    if let Some(node_pos) = self.state().node_positions.get(node_id) {
+                        let node_size = self
+                            .state()
+                            .node_sizes
+                            .get(node_id)
+                            .copied()
+                            .unwrap_or(Vec2::new(200.0, 200.0));
+                        let editor_size = ui.max_rect().size();
+                        let node_center = node_pos.to_vec2() + node_size / 2.0;
+                        self.state_mut().pan_zoom.pan = editor_size / 2.0 - node_center;
+                    }
+                }
+
+                graph_response
             })
             .inner;
 

@@ -1245,6 +1245,7 @@ impl eframe::App for PulseGraphEditor {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &eframe::egui::Context, _frame: &mut eframe::Frame) {
+        let mut prepended_responses: Vec<NodeResponse<PulseGraphResponse, PulseNodeData>> = vec![];
         ctx.set_visuals(egui::Visuals::dark());
         ctx.style_mut(|s| s.interaction.selectable_labels = false);
         self.undoer.feed_state(
@@ -1293,6 +1294,9 @@ impl eframe::App for PulseGraphEditor {
                         compile_graph(&self.state().graph, self.user_state(), 
                             #[cfg(feature = "nongame_asset_build")]&self.editor_config)
                     {
+                        if let CompileError::Node(node_id, _) = e {
+                            prepended_responses.push(NodeResponse::ChangeSelectionColor(node_id, Some(egui::Color32::RED)));
+                        }
                         MessageDialog::new()
                             .set_level(rfd::MessageLevel::Error)
                             .set_title("Compile failed")
@@ -1641,7 +1645,6 @@ impl eframe::App for PulseGraphEditor {
                 .remove(variable_scheduled_for_deletion);
         }
 
-        let mut prepended_responses: Vec<NodeResponse<PulseGraphResponse, PulseNodeData>> = vec![];
         if ctx.input(|i| i.key_released(egui::Key::Delete)) {
             // delete selected nodes
             for node_id in self.state().selected_nodes.iter() {

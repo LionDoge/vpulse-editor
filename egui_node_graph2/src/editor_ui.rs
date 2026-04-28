@@ -44,6 +44,7 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
     },
     CreatedNode(NodeId),
     SelectNode(NodeId),
+    ChangeSelectionColor(NodeId, Option<egui::Color32>),
     /// As a user of this library, prefer listening for `DeleteNodeFull` which
     /// will also contain the user data for the deleted node.
     DeleteNodeUi(NodeId),
@@ -105,6 +106,7 @@ pub struct GraphNodeWidget<'a, NodeData, DataType, ValueType> {
     pub node_id: NodeId,
     pub ongoing_drag: Option<(NodeId, AnyParameterId)>,
     pub selected: bool,
+    pub selected_color: Option<Color32>,
     pub pan: egui::Vec2,
 }
 
@@ -265,6 +267,7 @@ where
                     .selected_nodes
                     .iter()
                     .any(|selected| *selected == node_id),
+                selected_color: self.selection_colors.get(node_id).copied(),
                 pan: self.pan_zoom.pan + editor_rect.min.to_vec2(),
             }
             .show(&self.pan_zoom, ui, user_state, *self.node_sizes.get(node_id).unwrap_or(&NODE_INITIAL_SIZE));
@@ -436,8 +439,16 @@ where
                 NodeResponse::CreatedNode(_) => {
                     //Convenience NodeResponse for users
                 }
+                NodeResponse::ChangeSelectionColor(node_id, color ) => {
+                    if let Some(color) = color {
+                        self.selection_colors.insert(*node_id, *color);
+                    } else {
+                        self.selection_colors.remove(*node_id);
+                    }
+                }
                 NodeResponse::SelectNode(node_id) => {
                     self.selected_nodes = Vec::from([*node_id]);
+                    self.selection_colors.remove(*node_id);
                 }
                 NodeResponse::DeleteNodeUi(node_id) => {
                     let (node, disc_events) = self.graph.remove_node(*node_id);
@@ -460,6 +471,7 @@ where
                     // Make sure to not leave references to old nodes hanging
                     self.selected_nodes.retain(|id| *id != *node_id);
                     self.node_order.retain(|id| *id != *node_id);
+                    self.selection_colors.remove(*node_id);
                 }
                 NodeResponse::DisconnectEvent { input, output } => {
                     let other_node = self.graph.get_output(*output).node;
@@ -1161,7 +1173,7 @@ where
             });
 
             let node_rect = titlebar_rect.union(body_rect).union(bottom_body_rect);
-            let outline = if self.selected {
+            let mut outline = if self.selected {
                 Shape::Rect(RectShape {
                     rect: node_rect.expand(2.0 * pan_zoom.zoom),
                     corner_radius: corner_radius.into(),
@@ -1175,6 +1187,20 @@ where
             } else {
                 Shape::Noop
             };
+            
+            // Customizable selection by user, which can show some sort of importance to the node beyond just selection.
+            if let Some(highlight_color) = self.selected_color {
+                outline = Shape::Rect(RectShape {
+                    rect: node_rect.expand(2.0 * pan_zoom.zoom),
+                    corner_radius: corner_radius.into(),
+                    fill: highlight_color,
+                    stroke: Stroke::NONE,
+                    stroke_kind: StrokeKind::Middle,
+                    blur_width: 0.0,
+                    round_to_pixels: None,
+                    brush: None,
+                });
+            }
 
             // Take note of the node rect, so the editor can use it later to compute intersections.
             self.node_rects.insert(self.node_id, node_rect);

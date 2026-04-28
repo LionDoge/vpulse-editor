@@ -40,6 +40,10 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     /// The currently selected node. Some interface actions depend on the
     /// currently selected node.
     pub selected_nodes: Vec<NodeId>,
+    /// Some selection colors can be customized by the user per node
+    /// For example when there's an issue with a node it can have different selection color to indicate that to the user
+    #[cfg_attr(feature = "persistence", serde(skip))]
+    pub selection_colors: SecondaryMap<NodeId, egui::Color32>,
     /// The mouse drag start position for an ongoing box selection.
     pub ongoing_box_selection: Option<egui::Pos2>,
     /// The position of each node.
@@ -75,13 +79,13 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
             node_order: Default::default(),
             connection_in_progress: Default::default(),
             selected_nodes: Default::default(),
+            selection_colors: Default::default(),
             ongoing_box_selection: Default::default(),
             node_positions: Default::default(),
             node_sizes: Default::default(),
             node_finder: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),
-            //undo_memory: Default::default(),
         }
     }
 }

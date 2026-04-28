@@ -836,10 +836,6 @@ fn get_input_register_or_create_constant_from_id(
                     chunk.add_instruction(instruction);
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
-                // Having a constant value for these doesn't make sense.
-                PulseValueType::PVAL_EHANDLE(_) | PulseValueType::PVAL_SNDEVT_GUID(_) => {
-                    return Ok(None);
-                }
                 _ => {
                     println!("Warning: Unsupported constant value type for input - None will be returned {:?}: {value_type}", input_id);
                     return Ok(None);

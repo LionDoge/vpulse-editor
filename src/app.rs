@@ -16,7 +16,7 @@ use anyhow::anyhow;
 use eframe::egui::{self, ComboBox, Modal, Id, RichText};
 use egui_node_graph2::*;
 use crate::bindings::*;
-use crate::compiler::compile_graph;
+use crate::compiler::{compile_graph, CompileError};
 use crate::pulsetypes::*;
 use crate::typing::*;
 use crate::utils::get_node_ids_connected_to_output;

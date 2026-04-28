@@ -14,7 +14,7 @@ pub fn compile_node(
     graph_state: &PulseGraphState,
     target_chunk: i32,
     output_id: &Option<OutputId>,
-) -> anyhow::Result<Option<i32>> {
+) -> Result<Option<i32>, CompileError> {
     // if we're requesting for a value then we can try to find the output mapping first
     if let Some(output_id) = output_id {
         let existing_reg = graph_def.get_mapped_register_node_outputs(current_node.id, *output_id);
@@ -31,10 +31,7 @@ pub fn compile_node(
     );
     let binding = graph_state.bindings.find_function_by_id(binding_idx);
     if binding.is_none() {
-        anyhow::bail!(
-            "InvokeLibraryBinding node: Failed to find library binding with index {}",
-            binding_idx
-        );
+        return Err(CompileError::Node(current_node.id, format!("Failed to find library binding with index {}", binding_idx)));
     }
     
     let binding = binding.unwrap();
@@ -88,7 +85,7 @@ pub fn compile_node(
             // looking for the outputid matching the parameter name
             // this should be setup on the UI side, if not, then it's a programming error
             let current_output_id = current_node.get_output(&param.name).map_err(|e| {
-                anyhow::anyhow!(e).context("\nFunction Binding: Mismatch between UI and definition. This is likely caused by mismatched references.")
+                CompileError::Node(current_node.id, e.to_string())
             })?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let ret_type = if binding.polymorphic_return.is_some() {

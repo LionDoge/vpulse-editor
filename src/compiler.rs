@@ -2,6 +2,7 @@ mod instruction_templates;
 mod nodes;
 pub mod serialization;
 
+use std::path;
 use std::{fs, borrow::Cow};
 use anyhow::anyhow;
 use egui_node_graph2::*;
@@ -14,11 +15,22 @@ use crate::typing::{get_preffered_inputparamkind_from_type, get_pulse_constant_f
 use crate::typing::PulseValueType;
 use crate::utils::*;
 use serialization::*;
+use thiserror::Error;
 
 #[cfg(feature = "nongame_asset_build")]
 use std::{path::PathBuf, path, process::Command};
 #[cfg(feature = "nongame_asset_build")]
 use crate::app::types::EditorConfig;
+
+#[derive(Error, Debug)]
+pub enum CompileError {
+    #[error("{} - caused by node {:?}", .1, .0)]
+    Node(NodeId, String),
+    #[error("Failed to write to: {:?} - {}", .0, .1)]
+    WriteError(path::PathBuf, String),
+    #[error("{}", .0)]
+    Generic(#[from] anyhow::Error),
+}
 
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {
@@ -66,22 +78,13 @@ macro_rules! graph_run_next_actions_no_return {
 macro_rules! get_constant_graph_input_value {
     ($graph:ident, $node:ident, $input:literal, $typ_func:ident) => {{
         let input_id = $node.get_input($input).map_err(|e| {
-            anyhow::anyhow!(e).context(format!(
-                "Get constant input value for {} node {:?}",
-                $input, $node.user_data.template
-            ))
+            CompileError::Node($node.id, format!("failed to get input {0}: {1}", $input, e.to_string()))
         })?;
         let input_param = $graph.inputs.get(input_id).ok_or(
-            anyhow!("Can't find input value of {}", $input).context(format!(
-                "Get constant input value for node {:?}",
-                $node.user_data.template
-            )),
+            CompileError::Node($node.id, format!("Can't find input value for {0}", $input)),
         )?;
         input_param.value.clone().$typ_func().map_err(|e| {
-            anyhow::anyhow!(e).context(format!(
-                "Get constant input value conversion for {} node {:?}",
-                $input, $node.user_data.template
-            ))
+            CompileError::Node($node.id, format!("failed to convert input {0}: {1}", $input, e.to_string()))
         })?
     }};
 }
@@ -109,7 +112,7 @@ fn traverse_inflow_nodes(
     graph: &PulseGraph,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<bool> {
+) -> Result<bool, CompileError> {
     let mut processed: bool = false;
     // add a empty method at the start, otherwise async calls don't work
     // don't know how that's related, but that seems to be the case weirdly enough
@@ -221,18 +224,19 @@ fn traverse_event_cell(
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<()> {
+) -> Result<(), CompileError> {
     let input_id = node
         .get_input("event")
-        .map_err(|e| anyhow!(e).context("Traverse event cell node"))?;
+        .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
     let input_param = graph
         .inputs
         .get(input_id)
-        .ok_or(anyhow!("Can't find input value").context("Traverse event cell node"))?;
-    let event_binding_id = input_param.value.clone().try_event_binding_id()?;
+        .ok_or(CompileError::Node(node.id, "Can't find input value".into()))?;
+    let event_binding_id = input_param.value.clone().try_event_binding_id()
+    .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
     let event_binding = graph_state.bindings
         .find_event_by_id(event_binding_id)
-        .ok_or_else(|| anyhow::anyhow!("Event binding with id {} not found", event_binding_id))?;
+        .ok_or_else(|| CompileError::Node(node.id, format!("Event binding with id {} not found", event_binding_id)))?;
     // create new pulse cell node.
     let chunk_id = graph_def.create_chunk();
     let mut cell_event =
@@ -244,7 +248,7 @@ fn traverse_event_cell(
         for param in inparams.iter() {
             let output_id = node
                 .get_output(param.name.as_str())
-                .map_err(|e| anyhow!(e).context("Traverse event cell node"))?;
+                .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
 
             let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
             let reg_id = chunk.add_register(param.pulsetype.to_string(), 0);
@@ -254,7 +258,8 @@ fn traverse_event_cell(
     }
 
     graph_def.cells.push(Box::from(cell_event));
-    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
+    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")
+        .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
     for (connected_node, input_name) in connected_node.iter() {
         traverse_nodes_and_populate(
             graph,
@@ -276,16 +281,17 @@ fn traverse_graphhook_cell(
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<()> {
+) -> Result<(), CompileError> {
     let hook_id = get_constant_graph_input_value!(graph, node, "hook", try_hook_binding);
     let hook = graph_state.bindings
         .find_hook_by_id(hook_id)
-        .ok_or_else(|| anyhow::anyhow!("Hook binding with id {} not found", hook_id))?;
+        .ok_or_else(|| CompileError::Node(node.id, format!("Hook binding with id {} not found", hook_id)))?;
     let chunk_id = graph_def.create_chunk();
     let cell_hook =
         CPulseCell_Inflow_GraphHook::new(hook.libname.clone().into(), RegisterMap::default(), chunk_id);
     graph_def.cells.push(Box::from(cell_hook));
-    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")?;
+    let connected_node = get_nodes_connected_to_output(node, graph, "outAction")
+        .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
     for (connected_node, input_name) in connected_node.iter() {
         traverse_nodes_and_populate(
             graph,
@@ -309,7 +315,7 @@ fn traverse_function_entry(
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<i32> {
+) -> Result<i32, CompileError> {
     let existing_entrypoint = graph_def
         .traversed_entrypoints
         .iter()
@@ -322,7 +328,8 @@ fn traverse_function_entry(
         match node.user_data.template {
             PulseNodeTemplate::ListenForEntityOutput => {
                 let reg_id_activator = chunk.add_register(String::from("PVAL_EHANDLE"), 0);
-                let output_id_activator = node.get_output("pActivator")?;
+                let output_id_activator = node.get_output("pActivator")
+                    .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
                 graph_def.add_register_mapping(output_id_activator, reg_id_activator);
 
                 let mut reg_map = RegisterMap::default();
@@ -362,10 +369,7 @@ fn traverse_function_entry(
                 ret_value = chunk_id;
             }
             _ => {
-                return Err(anyhow::anyhow!(
-                    "Unsupported node type for function entry: {:?}",
-                    node.user_data.template
-                ));
+                return Err(CompileError::Node(node.id, format!("Unsupported node type for function entry: {:?}", node.user_data.template)));
             }
         };
         // remember that we traversed this already!
@@ -392,7 +396,7 @@ fn traverse_method_cell(
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<()> {
+) -> Result<(), CompileError> {
     let mut cell_method = CPulseCell_Inflow_Method::default();
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
@@ -404,7 +408,7 @@ fn traverse_method_cell(
     let reg_id_arg1 = chunk.add_register(String::from("PVAL_STRING"), 0);
     let output_id_arg1 = node
         .get_output("argument1")
-        .map_err(|e| anyhow!(e).context("Traverse public method node"))?;
+        .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
     cell_method.add_arg(
         String::from("arg1"),
         String::default(),
@@ -436,7 +440,7 @@ fn traverse_ent_output_cell(
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> anyhow::Result<()> {
+) -> Result<(), CompileError> {
     let chunk_id = graph_def.create_chunk();
     let entity_name = get_constant_graph_input_value!(
         graph,
@@ -489,7 +493,7 @@ pub fn compile_graph(
     graph_state: &PulseGraphState,
     #[cfg(feature = "nongame_asset_build")]
     config: &EditorConfig,
-) -> anyhow::Result<()> {
+) -> Result<(), CompileError> {
     let mut graph_def = PulseGraphDef::default();
     let file_dir = graph_state
         .save_file_path
@@ -502,35 +506,27 @@ pub fn compile_graph(
     graph_def.graph_domain = graph_state.graph_domain.clone();
     graph_def.graph_subtype = graph_state.graph_subtype.clone();
 
-    match traverse_inflow_nodes(graph, &mut graph_def, graph_state) {
-        Ok(true) => {
-            // we found inflow nodes, so we can continue
-        }
-        Ok(false) => {
-            anyhow::bail!("No inflow nodes found in graph");
-        }
-        Err(e) => {
-            anyhow::bail!("Graph compile failed: {}", e);
-        }
+    if !traverse_inflow_nodes(graph, &mut graph_def, graph_state)? {
+        return Err(CompileError::Generic(anyhow!("No inflow nodes found in graph")));
     }
     let data = kv3::to_string(&graph_def.serialize());
-    let _ = fs::create_dir_all(file_dir).map_err(|e| {
-        anyhow!(
-            "Graph compile failed: Failed to create output directory: {}",
-            e
-        )
-    });
+    let dir = file_dir.parent().ok_or_else(|| {
+        CompileError::WriteError(file_dir.clone(), "Failed to get parent directory of this file".into())
+    })?;
+    fs::create_dir_all(dir).map_err(|e| {
+        CompileError::WriteError(file_dir.clone(), e.to_string())
+    })?;
 
     #[cfg(not(feature = "nongame_asset_build"))] {
-        let mut file_path = file_dir.clone();
+        let mut file_path: std::path::PathBuf = file_dir.clone();
         file_path.set_extension("vpulse");
         fs::write(file_path, data)
-            .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?
+            .map_err(|e| CompileError::WriteError(file_dir.clone(), e.to_string()))?;
     }
 
     #[cfg(feature = "nongame_asset_build")] {
         let file_name = file_dir.file_name().ok_or_else(|| {
-            anyhow::anyhow!("The provided file source path doesn't contain a filename, please re-save the file: '{}'", file_dir.display())
+            CompileError::WriteError(file_dir.clone(), "Failed to get file name".into())
         })?;
         // create a temporary file in the system temp directory with random suffix to avoid confilicts (very unlikely anyways)
         use rand::{Rng, distributions::Alphanumeric};
@@ -543,9 +539,9 @@ pub fn compile_graph(
                 .collect::<String>()
         ));
         fs::write(&temp_dir_file, data)
-            .map_err(|e| anyhow!("Graph compile failed: Failed to write to file: {}", e))?;
+            .map_err(|e| CompileError::WriteError(temp_dir_file.clone(), e.to_string()))?;
         run_asset_builder(config, &temp_dir_file, file_dir)
-            .map_err(|e| anyhow!("Graph compile failed: Failed to run asset builder: {}", e))?;
+            .map_err(|e| CompileError::Generic(e.to_string()))?;
         let _ = fs::remove_file(&temp_dir_file); // ok to ignore
     }
     Ok(())
@@ -671,7 +667,7 @@ fn get_input_register_or_create_constant_from_id(
     input_id: InputId,
     value_type: PulseValueType,
     always_reevaluate: bool,
-) -> anyhow::Result<Option<i32>> {
+) -> Result<Option<i32>, CompileError> {
     let connection_to_input: Option<OutputId> = graph.connection(input_id);
     let target_register: i32;
     // if we find a connection, then traverse to that node, whatever happens we should get a register id back.
@@ -682,7 +678,7 @@ fn get_input_register_or_create_constant_from_id(
             let out_node = graph
                 .nodes
                 .get(out_param.node)
-                .ok_or(anyhow!("Can't find output node"))?;
+                .ok_or(CompileError::Generic(anyhow!("Can't find output node")))?;
             target_register = traverse_nodes_and_populate(
                 graph,
                 out_node,
@@ -812,7 +808,7 @@ fn get_input_register_or_create_constant_from_id(
                     graph_def.add_constant(PulseConstant::Bool(input_value));
                 }
                 PulseValueType::PVAL_SCHEMA_ENUM(_) => {
-                    anyhow::bail!("Legacy type, we shouldn't be here anymore!")
+                    return Err(CompileError::Generic(anyhow!("Legacy schema enum type, we shouldn't be here!")));
                 }
                 PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => {
                     instruction =
@@ -866,9 +862,9 @@ fn get_input_register_or_create_constant(
     name: &str,
     value_type: PulseValueType,
     always_reevaluate: bool,
-) -> anyhow::Result<Option<i32>> {
-    let input_id = current_node.get_input(name).map_err(|e| {
-        anyhow::anyhow!(e).context(format!("failed to find input {name} in node {:?}", &current_node.user_data.template))
+) -> Result<Option<i32>, CompileError> {
+    let input_id = current_node.get_input(name).map_err(|_| {
+        CompileError::Node(current_node.id, format!("failed to find input {name} in node"))
     })?;
     get_input_register_or_create_constant_from_id(
         graph,
@@ -893,7 +889,7 @@ fn traverse_nodes_and_populate<'a>(
     target_chunk: i32,
     output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, always None for when node was reached through an action.
     source_input_name: &Option<Cow<'a, str>>, // mostly useful for traversing to next actions. It lets know about what action was specified for nodes that have multiple action inputs
-) -> anyhow::Result<i32> {
+) -> Result<i32, CompileError> {
     // to avoid having to pass the same parameters over and over again.
     macro_rules! get_register {
         ($name:expr, $typ:expr) => {
@@ -955,7 +951,8 @@ fn traverse_nodes_and_populate<'a>(
             // check for existence of the parameter value (connection, or non empty string)
             // to determine if we need to add it to the EntFire call
             let param_value_exists = 'checkParmValue: {
-                let input_id = current_node.get_input("value")?;
+                let input_id = current_node.get_input("value")
+                    .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
                 let connection_to_input: Option<OutputId> = graph.connection(input_id);
                 if connection_to_input.is_some() {
                     break 'checkParmValue true;
@@ -976,7 +973,8 @@ fn traverse_nodes_and_populate<'a>(
             }
             let cell = CPulseCell_Step_EntFire::new(input_value.clone().into());
 
-            let port_ehandle = current_node.get_input("entityHandle")?;
+            let port_ehandle = current_node.get_input("entityHandle")
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             if graph.connection(port_ehandle).is_some() {
                 let register_map = reg_map_setup_inputs!("hTarget", reg_entity, "pParam", reg_param);
                 add_cell_and_invoking(
@@ -1013,10 +1011,10 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::ConcatString => {
             let id_a = current_node
                 .get_input("A")
-                .map_err(|e| anyhow!(e).context("ConcatString node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let id_b = current_node
                 .get_input("B")
-                .map_err(|e| anyhow!(e).context("ConcatString node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let input_ids = [id_a, id_b];
             let connection_to_a = graph.connection(id_a);
             let connection_to_b = graph.connection(id_b);
@@ -1028,7 +1026,7 @@ fn traverse_nodes_and_populate<'a>(
                     Some(out) => {
                         let out_param = graph.get_output(*out);
                         let out_node = graph.nodes.get(out_param.node).ok_or(
-                            anyhow!("Can't find output node").context("ConcatString node"),
+                            CompileError::Node(current_node.id, "Can't find output node".into())
                         )?;
                         // grab the register that the value will come from.
                         input_registers[i] = traverse_nodes_and_populate(
@@ -1088,28 +1086,23 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::GetVar => {
             let name_id = current_node
                 .get_input("variableName")
-                .map_err(|e| anyhow!(e).context("GetVar node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             // name is a constant value
             let name = graph
                 .get_input(name_id)
                 .value()
                 .clone()
                 .try_variable_name()
-                .map_err(|e| anyhow!(e).context("GetVar node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let var_id = get_variable(graph_def, name.as_str());
             if var_id.is_none() {
-                anyhow::bail!(
-                    anyhow!("Variable {name} not found in variables list").context("GetVar node")
-                );
+                return Err(CompileError::Node(current_node.id, format!("Variable {name} not found in variables list")));
             }
             let var_id = var_id.unwrap();
             let typ = graph_def
                 .variables
                 .get(var_id as usize)
-                .ok_or(
-                    anyhow!("Variable id: {var_id} not found in variables list")
-                        .context("GetVar node"),
-                )?
+                .ok_or(CompileError::Node(current_node.id, format!("Variable id: {var_id} not found in variables list")))?
                 .typ_and_default_value
                 .to_string();
             // add register
@@ -1122,7 +1115,7 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::IntToString => {
             let value_id = current_node
                 .get_input("value")
-                .map_err(|e| anyhow!(e).context("IntToString node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let connection_to_value = graph.connection(value_id);
             let register_input: i32;
             match connection_to_value {
@@ -1131,7 +1124,7 @@ fn traverse_nodes_and_populate<'a>(
                     let out_node = graph
                         .nodes
                         .get(out_param.node)
-                        .ok_or(anyhow!("Can't find output node").context("IntToString node"))?;
+                        .ok_or(CompileError::Node(current_node.id, "Can't find output node".into()))?;
                     // grab the register that the value will come from.
                     register_input = traverse_nodes_and_populate(
                         graph,
@@ -1164,19 +1157,17 @@ fn traverse_nodes_and_populate<'a>(
         PulseNodeTemplate::SetVar => {
             let name_id = current_node
                 .get_input("variableName")
-                .map_err(|e| anyhow!(e).context("SetVar node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             // name is a constant value
             let name = graph
                 .get_input(name_id)
                 .value()
                 .clone()
                 .try_variable_name()
-                .map_err(|e| anyhow!(e).context("GetVar node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let var_id = get_variable(graph_def, name.as_str());
             if var_id.is_none() {
-                anyhow::bail!(
-                    anyhow!("Variable {name} not found in variables list").context("SetVar node")
-                );
+                return Err(CompileError::Node(current_node.id, format!("Variable {name} not found in variables list")));
             }
             let typ = graph_def
                 .variables
@@ -1289,7 +1280,7 @@ fn traverse_nodes_and_populate<'a>(
             // resolve connection to hEntity
             let hentity_input_id = current_node
                 .get_input("hEntity")
-                .map_err(|e| anyhow!(e).context("DebugWorldText node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let connection_to_hentity = graph.connection(hentity_input_id);
             if connection_to_hentity.is_none() {
                 println!("No connection found for hEntity input in DebugWorldText node. Node will not be processed, next action won't execute.");
@@ -1376,7 +1367,7 @@ fn traverse_nodes_and_populate<'a>(
                 let output_info = graph_def
                     .public_outputs
                     .get(pub_output)
-                    .ok_or(anyhow!("Public output not found").context("FireOutput node"))?;
+                    .ok_or(CompileError::Node(current_node.id, "Public output not found".into()))?;
                 let reg_param = get_register!("param", output_info.typ.clone());
                 graph_def
                 .cells
@@ -1531,24 +1522,30 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(instr_jump_false) = instr_jump_false {
                 instr_jump_false.dest_instruction = false_condition_instr_id;
             } else {
-                anyhow::bail!(
-                    "Compare node: Failed to find JUMP[false_condition] with id: {}",
-                    jump_false_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find JUMP[false_condition] with id: {}",
+                        jump_false_instr_id
+                    ),
+                ));
             }
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
             if let Some(instr_jump_end) = instr_jump_end {
                 instr_jump_end.dest_instruction = ending_instr_id;
             } else {
-                anyhow::bail!(
-                    "Compare node: Failed to find JUMP[end] with id: {}",
-                    jump_end_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find JUMP[end] with id: {}",
+                        jump_end_instr_id
+                    ),
+                ));
             }
         }
         PulseNodeTemplate::CompareIf => {
             let reg_cond = get_register!("condition", PulseValueType::PVAL_BOOL)
-                .ok_or(anyhow!("CompareIf node: Failed to get 'condition' register"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_jump_cond =
                 instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
@@ -1588,19 +1585,25 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(instr_jump_false) = instr_jump_false {
                 instr_jump_false.dest_instruction = false_condition_instr_id;
             } else {
-                anyhow::bail!(
-                    "Compare node: Failed to find JUMP[false_condition] with id: {}",
-                    jump_false_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find JUMP[false_condition] with id: {}",
+                        jump_false_instr_id
+                    ),
+                ));
             }
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
             if let Some(instr_jump_end) = instr_jump_end {
                 instr_jump_end.dest_instruction = ending_instr_id;
             } else {
-                anyhow::bail!(
-                    "Compare node: Failed to find JUMP[end] with id: {}",
-                    jump_end_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find JUMP[end] with id: {}",
+                        jump_end_instr_id
+                    ),
+                ));
             }
 
             graph_run_next_actions_no_return!(
@@ -1624,11 +1627,11 @@ fn traverse_nodes_and_populate<'a>(
                 }
             }
             let reg_from = get_register!("start", PulseValueType::PVAL_INT(None))
-                .ok_or(anyhow!("ForLoop node: Failed to get 'start' register"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'start' register".into()))?;
             let reg_to = get_register!("end", PulseValueType::PVAL_INT(None))
-                .ok_or(anyhow!("ForLoop node: Failed to get 'end' register"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'end' register".into()))?;
             let reg_step = get_register!("step", PulseValueType::PVAL_INT(None))
-                .ok_or(anyhow!("ForLoop node: Failed to get 'step' register"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'step' register".into()))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // new constant = 1 for incrementing
             // new register and constant
@@ -1651,7 +1654,7 @@ fn traverse_nodes_and_populate<'a>(
             // remember the output index, for nodes that want to access this output
             let output_idx_id = current_node
                 .get_output("index")
-                .map_err(|e| anyhow!(e).context("ForLoop node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             graph_def.add_register_mapping(output_idx_id, reg_idx);
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr_copy = instruction_templates::copy_value(reg_idx, reg_from);
@@ -1698,10 +1701,13 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(instr_jump_end) = instr_jump_end {
                 instr_jump_end.dest_instruction = end_instr_id;
             } else {
-                anyhow::bail!(
-                    "ForLoop node: Failed to find JUMP[end] with id: {}",
-                    jump_end_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "ForLoop node: Failed to find JUMP[end] with id: {}",
+                        jump_end_instr_id
+                    ),
+                ));
             }
 
             graph_run_next_actions_no_return!(
@@ -1717,7 +1723,7 @@ fn traverse_nodes_and_populate<'a>(
             let is_dowhile_loop =
                 get_constant_graph_input_value!(graph, current_node, "do-while", try_to_bool);
             let reg_condition = get_register!("condition", PulseValueType::PVAL_BOOL)
-                .ok_or(anyhow!("WhileLoop node: Failed to get 'condition' register"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
             if !is_dowhile_loop {
                 // While loop:
                 // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
@@ -1947,10 +1953,13 @@ fn traverse_nodes_and_populate<'a>(
                     create_comp_instructions("NOT".into(), Some(reg_lt), None)
                 }
                 _ => {
-                    anyhow::bail!(
-                        "CompareOutput node: Unknown operation value: {}",
-                        compare_value
-                    );
+                    return Err(CompileError::Node(
+                        current_node.id,
+                        format!(
+                            "Unknown operation value: {}",
+                            compare_value
+                        ),
+                    ));
                 }
             };
             return Ok(reg_comp);
@@ -2050,10 +2059,13 @@ fn traverse_nodes_and_populate<'a>(
                 if let Some(instr_jump_end) = instr_jump_end {
                     instr_jump_end.dest_instruction = ending_instruction_id;
                 } else {
-                    anyhow::bail!(
-                        "IntSwitch node: Failed to find JUMP[end] with id: {}",
-                        instr
-                    );
+                    return Err(CompileError::Node(
+                        current_node.id,
+                        format!(
+                            "IntSwitch node: Failed to find JUMP[end] with id: {}",
+                            instr
+                        ),
+                    ));
                 }
             }
             let cell = CPulseCell_Outflow_IntSwitch::new(
@@ -2087,10 +2099,13 @@ fn traverse_nodes_and_populate<'a>(
             let event_start_type = if let GeneralEnumChoice::SoundEventStartType(choice) = enum_choice {
                 choice
             } else {
-                anyhow::bail!(
-                    "SoundEventStart node: Expected SoundEventStartType, got {:?}",
-                    enum_choice
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Expected SoundEventStartType, got {:?}",
+                        enum_choice
+                    ),
+                ));
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
@@ -2238,10 +2253,13 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(binding) = binding {
                 binding.cell_index = cell_id as i32;
             } else {
-                anyhow::bail!(
-                    "Timeline node: Failed to find invoke binding with id: {}",
-                    binding_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find invoke binding with id: {}",
+                        binding_id
+                    ),
+                ));
             }
         }
         PulseNodeTemplate::SetAnimGraphParam => {
@@ -2317,7 +2335,7 @@ fn traverse_nodes_and_populate<'a>(
             for input_id in current_node.user_data.added_inputs.iter() {
                 let value = graph.get_input(*input_id).value().clone();
                 let constant = get_pulse_constant_from_graph_value(value).map_err(|e| {
-                    anyhow::anyhow!(format!("MakeArray node doesn't support constant values for type of {}. \
+                    CompileError::Node(current_node.id, format!("MakeArray node doesn't support constant values for type of {}. \
                     Please remove all initial elements and add them at runtime with the 'Array Append' node, or change the type - {e}", arr_type.get_ui_name()))
                 })?;
                 constants.push(constant);
@@ -2373,9 +2391,12 @@ fn traverse_nodes_and_populate<'a>(
                     return Ok(reg_out);
                 }
             }
-            anyhow::bail!(
-                "GetArrayElement node: Failed to get input registers for array or index."
-            );
+            return Err(
+                CompileError::Node(
+                    current_node.id,
+                    "Failed to get input registers for array or index.".into(),
+                )
+            )
         }
         PulseNodeTemplate::ScaleVector => {
             let reg_out = try_find_output_mapping(graph_def, output_id);
@@ -2395,9 +2416,9 @@ fn traverse_nodes_and_populate<'a>(
                 try_to_bool
             );
             let reg_src_vec = get_register!("vector", typ.clone())
-                .ok_or(anyhow!("ScaleVector node: Failed to get source vector register."))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get source vector register".into()))?;
             let reg_scale_factor = get_register!("scale", PulseValueType::PVAL_FLOAT(None))
-                .ok_or(anyhow!("ScaleVector node: Failed to get scale factor register."))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get scale factor register".into()))?;
 
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
@@ -2422,7 +2443,7 @@ fn traverse_nodes_and_populate<'a>(
         }
         PulseNodeTemplate::ReturnValue => {
             let reg_val = get_register!("value", PulseValueType::PVAL_ANY)
-                .ok_or(anyhow!("ReturnValue node: Failed to get value register."))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get value register".into()))?;
             graph_def.add_chunk_instruction(
                 target_chunk as usize,
                 instruction_templates::return_value(reg_val)
@@ -2434,11 +2455,12 @@ fn traverse_nodes_and_populate<'a>(
                 if reg_idx != -1 {
                     return Ok(reg_idx);
                 } else {
-                    anyhow::bail!(
-                        "ForEach node: Failed to find output register for 'index/element' when a node requested it.
-                        This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action.
-                        Please report this as a bug!"
-                    );
+                    return Err(CompileError::Node(
+                        current_node.id,
+                        "Failed to find output register for 'index/element' when a node requested it. \
+                        This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action. \
+                        Please report this as a bug!".into(),
+                    ));
                 }
             }
             let typ = current_node.user_data.custom_output_type
@@ -2448,7 +2470,12 @@ fn traverse_nodes_and_populate<'a>(
                 PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY))
             );
             let Some(reg_array) = reg_array_opt else {
-                anyhow::bail!("ForLoop node: Failed to get input register for array.");
+                return Err(
+                    CompileError::Node(
+                        current_node.id,
+                        "ForLoop node: Failed to get input register for array.".into(),
+                    )
+                )
             };
 
             // create constant int = 1
@@ -2461,9 +2488,9 @@ fn traverse_nodes_and_populate<'a>(
                 "CPulseArraylib::ArrayCount".into(),
                 reg_map_setup_inputs!("a", reg_array_opt),
                 target_chunk,
-            )?;
+            ).map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             let reg_to = reg_map_arraycount.get_outparam_by_name("retval")
-                .ok_or(anyhow!("ForEach node: Failed to get 'retval' register from ArrayCount"))?;
+                .ok_or(CompileError::Node(current_node.id, "Failed to get 'retval' register from ArrayCount".into()))?;
 
             // SETUP NEW REGISTERS
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -2492,11 +2519,11 @@ fn traverse_nodes_and_populate<'a>(
             // remember the output index, for nodes that want to access this output
             let output_idx_id = current_node
                 .get_output("index")
-                .map_err(|e| anyhow!(e).context("ForEach node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             graph_def.add_register_mapping(output_idx_id, reg_idx);
             let output_value_idx_id = current_node
                 .get_output("out")
-                .map_err(|e| anyhow!(e).context("ForEach node"))?;
+                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
             graph_def.add_register_mapping(output_value_idx_id, reg_value_out);
 
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -2542,10 +2569,13 @@ fn traverse_nodes_and_populate<'a>(
             if let Some(instr_jump_end) = instr_jump_end {
                 instr_jump_end.dest_instruction = end_instr_id;
             } else {
-                anyhow::bail!(
-                    "ForEach node: Failed to find JUMP[end] with id: {}",
-                    jump_end_instr_id
-                );
+                return Err(CompileError::Node(
+                    current_node.id,
+                    format!(
+                        "Failed to find JUMP[end] with id: {}",
+                        jump_end_instr_id
+                    ),
+                ));
             }
 
             graph_run_next_actions_no_return!(
@@ -2565,13 +2595,13 @@ fn traverse_nodes_and_populate<'a>(
             let reg_a = get_register!(
                 "A",
                 PulseValueType::PVAL_BOOL
-            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'A'."))?;
+            ).ok_or(CompileError::Node(current_node.id, "Failed to get input register for 'A'.".into()))?;
             let reg_b = get_register!(
                 "B",
                 PulseValueType::PVAL_BOOL
-            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'B'."))?;
+            ).ok_or(CompileError::Node(current_node.id, "Failed to get input register for 'B'.".into()))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
-                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'And' node."))?;
+                .ok_or_else(|| CompileError::Node(current_node.id, "Failed to add register for 'And' node.".into()))?;
             let instr = instruction_templates::and_bool(
                 reg_a,
                 reg_b,
@@ -2588,13 +2618,13 @@ fn traverse_nodes_and_populate<'a>(
             let reg_a = get_register!(
                 "A",
                 PulseValueType::PVAL_BOOL
-            ).ok_or(anyhow::anyhow!("Or node: Failed to get input register for 'A'."))?;
+            ).ok_or(CompileError::Node(current_node.id, "Failed to get input register for 'A'.".into()))?;
             let reg_b = get_register!(
                 "B",
                 PulseValueType::PVAL_BOOL
-            ).ok_or(anyhow::anyhow!("Or node: Failed to get input register for 'B'."))?;
+            ).ok_or(CompileError::Node(current_node.id, "Failed to get input register for 'B'.".into()))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
-                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Or' node."))?;
+                .ok_or_else(|| CompileError::Node(current_node.id, "Failed to add register for 'Or' node.".into()))?;
             let instr = instruction_templates::or_bool(
                 reg_a,
                 reg_b,
@@ -2611,9 +2641,9 @@ fn traverse_nodes_and_populate<'a>(
             let reg_in = get_register!(
                 "in",
                 PulseValueType::PVAL_BOOL
-            ).ok_or(anyhow::anyhow!("And node: Failed to get input register for 'in'."))?;
+            ).ok_or(CompileError::Node(current_node.id, "Failed to get input register for 'in'.".into()))?;
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_BOOL".to_string(), None)
-                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'Not' node."))?;
+                .ok_or_else(|| CompileError::Node(current_node.id, "Failed to add register for 'Not' node.".into()))?;
             let instr = instruction_templates::not_bool(
                 reg_in,
                 reg_out,
@@ -2629,7 +2659,7 @@ fn traverse_nodes_and_populate<'a>(
             let reg_min = get_register!("min", PulseValueType::PVAL_INT(None));
             let reg_max = get_register!("max", PulseValueType::PVAL_INT(None));
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_INT".to_string(), None)
-                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
+                .ok_or_else(|| CompileError::Node(current_node.id, "Failed to add register for 'RandomInt' node.".into()))?;
             let mut reg_map = reg_map_setup_inputs!(
                 "nMin",
                 reg_min,
@@ -2654,7 +2684,7 @@ fn traverse_nodes_and_populate<'a>(
             let reg_min = get_register!("min", PulseValueType::PVAL_FLOAT(None));
             let reg_max = get_register!("max", PulseValueType::PVAL_FLOAT(None));
             let reg_out = graph_def.add_chunk_register(target_chunk as usize, "PVAL_FLOAT".to_string(), None)
-                .ok_or_else(|| anyhow::anyhow!("Failed to add register for 'RandomInt' node."))?;
+                .ok_or_else(|| CompileError::Node(current_node.id, "Failed to add register for 'RandomFloat' node.".into()))?;
             let mut reg_map = reg_map_setup_inputs!(
                 "flMin",
                 reg_min,
@@ -2685,7 +2715,7 @@ fn make_library_call(
     name: Cow<'_, str>, 
     mut reg_map: RegisterMap, 
     chunk_id: i32
-) -> anyhow::Result<RegisterMap> {
+) -> Result<RegisterMap, CompileError> {
     let func = graph_state.bindings.find_function_by_libname(&name).ok_or(anyhow!(
         "Failed to find library binding with name: {}",
         name

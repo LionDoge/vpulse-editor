@@ -1061,7 +1061,7 @@ impl PulseGraphEditor {
     }
 
     fn do_redo(&mut self) {
-        if let Some(state) = self.undoer.undo(&self.full_state) {
+        if let Some(state) = self.undoer.redo(&self.full_state) {
             self.full_state.load_from_state(state.clone());
             self.state_mut().connection_in_progress = None;
         }

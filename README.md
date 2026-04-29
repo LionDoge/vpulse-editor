@@ -46,7 +46,7 @@ pulse_graph =
 This allows for Pulse graphs to be compiled properly, and to be displayed in the asset browser.
 
 ## Manual compile
-You need to have rust tooling installed first. Use cargo to build the tool with `cargo build --release`. Once finished it should be output to 'target/release/pulseedit.exe' directory, you'll only need the executable, and the bindings file ('bindings.json') next to the executable.
+You need to have rust tooling installed first. Use cargo to build the tool with `cargo build --release`. Once finished it should be output to 'target/release/pulseedit.exe' directory, you'll only need the executable, and the 'bindings' directory next to the executable.
 
 ## Pre-built release
 Download the newest version from [releases](https://github.com/LionDoge/vpulse-editor/releases). It includes almost everything needed to run the tool. Once unpacked, just run the pulseedit executable.

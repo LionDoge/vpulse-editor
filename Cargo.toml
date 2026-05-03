@@ -31,6 +31,7 @@ keyvalues3 = "1.1.0"
 serde_path_to_error = "0.1.20"
 arboard = "3.6.1"
 thiserror = "2.0.18"
+chrono = "0.4.44"
 
 [build-dependencies]
 embed-resource = "3.0.5"

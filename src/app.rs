@@ -37,6 +37,18 @@ pub struct ModalWindow {
     pub window_type: ModalWindowType,
     pub is_open: bool,
 }
+#[derive(Default, Clone)]
+enum ConsoleMessageType {
+    #[default]
+    Info,
+    Warning,
+    Error,
+}
+#[derive(Default, Clone)]
+struct ConsoleLine {
+    text: String,
+    message_type: ConsoleMessageType,
+}
 
 #[derive(Default, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
@@ -269,6 +281,7 @@ pub struct PulseGraphEditor {
     editor_config: EditorConfig,
     current_modal_dialog: ModalWindow,
     undoer: Undoer<FullGraphState>,
+    console_lines: Vec<ConsoleLine>,
 }
 
 impl PulseGraphEditor {
@@ -318,6 +331,7 @@ impl PulseGraphEditor {
     }
    
     fn load_graph(&mut self, filepath: &PathBuf) -> Result<(), anyhow::Error> {
+        self.clear_console();
         let res = self.full_state.load_state(filepath);
         if res.is_ok() {
             self.undoer = Self::get_new_undoer();
@@ -325,6 +339,7 @@ impl PulseGraphEditor {
         res
     }
     fn new_graph(&mut self, ctx: &egui::Context) {
+        self.clear_console();
         self.undoer = Self::get_new_undoer();
         self.full_state.state = MyEditorState::default();
         self.user_state_mut().load_from(PulseGraphState::default());
@@ -794,7 +809,10 @@ impl PulseGraphEditor {
                 }
             }
         } else {
-            println!("update_remote_node_params() called on node that does not exist in the graph anymore!");
+            self.write_console_line(
+                "update_remote_node_params() called on node that does not exist in the graph anymore!".into(),
+                ConsoleMessageType::Warning
+            );
         }
     }
     async fn check_for_updates() -> anyhow::Result<()> {
@@ -863,12 +881,10 @@ impl PulseGraphEditor {
                         self.state_mut().graph.get_output_mut(out_id).typ = pulse_value_type_to_node_types(inner).0;
                         Some((**inner).clone())
                     } else {
-                        rfd::MessageDialog::new()
-                            .set_title("Type update warning")
-                            .set_description(format!("Expected array type from source node, but got {source_type} The node setup might not work correctly in this state."))
-                            .set_buttons(rfd::MessageButtons::Ok)
-                            .set_level(rfd::MessageLevel::Warning)
-                            .show();
+                        self.write_console_line(
+                            format!("[UI] Expected array type from source node, but got {source_type}. The node setup might not work correctly in this state."),
+                            ConsoleMessageType::Warning
+                        );
                         None
                     }
                 } else {
@@ -956,9 +972,9 @@ impl PulseGraphEditor {
         if let Some(new_type) = &opt_new_type {
             let node_data_mut = self.state_mut().graph.nodes.get_mut(node_id).unwrap();
             node_data_mut.user_data.custom_output_type = opt_new_type.clone();
-            println!(
-                "[UI] Updating polymorphic output type of node {:?} to {:?}",
-                node_id, new_type
+            self.write_console_line(
+                format!("[UI] Updating polymorphic output type of node {:?} to {:?}", node_id, new_type),
+                ConsoleMessageType::Info
             );
             // LOL, this needs to be slightly improved to make it more generic.
             let outnodes = get_node_ids_connected_to_output(
@@ -1037,7 +1053,6 @@ impl PulseGraphEditor {
         } else {
             "<UNSAVED>".to_string()
         };
-        println!("{}", file_name);
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(
             format!("{APP_NAME} - {}", file_name)
         ));
@@ -1066,6 +1081,18 @@ impl PulseGraphEditor {
             self.state_mut().connection_in_progress = None;
         }
     }
+
+    fn write_console_line(&mut self, line: String, message_type: ConsoleMessageType) {
+        let time = chrono::Local::now().format("[%H:%M:%S]");
+        self.console_lines.push(ConsoleLine {
+            text: format!("{} {}", time, line),
+            message_type,
+        });
+    }
+
+    fn clear_console(&mut self) {
+        self.console_lines.clear();
+    }
 }
 
 impl PulseGraphEditor{
@@ -1079,6 +1106,7 @@ impl PulseGraphEditor{
             undoer: Self::get_new_undoer(),
             current_modal_dialog: ModalWindow::default(),
             version: FileVersion::default(),
+            console_lines: vec![]
         };
 
         grph.update_titlebar(&cc.egui_ctx);
@@ -1300,12 +1328,9 @@ impl eframe::App for PulseGraphEditor {
                             self.state_mut().reset_zoom(ui);
                             center_on_node = Some(node_id);
                         }
-                        MessageDialog::new()
-                            .set_level(rfd::MessageLevel::Error)
-                            .set_title("Compile failed")
-                            .set_buttons(rfd::MessageButtons::Ok)
-                            .set_description(e.to_string())
-                            .show();
+                        self.write_console_line(format!("Compile error: {e}"), ConsoleMessageType::Error);
+                    } else {
+                        self.write_console_line("Graph compiled successfully".into(), ConsoleMessageType::Info);
                     }
                 }
                 // User pressed the "Save" button or
@@ -1655,6 +1680,22 @@ impl eframe::App for PulseGraphEditor {
             }
         }
 
+        egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
+            egui::ScrollArea::vertical()
+            .auto_shrink(false)
+            .stick_to_bottom(true)
+            .show(ui, |ui| {
+                for line in &self.console_lines {
+                    let color = match line.message_type {
+                        ConsoleMessageType::Info => egui::Color32::WHITE,
+                        ConsoleMessageType::Warning => egui::Color32::YELLOW,
+                        ConsoleMessageType::Error => egui::Color32::RED,
+                    };
+                    ui.label(RichText::new(&line.text).color(color));
+                }
+            });
+        });
+
         let graph_response = egui::CentralPanel::default()
             .show(ctx, |ui| {
                 let graph_response = self.full_state.state.draw_graph_editor(
@@ -1763,7 +1804,10 @@ impl eframe::App for PulseGraphEditor {
                         }
                         PulseGraphResponse::UpdatePolymorphicTypes(node_id) => {
                             if let Err(e) = self.update_polymorphic_output_types(node_id, None, None) {
-                                println!("[UI] Warning: Failed to update polymorphic output types: {e}");
+                                self.write_console_line(
+                                    format!("[UI] Failed to update polymorphic output types: {e}"), 
+                                    ConsoleMessageType::Warning
+                                );
                             }
                         }
                     }
@@ -1787,7 +1831,10 @@ impl eframe::App for PulseGraphEditor {
                     let graph = &self.state().graph;
                     let node_id = graph.get_output(output).node;
                     if let Err(e) = self.update_polymorphic_output_types(node_id, None, None) {
-                        println!("[UI] Warning: Failed to update polymorphic output types: {e}");
+                        self.write_console_line(
+                            format!("[UI] Warning: Failed to update polymorphic output types: {e}"),
+                            ConsoleMessageType::Warning
+                        );
                     }
                 }
                 _ => {}

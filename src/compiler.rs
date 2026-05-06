@@ -2178,7 +2178,7 @@ fn traverse_nodes_and_populate<'a>(
                             chunk.add_instruction(instruction_templates::cell_invoke(binding_id));
                         let binding = InvokeBinding {
                             register_map,
-                            func_name: source_input_name.as_ref().unwrap().to_string().into(), // XD
+                            func_name: format!("CPulseCell_Outflow_ListenForEntityOutput::{}", source_input_name.as_ref().unwrap()).into(),
                             cell_index: remote_chunk_or_cell,
                             src_chunk: target_chunk,
                             src_instruction: instr,

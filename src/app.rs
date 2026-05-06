@@ -5,6 +5,7 @@ pub mod types;
 mod migrations;
 
 use delegate::delegate;
+use std::collections::VecDeque;
 use std::time::UNIX_EPOCH;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
@@ -281,7 +282,7 @@ pub struct PulseGraphEditor {
     editor_config: EditorConfig,
     current_modal_dialog: ModalWindow,
     undoer: Undoer<FullGraphState>,
-    console_lines: Vec<ConsoleLine>,
+    console_lines: VecDeque<ConsoleLine>,
 }
 
 impl PulseGraphEditor {
@@ -1084,10 +1085,13 @@ impl PulseGraphEditor {
 
     fn write_console_line(&mut self, line: String, message_type: ConsoleMessageType) {
         let time = chrono::Local::now().format("[%H:%M:%S]");
-        self.console_lines.push(ConsoleLine {
+        self.console_lines.push_back(ConsoleLine {
             text: format!("{} {}", time, line),
             message_type,
         });
+        if self.console_lines.len() > 100 {
+            self.console_lines.pop_front();
+        }
     }
 
     fn clear_console(&mut self) {
@@ -1106,7 +1110,7 @@ impl PulseGraphEditor{
             undoer: Self::get_new_undoer(),
             current_modal_dialog: ModalWindow::default(),
             version: FileVersion::default(),
-            console_lines: vec![]
+            console_lines: VecDeque::new()
         };
 
         grph.update_titlebar(&cc.egui_ctx);

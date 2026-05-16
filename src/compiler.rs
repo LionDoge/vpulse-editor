@@ -1763,8 +1763,6 @@ fn traverse_nodes_and_populate<'a>(
                     .dest_instruction = chunk.get_last_instruction_id() + 1;
                 chunk.add_instruction(Instruction::default());
             } else {
-                let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;
                 graph_run_next_actions_no_return!(
                     graph,
                     current_node,
@@ -1776,7 +1774,7 @@ fn traverse_nodes_and_populate<'a>(
                 );
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond =
-                    instruction_templates::jump_cond(reg_condition, loop_action_instructions_start);
+                    instruction_templates::jump_cond(reg_condition, cond_instr_id);
                 chunk.add_instruction(instr_jump_cond);
             }
 

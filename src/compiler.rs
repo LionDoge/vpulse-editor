@@ -34,6 +34,9 @@ pub enum CompileError {
 
 macro_rules! graph_next_action {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident) => {
+        graph_next_action!($graph, $current_node, $graph_def, $graph_state, $target_chunk, false)
+    };
+    ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident, $force_regenerate:expr) => {
         let connected_nodes = get_nodes_connected_to_output($current_node, $graph, "outAction");
         if let Ok(connected_nodes) = connected_nodes {
             for (connected_node, input_name) in connected_nodes.iter() {
@@ -45,6 +48,7 @@ macro_rules! graph_next_action {
                     $target_chunk,
                     &None,
                     &Some(Cow::Borrowed(input_name)),
+                    $force_regenerate,
                 );
             }
         }
@@ -53,6 +57,9 @@ macro_rules! graph_next_action {
 
 macro_rules! graph_run_next_actions_no_return {
     ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident, $action_name:expr) => {{
+        graph_run_next_actions_no_return!($graph, $current_node, $graph_def, $graph_state, $target_chunk, $action_name, false)
+    }};
+    ($graph:ident, $current_node:ident, $graph_def:ident, $graph_state:ident, $target_chunk:ident, $action_name:expr, $force_regenerate:expr) => {{
         let connected_nodes = get_nodes_connected_to_output($current_node, $graph, $action_name);
         if let Ok(connected_nodes) = connected_nodes {
             let mut any = false;
@@ -65,6 +72,7 @@ macro_rules! graph_run_next_actions_no_return {
                     $target_chunk,
                     &None,
                     &Some(Cow::Borrowed(input_name)),
+                    $force_regenerate,
                 )?;
                 any = true;
             }
@@ -269,6 +277,7 @@ fn traverse_event_cell(
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),
+            false,
         )?;
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
@@ -301,6 +310,7 @@ fn traverse_graphhook_cell(
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),
+            false,
         )?;
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
@@ -428,6 +438,7 @@ fn traverse_method_cell(
             chunk_id,
             &None,
             &Some(Cow::Borrowed(*input_name)),
+            false,
         )?;
     }
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
@@ -628,18 +639,12 @@ fn run_asset_builder(config: &EditorConfig, path_src: &path::Path, path_editor_f
     Ok(())
 }
 
-fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputId>) -> i32 {
+fn try_find_output_mapping(graph_def: &PulseGraphDef, output_id: &Option<OutputId>) -> Option<i32> {
     match output_id {
         Some(output_id) => {
-            match graph_def.get_mapped_reigster(*output_id) {
-                Some(reg) => {
-                    // we found a mapping! So we know which register to use for this
-                    *reg
-                }
-                None => -1,
-            }
+            graph_def.get_mapped_reigster(*output_id).copied()
         }
-        None => -1,
+        None => None,
     }
 }
 
@@ -687,6 +692,7 @@ fn get_input_register_or_create_constant_from_id(
                 chunk_id,
                 &Some(out),
                 &None,
+                always_reevaluate,
             )?;
         }
         None => {
@@ -884,6 +890,7 @@ fn get_input_register_or_create_constant(
 // takes care of referencing already assigned registers or other data (like visisted list in a graph traversal)
 // it operates ONLY on a target chunk - which is basically a set of instructions related to one flow of logic
 // inside the GUI a chunk is one continous flow of logic.
+#[allow(clippy::too_many_arguments)]
 fn traverse_nodes_and_populate<'a>(
     graph: &PulseGraph,
     current_node: &Node<PulseNodeData>,
@@ -892,6 +899,7 @@ fn traverse_nodes_and_populate<'a>(
     target_chunk: i32,
     output_id: &Option<OutputId>, // if this is Some, then this was called by a node requesting a value, always None for when node was reached through an action.
     source_input_name: &Option<Cow<'a, str>>, // mostly useful for traversing to next actions. It lets know about what action was specified for nodes that have multiple action inputs
+    force_regenerate: bool,
 ) -> Result<i32, CompileError> {
     // to avoid having to pass the same parameters over and over again.
     macro_rules! get_register {
@@ -908,14 +916,23 @@ fn traverse_nodes_and_populate<'a>(
             )?
         };
     }
+    // When force_regenerate is true and an output was requested, ignore cached mappings
+    let ignore_cached_output = force_regenerate
+        && output_id.is_some()
+        && !matches!(
+            current_node.user_data.template,
+            PulseNodeTemplate::CellPublicMethod
+                | PulseNodeTemplate::EventHandler
+                | PulseNodeTemplate::ListenForEntityOutput
+        );
     match current_node.user_data.template {
         PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
-            return Ok(try_find_output_mapping(graph_def, output_id));
+            return Ok(try_find_output_mapping(graph_def, output_id).unwrap_or(-1));
         }
         PulseNodeTemplate::EventHandler => {
             // here we resolve connections to the argument outputs
-            return Ok(try_find_output_mapping(graph_def, output_id));
+            return Ok(try_find_output_mapping(graph_def, output_id).unwrap_or(-1));
         }
         PulseNodeTemplate::CellWait => {
             let reg_time = get_register!("time", PulseValueType::PVAL_FLOAT(None));
@@ -939,7 +956,7 @@ fn traverse_nodes_and_populate<'a>(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             chunk.add_instruction(instr_ret_void);
 
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::EntFire => {
             let reg_entity_name = get_register!("entity", PulseValueType::DOMAIN_ENTITY_NAME);
@@ -1009,7 +1026,7 @@ fn traverse_nodes_and_populate<'a>(
                 );
                 graph_def.add_output_connection(output_connection);
             }
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::ConcatString => {
             let id_a = current_node
@@ -1040,6 +1057,7 @@ fn traverse_nodes_and_populate<'a>(
                             target_chunk,
                             &Some(*out),
                             source_input_name,
+                            force_regenerate,
                         )?;
                     }
                     None => {
@@ -1069,7 +1087,7 @@ fn traverse_nodes_and_populate<'a>(
                 }
             }
             // registers are figured out. now prepare the output register and the instruction
-            let mut register = try_find_output_mapping(graph_def, output_id);
+            let mut register = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if register == -1 {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 register = chunk.add_register(
@@ -1137,6 +1155,7 @@ fn traverse_nodes_and_populate<'a>(
                         target_chunk,
                         &Some(out),
                         source_input_name,
+                        force_regenerate,
                     )?;
                 }
                 None => {
@@ -1144,7 +1163,7 @@ fn traverse_nodes_and_populate<'a>(
                     return Ok(-1);
                 }
             }
-            let mut register = try_find_output_mapping(graph_def, output_id);
+            let mut register = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if register == -1 {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 register = chunk.add_register(
@@ -1203,10 +1222,10 @@ fn traverse_nodes_and_populate<'a>(
                 chunk.add_instruction(instruction_templates::set_var(reg_value, var_id.unwrap()));
             }
 
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::Operation => {
-            let existing_reg_mapping = try_find_output_mapping(graph_def, output_id);
+            let existing_reg_mapping = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if existing_reg_mapping != -1 {
                 return Ok(existing_reg_mapping);
             }
@@ -1244,7 +1263,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(register_output);
         }
         PulseNodeTemplate::FindEntByName => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -1336,7 +1355,7 @@ fn traverse_nodes_and_populate<'a>(
             );
 
             // go to next action.
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::DebugLog => {
             let reg_message = get_register!("pMessage", PulseValueType::PVAL_STRING(None));
@@ -1355,7 +1374,7 @@ fn traverse_nodes_and_populate<'a>(
             graph_def.add_invoke_binding(binding);
 
             // go to next action.
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::FireOutput => {
             let output_name = get_constant_graph_input_value!(
@@ -1391,7 +1410,7 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def.add_invoke_binding(binding);
             }
            
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::GetGameTime => {
             // create output return value
@@ -1429,10 +1448,10 @@ fn traverse_nodes_and_populate<'a>(
             chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
             graph_def.add_invoke_binding(binding);
 
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::Convert => {
-            let mut register = try_find_output_mapping(graph_def, output_id);
+            let mut register = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if register == -1 {
                 let mut type_to =
                     get_constant_graph_input_value!(graph, current_node, "typeto", try_pulse_type);
@@ -1499,7 +1518,8 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "True"
+                "True",
+                force_regenerate
             );
             // have to reborrow the chunk after we did borrow of graph_def.
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1514,7 +1534,8 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "False"
+                "False",
+                force_regenerate
             );
             // aaand borrow yet again lol
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1553,21 +1574,19 @@ fn traverse_nodes_and_populate<'a>(
             let instr_jump_cond =
                 instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
             graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_cond);
-            let instr_jump_false = instruction_templates::jump(-1); // the id is yet unknown. Note this instruction id, and modify the instruction later.
+            let instr_jump_false = instruction_templates::jump(-1);
             let jump_false_instr_id = graph_def.add_chunk_instruction(target_chunk as usize, instr_jump_false).unwrap();
-            // instruction set for the true condition (if exists)
             graph_run_next_actions_no_return!(
                 graph,
                 current_node,
                 graph_def,
                 graph_state,
                 target_chunk,
-                "True"
+                "True",
+                force_regenerate
             );
-            // have to reborrow the chunk after we did borrow of graph_def.
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let false_condition_instr_id = chunk.get_last_instruction_id() + 2;
-            // jump over the false condition
             let instr_jump_end = instruction_templates::jump(-1);
             let jump_end_instr_id = chunk.add_instruction(instr_jump_end);
 
@@ -1577,9 +1596,9 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "False"
+                "False",
+                force_regenerate
             ) {
-                // if no actions were run, we still need to add an empty instruction, so we can jump to it.
                 graph_def.add_chunk_instruction(target_chunk as usize, Instruction::default());
             }
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1590,10 +1609,7 @@ fn traverse_nodes_and_populate<'a>(
             } else {
                 return Err(CompileError::Node(
                     current_node.id,
-                    format!(
-                        "Failed to find JUMP[false_condition] with id: {}",
-                        jump_false_instr_id
-                    ),
+                    format!("Failed to find JUMP[false_condition] with id: {}", jump_false_instr_id),
                 ));
             }
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
@@ -1602,10 +1618,7 @@ fn traverse_nodes_and_populate<'a>(
             } else {
                 return Err(CompileError::Node(
                     current_node.id,
-                    format!(
-                        "Failed to find JUMP[end] with id: {}",
-                        jump_end_instr_id
-                    ),
+                    format!("Failed to find JUMP[end] with id: {}", jump_end_instr_id),
                 ));
             }
 
@@ -1615,17 +1628,17 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "Either"
+                "Either",
+                force_regenerate
             );
         }
         PulseNodeTemplate::ForLoop => {
             if output_id.is_some() {
-                let reg_idx = try_find_output_mapping(graph_def, output_id);
+                let reg_idx = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
                 if reg_idx != -1 {
                     return Ok(reg_idx);
                 } else {
-                    println!("[WARN] ForLoop node: Failed to find output register for 'index' when a node requested it.
-                    This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action.");
+                    println!("[WARN] ForLoop node: Failed to find output register for 'index' when a node requested it.\n                    This means that the connected node tried to get the value, before the loop node had it's logic generated by an inflow action.");
                     return Ok(-1);
                 }
             }
@@ -1636,25 +1649,11 @@ fn traverse_nodes_and_populate<'a>(
             let reg_step = get_register!("step", PulseValueType::PVAL_INT(None))
                 .ok_or(CompileError::Node(current_node.id, "Failed to get 'step' register".into()))?;
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // new constant = 1 for incrementing
-            // new register and constant
-            // new reg "idx" (written by yet unknown)
-            // copy "from" value to "idx"
-            // new reg "cond" (written by following instruction)
-            // "idx" LTE "to" "cond"
-            // JUMP_COND{reg_cond}[curr + 3]
-            // JUMP[end] (to the end)
-            // body
-            // "idx" ADD 1 "idx"
-            // JUMP[cond] (to the condition)
 
-            // we don't actually add the register right now, because we know the written_by_instruction id to make one.
-            // however the index it will have is known, so we are free to use it, and then actually add it later, once the instruction id is known
             let reg_idx = chunk.add_register(
                 String::from("PVAL_INT"),
                 chunk.get_last_instruction_id() + 1,
             );
-            // remember the output index, for nodes that want to access this output
             let output_idx_id = current_node
                 .get_output("index")
                 .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
@@ -1674,7 +1673,6 @@ fn traverse_nodes_and_populate<'a>(
                 ..Default::default()
             };
             let instr_compare_id = chunk.add_instruction(instr_compare);
-            // jump over the unconditional jump to the end
             let instr_jump_cond =
                 instruction_templates::jump_cond(reg_cond, chunk.get_last_instruction_id() + 3);
             chunk.add_instruction(instr_jump_cond);
@@ -1687,29 +1685,23 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "loopAction"
+                "loopAction",
+                force_regenerate
             );
-            // borrow again (we know that it still is fine)
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            // increment the index by step
             let instr_add = instruction_templates::add_value(reg_idx, reg_step, reg_idx);
             chunk.add_instruction(instr_add);
 
-            // jump to conditional check
             let instr_jump = instruction_templates::jump(instr_compare_id);
             chunk.add_instruction(instr_jump);
             let end_instr_id = chunk.get_last_instruction_id() + 1;
-            // update the jump instruction defined ealier to point to the end of the loop
             let instr_jump_end = chunk.get_instruction_from_id_mut(jump_end_instr_id);
             if let Some(instr_jump_end) = instr_jump_end {
                 instr_jump_end.dest_instruction = end_instr_id;
             } else {
                 return Err(CompileError::Node(
                     current_node.id,
-                    format!(
-                        "ForLoop node: Failed to find JUMP[end] with id: {}",
-                        jump_end_instr_id
-                    ),
+                    format!("ForLoop node: Failed to find JUMP[end] with id: {}", jump_end_instr_id),
                 ));
             }
 
@@ -1719,30 +1711,31 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "endAction"
+                "endAction",
+                force_regenerate
             );
         }
         PulseNodeTemplate::WhileLoop => {
             let is_dowhile_loop =
                 get_constant_graph_input_value!(graph, current_node, "do-while", try_to_bool);
-            let reg_condition = get_register!("condition", PulseValueType::PVAL_BOOL)
-                .ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
-            if !is_dowhile_loop {
-                // While loop:
-                // JUMP_COND{reg_condition == true}[curr + 3] (over the next jump)
-                // JUMP[end] (to the end)
-                // instructions
-                // JUMP[evaluator] (to the condition evaluation)
 
-                // save the current instruction id before populating the instruction for the condition
-                // this will be the instruction that will be used to jump to the condition check
-                let cond_instr_id = graph_def
-                    .chunks
-                    .get_mut(target_chunk as usize)
-                    .unwrap()
-                    .get_last_instruction_id()
-                    + 1;
-                
+            let cond_instr_id = graph_def
+                .chunks
+                .get_mut(target_chunk as usize)
+                .unwrap()
+                .get_last_instruction_id()
+                + 1;
+            let reg_condition = get_input_register_or_create_constant(
+                graph,
+                current_node,
+                graph_def,
+                graph_state,
+                target_chunk,
+                "condition",
+                PulseValueType::PVAL_BOOL,
+                true
+            )?.ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
+            if !is_dowhile_loop {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond = instruction_templates::jump_cond(
                     reg_condition,
@@ -1758,9 +1751,9 @@ fn traverse_nodes_and_populate<'a>(
                     graph_def,
                     graph_state,
                     target_chunk,
-                    "loopAction"
+                    "loopAction",
+                    force_regenerate
                 );
-                // reborrow the chunk after we did borrow of graph_def.
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump = instruction_templates::jump(cond_instr_id);
                 chunk.add_instruction(instr_jump);
@@ -1768,47 +1761,38 @@ fn traverse_nodes_and_populate<'a>(
                     .get_instruction_from_id_mut(jump_end_instr_id)
                     .unwrap()
                     .dest_instruction = chunk.get_last_instruction_id() + 1;
-                chunk.add_instruction(Instruction::default()); // NOP just in case.
+                chunk.add_instruction(Instruction::default());
             } else {
-                // Do-While loop:
-                // loopAction instructions
-                // run condition checks
-                // JUMP_COND{reg_condition == true}[start of loopAction instructions]
-                // loopEnd instructions
-
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                // remember the instruction id of the first instruction of the loop action to jump to later
                 let loop_action_instructions_start = chunk.get_last_instruction_id() + 1;
-                // first we fill out the instructions to run per iteration (it will always be run first without checking the condition)
                 graph_run_next_actions_no_return!(
                     graph,
                     current_node,
                     graph_def,
                     graph_state,
                     target_chunk,
-                    "loopAction"
+                    "loopAction",
+                    force_regenerate
                 );
-                // next do all the condition check instructions
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                // jump back if condition is true
                 let instr_jump_cond =
                     instruction_templates::jump_cond(reg_condition, loop_action_instructions_start);
                 chunk.add_instruction(instr_jump_cond);
             }
 
-            // after loop is finished (and if something is connected here) proceed.
             graph_run_next_actions_no_return!(
                 graph,
                 current_node,
                 graph_def,
                 graph_state,
                 target_chunk,
-                "endAction"
+                "endAction",
+                force_regenerate
             );
         }
         PulseNodeTemplate::StringToEntityName => {
             let reg_input = get_register!("entityName", PulseValueType::PVAL_STRING(None));
-            let mut reg_out = try_find_output_mapping(graph_def, output_id);
+            let mut reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out == -1 {
                 let binding_id = graph_def.get_current_binding_id() + 1; // new binding id, I've put it here because borrow checker
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
@@ -1839,14 +1823,14 @@ fn traverse_nodes_and_populate<'a>(
             // if action, then continue without returning, in other case return the output register, 
             // if action was connected already and is requested again later then it will reuse saved outputs
             // if output was eval'ed first and then action (usually shouldn't happen) then node will be fully evaluated again.
-            if let Some(reg_out) =  nodes::invoke_binding::compile_node(graph, current_node, graph_def, graph_state, target_chunk, output_id)? {
+            if let Some(reg_out) = nodes::invoke_binding::compile_node(graph, current_node, graph_def, graph_state, target_chunk, output_id, force_regenerate)? {
                 return Ok(reg_out);
             } else {
-                graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+                graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
             }
         }
         PulseNodeTemplate::FindEntitiesWithin => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2008,6 +1992,7 @@ fn traverse_nodes_and_populate<'a>(
                             target_chunk,
                             &None,
                             &Some(input_name.into()),
+                            force_regenerate,
                         )?;
                     }
                     // add a JUMP instruction to the end of all of the cases
@@ -2037,7 +2022,8 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "defaultcase"
+                "defaultcase",
+                force_regenerate
             ) {
                 let default_case_instruction_id = graph_def
                     .chunks
@@ -2081,11 +2067,11 @@ fn traverse_nodes_and_populate<'a>(
                 .get_invoke_binding_mut(cell_binding_id)
                 .unwrap()
                 .cell_index = graph_def.get_last_cell_id() as i32;
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::SoundEventStart => {
             if output_id.is_some() {
-                let reg_out = try_find_output_mapping(graph_def, output_id);
+                let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
                 if reg_out > -1 {
                     return Ok(reg_out);
                 }
@@ -2138,7 +2124,7 @@ fn traverse_nodes_and_populate<'a>(
             if output_id.is_some() {
                 return Ok(reg_out);
             } else {
-                graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+                graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
             }
         }
         PulseNodeTemplate::CallNode => {
@@ -2195,11 +2181,11 @@ fn traverse_nodes_and_populate<'a>(
             } else {
                 println!("CallNode: Node not found in the graph.");
             }
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::ListenForEntityOutput => {
             // just get the saved register and return it. If we get here it's already cached.
-            return Ok(try_find_output_mapping(graph_def, output_id));
+            return Ok(try_find_output_mapping(graph_def, output_id).unwrap_or(-1));
         }
         PulseNodeTemplate::Timeline => {
             // Timeline is a special node that is used to run a sequence of actions in a specific order.
@@ -2232,7 +2218,8 @@ fn traverse_nodes_and_populate<'a>(
                     graph_def,
                     graph_state,
                     target_chunk,
-                    format!("outAction{i}").as_str()
+                    format!("outAction{i}").as_str(),
+                    force_regenerate
                 ) {
                     graph_def
                         .chunks
@@ -2286,45 +2273,45 @@ fn traverse_nodes_and_populate<'a>(
                 target_chunk,
                 "CPulseCell_Step_SetAnimGraphParam::Run".into()
             );
-            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk);
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
         }
         PulseNodeTemplate::ConstantBool => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
             return Ok(get_register!("value", PulseValueType::PVAL_BOOL).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantFloat => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
             return Ok(get_register!("value", PulseValueType::PVAL_FLOAT(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantInt => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
             return Ok(get_register!("value", PulseValueType::PVAL_INT(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantVec3 => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
             return Ok(get_register!("value", PulseValueType::PVAL_VEC3(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::ConstantString => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
             return Ok(get_register!("value", PulseValueType::PVAL_STRING(None)).unwrap_or(-1));
         }
         PulseNodeTemplate::NewArray => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2360,7 +2347,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::GetArrayElement => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2402,7 +2389,7 @@ fn traverse_nodes_and_populate<'a>(
             )
         }
         PulseNodeTemplate::ScaleVector => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2454,7 +2441,7 @@ fn traverse_nodes_and_populate<'a>(
         }
         PulseNodeTemplate::ForEach => {
             if output_id.is_some() {
-                let reg_idx = try_find_output_mapping(graph_def, output_id);
+                let reg_idx = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
                 if reg_idx != -1 {
                     return Ok(reg_idx);
                 } else {
@@ -2556,7 +2543,8 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "loopAction"
+                "loopAction",
+                force_regenerate
             );
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             // increment the index by step
@@ -2587,11 +2575,12 @@ fn traverse_nodes_and_populate<'a>(
                 graph_def,
                 graph_state,
                 target_chunk,
-                "endAction"
+                "endAction",
+                force_regenerate
             );
         }
         PulseNodeTemplate::And => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2614,7 +2603,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::Or => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2637,7 +2626,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::Not => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2655,7 +2644,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::RandomInt => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }
@@ -2680,7 +2669,7 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(reg_out);
         }
         PulseNodeTemplate::RandomFloat => {
-            let reg_out = try_find_output_mapping(graph_def, output_id);
+            let reg_out = if ignore_cached_output { -1 } else { try_find_output_mapping(graph_def, output_id).unwrap_or(-1) };
             if reg_out > -1 {
                 return Ok(reg_out);
             }

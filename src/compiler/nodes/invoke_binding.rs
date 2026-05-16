@@ -14,12 +14,15 @@ pub fn compile_node(
     graph_state: &PulseGraphState,
     target_chunk: i32,
     output_id: &Option<OutputId>,
+    force_regenerate: bool,
 ) -> Result<Option<i32>, CompileError> {
-    // if we're requesting for a value then we can try to find the output mapping first
-    if let Some(output_id) = output_id {
-        let existing_reg = graph_def.get_mapped_register_node_outputs(current_node.id, *output_id);
-        if let Some(reg) = existing_reg {
-            return Ok(Some(*reg));
+    if !force_regenerate {
+        // if we're requesting for a value then we can try to find the output mapping first
+        if let Some(output_id) = output_id {
+            let existing_reg = graph_def.get_mapped_register_node_outputs(current_node.id, *output_id);
+            if let Some(reg) = existing_reg {
+                return Ok(Some(*reg));
+            }
         }
     }
 

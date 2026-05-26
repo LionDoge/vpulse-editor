@@ -305,6 +305,7 @@ impl PulseValueType {
             PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_RESOURCE(None, None),
             PulseValueType::PVAL_GAMETIME(None),
+            PulseValueType::PVAL_TYPESAFE_INT(None, None)
         ]
     }
     pub fn get_vector_types() -> Vec<PulseValueType> {

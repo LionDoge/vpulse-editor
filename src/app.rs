@@ -1237,6 +1237,10 @@ pub fn update_variable_data(var: &mut PulseVariable) {
             var.data_type = PulseDataType::EntityName;
             var.typ_and_default_value.to_owned()
         }
+        PulseValueType::PVAL_TYPESAFE_INT(_, _) => {
+            var.data_type = PulseDataType::TypeSafeInteger;
+            PulseValueType::PVAL_TYPESAFE_INT(Some(var.default_value_buffer.clone()), None)
+        }
         _ => {
             var.data_type = pulse_value_type_to_node_types(&var.typ_and_default_value).0;
             var.typ_and_default_value.to_owned()
@@ -1582,11 +1586,12 @@ impl eframe::App for PulseGraphEditor {
                                 });
                         });
                         ui.horizontal(|ui| {
-                            // change the label text if we're working on an EHandle type, as it can't have a default value.
-                            // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
                             match &var.typ_and_default_value {
+                                // change the label text if we're working on an EHandle type, as it can't have a default value.
+                                // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
                                 PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
                                 PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
+                                PulseValueType::PVAL_TYPESAFE_INT(_, _) => ui.label("Typesafe Int type")
                                 _ => ui.label("Default value"),
                             };
 

@@ -1591,7 +1591,7 @@ impl eframe::App for PulseGraphEditor {
                                 // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
                                 PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
                                 PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
-                                PulseValueType::PVAL_TYPESAFE_INT(_, _) => ui.label("Typesafe Int type")
+                                PulseValueType::PVAL_TYPESAFE_INT(_, _) => ui.label("Typesafe Int type"),
                                 _ => ui.label("Default value"),
                             };
 

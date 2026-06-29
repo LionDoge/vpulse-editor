@@ -10,6 +10,8 @@ This tool has only been tested on Windows 10 and 11 currently, support for Linux
 > [!IMPORTANT]
 > When developing for Deadlock, and using CSDK, some things may work differently than in the official game. This is because the game engine version is usually out of date, and Pulse definitions, and structure can update very often, so there may be some discrepancies!
 
+[Development release](https://nightly.link/LionDoge/vpulse-editor/workflows/build/main/release-windows.zip) - Untested new features will apear here. Note: Using unreleased versions may not guarantee save-file compatiblity. Take backups before using!
+
 # Game setup
 Some initial setup inside the game files is required to make working with Pulse graphs way easier.
 

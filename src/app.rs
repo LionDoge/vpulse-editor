@@ -1102,7 +1102,7 @@ impl PulseGraphEditor {
 impl PulseGraphEditor{
     /// If the persistence feature is enabled, Called once before the first frame.
     /// Load previous app state (if any).
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> anyhow::Result<Self> {
         let mut grph = Self {
             full_state: cc.storage
                 .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
@@ -1146,10 +1146,11 @@ impl PulseGraphEditor{
                     .set_buttons(rfd::MessageButtons::Ok)
                     .set_description(e.to_string())
                     .show();
+                return Err(e);
             }
         };
         grph.full_state.verify_compat();
-        grph
+        Ok(grph)
     }
 
     fn handle_open_file(&mut self, filepath: &PathBuf) -> anyhow::Result<()> {

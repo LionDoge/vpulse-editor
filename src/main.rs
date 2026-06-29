@@ -19,16 +19,16 @@ fn main() {
         ..Default::default()
     };
     options.viewport.icon = Some(Arc::new(d));
-    eframe::run_native(
+    let _ = eframe::run_native(
         "Pulse Graph Editor",
         options,
         Box::new(|cc| {
-            Ok(Box::new(PulseGraphEditor::new(cc)))
-            // #[cfg(not(feature = "persistence"))]
-            // Ok(Box::<PulseGraphEditor>::default())
-        }),
-    )
-    .expect("Failed to run app");
+            let graph_editor = PulseGraphEditor::new(cc);
+            match graph_editor {
+                Ok(graph_editor) => Ok(Box::new(graph_editor)),
+                Err(e) => Err(e.into())
+            }
+        }));
 }
 
 fn setup_panic_hook() {

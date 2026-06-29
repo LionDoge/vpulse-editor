@@ -4925,7 +4925,7 @@
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_FLOAT"
+                    "type": "PVAL_INT"
                 }
             ]
         },
@@ -5214,7 +5214,7 @@
             "inparams": [
                 {
                     "name": "a",
-                    "type": "PVAL_EHANDLE:point_prefab"
+                    "type": "PVAL_ARRAY"
                 },
                 {
                     "name": "element",
@@ -5349,6 +5349,27 @@
                 {
                     "name": "retval",
                     "type": "PVAL_VEC3_WORLDSPACE"
+                }
+            ]
+        },
+        {
+            "id": 260,
+            "type": "action",
+            "displayname": "Sound Event Set Param String Token",
+            "libname": "CPulseServerFuncs_Sounds::SoundEventSetParamStringToken",
+            "description": "Set a sound event parameter to a string_token value.",
+            "inparams": [
+                {
+                    "name": "nSoundEventGuid",
+                    "type": "PVAL_SNDEVT_GUID"
+                },
+                {
+                    "name": "pParameterName",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "pStringName",
+                    "type": "PVAL_STRING"
                 }
             ]
         }

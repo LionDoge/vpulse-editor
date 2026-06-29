@@ -155,7 +155,6 @@ impl PartialEq for GraphBindings {
 fn process_params(enum_bindings: &EnumBindings, params: &mut Option<Vec<ParamInfo>>) -> anyhow::Result<()> {
     if let Some(param_list) = params {
         for param in param_list.iter_mut() {
-            // deliberately panic to signify invalid data in bindings
             param.pulsetype = try_string_to_pulsevalue(enum_bindings, &param.typ).map_err(|err| {
                 anyhow::anyhow!("Invalid PulseValueType in bindings: {}: {}", param.typ, err)
             })?;

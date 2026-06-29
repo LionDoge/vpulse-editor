@@ -166,7 +166,10 @@ fn process_params(enum_bindings: &EnumBindings, params: &mut Option<Vec<ParamInf
 
 // enum bindings are required to process the proper types
 fn load_game_bindings(enum_bindings: &EnumBindings, filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
-    let json = std::fs::read_to_string(filepath)?;
+    let json = std::fs::read_to_string(filepath)
+        .map_err(|e| {
+            anyhow::anyhow!("Failed to read bindings file \"{}\": {}", filepath.display(), e)
+        })?;
     let mut deserializer = serde_json::Deserializer::from_str(&json);
     let mut bindings: GraphBindings = serde_path_to_error::deserialize(&mut deserializer)?;
     for binding in bindings.gamefunctions.iter_mut() {
@@ -181,11 +184,17 @@ fn load_game_bindings(enum_bindings: &EnumBindings, filepath: &std::path::Path) 
 }
 
 pub fn load_bindings(filepath: &std::path::Path) -> anyhow::Result<GraphBindings> {
-    let json = std::fs::read_to_string(filepath)?;
+    let json = std::fs::read_to_string(filepath)
+        .map_err(|e| {
+            anyhow::anyhow!("Failed to read bindings manifest file \"{}\": {}", filepath.display(), e)
+        })?;
     let mut deserializer = serde_json::Deserializer::from_str(&json);
     let bindings_manifest: BindingsManifest = serde_path_to_error::deserialize(&mut deserializer)?;
 
-    let json_enums = std::fs::read_to_string(&bindings_manifest.enums_file)?;
+    let json_enums = std::fs::read_to_string(&bindings_manifest.enums_file)
+        .map_err(|e| {
+            anyhow::anyhow!("Failed to read enums file \"{}\": {}", bindings_manifest.enums_file, e)
+        })?;
     let mut deserializer_enums = serde_json::Deserializer::from_str(&json_enums);
     let enums = serde_path_to_error::deserialize(&mut deserializer_enums)?;
     

@@ -33,7 +33,13 @@
         {
             "id": 11,
             "displayname": "OnStreetBrawlEnterState",
-            "libname": "CCitadelPointPulseAPI::OnStreetBrawlEnterState"
+            "libname": "CCitadelPointPulseAPI::OnStreetBrawlEnterState",
+            "inparams": [
+                {
+                    "name": "eState",
+                    "type": "PVAL_SCHEMA_ENUM:EStreetBrawlGameState"
+                }
+            ]
         },
         {
             "id": 20000,

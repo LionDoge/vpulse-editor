@@ -909,5 +909,36 @@
                 "name_ui": "End"
             }
         ]
+    },
+    {
+        "id": 21,
+        "name": "EStreetBrawlGameState",
+        "name_ui": "Street Brawl Game State",
+        "variants": [
+            {
+                "name": "ESBGS_Init",
+                "name_ui": "Init"
+            },
+            {
+                "name": "ESBGS_PreBuy",
+                "name_ui": "Pre-buy"
+            },
+            {
+                "name": "ESBGS_Buy",
+                "name_ui": "Buy"
+            },
+            {
+                "name": "ESBGS_Combat",
+                "name_ui": "Combat"
+            },
+            {
+                "name": "ESBGS_PreScoring",
+                "name_ui": "Pre-scoring"
+            },
+            {
+                "name": "ESBGS_Scoring",
+                "name_ui": "Scoring"
+            }
+        ]
     }
 ]

@@ -3,7 +3,17 @@
         {
             "id": 7,
             "displayname": "OnStartMatchmaking",
-            "libname": "CCitadelPointPulseAPI::OnStartMatchmaking"
+            "libname": "CCitadelPointPulseAPI::OnStartMatchmaking",
+            "inparams": [
+                {
+                    "name": "eMatchMode",
+                    "type": "PVAL_SCHEMA_ENUM:ECitadelMatchMode"
+                },
+                {
+                    "name": "eGameMode",
+                    "type": "PVAL_SCHEMA_ENUM:ECitadelGameMode"
+                }
+            ]
         },
         {
             "id": 8,
@@ -24,6 +34,17 @@
             "id": 11,
             "displayname": "OnStreetBrawlEnterState",
             "libname": "CCitadelPointPulseAPI::OnStreetBrawlEnterState"
+        },
+        {
+            "id": 20000,
+            "displayname": "OnGameStateChanged",
+            "libname": "CCitadelPointPulseAPI::OnGameStateChanged",
+            "inparams": [
+                {
+                    "name": "eState",
+                    "type": "PVAL_SCHEMA_ENUM:EGameState"
+                }
+            ]
         }
     ],
     "gamefunctions": [
@@ -260,6 +281,20 @@
                     "type": "PVAL_TYPESAFE_INT:AI_VolumetricEventHandle_t"
                 }
             ]
+        },
+        {
+            "id": 261,
+            "type": "value",
+            "displayname": "Get Game Mode",
+            "libname": "CCitadelPointPulseAPI::GetGameMode",
+            "description": "Get the game mode",
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_SCHEMA_ENUM:ECitadelGameMode"
+                }
+            ]
+
         }
     ]
 }

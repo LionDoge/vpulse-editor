@@ -776,5 +776,138 @@
                 "name_ui": "Eyes Only"
             }
         ]
+    },
+    {
+        "id": 18,
+        "name": "ECitadelMatchMode",
+        "name_ui": "Citadel Match Mode",
+        "variants": [
+            {
+                "name": "k_ECitadelMatchMode_Invalid",
+                "name_ui": "Invalid"
+            },
+            {
+                "name": "k_ECitadelMatchMode_Unranked",
+                "name_ui": "Unranked"
+            },
+            {
+                "name": "k_ECitadelMatchMode_PrivateLobby",
+                "name_ui": "Private Lobby"
+            },
+            {
+                "name": "k_ECitadelMatchMode_CoopBot",
+                "name_ui": "Coop Bot"
+            },
+            {
+                "name": "k_ECitadelMatchMode_Ranked",
+                "name_ui": "Ranked"
+            },
+            {
+                "name": "k_ECitadelMatchMode_ServerTest",
+                "name_ui": "Server Test"
+            },
+            {
+                "name": "k_ECitadelMatchMode_Tutorial",
+                "name_ui": "Tutorial"
+            },
+            {
+                "name": "k_ECitadelMatchMode_HeroLabs",
+                "name_ui": "Hero Labs"
+            },
+            {
+                "name": "k_ECitadelMatchMode_NewPlayerPlacement",
+                "name_ui": "New Player Placement"
+            }
+        ]
+    },
+    {
+        "id": 19,
+        "name": "ECitadelGameMode",
+        "name_ui": "Citadel Game Mode",
+        "variants": [
+            {
+                "name": "k_ECitadelGameMode_Invalid",
+                "name_ui": "Invalid"
+            },
+            {
+                "name": "k_ECitadelGameMode_Normal",
+                "name_ui": "Normal"
+            },
+            {
+                "name": "k_ECitadelGameMode_1v1Test",
+                "name_ui": "1v1 Test"
+            },
+            {
+                "name": "k_ECitadelGameMode_Sandbox",
+                "name_ui": "Sandbox"
+            },
+            {
+                "name": "k_ECitadelGameMode_StreetBrawl",
+                "name_ui": "Street Brawl"
+            },
+            {
+                "name": "k_ECitadelGameMode_ExploreNYC",
+                "name_ui": "Explore NYC"
+            },
+            {
+                "name": "k_ECitadelGameMode_Internal",
+                "name_ui": "Internal"
+            }
+        ]
+    },
+    {
+        "id": 20,
+        "name": "EGameState",
+        "name_ui": "Game State",
+        "variants": [
+            {
+                "name": "EGameState_Invalid",
+                "name_ui": "Invalid"
+            },
+            {
+                "name": "EGameState_Init",
+                "name_ui": "Init"
+            },
+            {
+                "name": "EGameState_WaitingForPlayersToJoin",
+                "name_ui": "Waiting For Players To Join"
+            },
+            {
+                "name": "EGameState_HeroSelection",
+                "name_ui": "Hero Selection"
+            },
+            {
+                "name": "EGameState_MatchIntro",
+                "name_ui": "Match Intro"
+            },
+            {
+                "name": "EGameState_WaitForMapToLoad",
+                "name_ui": "Wait For Map To Load"
+            },
+            {
+                "name": "EGameState_PreGameWait",
+                "name_ui": "Pre Game Wait"
+            },
+            {
+                "name": "EGameState_GameInProgress",
+                "name_ui": "Game In Progress"
+            },
+            {
+                "name": "EGameState_PostGame",
+                "name_ui": "Post Game"
+            },
+            {
+                "name": "EGameState_PostGame_PlayOfTheGame",
+                "name_ui": "Post Game Play Of The Game"
+            },
+            {
+                "name": "EGameState_Abandoned",
+                "name_ui": "Abandoned"
+            },
+            {
+                "name": "EGameState_End",
+                "name_ui": "End"
+            }
+        ]
     }
 ]

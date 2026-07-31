@@ -230,7 +230,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::SoundEventName => egui::Color32::from_rgb(52, 100, 120),
             PulseDataType::NoideChoice => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Any => egui::Color32::from_rgb(200, 200, 200),
-            PulseDataType::SchemaEnum => egui::Color32::from_rgb(0, 0, 0),
+            PulseDataType::SchemaEnum => egui::Color32::from_rgb(236, 252, 3),
             PulseDataType::GeneralEnum => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::CommentBox => egui::Color32::from_rgb(0, 0, 0),
             PulseDataType::Vec4 => egui::Color32::from_rgb(210, 238, 109),
@@ -1349,7 +1349,18 @@ impl WidgetValueTrait for PulseGraphValueType {
                     ui.horizontal(|ui| {
                         ui.label(param_name);
                         let type_list: Vec<PulseValueType> = match &node_data.template {
-                            PulseNodeTemplate::CompareOutput => PulseValueType::get_comparable_types(),
+                            PulseNodeTemplate::CompareOutput => {
+                                let mut types = PulseValueType::get_comparable_types();
+                                types.extend(
+                                    user_state
+                                        .bindings
+                                        .enums
+                                        .iter()
+                                        .cloned()
+                                        .map(PulseValueType::PVAL_SCHEMA_ENUM_CHOICE)
+                                );
+                                types
+                            }
                             PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
                             PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),
                             _ => PulseValueType::get_variable_supported_types(),

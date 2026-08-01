@@ -475,11 +475,12 @@ impl PulseGraphEditor {
                     .iter()
                     .find(|var| var.name == *name);
                 if let Some(var) = var {
-                    let val_typ = data_type_to_value_type(&var.data_type);
+                    let val_typ = pulse_value_type_to_node_types(&var.typ_and_default_value);
+                    //let val_typ = data_type_to_value_type(&var.data_type);
                     self.add_node_input_simple(
                         node_id,
                         var.data_type.clone(),
-                        val_typ,
+                        val_typ.1,
                         "value",
                         InputParamKind::ConnectionOrConstant,
                     );
@@ -1543,17 +1544,18 @@ impl eframe::App for PulseGraphEditor {
                 ui.separator();
                 ui.label("Variables:");
                 if ui.button("Add variable").clicked() {
-                    self.user_state_mut()
+                    self.full_state.user_state
                         .outputs_dropdown_choices
                         .push(PulseValueType::PVAL_INT(None));
-                    self.user_state_mut().variables.push(PulseVariable {
+                    self.full_state.user_state.variables.push(PulseVariable {
                         name: String::default(),
                         typ_and_default_value: PulseValueType::PVAL_INT(None),
                         data_type: PulseDataType::Scalar,
                         default_value_buffer: String::default(),
                     });
                 }
-                for (idx, var) in self.user_state_mut().variables.iter_mut().enumerate() {
+                let variable_type_list = PulseValueType::get_variable_supported_types();
+                for (idx, var) in self.full_state.user_state.variables.iter_mut().enumerate() {
                     ui.add_space(4.0);
                     egui::Frame::default()
                         .inner_margin(8.0)
@@ -1574,10 +1576,11 @@ impl eframe::App for PulseGraphEditor {
                             ComboBox::from_id_salt(format!("var{idx}"))
                                 .selected_text(var.typ_and_default_value.get_ui_name())
                                 .show_ui(ui, |ui| {
-                                    for typ in PulseValueType::get_variable_supported_types() {
+                                    
+                                    for typ in variable_type_list.iter() {
                                         let name = typ.get_ui_name();
                                         if ui.selectable_value(&mut var.typ_and_default_value,
-                                            typ,
+                                            typ.clone(),
                                             name
                                         ).clicked() {
                                             // if the type is changed, update the variable data.

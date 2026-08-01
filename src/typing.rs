@@ -48,7 +48,7 @@ impl Display for HookBindingIndex {
     }
 }
 
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct EnumBindingIndex(pub u32);
 impl Display for EnumBindingIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -372,38 +372,6 @@ pub fn try_string_to_pulsevalue(enums: &EnumBindings, s: &str) -> Result<PulseVa
     }
 }
 
-pub fn data_type_to_value_type(typ: &PulseDataType) -> PulseGraphValueType {
-    match typ {
-        PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0f32 },
-        PulseDataType::String => PulseGraphValueType::String {
-            value: String::default(),
-        },
-        PulseDataType::Vec3
-        | PulseDataType::Vec3Local => PulseGraphValueType::Vec3Local {
-            value: Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0,
-            },
-        },
-        PulseDataType::EHandle => PulseGraphValueType::EHandle,
-        PulseDataType::Bool => PulseGraphValueType::Bool { value: false },
-        PulseDataType::SndEventHandle => PulseGraphValueType::SndEventHandle,
-        PulseDataType::EntityName => PulseGraphValueType::EntityName {
-            value: String::default(),
-        },
-        PulseDataType::Action => PulseGraphValueType::Action,
-        PulseDataType::SoundEventName => PulseGraphValueType::SoundEventName {
-            value: String::default(),
-        },
-        PulseDataType::Color => PulseGraphValueType::Color {
-            value: [0.0, 0.0, 0.0, 0.0],
-        },
-        PulseDataType::Any => PulseGraphValueType::Any,
-        _ => PulseGraphValueType::Scalar { value: 0f32 },
-    }
-}
-
 pub fn pulse_value_type_to_node_types(
     typ: &PulseValueType,
 ) -> (PulseDataType, PulseGraphValueType) {
@@ -521,7 +489,7 @@ pub fn pulse_value_type_to_node_types(
                 integer_type: int_type.clone().unwrap_or_default(),
             }
         ),
-        _ => todo!("Implement more type conversions"),
+        _ => todo!("PulseValueType to PulseDataType conversion not implemented for {:?}", typ),
     }
 }
 
@@ -555,7 +523,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         PulseValueType::PVAL_BOOL
         | PulseValueType::PVAL_BOOL_VALUE(_)
         | PulseValueType::PVAL_SCHEMA_ENUM(_)
-        | PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => InputParamKind::ConstantOnly,
+        | PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => InputParamKind::ConstantOnly
     }
 }
 

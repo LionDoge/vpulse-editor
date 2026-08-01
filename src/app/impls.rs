@@ -47,6 +47,14 @@ impl PulseGraphValueType {
         }
     }
 
+    pub fn try_to_integer(self) -> anyhow::Result<i32> {
+        if let PulseGraphValueType::Integer { value } = self {
+            Ok(value)
+        } else {
+            anyhow::bail!("Invalid cast from {:?} to integer", self)
+        }
+    }
+
     pub fn try_to_string(self) -> anyhow::Result<String> {
         match self {
             PulseGraphValueType::String { value } => Ok(value),
@@ -211,6 +219,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
     fn data_type_color(&self, _user_state: &mut PulseGraphState) -> egui::Color32 {
         match self {
             PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
+            PulseDataType::Integer => egui::Color32::from_rgb(38, 109, 211),
             PulseDataType::Vec2 => egui::Color32::from_rgb(238, 163, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3Local => egui::Color32::from_rgb(168, 144, 91),
@@ -246,14 +255,15 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
 
     fn name(&self) -> Cow<'_, str> {
         match self {
-            PulseDataType::Scalar => Cow::Borrowed("scalar"),
-            PulseDataType::Vec2 => Cow::Borrowed("2d vector"),
-            PulseDataType::Vec3 => Cow::Borrowed("3d world vector"),
-            PulseDataType::Vec3Local => Cow::Borrowed("3d local vector"),
-            PulseDataType::Color => Cow::Borrowed("color"),
-            PulseDataType::String => Cow::Borrowed("string"),
-            PulseDataType::Bool => Cow::Borrowed("bool"),
-            PulseDataType::Action => Cow::Borrowed("action"),
+            PulseDataType::Scalar => Cow::Borrowed("Float"),
+            PulseDataType::Integer => Cow::Borrowed("Integer"),
+            PulseDataType::Vec2 => Cow::Borrowed("2D Vector"),
+            PulseDataType::Vec3 => Cow::Borrowed("3D World Vector"),
+            PulseDataType::Vec3Local => Cow::Borrowed("3D Local Vector"),
+            PulseDataType::Color => Cow::Borrowed("Color"),
+            PulseDataType::String => Cow::Borrowed("String"),
+            PulseDataType::Bool => Cow::Borrowed("Bool"),
+            PulseDataType::Action => Cow::Borrowed("Action"),
             PulseDataType::EHandle => Cow::Borrowed("EHandle"),
             PulseDataType::EntityName => Cow::Borrowed("Entity name"),
             PulseDataType::InternalOutputName => Cow::Borrowed("Output name"),
@@ -264,12 +274,12 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
             PulseDataType::HookBindingChoice => Cow::Borrowed("Hook binding"),
             PulseDataType::SndEventHandle => Cow::Borrowed("Sound event handle"),
             PulseDataType::SoundEventName => Cow::Borrowed("Sound event name"),
-            PulseDataType::NoideChoice => Cow::Borrowed("Node reference"),
+            PulseDataType::NoideChoice => Cow::Borrowed("Node Reference"),
             PulseDataType::Any => Cow::Borrowed("Any type"),
-            PulseDataType::SchemaEnum => Cow::Borrowed("Schema enum"),
+            PulseDataType::SchemaEnum => Cow::Borrowed("Schema Enum"),
             PulseDataType::GeneralEnum => Cow::Borrowed("Enum"),
             PulseDataType::CommentBox => Cow::Borrowed("Comment box"),
-            PulseDataType::Vec4 => Cow::Borrowed("4d vector"),
+            PulseDataType::Vec4 => Cow::Borrowed("4D Vector"),
             PulseDataType::QAngle => Cow::Borrowed("QAngle"),
             PulseDataType::Transform => Cow::Borrowed("Transform"),
             PulseDataType::TransformWorldspace => Cow::Borrowed("Worldspace transform"),
@@ -585,7 +595,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 node_id,
                 name.to_string(),
                 PulseDataType::Array,
-                PulseGraphValueType::Array,
+                PulseGraphValueType::Array {
+                    array_type: Default::default(),
+                },
                 InputParamKind::ConnectionOnly,
                 true,
             );
@@ -1238,6 +1250,12 @@ impl WidgetValueTrait for PulseGraphValueType {
                         ui.add(DragValue::new(value));
                     });
                 }
+                PulseGraphValueType::Integer { value } => {
+                    ui.horizontal(|ui| {
+                        ui.label(param_name);
+                        ui.add(DragValue::new(value));
+                    });
+                }
                 PulseGraphValueType::String { value } => {
                     ui.horizontal(|ui| {
                         ui.label(param_name);
@@ -1537,7 +1555,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 PulseGraphValueType::GameTime => {
                     ui.label(format!("Game Time {param_name}"));
                 }
-                PulseGraphValueType::Array => {
+                PulseGraphValueType::Array { .. } => {
                     ui.label(format!("Array {param_name}"));
                 }
                 PulseGraphValueType::TypeSafeInteger { integer_type } => {

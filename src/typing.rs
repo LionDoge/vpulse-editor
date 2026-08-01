@@ -477,7 +477,7 @@ pub fn pulse_value_type_to_node_types(
         PulseValueType::PVAL_ARRAY(_) =>
         (
             PulseDataType::Array,
-            PulseGraphValueType::Array
+            PulseGraphValueType::Array { array_type: PulseDataType::default() }
         ),
         PulseValueType::PVAL_GAMETIME(_) => (
             PulseDataType::GameTime,

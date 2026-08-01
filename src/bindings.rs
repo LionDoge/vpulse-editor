@@ -132,6 +132,10 @@ impl GraphBindings {
         self.enums.iter().find(|e| e.id == id)
     }
 
+    pub fn list_enums(&self) -> Vec<&BindingEnum> {
+        self.enums.iter().collect()
+    }
+
     fn append_from(&mut self, other: &mut GraphBindings) {
         self.gamefunctions.append(&mut other.gamefunctions);
         self.events.append(&mut other.events);
@@ -255,9 +259,31 @@ impl BindingEnum {
     pub fn get_variant_by_id(&self, id: EnumBindingValueIndex) -> Option<&EnumVariant> {
         self.variants.get(id.0)
     }
+
+    pub fn get_all_variants(&self) -> &Vec<EnumVariant> {
+        &self.variants
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name_ui
+    }
+
+    pub fn name_internal(&self) -> &str {
+        &self.name
+    }
 }
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct EnumVariant {
     pub name: String,
     pub name_ui: String,
+}
+
+impl EnumVariant {
+    pub fn name(&self) -> &str {
+        &self.name_ui
+    }
+
+    pub fn name_internal(&self) -> &str {
+        &self.name
+    }
 }

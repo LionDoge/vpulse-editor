@@ -1,8 +1,10 @@
 mod impls;
 // contains help text
 mod help;
-pub mod types;
 mod migrations;
+mod appwidgets;
+
+pub mod types;
 
 use delegate::delegate;
 use std::collections::VecDeque;
@@ -156,22 +158,20 @@ impl FullGraphState {
                     }
                 }
                 // v0.3.1 we added sound event source input.
-                PulseNodeTemplate::SoundEventStart => {
+                PulseNodeTemplate::SoundEventStart
                     // if the input is not present, add it to a list, and then add the input later
                     // can't do it here because of borrow checker
-                    if node.get_input("soundEventType").is_err() {
+                    if node.get_input("soundEventType").is_err() => {
                         sound_event_nodes.push(node_id);
                     }
-                }
                 // v0.3.1 Added entity handle input to EntFire
-                PulseNodeTemplate::EntFire => {
-                    if node.get_input("entityHandle").is_err() {
+                PulseNodeTemplate::EntFire
+                    if node.get_input("entityHandle").is_err() => {
                         entfire_nodes.push(node_id);
                     }
-                }
                 // v0.3.1 Added Async fire mode to Call Node for functions
-                PulseNodeTemplate::CallNode => {
-                    if node.get_input("Async").is_err() {
+                PulseNodeTemplate::CallNode
+                    if node.get_input("Async").is_err() => {
                         let target_node_id = node
                             .get_input("nodeId")
                             .ok()
@@ -189,7 +189,6 @@ impl FullGraphState {
                             }
                         }
                     }
-                }
                 _ => (),
             }
         }
@@ -347,74 +346,74 @@ impl PulseGraphEditor {
         self.user_state_mut().save_file_path = None;
         self.update_titlebar(ctx);
     }
-    pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
-        let param = self
-            .state_mut()
-            .graph
-            .nodes
-            .get_mut(node_id)
-            .unwrap()
-            .get_input(input_name);
-        if let Ok(param) = param {
-            self.state_mut().graph.remove_input_param(param);
-        }
-        let public_outputs: Vec<_> = self.user_state().public_outputs.to_vec();
-        for output in public_outputs {
-            if output.name == *name {
-                match output.typ {
-                    PulseValueType::PVAL_FLOAT(_) | PulseValueType::PVAL_INT(_) => {
-                        self.state_mut().graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::Scalar,
-                            PulseGraphValueType::Scalar { value: 0f32 },
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_STRING(_) => {
-                        self.state_mut().graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::String,
-                            PulseGraphValueType::String {
-                                value: String::default(),
-                            },
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_VEC3(_) => {
-                        self.state_mut().graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::Vec3,
-                            PulseGraphValueType::Vec3 {
-                                value: Vec3 {
-                                    x: 0.0,
-                                    y: 0.0,
-                                    z: 0.0,
-                                },
-                            },
-                            InputParamKind::ConnectionOrConstant,
-                            true,
-                        );
-                    }
-                    PulseValueType::PVAL_EHANDLE(_) => {
-                        self.state_mut().graph.add_input_param(
-                            node_id,
-                            String::from(input_name),
-                            PulseDataType::EHandle,
-                            PulseGraphValueType::EHandle,
-                            InputParamKind::ConnectionOnly,
-                            true,
-                        );
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
+    // pub fn update_output_node_param(&mut self, node_id: NodeId, name: &String, input_name: &str) {
+    //     let param = self
+    //         .state_mut()
+    //         .graph
+    //         .nodes
+    //         .get_mut(node_id)
+    //         .unwrap()
+    //         .get_input(input_name);
+    //     if let Ok(param) = param {
+    //         self.state_mut().graph.remove_input_param(param);
+    //     }
+    //     let public_outputs: Vec<_> = self.user_state().public_outputs.to_vec();
+    //     for output in public_outputs {
+    //         if output.name == *name {
+    //             match output.typ {
+    //                 PulseValueType::PVAL_FLOAT(_) | PulseValueType::PVAL_INT(_) => {
+    //                     self.state_mut().graph.add_input_param(
+    //                         node_id,
+    //                         String::from(input_name),
+    //                         PulseDataType::Scalar,
+    //                         PulseGraphValueType::Scalar { value: 0f32 },
+    //                         InputParamKind::ConnectionOrConstant,
+    //                         true,
+    //                     );
+    //                 }
+    //                 PulseValueType::PVAL_STRING(_) => {
+    //                     self.state_mut().graph.add_input_param(
+    //                         node_id,
+    //                         String::from(input_name),
+    //                         PulseDataType::String,
+    //                         PulseGraphValueType::String {
+    //                             value: String::default(),
+    //                         },
+    //                         InputParamKind::ConnectionOrConstant,
+    //                         true,
+    //                     );
+    //                 }
+    //                 PulseValueType::PVAL_VEC3(_) => {
+    //                     self.state_mut().graph.add_input_param(
+    //                         node_id,
+    //                         String::from(input_name),
+    //                         PulseDataType::Vec3,
+    //                         PulseGraphValueType::Vec3 {
+    //                             value: Vec3 {
+    //                                 x: 0.0,
+    //                                 y: 0.0,
+    //                                 z: 0.0,
+    //                             },
+    //                         },
+    //                         InputParamKind::ConnectionOrConstant,
+    //                         true,
+    //                     );
+    //                 }
+    //                 PulseValueType::PVAL_EHANDLE(_) => {
+    //                     self.state_mut().graph.add_input_param(
+    //                         node_id,
+    //                         String::from(input_name),
+    //                         PulseDataType::EHandle,
+    //                         PulseGraphValueType::EHandle,
+    //                         InputParamKind::ConnectionOnly,
+    //                         true,
+    //                     );
+    //                 }
+    //                 _ => {}
+    //             }
+    //         }
+    //     }
+    // }
     fn add_node_input_simple(
         &mut self,
         node_id: NodeId,
@@ -1459,15 +1458,14 @@ impl eframe::App for PulseGraphEditor {
                 });
             });
         });
-        let mut output_scheduled_for_deletion: usize = usize::MAX; // we can get away with just one reference (it's not like the user can click more than one at once)
-        let mut variable_scheduled_for_deletion: usize = usize::MAX;
-        let mut output_node_updates = vec![];
+        let mut output_scheduled_for_deletion: Option<usize> = None; // we can get away with just one reference (it's not like the user can click more than one at once)
+        let mut variable_scheduled_for_deletion: Option<usize> = None;
         egui::SidePanel::left("left_panel").show(ctx, |ui| {
             egui::CollapsingHeader::new("Advanced")
                 .default_open(false)
                 .show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label("Graph domain").on_hover_text("Suggests which context the graph can be used in, and what features are available.");
+                        ui.label("Graph domain").on_hover_text("Suggests which context the graph can be used in, and what features will be available.");
                         ui.text_edit_singleline(&mut self.user_state_mut().graph_domain);
                     });
                     ui.horizontal(|ui| {
@@ -1476,211 +1474,46 @@ impl eframe::App for PulseGraphEditor {
                     });
                 });
             egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.label("Outputs:");
+                ui.label("Public outputs:");
                 if ui.button("Add output").clicked() {
-                    self.user_state_mut()
-                        .outputs_dropdown_choices
-                        .push(PulseValueType::PVAL_INT(None));
                     self.user_state_mut().public_outputs.push(OutputDefinition {
                         name: String::default(),
+                        data_type: PulseDataType::default(),
+                        value_type: PulseGraphValueType::default(),
                         typ: PulseValueType::PVAL_INT(None),
                         typ_old: PulseValueType::PVAL_INT(None),
                     });
                 }
-                for (idx, outputdef) in self.full_state.user_state.public_outputs.iter_mut().enumerate() {
-                    ui.add_space(4.0);
-                    egui::Frame::default()
-                        .inner_margin(8.0)
-                        .fill(egui::Color32::from_rgba_unmultiplied(36, 36, 36, 255))
-                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-                        .show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            if ui.button("X").clicked() {
-                                output_scheduled_for_deletion = idx;
-                            }
-                            ui.add(egui::TextEdit::singleline(&mut outputdef.name)
-                                .font(TextStyle::Heading)
-                                .hint_text("Output name")
-                            );
-                        });
-                        ui.horizontal(|ui| {
-                            ui.label("Param type");
-                            ComboBox::from_id_salt(format!("output{idx}"))
-                                .selected_text(outputdef.typ.get_ui_name())
-                                .show_ui(ui, |ui| {
-                                    for typ in PulseValueType::get_variable_supported_types() {
-                                        let name = typ.get_ui_name();
-                                        ui.selectable_value(&mut outputdef.typ,
-                                            typ,
-                                            name
-                                        );
-                                    }
-                                });
-                        });
-                        if outputdef.typ != outputdef.typ_old {
-                            let node_ids: Vec<_> = self.full_state.state.graph.iter_nodes().collect();
-                            for nodeid in node_ids {
-                                let node = self.full_state.state.graph.nodes.get(nodeid).unwrap();
-                                if node.user_data.template == PulseNodeTemplate::FireOutput {
-                                    let inp = node.get_input("outputName");
-                                    let val = self
-                                        .full_state
-                                        .state
-                                        .graph
-                                        .get_input(inp.unwrap())
-                                        .value()
-                                        .clone()
-                                        .try_output_name()
-                                        .unwrap();
-                                    if outputdef.name == val {
-                                        output_node_updates.push((nodeid, outputdef.name.clone()));
-                                    }
-                                }
-                            }
-                            outputdef.typ_old = outputdef.typ.clone();
-                        }
-                    });
-                }
+                output_scheduled_for_deletion = appwidgets::public_output_list_widget(
+                    ui, &mut self.full_state.user_state.public_outputs, &self.full_state.user_state.bindings
+                );
                 ui.separator();
+
                 ui.label("Variables:");
                 if ui.button("Add variable").clicked() {
-                    self.full_state.user_state
-                        .outputs_dropdown_choices
-                        .push(PulseValueType::PVAL_INT(None));
                     self.full_state.user_state.variables.push(PulseVariable {
-                        name: String::default(),
-                        typ_and_default_value: PulseValueType::PVAL_INT(None),
-                        data_type: PulseDataType::Scalar,
+                        name: "variable".to_string(),
+                        data_type: PulseDataType::default(),
+                        stored_value: PulseGraphValueType::default(),
+                        typ_and_default_value: PulseValueType::PVAL_INVALID,
                         default_value_buffer: String::default(),
                     });
                 }
-                let variable_type_list = PulseValueType::get_variable_supported_types();
-                for (idx, var) in self.full_state.user_state.variables.iter_mut().enumerate() {
-                    ui.add_space(4.0);
-                    egui::Frame::default()
-                        .inner_margin(8.0)
-                        .fill(egui::Color32::from_rgba_unmultiplied(36, 36, 36, 255))
-                        .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
-                        .show(ui, |ui| {
-                        ui.horizontal(|ui| {
-                            if ui.button("X").clicked() {
-                                variable_scheduled_for_deletion = idx;
-                            }
-                            ui.add(egui::TextEdit::singleline(&mut var.name)
-                                .font(TextStyle::Heading)
-                                .hint_text("Variable name")
-                            );
-                        });
-                        ui.horizontal(|ui| {
-                            ui.label("Param type");
-                            ComboBox::from_id_salt(format!("var{idx}"))
-                                .selected_text(var.typ_and_default_value.get_ui_name())
-                                .show_ui(ui, |ui| {
-                                    
-                                    for typ in variable_type_list.iter() {
-                                        let name = typ.get_ui_name();
-                                        if ui.selectable_value(&mut var.typ_and_default_value,
-                                            typ.clone(),
-                                            name
-                                        ).clicked() {
-                                            // if the type is changed, update the variable data.
-                                            update_variable_data(var);
-                                        }
-                                    }
-                                });
-                        });
-                        ui.horizontal(|ui| {
-                            match &var.typ_and_default_value {
-                                // change the label text if we're working on an EHandle type, as it can't have a default value.
-                                // the internal value will be used and updated approperiately as the ehandle type instead of the default value.
-                                PulseValueType::PVAL_EHANDLE(_) => ui.label("EHandle class"),
-                                PulseValueType::PVAL_ARRAY(_) => ui.label("Array type"),
-                                PulseValueType::PVAL_TYPESAFE_INT(_, _) => ui.label("Typesafe Int type"),
-                                _ => ui.label("Default value"),
-                            };
-
-                            match &mut var.typ_and_default_value {
-                                PulseValueType::PVAL_BOOL_VALUE(value) => {
-                                    ui.checkbox(
-                                        value.get_or_insert_default(), ""
-                                    );
-                                }
-                                PulseValueType::PVAL_VEC2(value) => {
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                                }
-                                PulseValueType::PVAL_VEC3(value)
-                                | PulseValueType::PVAL_VEC3_LOCAL(value)
-                                | PulseValueType::PVAL_QANGLE(value) => {
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
-                                }
-                                PulseValueType::PVAL_VEC4(value) => {
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().x).prefix("X: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().y).prefix("Y: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().z).prefix("Z: "));
-                                    ui.add(egui::DragValue::new(&mut value.get_or_insert_default().w).prefix("W: "));
-                                }
-                                PulseValueType::PVAL_COLOR_RGB(value) => {
-                                    let color = value.get_or_insert_default();
-                                    // there's probably a better way, but our type system is a mess right now, I can't be bothered.
-                                    let mut arr = [color.x / 255.0, color.y / 255.0, color.z / 255.0];
-                                    if ui.color_edit_button_rgb(&mut arr).changed() {
-                                        color.x = arr[0] * 255.0;
-                                        color.y = arr[1] * 255.0;
-                                        color.z = arr[2] * 255.0;
-                                    }
-                                }
-                                PulseValueType::PVAL_RESOURCE(resource_type, value) => {
-                                    let resource_type_val = resource_type.get_or_insert_with(Default::default);
-                                    if ui.add(egui::TextEdit::singleline(resource_type_val)
-                                        .hint_text("Type")
-                                        .desired_width(40.0)).changed() 
-                                        && resource_type_val.trim().is_empty() {
-                                            *resource_type = None;
-                                        }
-                            
-                                    ui.add(egui::TextEdit::singleline(value.get_or_insert_default()).hint_text("Resource path"));
-                                }
-                                PulseValueType::PVAL_GAMETIME(value) => {
-                                    ui.add(egui::DragValue::new(value.get_or_insert_default()).speed(0.01));
-                                }
-                                PulseValueType::PVAL_ARRAY(inner_type) => {
-                                    // TODO: make it recursive, so we can have more nested types.
-                                    ComboBox::from_id_salt(format!("var{idx}_inner"))
-                                        .selected_text(inner_type.get_ui_name())
-                                        .show_ui(ui, |ui| {
-                                            for typ in PulseValueType::get_variable_supported_types() {
-                                                let name = typ.get_ui_name();
-                                                ui.selectable_value(inner_type,
-                                                    Box::from(typ),
-                                                    name);
-                                            }
-                                        });
-                                }
-                                PulseValueType::DOMAIN_ENTITY_NAME 
-                                | PulseValueType::PVAL_SNDEVT_GUID(_)
-                                | PulseValueType::PVAL_TRANSFORM(_)
-                                | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => {}
-                                _ => {
-                                    if ui.text_edit_singleline(&mut var.default_value_buffer).changed() {
-                                        update_variable_data(var);
-                                    }
-                                }
-                            }
-                                
-                        });
-                        });
-                }
+                let variable_type_list = PulseDataType::get_variable_supported_types();
+                variable_scheduled_for_deletion = appwidgets::variable_list_widget(
+                    ui,
+                    &mut self.full_state.user_state.variables,
+                    variable_type_list,
+                    &self.full_state.user_state.bindings
+                );
             });
         });
-        if output_scheduled_for_deletion != usize::MAX {
+        if let Some(output_scheduled_for_deletion) = output_scheduled_for_deletion {
             self.user_state_mut()
                 .public_outputs
                 .remove(output_scheduled_for_deletion);
         }
-        if variable_scheduled_for_deletion != usize::MAX {
+        if let Some(variable_scheduled_for_deletion) = variable_scheduled_for_deletion {
             self.user_state_mut()
                 .variables
                 .remove(variable_scheduled_for_deletion);
@@ -1796,7 +1629,7 @@ impl eframe::App for PulseGraphEditor {
                             self.state_mut().graph.remove_output_param(param);
                         }
                         PulseGraphResponse::ChangeOutputParamType(node_id, name) => {
-                            self.update_output_node_param(node_id, &name, "param");
+                            //self.update_output_node_param(node_id, &name, "param");
                         }
                         PulseGraphResponse::ChangeVariableParamType(node_id, name) => {
                             self.update_node_inputs_outputs_types(node_id, &name, None);
@@ -1853,9 +1686,9 @@ impl eframe::App for PulseGraphEditor {
                 _ => {}
             }
         }
-        for (nodeid, name) in output_node_updates {
-            self.update_output_node_param(nodeid, &name, "param");
-        }
+        // for (nodeid, name) in output_node_updates {
+        //     self.update_output_node_param(nodeid, &name, "param");
+        // }
     }
 }
 

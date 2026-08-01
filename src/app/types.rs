@@ -34,6 +34,7 @@ pub struct PulseNodeData {
 pub enum PulseDataType {
     #[default]
     Scalar,
+    Integer,
     Vec2,
     Vec3,
     Vec3Local,
@@ -73,11 +74,16 @@ pub enum PulseDataType {
 /// this library makes no attempt to check this consistency. For instance, it is
 /// up to the user code in this example to make sure no parameter is created
 /// with a DataType of Scalar and a ValueType of Vec2.
+///
+/// Empty enums mean that we do not support inputting, or storing a default value for that type.
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
 pub enum PulseGraphValueType {
     Vec2 {
         value: Vec2,
+    },
+    Integer {
+        value: i32,
     },
     Scalar {
         value: f32,
@@ -152,7 +158,10 @@ pub enum PulseGraphValueType {
         resource_type: Option<String>, // Used for displaying in the UI only.
         value: String,
     },
-    Array,
+    Array {
+        #[serde(default)]
+        array_type: PulseDataType
+    },
     GameTime,
     TypeSafeInteger {
         integer_type: String,
@@ -310,3 +319,110 @@ pub type MyEditorState = GraphEditorState<
     PulseNodeTemplate,
     PulseGraphState,
 >;
+
+impl PulseDataType {
+    pub fn get_comparable_types() -> Vec<PulseDataType> {
+        vec![
+            PulseDataType::Integer,
+            PulseDataType::Scalar,
+            PulseDataType::String,
+            PulseDataType::Bool,
+            PulseDataType::EHandle,
+            PulseDataType::EntityName,
+            PulseDataType::Vec2,
+            PulseDataType::Vec3,
+            PulseDataType::Vec3Local,
+            PulseDataType::Vec4,
+            PulseDataType::Color,
+            PulseDataType::Array,
+            PulseDataType::QAngle,
+            PulseDataType::GameTime,
+        ]
+    }
+    pub fn get_operatable_types() -> Vec<PulseDataType> {
+        vec![
+            PulseDataType::Integer,
+            PulseDataType::Scalar,
+            PulseDataType::String,
+            PulseDataType::Bool,
+            PulseDataType::EHandle,
+            PulseDataType::EntityName,
+            PulseDataType::Vec2,
+            PulseDataType::Vec3,
+            PulseDataType::Vec3Local,
+            PulseDataType::Vec4,
+        ]
+    }
+    pub fn get_scalable_types() -> Vec<PulseDataType> {
+        vec![
+            PulseDataType::Vec2,
+            PulseDataType::Vec3,
+            PulseDataType::Vec3Local,
+            PulseDataType::Vec4,
+        ]
+    }
+    pub fn get_variable_supported_types() -> Vec<PulseDataType> {
+        vec![
+            PulseDataType::Integer,
+            PulseDataType::Scalar,
+            PulseDataType::String,
+            PulseDataType::Bool,
+            PulseDataType::Vec2,
+            PulseDataType::Vec3,
+            PulseDataType::Vec3Local,
+            PulseDataType::Vec4,
+            PulseDataType::QAngle,
+            PulseDataType::Transform,
+            PulseDataType::TransformWorldspace,
+            PulseDataType::Color,
+            PulseDataType::EHandle,
+            PulseDataType::EntityName,
+            PulseDataType::SndEventHandle,
+            PulseDataType::Array,
+            PulseDataType::Resource,
+            PulseDataType::GameTime,
+            PulseDataType::TypeSafeInteger,
+            PulseDataType::SchemaEnum,
+        ]
+    }
+    pub fn get_vector_types() -> Vec<PulseDataType> {
+        vec![
+            PulseDataType::Vec2,
+            PulseDataType::Vec3,
+            PulseDataType::Vec3Local,
+            PulseDataType::Vec4,
+        ]
+    }
+}
+
+#[allow(clippy::from_over_into)] // Providing From conversion won't work in this scenario
+impl Into<PulseGraphValueType> for PulseDataType {
+    fn into(self) -> PulseGraphValueType {
+        match self {
+            PulseDataType::Integer => PulseGraphValueType::Integer { value: 0 },
+            PulseDataType::Scalar => PulseGraphValueType::Scalar { value: 0.0 },
+            PulseDataType::String => PulseGraphValueType::String { value: String::new() },
+            PulseDataType::Bool => PulseGraphValueType::Bool { value: false },
+            PulseDataType::EHandle => PulseGraphValueType::EHandle,
+            PulseDataType::EntityName => PulseGraphValueType::EntityName { value: String::new() },
+            PulseDataType::Vec2 => PulseGraphValueType::Vec2 { value: Vec2::default() },
+            PulseDataType::Vec3 => PulseGraphValueType::Vec3 { value: Vec3::default() },
+            PulseDataType::Vec3Local => PulseGraphValueType::Vec3Local { value: Vec3::default() },
+            PulseDataType::Vec4 => PulseGraphValueType::Vec4 { value: Vec4::default() },
+            PulseDataType::Color => PulseGraphValueType::Color { value: [0.0, 0.0, 0.0, 0.0] },
+            PulseDataType::Array => PulseGraphValueType::Array { array_type: PulseDataType::Any},
+            PulseDataType::QAngle => PulseGraphValueType::QAngle { value: Vec3::default() },
+            PulseDataType::Transform => PulseGraphValueType::Transform,
+            PulseDataType::TransformWorldspace => PulseGraphValueType::TransformWorldspace,
+            PulseDataType::Resource => PulseGraphValueType::Resource { resource_type: None, value: String::new() },
+            PulseDataType::GameTime => PulseGraphValueType::GameTime,
+            PulseDataType::TypeSafeInteger => PulseGraphValueType::TypeSafeInteger { integer_type: String::new() },
+            PulseDataType::SoundEventName => PulseGraphValueType::SoundEventName { value: String::new() },
+            PulseDataType::SndEventHandle => PulseGraphValueType::SndEventHandle,
+            PulseDataType::SchemaEnum => PulseGraphValueType::SchemaEnumChoice { 
+                enum_type: EnumBindingIndex::default(), enum_variant: EnumBindingValueIndex::default() 
+            },
+            _ => PulseGraphValueType::Any,
+        }
+    }
+}

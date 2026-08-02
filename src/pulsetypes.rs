@@ -11,7 +11,9 @@ use crate::typing::PulseValueType;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct PulseVariable {
     pub name: String,
+    #[serde(default)]
     pub data_type: PulseDataType,
+    #[serde(default)]
     pub stored_value: PulseGraphValueType,
 
     // deprecated
@@ -26,7 +28,9 @@ pub struct PulseVariable {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct OutputDefinition {
     pub name: String,
+    #[serde(default)]
     pub data_type: PulseDataType,
+    #[serde(default)]
     pub value_type: PulseGraphValueType, // we don't hold the default value, but needed for inner-types.
 
     // deprecated

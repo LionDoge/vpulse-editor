@@ -2,7 +2,7 @@ use eframe::egui;
 use egui_node_graph2::{InputParamKind, NodeId};
 use ron::{Value, value::{Map, Number, F32}};
 
-use crate::{app::{FullGraphState, types::{PulseDataType, PulseGraphValueType, PulseNodeTemplate, pulse_value_type_to_node_types}}, pulsetypes::{GeneralEnumChoice, SoundEventStartType}};
+use crate::{app::{FullGraphState, types::{PulseDataType, PulseGraphValueType, PulseNodeTemplate, pulse_value_type_to_node_types}}, pulsetypes::{GeneralEnumChoice, SoundEventStartType}, typing::PulseValueType};
 use crate::typing::{get_preffered_inputparamkind_from_type};
 
 // This is currently unused due to issues with RON deserializing into Value type without losing version information
@@ -208,14 +208,24 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
 
     // variables and outputs use PulseDataType now
     for var in full_state.user_state.variables.iter_mut() {
+        if matches!(var.typ_and_default_value, PulseValueType::PVAL_INVALID) {
+            continue;
+        }
         let types = pulse_value_type_to_node_types(&var.typ_and_default_value);
         var.data_type = types.0;
         var.stored_value = types.1;
+
+        var.typ_and_default_value = PulseValueType::PVAL_INVALID;
     }
 
     for output in full_state.user_state.public_outputs.iter_mut() {
+        if matches!(output.typ, PulseValueType::PVAL_INVALID) {
+            continue;
+        }
         let types = pulse_value_type_to_node_types(&output.typ);
         output.data_type = types.0;
         output.value_type = types.1;
+
+        output.typ = PulseValueType::PVAL_INVALID;
     }
 }

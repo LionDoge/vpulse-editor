@@ -426,3 +426,163 @@ impl Into<PulseGraphValueType> for PulseDataType {
         }
     }
 }
+
+pub fn pulse_value_type_to_node_types(
+    typ: &PulseValueType,
+) -> (PulseDataType, PulseGraphValueType) {
+    match typ {
+        PulseValueType::PVAL_INT(val) => (
+            PulseDataType::Scalar,
+            PulseGraphValueType::Scalar {
+                value: val.map(|v| v as f32).unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_FLOAT(val) => (
+            PulseDataType::Scalar,
+            PulseGraphValueType::Scalar {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_VEC3(val) => (
+            PulseDataType::Vec3,
+            PulseGraphValueType::Vec3 {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_VEC3_LOCAL(val) => (
+            PulseDataType::Vec3Local,
+            PulseGraphValueType::Vec3Local {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_STRING(val) => (
+            PulseDataType::String,
+            PulseGraphValueType::String {
+                value: val.clone().unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_BOOL => (
+            PulseDataType::Bool,
+            PulseGraphValueType::Bool { value: false },
+        ),
+        PulseValueType::PVAL_BOOL_VALUE(val) => (
+            PulseDataType::Bool,
+            PulseGraphValueType::Bool { value: val.unwrap_or_default() },
+        ),
+        PulseValueType::PVAL_EHANDLE(_) => (PulseDataType::EHandle, PulseGraphValueType::EHandle),
+        PulseValueType::PVAL_COLOR_RGB(val) => (
+            PulseDataType::Color,
+            PulseGraphValueType::Color {
+                value: val
+                    .map(|v| [v.x, v.y, v.z, 0.0])
+                    .unwrap_or([0.0, 0.0, 0.0, 0.0]),
+            },
+        ),
+        PulseValueType::PVAL_SNDEVT_GUID(_) => (
+            PulseDataType::SndEventHandle,
+            PulseGraphValueType::SndEventHandle,
+        ),
+        PulseValueType::PVAL_SNDEVT_NAME(val) => (
+            PulseDataType::SoundEventName,
+            PulseGraphValueType::SoundEventName {
+                value: val.clone().unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
+            (
+                PulseDataType::SchemaEnum,
+                PulseGraphValueType::SchemaEnum {
+                    enum_type: *enum_type,
+                    value: enum_type
+                        .get_all_types_as_enums()
+                        .into_iter()
+                        .next()
+                        .expect("Schema enum variants list must not be empty"),
+                },
+            )
+        }
+        PulseValueType::DOMAIN_ENTITY_NAME => (
+            PulseDataType::EntityName,
+            PulseGraphValueType::EntityName {
+                value: String::default(),
+            },
+        ),
+        PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
+        PulseValueType::PVAL_ANY => (PulseDataType::Any, PulseGraphValueType::Any),
+        PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_binding) => {
+            (
+                PulseDataType::SchemaEnum,
+                PulseGraphValueType::SchemaEnumChoice { 
+                    enum_type: enum_binding.id,
+                    enum_variant: EnumBindingValueIndex::default()
+                },
+            )
+        }
+        PulseValueType::PVAL_VEC2(val) => (
+            PulseDataType::Vec2,
+            PulseGraphValueType::Vec2 {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_VEC4(val) => (
+            PulseDataType::Vec4,
+            PulseGraphValueType::Vec4 {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_QANGLE(val) => (
+            PulseDataType::QAngle,
+            PulseGraphValueType::QAngle {
+                value: val.unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_TRANSFORM(_) => (
+            PulseDataType::Transform,
+            PulseGraphValueType::Transform,
+        ),
+        PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => (
+            PulseDataType::TransformWorldspace,
+            PulseGraphValueType::TransformWorldspace,
+        ),
+        PulseValueType::PVAL_RESOURCE(resource_type, val) => (
+            PulseDataType::Resource,
+            PulseGraphValueType::Resource {
+                resource_type: resource_type.clone(),
+                value: val.clone().unwrap_or_default(),
+            },
+        ),
+        PulseValueType::PVAL_ARRAY(array_type) =>
+        (
+            PulseDataType::Array,
+            PulseGraphValueType::Array {
+                array_type: PulseDataType::from((**array_type).clone()),
+            }
+        ),
+        PulseValueType::PVAL_GAMETIME(_) => (
+            PulseDataType::GameTime,
+            PulseGraphValueType::GameTime,
+        ),
+        PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => (
+            PulseDataType::TypeSafeInteger,
+            PulseGraphValueType::TypeSafeInteger {
+                integer_type: int_type.clone().unwrap_or_default(),
+            }
+        ),
+        _ => (
+            PulseDataType::Any,
+            PulseGraphValueType::Any
+        )
+    }
+}
+
+impl From<PulseValueType> for PulseGraphValueType {
+    fn from(value: PulseValueType) -> Self {
+        pulse_value_type_to_node_types(&value).1
+    }
+}
+
+impl From<PulseValueType> for PulseDataType {
+    fn from(value: PulseValueType) -> Self {
+        pulse_value_type_to_node_types(&value).0
+    }
+}

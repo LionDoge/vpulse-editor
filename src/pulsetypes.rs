@@ -16,8 +16,10 @@ pub struct PulseVariable {
 
     // deprecated
     #[serde(skip_serializing)]
+    #[serde(default)]
     pub typ_and_default_value: PulseValueType,
     #[serde(skip_serializing)]
+    #[serde(default)]
     pub default_value_buffer: String,
 }
 
@@ -29,7 +31,9 @@ pub struct OutputDefinition {
 
     // deprecated
     #[serde(skip_serializing)]
+    #[serde(default)]
     pub typ: PulseValueType,
     #[serde(skip_serializing)]
+    #[serde(default)]
     pub typ_old: PulseValueType,
 }

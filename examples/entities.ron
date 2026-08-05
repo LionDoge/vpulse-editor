@@ -1,7 +1,4 @@
 (
-    version: (
-        version: "v1",
-    ),
     state: (
         graph: (
             nodes: [
@@ -13,203 +10,279 @@
                     value: Some((
                         id: (
                             idx: 1,
-                            version: 1,
+                            version: 3,
                         ),
                         label: "Public Method",
                         inputs: [
                             ("name", (
-                                idx: 1,
-                                version: 1,
+                                idx: 7,
+                                version: 3,
                             )),
                         ],
                         outputs: [
                             ("argument1", (
-                                idx: 1,
-                                version: 1,
+                                idx: 5,
+                                version: 3,
                             )),
                             ("outAction", (
-                                idx: 2,
-                                version: 1,
+                                idx: 10,
+                                version: 3,
                             )),
                         ],
                         user_data: (
                             template: CellPublicMethod,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 2,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "EntFire",
+                        label: "Array Concatenate",
                         inputs: [
-                            ("ActionIn", (
-                                idx: 2,
+                            ("binding", (
+                                idx: 23,
                                 version: 1,
                             )),
-                            ("entity", (
-                                idx: 3,
+                            ("a", (
+                                idx: 24,
                                 version: 1,
                             )),
-                            ("input", (
-                                idx: 4,
-                                version: 1,
-                            )),
-                            ("value", (
-                                idx: 5,
+                            ("b", (
+                                idx: 25,
                                 version: 1,
                             )),
                         ],
                         outputs: [
-                            ("outAction", (
-                                idx: 3,
-                                version: 1,
+                            ("retval", (
+                                idx: 8,
+                                version: 9,
                             )),
                         ],
                         user_data: (
-                            template: EntFire,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (66),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_ARRAY(PVAL_EHANDLE(None))),
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 3,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "String to entity name",
+                        label: "Debug world text",
                         inputs: [
-                            ("entityName", (
-                                idx: 6,
-                                version: 1,
+                            ("ActionIn", (
+                                idx: 12,
+                                version: 9,
+                            )),
+                            ("pMessage", (
+                                idx: 11,
+                                version: 3,
+                            )),
+                            ("hEntity", (
+                                idx: 10,
+                                version: 3,
+                            )),
+                            ("nTextOffset", (
+                                idx: 9,
+                                version: 3,
+                            )),
+                            ("flDuration", (
+                                idx: 14,
+                                version: 5,
+                            )),
+                            ("flVerticalOffset", (
+                                idx: 5,
+                                version: 3,
+                            )),
+                            ("bAttached", (
+                                idx: 4,
+                                version: 3,
+                            )),
+                            ("color", (
+                                idx: 3,
+                                version: 3,
+                            )),
+                            ("flAlpha", (
+                                idx: 2,
+                                version: 3,
+                            )),
+                            ("flScale", (
+                                idx: 8,
+                                version: 3,
                             )),
                         ],
                         outputs: [
-                            ("out", (
-                                idx: 4,
-                                version: 1,
+                            ("outAction", (
+                                idx: 3,
+                                version: 3,
                             )),
                         ],
                         user_data: (
-                            template: StringToEntityName,
-                            custom_named_outputs: {},
+                            template: DebugWorldText,
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
-                    value: Some((
-                        id: (
-                            idx: 4,
-                            version: 1,
-                        ),
-                        label: "Find entity by name",
-                        inputs: [
-                            ("entName", (
-                                idx: 7,
-                                version: 1,
-                            )),
-                            ("entClass", (
-                                idx: 8,
-                                version: 1,
-                            )),
-                        ],
-                        outputs: [
-                            ("out", (
-                                idx: 5,
-                                version: 1,
-                            )),
-                        ],
-                        user_data: (
-                            template: FindEntByName,
-                            custom_named_outputs: {},
-                        ),
-                    )),
-                    version: 1,
+                    value: None,
+                    version: 2,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 5,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "Debug log",
+                        label: "Find All Entities",
                         inputs: [
-                            ("ActionIn", (
-                                idx: 9,
-                                version: 1,
+                            ("binding", (
+                                idx: 18,
+                                version: 5,
                             )),
-                            ("pMessage", (
-                                idx: 10,
+                            ("entityType", (
+                                idx: 19,
+                                version: 5,
+                            )),
+                            ("entityName", (
+                                idx: 22,
                                 version: 1,
                             )),
                         ],
                         outputs: [
-                            ("outAction", (
-                                idx: 6,
-                                version: 1,
+                            ("retval", (
+                                idx: 4,
+                                version: 5,
                             )),
                         ],
                         user_data: (
-                            template: DebugLog,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (188),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_ARRAY(PVAL_EHANDLE(None))),
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 6,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "Invoke library binding",
+                        label: "Get Entity Debug String",
                         inputs: [
                             ("binding", (
-                                idx: 11,
-                                version: 1,
+                                idx: 17,
+                                version: 3,
                             )),
                             ("hEnt", (
-                                idx: 12,
-                                version: 7,
+                                idx: 13,
+                                version: 3,
                             )),
                         ],
                         outputs: [
                             ("retval", (
-                                idx: 7,
-                                version: 7,
+                                idx: 9,
+                                version: 3,
                             )),
                         ],
                         user_data: (
-                            template: InvokeLibraryBinding,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (237),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 7,
+                            version: 7,
+                        ),
+                        label: "For each",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 6,
+                                version: 3,
+                            )),
+                            ("array", (
+                                idx: 1,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("index", (
+                                idx: 2,
+                                version: 3,
+                            )),
+                            ("out", (
+                                idx: 1,
+                                version: 3,
+                            )),
+                            ("loopAction", (
+                                idx: 7,
+                                version: 9,
+                            )),
+                            ("endAction", (
+                                idx: 6,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: ForEach,
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_EHANDLE(None)),
+                            added_inputs: [],
+                        ),
+                    )),
+                    version: 7,
+                ),
+                (
+                    value: None,
+                    version: 2,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 9,
                             version: 5,
                         ),
                         label: "Comment",
                         inputs: [
                             ("text", (
                                 idx: 16,
-                                version: 7,
+                                version: 11,
                             )),
                         ],
                         outputs: [],
                         user_data: (
                             template: Comment,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 5,
@@ -217,91 +290,40 @@
                 (
                     value: Some((
                         id: (
-                            idx: 8,
-                            version: 1,
-                        ),
-                        label: "Public Method",
-                        inputs: [
-                            ("name", (
-                                idx: 17,
-                                version: 1,
-                            )),
-                        ],
-                        outputs: [
-                            ("argument1", (
-                                idx: 9,
-                                version: 1,
-                            )),
-                            ("outAction", (
-                                idx: 10,
-                                version: 1,
-                            )),
-                        ],
-                        user_data: (
-                            template: CellPublicMethod,
-                            custom_named_outputs: {},
-                        ),
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 9,
-                            version: 1,
-                        ),
-                        label: "Convert",
-                        inputs: [
-                            ("typefrom", (
-                                idx: 18,
-                                version: 1,
-                            )),
-                            ("typeto", (
-                                idx: 19,
-                                version: 1,
-                            )),
-                            ("entityclass", (
-                                idx: 20,
-                                version: 1,
-                            )),
-                            ("input", (
-                                idx: 21,
-                                version: 3,
-                            )),
-                        ],
-                        outputs: [
-                            ("out", (
-                                idx: 11,
-                                version: 3,
-                            )),
-                        ],
-                        user_data: (
-                            template: Convert,
-                            custom_named_outputs: {},
-                        ),
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
                             idx: 10,
-                            version: 3,
+                            version: 5,
                         ),
-                        label: "Comment",
+                        label: "Find All Entities",
                         inputs: [
-                            ("text", (
+                            ("binding", (
                                 idx: 15,
+                                version: 7,
+                            )),
+                            ("entityType", (
+                                idx: 21,
+                                version: 5,
+                            )),
+                            ("entityName", (
+                                idx: 20,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("retval", (
+                                idx: 11,
                                 version: 5,
                             )),
                         ],
-                        outputs: [],
                         user_data: (
-                            template: Comment,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (188),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_ARRAY(PVAL_EHANDLE(None))),
+                            added_inputs: [],
                         ),
                     )),
-                    version: 3,
+                    version: 5,
                 ),
             ],
             inputs: [
@@ -313,183 +335,203 @@
                     value: Some((
                         id: (
                             idx: 1,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "ReColor",
+                        typ: Array,
+                        value: ArrayVal(
+                            array_type: Scalar,
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConnectionOnly,
                         node: (
-                            idx: 1,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 2,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Action,
-                        value: Action,
-                        kind: ConnectionOnly,
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 1.0,
+                        ),
+                        kind: ConnectionOrConstant,
                         node: (
-                            idx: 2,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 3,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: EntityName,
-                        value: EntityName(
-                            value: "",
+                        typ: Color,
+                        value: Color(
+                            value: (1.0, 1.0, 1.0, 1.0),
                         ),
                         kind: ConnectionOrConstant,
                         node: (
-                            idx: 2,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 4,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "Color",
+                        typ: Bool,
+                        value: Bool(
+                            value: true,
                         ),
                         kind: ConstantOnly,
                         node: (
-                            idx: 2,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 5,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "255 0 0",
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
                         ),
                         kind: ConnectionOrConstant,
                         node: (
-                            idx: 2,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 6,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "",
-                        ),
-                        kind: ConnectionOrConstant,
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
                         node: (
-                            idx: 3,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 7,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: EntityName,
-                        value: EntityName(
-                            value: "btn",
+                        typ: String,
+                        value: String(
+                            value: "displayInfo",
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConstantOnly,
                         node: (
-                            idx: 4,
-                            version: 1,
+                            idx: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 8,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "func_button",
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 1.0,
                         ),
-                        kind: ConstantOnly,
+                        kind: ConnectionOrConstant,
                         node: (
-                            idx: 4,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 9,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Action,
-                        value: Action,
-                        kind: ConnectionOnly,
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
                         node: (
-                            idx: 5,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 10,
-                            version: 1,
+                            version: 3,
+                        ),
+                        typ: EHandle,
+                        value: EHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 3,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 11,
+                            version: 3,
                         ),
                         typ: String,
                         value: String(
@@ -497,73 +539,63 @@
                         ),
                         kind: ConnectionOrConstant,
                         node: (
-                            idx: 5,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 11,
-                            version: 1,
-                        ),
-                        typ: LibraryBindingChoice,
-                        value: LibraryBindingChoice(
-                            value: (5),
-                        ),
-                        kind: ConstantOnly,
-                        node: (
-                            idx: 6,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 12,
-                            version: 7,
+                            version: 9,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 3,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 9,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 13,
+                            version: 3,
                         ),
                         typ: EHandle,
                         value: EHandle,
                         kind: ConnectionOnly,
                         node: (
                             idx: 6,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 7,
-                ),
-                (
-                    value: None,
-                    version: 2,
-                ),
-                (
-                    value: None,
-                    version: 2,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
-                            idx: 15,
+                            idx: 14,
                             version: 5,
                         ),
-                        typ: CommentBox,
-                        value: CommentBox(
-                            value: "Find entity by name will return a entity handle provided the entity\'s name and it\'s class (type). Only one will be returned if multiple exist.",
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 5.0,
                         ),
-                        kind: ConstantOnly,
+                        kind: ConnectionOrConstant,
                         node: (
-                            idx: 10,
+                            idx: 3,
                             version: 3,
                         ),
                         max_connections: Some(1),
@@ -574,16 +606,16 @@
                 (
                     value: Some((
                         id: (
-                            idx: 16,
+                            idx: 15,
                             version: 7,
                         ),
-                        typ: CommentBox,
-                        value: CommentBox(
-                            value: "EntFire node requires conversion with a \'String to entity name\' due to how game handles entities.",
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (188),
                         ),
                         kind: ConstantOnly,
                         node: (
-                            idx: 7,
+                            idx: 10,
                             version: 5,
                         ),
                         max_connections: Some(1),
@@ -594,102 +626,202 @@
                 (
                     value: Some((
                         id: (
+                            idx: 16,
+                            version: 11,
+                        ),
+                        typ: CommentBox,
+                        value: CommentBox(
+                            value: "\"Find all entities\" can be used to find entities of a given class, and optionally by name too. Result can be iterated with a \"For each\" node. Here we search for both decoys and players, just as an example.",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 9,
+                            version: 5,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 11,
+                ),
+                (
+                    value: Some((
+                        id: (
                             idx: 17,
-                            version: 1,
-                        ),
-                        typ: String,
-                        value: String(
-                            value: "GetHeightAboveWorld",
-                        ),
-                        kind: ConnectionOrConstant,
-                        node: (
-                            idx: 8,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 18,
-                            version: 1,
-                        ),
-                        typ: Typ,
-                        value: Typ(
-                            value: PVAL_FLOAT(None),
-                        ),
-                        kind: ConstantOnly,
-                        node: (
-                            idx: 9,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 19,
-                            version: 1,
-                        ),
-                        typ: Typ,
-                        value: Typ(
-                            value: PVAL_STRING(None),
-                        ),
-                        kind: ConstantOnly,
-                        node: (
-                            idx: 9,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 20,
-                            version: 1,
-                        ),
-                        typ: String,
-                        value: String(
-                            value: "",
-                        ),
-                        kind: ConstantOnly,
-                        node: (
-                            idx: 9,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 21,
                             version: 3,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (237),
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConstantOnly,
                         node: (
-                            idx: 9,
-                            version: 1,
+                            idx: 6,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
                     version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 18,
+                            version: 5,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (188),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 5,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 19,
+                            version: 5,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "player",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 5,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 20,
+                            version: 3,
+                        ),
+                        typ: EntityName,
+                        value: EntityName(
+                            value: "",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 10,
+                            version: 5,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 21,
+                            version: 5,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "decoy_projectile",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 10,
+                            version: 5,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 22,
+                            version: 1,
+                        ),
+                        typ: EntityName,
+                        value: EntityName(
+                            value: "",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 5,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 23,
+                            version: 1,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (66),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 2,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 24,
+                            version: 1,
+                        ),
+                        typ: Array,
+                        value: ArrayVal(
+                            array_type: Any,
+                        ),
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 2,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 25,
+                            version: 1,
+                        ),
+                        typ: Array,
+                        value: ArrayVal(
+                            array_type: Any,
+                        ),
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 2,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
                 ),
             ],
             outputs: [
@@ -701,145 +833,155 @@
                     value: Some((
                         id: (
                             idx: 1,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 1,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
-                        typ: String,
+                        typ: EHandle,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 2,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 1,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
-                        typ: Action,
+                        typ: Scalar,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 3,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 2,
-                            version: 1,
+                            idx: 3,
+                            version: 3,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 4,
-                            version: 1,
+                            version: 5,
                         ),
                         node: (
-                            idx: 3,
-                            version: 1,
+                            idx: 5,
+                            version: 3,
                         ),
-                        typ: EntityName,
+                        typ: Array,
                     )),
-                    version: 1,
+                    version: 5,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 5,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 4,
-                            version: 1,
+                            idx: 1,
+                            version: 3,
                         ),
-                        typ: EHandle,
+                        typ: String,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 6,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 5,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 7,
-                            version: 7,
+                            version: 9,
                         ),
                         node: (
-                            idx: 6,
-                            version: 1,
+                            idx: 7,
+                            version: 7,
                         ),
-                        typ: Scalar,
+                        typ: Action,
                     )),
-                    version: 7,
+                    version: 9,
                 ),
                 (
-                    value: None,
-                    version: 8,
+                    value: Some((
+                        id: (
+                            idx: 8,
+                            version: 9,
+                        ),
+                        node: (
+                            idx: 2,
+                            version: 3,
+                        ),
+                        typ: Array,
+                    )),
+                    version: 9,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 9,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 8,
-                            version: 1,
+                            idx: 6,
+                            version: 3,
                         ),
                         typ: String,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 10,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 8,
-                            version: 1,
+                            idx: 1,
+                            version: 3,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 11,
-                            version: 3,
+                            version: 5,
                         ),
                         node: (
-                            idx: 9,
-                            version: 1,
+                            idx: 10,
+                            version: 5,
                         ),
-                        typ: String,
+                        typ: Array,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
             ],
             connections: [
@@ -848,42 +990,16 @@
                     version: 0,
                 ),
                 (
-                    value: None,
-                    version: 0,
-                ),
-                (
                     value: Some([
                         (
-                            idx: 2,
-                            version: 1,
+                            idx: 8,
+                            version: 9,
                         ),
                     ]),
-                    version: 1,
+                    version: 3,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 4,
-                            version: 1,
-                        ),
-                    ]),
-                    version: 1,
-                ),
-                (
-                    value: None,
-                    version: 0,
-                ),
-                (
-                    value: None,
-                    version: 0,
-                ),
-                (
-                    value: Some([
-                        (
-                            idx: 1,
-                            version: 1,
-                        ),
-                    ]),
+                    value: Some([]),
                     version: 1,
                 ),
                 (
@@ -895,21 +1011,20 @@
                     version: 0,
                 ),
                 (
+                    value: None,
+                    version: 0,
+                ),
+                (
                     value: Some([
                         (
                             idx: 10,
-                            version: 1,
-                        ),
-                    ]),
-                    version: 1,
-                ),
-                (
-                    value: Some([
-                        (
-                            idx: 11,
                             version: 3,
                         ),
                     ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([]),
                     version: 1,
                 ),
                 (
@@ -917,17 +1032,44 @@
                     version: 0,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 5,
-                            version: 1,
-                        ),
-                    ]),
-                    version: 7,
+                    value: Some([]),
+                    version: 1,
                 ),
                 (
-                    value: None,
-                    version: 0,
+                    value: Some([
+                        (
+                            idx: 1,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 9,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 7,
+                            version: 9,
+                        ),
+                    ]),
+                    version: 9,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 1,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
                 ),
                 (
                     value: None,
@@ -958,55 +1100,68 @@
                     version: 0,
                 ),
                 (
+                    value: Some([]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
                     value: Some([
                         (
-                            idx: 7,
-                            version: 7,
+                            idx: 11,
+                            version: 5,
                         ),
                     ]),
-                    version: 3,
+                    version: 1,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 4,
+                            version: 5,
+                        ),
+                    ]),
+                    version: 1,
                 ),
             ],
         ),
         node_order: [
             (
-                idx: 5,
-                version: 1,
+                idx: 1,
+                version: 3,
             ),
             (
                 idx: 9,
-                version: 1,
-            ),
-            (
-                idx: 6,
-                version: 1,
-            ),
-            (
-                idx: 4,
-                version: 1,
-            ),
-            (
-                idx: 2,
-                version: 1,
-            ),
-            (
-                idx: 1,
-                version: 1,
-            ),
-            (
-                idx: 3,
-                version: 1,
-            ),
-            (
-                idx: 7,
                 version: 5,
             ),
             (
-                idx: 8,
-                version: 1,
+                idx: 6,
+                version: 3,
+            ),
+            (
+                idx: 3,
+                version: 3,
             ),
             (
                 idx: 10,
+                version: 5,
+            ),
+            (
+                idx: 2,
+                version: 3,
+            ),
+            (
+                idx: 7,
+                version: 7,
+            ),
+            (
+                idx: 5,
                 version: 3,
             ),
         ],
@@ -1020,73 +1175,67 @@
             ),
             (
                 value: Some((
-                    x: 81.612,
-                    y: 146.66171,
+                    x: -14.024353,
+                    y: -288.61438,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
-                    x: 530.60706,
-                    y: 127.40378,
+                    x: 249.0597,
+                    y: 45.867126,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
-                    x: 322.37067,
-                    y: 219.3981,
+                    x: 1053.5691,
+                    y: -158.36035,
                 )),
-                version: 1,
+                version: 3,
+            ),
+            (
+                value: None,
+                version: 0,
             ),
             (
                 value: Some((
-                    x: 103.024536,
-                    y: -89.2529,
+                    x: -11.5008545,
+                    y: 144.02283,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
-                    x: 1079.876,
-                    y: -243.08882,
+                    x: 703.9606,
+                    y: -13.534882,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
-                    x: 428.37488,
-                    y: -101.25079,
+                    x: 492.7661,
+                    y: -151.9266,
                 )),
-                version: 1,
+                version: 7,
+            ),
+            (
+                value: None,
+                version: 0,
             ),
             (
                 value: Some((
-                    x: 218.36429,
-                    y: 48.54834,
+                    x: -47.740234,
+                    y: -135.73282,
                 )),
                 version: 5,
             ),
             (
                 value: Some((
-                    x: -2.7954407,
-                    y: -273.18472,
+                    x: -23.500854,
+                    y: 13.622864,
                 )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 853.8254,
-                    y: -200.30347,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 2.1453552,
-                    y: -164.1389,
-                )),
-                version: 3,
+                version: 5,
             ),
         ],
         node_sizes: [
@@ -1099,46 +1248,54 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 246.45615,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: None,
+                version: 0,
             ),
             (
                 value: Some((
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 7,
+            ),
+            (
+                value: None,
+                version: 0,
             ),
             (
                 value: Some((
-                    x: 200.0,
-                    y: 200.0,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 371.88782,
+                    x: 364.8,
                     y: 200.0,
                 )),
                 version: 5,
@@ -1148,40 +1305,20 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 200.0,
-                    y: 200.0,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 441.01047,
-                    y: 200.0,
-                )),
-                version: 3,
+                version: 5,
             ),
         ],
         node_finder: None,
         pan_zoom: (
             pan: (
-                x: 224.00018,
-                y: 375.19986,
+                x: 262.72784,
+                y: 432.93286,
             ),
-            zoom: 0.8610266,
+            zoom: 1.0,
         ),
         _user_state: (),
     ),
     user_state: (
-        added_parameters: [
-            (
-                value: None,
-                version: 0,
-            ),
-        ],
         public_outputs: [],
         variables: [],
         exposed_nodes: [
@@ -1191,5 +1328,8 @@
             ),
         ],
         outputs_dropdown_choices: [],
+        save_file_path: None,
+        graph_domain: "ServerEntity",
+        graph_subtype: "PVAL_EHANDLE:point_pulse",
     ),
 )

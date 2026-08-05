@@ -1,7 +1,4 @@
 (
-    version: (
-        version: "v1",
-    ),
     state: (
         graph: (
             nodes: [
@@ -34,7 +31,9 @@
                         ],
                         user_data: (
                             template: CellPublicMethod,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 13,
@@ -55,12 +54,14 @@
                         outputs: [
                             ("value", (
                                 idx: 4,
-                                version: 3,
+                                version: 5,
                             )),
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_INT(Some(0))),
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -82,23 +83,25 @@
                                 version: 5,
                             )),
                             ("A", (
-                                idx: 2,
-                                version: 9,
+                                idx: 4,
+                                version: 13,
                             )),
                             ("B", (
-                                idx: 4,
+                                idx: 2,
                                 version: 11,
                             )),
                         ],
                         outputs: [
                             ("out", (
                                 idx: 3,
-                                version: 3,
+                                version: 5,
                             )),
                         ],
                         user_data: (
                             template: Operation,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -120,23 +123,25 @@
                                 version: 1,
                             )),
                             ("A", (
-                                idx: 9,
-                                version: 1,
+                                idx: 10,
+                                version: 3,
                             )),
                             ("B", (
-                                idx: 10,
-                                version: 1,
+                                idx: 9,
+                                version: 3,
                             )),
                         ],
                         outputs: [
                             ("out", (
                                 idx: 2,
-                                version: 7,
+                                version: 9,
                             )),
                         ],
                         user_data: (
                             template: Operation,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -170,7 +175,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -179,73 +186,41 @@
                     value: Some((
                         id: (
                             idx: 6,
-                            version: 3,
+                            version: 5,
                         ),
-                        label: "Int Switch",
+                        label: "Compare",
                         inputs: [
-                            ("ActionIn", (
-                                idx: 15,
-                                version: 3,
-                            )),
-                            ("value", (
-                                idx: 14,
-                                version: 3,
-                            )),
-                            ("caselabel", (
+                            ("type", (
                                 idx: 19,
-                                version: 1,
+                                version: 3,
+                            )),
+                            ("operation", (
+                                idx: 14,
+                                version: 5,
+                            )),
+                            ("A", (
+                                idx: 67,
+                                version: 5,
+                            )),
+                            ("B", (
+                                idx: 15,
+                                version: 7,
                             )),
                         ],
                         outputs: [
-                            ("defaultcase", (
-                                idx: 7,
-                                version: 3,
-                            )),
-                            ("outAction", (
-                                idx: 9,
-                                version: 1,
-                            )),
-                            ("0", (
-                                idx: 10,
-                                version: 1,
-                            )),
-                            ("1", (
-                                idx: 11,
-                                version: 1,
-                            )),
-                            ("2", (
+                            ("out", (
                                 idx: 12,
-                                version: 1,
+                                version: 3,
                             )),
                         ],
                         user_data: (
-                            template: IntSwitch,
-                            custom_named_outputs: {
-                                (
-                                    idx: 12,
-                                    version: 1,
-                                ): (
-                                    name: "2",
-                                    data: PVAL_ACT,
-                                ),
-                                (
-                                    idx: 11,
-                                    version: 1,
-                                ): (
-                                    name: "1",
-                                    data: PVAL_ACT,
-                                ),
-                                (
-                                    idx: 10,
-                                    version: 1,
-                                ): (
-                                    name: "0",
-                                    data: PVAL_ACT,
-                                ),
-                            },
+                            template: CompareOutput,
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
@@ -276,7 +251,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -289,6 +266,10 @@
                         ),
                         label: "Sound event start",
                         inputs: [
+                            ("ActionIn", (
+                                idx: 79,
+                                version: 1,
+                            )),
                             ("strSoundEventName", (
                                 idx: 20,
                                 version: 1,
@@ -297,16 +278,26 @@
                                 idx: 21,
                                 version: 1,
                             )),
+                            ("soundEventType", (
+                                idx: 78,
+                                version: 1,
+                            )),
                         ],
                         outputs: [
                             ("retval", (
                                 idx: 13,
                                 version: 1,
                             )),
+                            ("outAction", (
+                                idx: 40,
+                                version: 1,
+                            )),
                         ],
                         user_data: (
                             template: SoundEventStart,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -327,6 +318,10 @@
                                 idx: 27,
                                 version: 3,
                             )),
+                            ("Async", (
+                                idx: 84,
+                                version: 1,
+                            )),
                         ],
                         outputs: [
                             ("outAction", (
@@ -336,7 +331,9 @@
                         ],
                         user_data: (
                             template: CallNode,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 3,
@@ -357,7 +354,9 @@
                         ],
                         user_data: (
                             template: Function,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -366,35 +365,47 @@
                     value: Some((
                         id: (
                             idx: 11,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "Invoke library binding",
+                        label: "Sound Event Set Param Float",
                         inputs: [
                             ("binding", (
-                                idx: 23,
-                                version: 1,
+                                idx: 25,
+                                version: 3,
                             )),
                             ("ActionIn", (
                                 idx: 24,
-                                version: 1,
+                                version: 3,
                             )),
                             ("nSoundEventGuid", (
-                                idx: 25,
+                                idx: 23,
+                                version: 3,
+                            )),
+                            ("pParameterName", (
+                                idx: 85,
+                                version: 3,
+                            )),
+                            ("flValue", (
+                                idx: 89,
                                 version: 1,
                             )),
                         ],
                         outputs: [
                             ("outAction", (
                                 idx: 15,
-                                version: 1,
+                                version: 3,
                             )),
                         ],
                         user_data: (
-                            template: InvokeLibraryBinding,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (22),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -417,7 +428,9 @@
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_SNDEVT_GUID(None)),
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -451,7 +464,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -464,6 +479,10 @@
                         ),
                         label: "Sound event start",
                         inputs: [
+                            ("ActionIn", (
+                                idx: 81,
+                                version: 1,
+                            )),
                             ("strSoundEventName", (
                                 idx: 31,
                                 version: 1,
@@ -472,16 +491,26 @@
                                 idx: 32,
                                 version: 1,
                             )),
+                            ("soundEventType", (
+                                idx: 80,
+                                version: 1,
+                            )),
                         ],
                         outputs: [
                             ("retval", (
                                 idx: 19,
                                 version: 1,
                             )),
+                            ("outAction", (
+                                idx: 41,
+                                version: 1,
+                            )),
                         ],
                         user_data: (
                             template: SoundEventStart,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -494,6 +523,10 @@
                         ),
                         label: "Sound event start",
                         inputs: [
+                            ("ActionIn", (
+                                idx: 83,
+                                version: 1,
+                            )),
                             ("strSoundEventName", (
                                 idx: 33,
                                 version: 1,
@@ -502,16 +535,26 @@
                                 idx: 34,
                                 version: 1,
                             )),
+                            ("soundEventType", (
+                                idx: 82,
+                                version: 1,
+                            )),
                         ],
                         outputs: [
                             ("retval", (
                                 idx: 20,
                                 version: 1,
                             )),
+                            ("outAction", (
+                                idx: 42,
+                                version: 1,
+                            )),
                         ],
                         user_data: (
                             template: SoundEventStart,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -545,7 +588,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -575,7 +620,9 @@
                         ],
                         user_data: (
                             template: CellPublicMethod,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 5,
@@ -601,7 +648,9 @@
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 5,
@@ -639,7 +688,9 @@
                         ],
                         user_data: (
                             template: Operation,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 3,
@@ -669,7 +720,9 @@
                         ],
                         user_data: (
                             template: DebugLog,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 3,
@@ -699,7 +752,9 @@
                         ],
                         user_data: (
                             template: DebugLog,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -729,7 +784,9 @@
                         ],
                         user_data: (
                             template: DebugLog,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -738,43 +795,47 @@
                     value: Some((
                         id: (
                             idx: 23,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "Invoke library binding",
+                        label: "Sound Event Set Param Float",
                         inputs: [
                             ("binding", (
-                                idx: 41,
-                                version: 3,
+                                idx: 45,
+                                version: 5,
                             )),
                             ("ActionIn", (
-                                idx: 48,
-                                version: 3,
+                                idx: 46,
+                                version: 5,
                             )),
                             ("nSoundEventGuid", (
                                 idx: 47,
-                                version: 3,
+                                version: 5,
                             )),
                             ("pParameterName", (
-                                idx: 46,
-                                version: 3,
+                                idx: 48,
+                                version: 5,
                             )),
                             ("flValue", (
-                                idx: 45,
-                                version: 3,
+                                idx: 41,
+                                version: 5,
                             )),
                         ],
                         outputs: [
                             ("outAction", (
                                 idx: 29,
-                                version: 1,
+                                version: 3,
                             )),
                         ],
                         user_data: (
-                            template: InvokeLibraryBinding,
-                            custom_named_outputs: {},
+                            template: LibraryBindingAssigned(
+                                binding: (22),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -797,7 +858,9 @@
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_SNDEVT_GUID(None)),
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -831,7 +894,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -861,7 +926,9 @@
                         ],
                         user_data: (
                             template: CellPublicMethod,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -887,7 +954,9 @@
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: Some(PVAL_SNDEVT_GUID(None)),
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -925,7 +994,9 @@
                         ],
                         user_data: (
                             template: Operation,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -934,43 +1005,41 @@
                     value: Some((
                         id: (
                             idx: 29,
-                            version: 1,
+                            version: 3,
                         ),
-                        label: "Invoke library binding",
+                        label: "If",
                         inputs: [
-                            ("binding", (
-                                idx: 65,
-                                version: 1,
-                            )),
                             ("ActionIn", (
-                                idx: 66,
-                                version: 1,
-                            )),
-                            ("nSoundEventGuid", (
-                                idx: 67,
-                                version: 1,
-                            )),
-                            ("pParameterName", (
-                                idx: 68,
-                                version: 1,
-                            )),
-                            ("flValue", (
                                 idx: 69,
-                                version: 1,
+                                version: 3,
+                            )),
+                            ("condition", (
+                                idx: 68,
+                                version: 3,
                             )),
                         ],
                         outputs: [
-                            ("outAction", (
+                            ("True", (
                                 idx: 36,
+                                version: 3,
+                            )),
+                            ("False", (
+                                idx: 43,
+                                version: 3,
+                            )),
+                            ("Either", (
+                                idx: 45,
                                 version: 1,
                             )),
                         ],
                         user_data: (
-                            template: InvokeLibraryBinding,
-                            custom_named_outputs: {},
+                            template: CompareIf,
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -1001,7 +1070,9 @@
                         ],
                         user_data: (
                             template: InvokeLibraryBinding,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -1035,7 +1106,9 @@
                         ],
                         user_data: (
                             template: SetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -1061,7 +1134,9 @@
                         ],
                         user_data: (
                             template: GetVar,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -1082,7 +1157,127 @@
                         outputs: [],
                         user_data: (
                             template: Comment,
-                            custom_named_outputs: {},
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 34,
+                            version: 3,
+                        ),
+                        label: "Sound Event Stop",
+                        inputs: [
+                            ("binding", (
+                                idx: 88,
+                                version: 3,
+                            )),
+                            ("ActionIn", (
+                                idx: 87,
+                                version: 3,
+                            )),
+                            ("nSoundEventGuid", (
+                                idx: 86,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("outAction", (
+                                idx: 44,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: LibraryBindingAssigned(
+                                binding: (21),
+                            ),
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
+                        ),
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 35,
+                            version: 1,
+                        ),
+                        label: "If",
+                        inputs: [
+                            ("ActionIn", (
+                                idx: 66,
+                                version: 3,
+                            )),
+                            ("condition", (
+                                idx: 65,
+                                version: 3,
+                            )),
+                        ],
+                        outputs: [
+                            ("True", (
+                                idx: 11,
+                                version: 3,
+                            )),
+                            ("False", (
+                                idx: 10,
+                                version: 3,
+                            )),
+                            ("Either", (
+                                idx: 9,
+                                version: 3,
+                            )),
+                        ],
+                        user_data: (
+                            template: CompareIf,
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
+                        ),
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        label: "Compare",
+                        inputs: [
+                            ("type", (
+                                idx: 90,
+                                version: 1,
+                            )),
+                            ("operation", (
+                                idx: 91,
+                                version: 1,
+                            )),
+                            ("A", (
+                                idx: 92,
+                                version: 5,
+                            )),
+                            ("B", (
+                                idx: 93,
+                                version: 5,
+                            )),
+                        ],
+                        outputs: [
+                            ("out", (
+                                idx: 7,
+                                version: 5,
+                            )),
+                        ],
+                        user_data: (
+                            template: CompareOutput,
+                            input_hint_text: None,
+                            custom_output_type: None,
+                            added_inputs: [],
                         ),
                     )),
                     version: 1,
@@ -1117,11 +1312,11 @@
                     value: Some((
                         id: (
                             idx: 2,
-                            version: 9,
+                            version: 11,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
+                        typ: Integer,
+                        value: Integer(
+                            value: 1,
                         ),
                         kind: ConnectionOrConstant,
                         node: (
@@ -1131,7 +1326,7 @@
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 9,
+                    version: 11,
                 ),
                 (
                     value: Some((
@@ -1157,11 +1352,11 @@
                     value: Some((
                         id: (
                             idx: 4,
-                            version: 11,
+                            version: 13,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 1.0,
+                        typ: Integer,
+                        value: Integer(
+                            value: 0,
                         ),
                         kind: ConnectionOrConstant,
                         node: (
@@ -1171,7 +1366,7 @@
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 11,
+                    version: 13,
                 ),
                 (
                     value: Some((
@@ -1258,11 +1453,11 @@
                     value: Some((
                         id: (
                             idx: 9,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
+                        typ: Integer,
+                        value: Integer(
+                            value: 3,
                         ),
                         kind: ConnectionOrConstant,
                         node: (
@@ -1272,17 +1467,17 @@
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 10,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 3.0,
+                        typ: Integer,
+                        value: Integer(
+                            value: 0,
                         ),
                         kind: ConnectionOrConstant,
                         node: (
@@ -1292,7 +1487,7 @@
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -1357,39 +1552,41 @@
                     value: Some((
                         id: (
                             idx: 14,
-                            version: 3,
+                            version: 5,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
+                        typ: String,
+                        value: String(
+                            value: "==",
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConstantOnly,
                         node: (
                             idx: 6,
-                            version: 3,
+                            version: 5,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 15,
-                            version: 3,
+                            version: 7,
                         ),
-                        typ: Action,
-                        value: Action,
-                        kind: ConnectionOnly,
+                        typ: Integer,
+                        value: Integer(
+                            value: 0,
+                        ),
+                        kind: ConnectionOrConstant,
                         node: (
                             idx: 6,
-                            version: 3,
+                            version: 5,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 3,
+                    version: 7,
                 ),
                 (
                     value: Some((
@@ -1452,21 +1649,21 @@
                     value: Some((
                         id: (
                             idx: 19,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 2.0,
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_INT(None),
                         ),
                         kind: ConstantOnly,
                         node: (
                             idx: 6,
-                            version: 3,
+                            version: 5,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -1533,57 +1730,57 @@
                     value: Some((
                         id: (
                             idx: 23,
-                            version: 1,
-                        ),
-                        typ: LibraryBindingChoice,
-                        value: LibraryBindingChoice(
-                            value: (21),
-                        ),
-                        kind: ConstantOnly,
-                        node: (
-                            idx: 11,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 24,
-                            version: 1,
-                        ),
-                        typ: Action,
-                        value: Action,
-                        kind: ConnectionOrConstant,
-                        node: (
-                            idx: 11,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 1,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 25,
-                            version: 1,
+                            version: 3,
                         ),
                         typ: SndEventHandle,
                         value: SndEventHandle,
                         kind: ConnectionOnly,
                         node: (
                             idx: 11,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 24,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 11,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 25,
+                            version: 3,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (22),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 11,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -1879,21 +2076,21 @@
                     value: Some((
                         id: (
                             idx: 41,
-                            version: 3,
+                            version: 5,
                         ),
-                        typ: LibraryBindingChoice,
-                        value: LibraryBindingChoice(
-                            value: (22),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
                         ),
-                        kind: ConstantOnly,
+                        kind: ConnectionOrConstant,
                         node: (
                             idx: 23,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
@@ -1959,27 +2156,63 @@
                     value: Some((
                         id: (
                             idx: 45,
-                            version: 3,
+                            version: 5,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (22),
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConstantOnly,
                         node: (
                             idx: 23,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 46,
+                            version: 5,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 23,
                             version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 47,
+                            version: 5,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 23,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 48,
+                            version: 5,
                         ),
                         typ: String,
                         value: String(
@@ -1988,48 +2221,12 @@
                         kind: ConnectionOrConstant,
                         node: (
                             idx: 23,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 3,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 47,
                             version: 3,
                         ),
-                        typ: SndEventHandle,
-                        value: SndEventHandle,
-                        kind: ConnectionOnly,
-                        node: (
-                            idx: 23,
-                            version: 1,
-                        ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 3,
-                ),
-                (
-                    value: Some((
-                        id: (
-                            idx: 48,
-                            version: 3,
-                        ),
-                        typ: Action,
-                        value: Action,
-                        kind: ConnectionOrConstant,
-                        node: (
-                            idx: 23,
-                            version: 1,
-                        ),
-                        max_connections: Some(1),
-                        shown_inline: true,
-                    )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
@@ -2350,97 +2547,97 @@
                     value: Some((
                         id: (
                             idx: 65,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: LibraryBindingChoice,
-                        value: LibraryBindingChoice(
-                            value: (22),
+                        typ: Bool,
+                        value: Bool(
+                            value: false,
                         ),
-                        kind: ConstantOnly,
+                        kind: ConnectionOnly,
                         node: (
-                            idx: 29,
+                            idx: 35,
                             version: 1,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 66,
-                            version: 1,
+                            version: 3,
                         ),
                         typ: Action,
                         value: Action,
-                        kind: ConnectionOrConstant,
+                        kind: ConnectionOnly,
                         node: (
-                            idx: 29,
+                            idx: 35,
                             version: 1,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 67,
-                            version: 1,
+                            version: 5,
                         ),
-                        typ: SndEventHandle,
-                        value: SndEventHandle,
-                        kind: ConnectionOnly,
+                        typ: Integer,
+                        value: Integer(
+                            value: 0,
+                        ),
+                        kind: ConnectionOrConstant,
                         node: (
-                            idx: 29,
-                            version: 1,
+                            idx: 6,
+                            version: 5,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 5,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 68,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: String,
-                        value: String(
-                            value: "volume",
+                        typ: Bool,
+                        value: Bool(
+                            value: false,
                         ),
-                        kind: ConnectionOrConstant,
+                        kind: ConnectionOnly,
                         node: (
                             idx: 29,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 69,
-                            version: 1,
+                            version: 3,
                         ),
-                        typ: Scalar,
-                        value: Scalar(
-                            value: 0.0,
-                        ),
-                        kind: ConnectionOrConstant,
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
                         node: (
                             idx: 29,
-                            version: 1,
+                            version: 3,
                         ),
                         max_connections: Some(1),
                         shown_inline: true,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -2602,6 +2799,316 @@
                     )),
                     version: 1,
                 ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 78,
+                            version: 1,
+                        ),
+                        typ: GeneralEnum,
+                        value: GeneralEnumChoice(
+                            value: SoundEventStartType(Entity),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 79,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 80,
+                            version: 1,
+                        ),
+                        typ: GeneralEnum,
+                        value: GeneralEnumChoice(
+                            value: SoundEventStartType(Entity),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 81,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 82,
+                            version: 1,
+                        ),
+                        typ: GeneralEnum,
+                        value: GeneralEnumChoice(
+                            value: SoundEventStartType(Entity),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 83,
+                            version: 1,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 84,
+                            version: 1,
+                        ),
+                        typ: Bool,
+                        value: Bool(
+                            value: false,
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 9,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 85,
+                            version: 3,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "volume",
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 11,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 86,
+                            version: 3,
+                        ),
+                        typ: SndEventHandle,
+                        value: SndEventHandle,
+                        kind: ConnectionOnly,
+                        node: (
+                            idx: 34,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 87,
+                            version: 3,
+                        ),
+                        typ: Action,
+                        value: Action,
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 34,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 88,
+                            version: 3,
+                        ),
+                        typ: LibraryBindingChoice,
+                        value: LibraryBindingChoice(
+                            value: (21),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 34,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 89,
+                            version: 1,
+                        ),
+                        typ: Scalar,
+                        value: Scalar(
+                            value: 0.0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 11,
+                            version: 3,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 90,
+                            version: 1,
+                        ),
+                        typ: Typ,
+                        value: Typ(
+                            value: PVAL_INT(None),
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 91,
+                            version: 1,
+                        ),
+                        typ: String,
+                        value: String(
+                            value: "==",
+                        ),
+                        kind: ConstantOnly,
+                        node: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 92,
+                            version: 5,
+                        ),
+                        typ: Integer,
+                        value: Integer(
+                            value: 0,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 93,
+                            version: 5,
+                        ),
+                        typ: Integer,
+                        value: Integer(
+                            value: 1,
+                        ),
+                        kind: ConnectionOrConstant,
+                        node: (
+                            idx: 36,
+                            version: 1,
+                        ),
+                        max_connections: Some(1),
+                        shown_inline: true,
+                    )),
+                    version: 5,
+                ),
             ],
             outputs: [
                 (
@@ -2626,43 +3133,43 @@
                     value: Some((
                         id: (
                             idx: 2,
-                            version: 7,
+                            version: 9,
                         ),
                         node: (
                             idx: 4,
                             version: 1,
                         ),
-                        typ: Scalar,
+                        typ: Integer,
                     )),
-                    version: 7,
+                    version: 9,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 3,
-                            version: 3,
+                            version: 5,
                         ),
                         node: (
                             idx: 3,
                             version: 1,
                         ),
-                        typ: Scalar,
+                        typ: Integer,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 4,
-                            version: 3,
+                            version: 5,
                         ),
                         node: (
                             idx: 2,
                             version: 1,
                         ),
-                        typ: Scalar,
+                        typ: Integer,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
@@ -2696,15 +3203,15 @@
                     value: Some((
                         id: (
                             idx: 7,
-                            version: 3,
+                            version: 5,
                         ),
                         node: (
-                            idx: 6,
-                            version: 3,
+                            idx: 36,
+                            version: 1,
                         ),
-                        typ: Action,
+                        typ: Bool,
                     )),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some((
@@ -2724,57 +3231,57 @@
                     value: Some((
                         id: (
                             idx: 9,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 6,
-                            version: 3,
+                            idx: 35,
+                            version: 1,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 10,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 6,
-                            version: 3,
+                            idx: 35,
+                            version: 1,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 11,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
-                            idx: 6,
-                            version: 3,
+                            idx: 35,
+                            version: 1,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
                         id: (
                             idx: 12,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
                             idx: 6,
-                            version: 3,
+                            version: 5,
                         ),
-                        typ: Action,
+                        typ: Bool,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -2808,15 +3315,15 @@
                     value: Some((
                         id: (
                             idx: 15,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
                             idx: 11,
-                            version: 1,
+                            version: 3,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -3004,15 +3511,15 @@
                     value: Some((
                         id: (
                             idx: 29,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
                             idx: 23,
-                            version: 1,
+                            version: 3,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -3102,15 +3609,15 @@
                     value: Some((
                         id: (
                             idx: 36,
-                            version: 1,
+                            version: 3,
                         ),
                         node: (
                             idx: 29,
-                            version: 1,
+                            version: 3,
                         ),
                         typ: Action,
                     )),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some((
@@ -3154,8 +3661,100 @@
                     )),
                     version: 1,
                 ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 40,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 8,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 41,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 14,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 42,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 15,
+                            version: 1,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 43,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 29,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 44,
+                            version: 3,
+                        ),
+                        node: (
+                            idx: 34,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 3,
+                ),
+                (
+                    value: Some((
+                        id: (
+                            idx: 45,
+                            version: 1,
+                        ),
+                        node: (
+                            idx: 29,
+                            version: 3,
+                        ),
+                        typ: Action,
+                    )),
+                    version: 1,
+                ),
             ],
             connections: [
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
                 (
                     value: None,
                     version: 0,
@@ -3168,14 +3767,10 @@
                     value: Some([
                         (
                             idx: 4,
-                            version: 3,
+                            version: 5,
                         ),
                     ]),
-                    version: 9,
-                ),
-                (
-                    value: None,
-                    version: 0,
+                    version: 13,
                 ),
                 (
                     value: None,
@@ -3201,14 +3796,10 @@
                     value: Some([
                         (
                             idx: 3,
-                            version: 3,
+                            version: 5,
                         ),
                     ]),
-                    version: 1,
-                ),
-                (
-                    value: None,
-                    version: 0,
+                    version: 3,
                 ),
                 (
                     value: Some([
@@ -3224,37 +3815,22 @@
                     version: 0,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 2,
-                            version: 7,
-                        ),
-                    ]),
+                    value: Some([]),
                     version: 1,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 2,
-                            version: 7,
-                        ),
-                    ]),
+                    value: Some([]),
                     version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
                 ),
                 (
                     value: Some([
                         (
-                            idx: 17,
-                            version: 1,
-                        ),
-                    ]),
-                    version: 3,
-                ),
-                (
-                    value: Some([
-                        (
-                            idx: 10,
-                            version: 1,
+                            idx: 36,
+                            version: 3,
                         ),
                     ]),
                     version: 1,
@@ -3289,25 +3865,25 @@
                     version: 0,
                 ),
                 (
-                    value: None,
-                    version: 0,
+                    value: Some([
+                        (
+                            idx: 31,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
                 ),
                 (
                     value: Some([
                         (
-                            idx: 14,
-                            version: 1,
+                            idx: 23,
+                            version: 3,
                         ),
                     ]),
-                    version: 1,
+                    version: 3,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 16,
-                            version: 1,
-                        ),
-                    ]),
+                    value: Some([]),
                     version: 1,
                 ),
                 (
@@ -3327,7 +3903,7 @@
                     value: Some([
                         (
                             idx: 11,
-                            version: 1,
+                            version: 3,
                         ),
                     ]),
                     version: 1,
@@ -3364,8 +3940,8 @@
                 (
                     value: Some([
                         (
-                            idx: 12,
-                            version: 1,
+                            idx: 10,
+                            version: 3,
                         ),
                     ]),
                     version: 1,
@@ -3396,8 +3972,13 @@
                     version: 0,
                 ),
                 (
-                    value: None,
-                    version: 0,
+                    value: Some([
+                        (
+                            idx: 37,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 5,
                 ),
                 (
                     value: Some([
@@ -3417,34 +3998,29 @@
                     version: 1,
                 ),
                 (
-                    value: Some([
-                        (
-                            idx: 28,
-                            version: 3,
-                        ),
-                    ]),
+                    value: Some([]),
                     version: 3,
                 ),
                 (
-                    value: None,
-                    version: 0,
-                ),
-                (
                     value: Some([
                         (
-                            idx: 31,
+                            idx: 33,
                             version: 1,
                         ),
                     ]),
-                    version: 3,
+                    version: 5,
                 ),
                 (
                     value: Some([
                         (
-                            idx: 23,
-                            version: 3,
+                            idx: 34,
+                            version: 1,
                         ),
                     ]),
+                    version: 5,
+                ),
+                (
+                    value: Some([]),
                     version: 3,
                 ),
                 (
@@ -3493,8 +4069,8 @@
                 (
                     value: Some([
                         (
-                            idx: 29,
-                            version: 1,
+                            idx: 15,
+                            version: 3,
                         ),
                     ]),
                     version: 1,
@@ -3542,39 +4118,49 @@
                     version: 3,
                 ),
                 (
-                    value: None,
-                    version: 0,
-                ),
-                (
                     value: Some([
                         (
-                            idx: 33,
-                            version: 1,
+                            idx: 7,
+                            version: 5,
                         ),
                     ]),
-                    version: 1,
+                    version: 3,
                 ),
                 (
                     value: Some([
                         (
-                            idx: 34,
-                            version: 1,
-                        ),
-                    ]),
-                    version: 1,
-                ),
-                (
-                    value: None,
-                    version: 0,
-                ),
-                (
-                    value: Some([
-                        (
-                            idx: 37,
+                            idx: 43,
                             version: 3,
                         ),
                     ]),
-                    version: 1,
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 2,
+                            version: 9,
+                        ),
+                    ]),
+                    version: 5,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 12,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 17,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
                 ),
                 (
                     value: None,
@@ -3583,8 +4169,8 @@
                 (
                     value: Some([
                         (
-                            idx: 36,
-                            version: 1,
+                            idx: 29,
+                            version: 3,
                         ),
                     ]),
                     version: 3,
@@ -3615,35 +4201,103 @@
                     ]),
                     version: 1,
                 ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 16,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 14,
+                            version: 1,
+                        ),
+                    ]),
+                    version: 3,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 28,
+                            version: 3,
+                        ),
+                    ]),
+                    version: 1,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: None,
+                    version: 0,
+                ),
+                (
+                    value: Some([
+                        (
+                            idx: 2,
+                            version: 9,
+                        ),
+                    ]),
+                    version: 5,
+                ),
             ],
         ),
         node_order: [
-            (
-                idx: 2,
-                version: 1,
-            ),
-            (
-                idx: 3,
-                version: 1,
-            ),
-            (
-                idx: 4,
-                version: 1,
-            ),
             (
                 idx: 1,
                 version: 13,
             ),
             (
-                idx: 5,
-                version: 1,
-            ),
-            (
                 idx: 10,
-                version: 1,
-            ),
-            (
-                idx: 11,
                 version: 1,
             ),
             (
@@ -3663,14 +4317,6 @@
                 version: 1,
             ),
             (
-                idx: 9,
-                version: 3,
-            ),
-            (
-                idx: 20,
-                version: 3,
-            ),
-            (
                 idx: 21,
                 version: 1,
             ),
@@ -3679,20 +4325,8 @@
                 version: 1,
             ),
             (
-                idx: 6,
-                version: 3,
-            ),
-            (
                 idx: 17,
                 version: 5,
-            ),
-            (
-                idx: 23,
-                version: 1,
-            ),
-            (
-                idx: 19,
-                version: 3,
             ),
             (
                 idx: 18,
@@ -3700,14 +4334,6 @@
             ),
             (
                 idx: 24,
-                version: 1,
-            ),
-            (
-                idx: 25,
-                version: 1,
-            ),
-            (
-                idx: 29,
                 version: 1,
             ),
             (
@@ -3735,11 +4361,31 @@
                 version: 1,
             ),
             (
-                idx: 15,
+                idx: 33,
                 version: 1,
             ),
             (
-                idx: 14,
+                idx: 34,
+                version: 3,
+            ),
+            (
+                idx: 20,
+                version: 3,
+            ),
+            (
+                idx: 19,
+                version: 3,
+            ),
+            (
+                idx: 23,
+                version: 3,
+            ),
+            (
+                idx: 9,
+                version: 3,
+            ),
+            (
+                idx: 3,
                 version: 1,
             ),
             (
@@ -3747,7 +4393,47 @@
                 version: 1,
             ),
             (
-                idx: 33,
+                idx: 5,
+                version: 1,
+            ),
+            (
+                idx: 15,
+                version: 1,
+            ),
+            (
+                idx: 25,
+                version: 1,
+            ),
+            (
+                idx: 11,
+                version: 3,
+            ),
+            (
+                idx: 36,
+                version: 1,
+            ),
+            (
+                idx: 35,
+                version: 1,
+            ),
+            (
+                idx: 14,
+                version: 1,
+            ),
+            (
+                idx: 29,
+                version: 3,
+            ),
+            (
+                idx: 6,
+                version: 5,
+            ),
+            (
+                idx: 4,
+                version: 1,
+            ),
+            (
+                idx: 2,
                 version: 1,
             ),
         ],
@@ -3761,232 +4447,253 @@
             ),
             (
                 value: Some((
-                    x: 531.23566,
-                    y: -213.25595,
+                    x: 750.45795,
+                    y: -216.37695,
                 )),
                 version: 13,
             ),
             (
                 value: Some((
-                    x: 577.86304,
-                    y: 170.3628,
+                    x: 667.695,
+                    y: 61.506866,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 864.7401,
-                    y: 4.734558,
+                    x: 924.85876,
+                    y: -65.350464,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1125.8103,
-                    y: -56.622498,
+                    x: 1132.9502,
+                    y: -44.08029,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1387.6494,
-                    y: -100.4046,
+                    x: 1348.4663,
+                    y: -201.91064,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1896.802,
-                    y: -51.069824,
-                )),
-                version: 3,
-            ),
-            (
-                value: Some((
-                    x: 2509.3225,
-                    y: -365.54047,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 1908.3804,
-                    y: -340.90533,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 1662.2432,
-                    y: -162.51892,
-                )),
-                version: 3,
-            ),
-            (
-                value: Some((
-                    x: 1307.0767,
-                    y: -463.3728,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 1719.8955,
-                    y: -501.3453,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 1371.5835,
-                    y: -371.68243,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 2546.0476,
-                    y: -218.48486,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 1916.9885,
-                    y: -226.53839,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 2058.4224,
-                    y: 159.08643,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 2559.9988,
-                    y: -7.376709,
-                )),
-                version: 1,
-            ),
-            (
-                value: Some((
-                    x: 803.1023,
-                    y: 373.93475,
+                    x: 1523.1752,
+                    y: -79.69168,
                 )),
                 version: 5,
             ),
             (
                 value: Some((
-                    x: 877.11523,
-                    y: 529.2155,
+                    x: 2306.4731,
+                    y: -336.16846,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1847.0525,
+                    y: -511.01892,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1602.6467,
+                    y: -200.32492,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1360.7561,
+                    y: -413.12427,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1544.3735,
+                    y: 261.8499,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1411.4973,
+                    y: -341.00043,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2335.3652,
+                    y: -220.48956,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 1826.6678,
+                    y: -364.87283,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2033.3197,
+                    y: 172.17242,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 2346.3394,
+                    y: -54.42639,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 964.31396,
+                    y: 245.52472,
                 )),
                 version: 5,
             ),
             (
                 value: Some((
-                    x: 1202.2245,
-                    y: 554.5601,
+                    x: 1022.5344,
+                    y: 367.67188,
+                )),
+                version: 5,
+            ),
+            (
+                value: Some((
+                    x: 1257.1437,
+                    y: 391.69922,
                 )),
                 version: 3,
             ),
             (
                 value: Some((
-                    x: 2905.659,
-                    y: -348.7104,
+                    x: 2642.1042,
+                    y: -341.33643,
                 )),
                 version: 3,
             ),
             (
                 value: Some((
-                    x: 2938.9167,
-                    y: -168.37909,
+                    x: 2644.41,
+                    y: -181.0735,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 3017.4885,
-                    y: 13.969177,
+                    x: 2706.215,
+                    y: -37.63434,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1517.136,
-                    y: 352.84882,
+                    x: 1688.8975,
+                    y: 514.0852,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1256.3098,
+                    y: 307.5736,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1174.3,
-                    y: 452.8128,
+                    x: 1848.3943,
+                    y: 333.6488,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1882.7817,
-                    y: 422.69855,
+                    x: 1057.9912,
+                    y: 533.56396,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 922.18787,
-                    y: 740.1048,
+                    x: 1255.3198,
+                    y: 623.9075,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1173.0413,
-                    y: 854.95294,
+                    x: 1234.7144,
+                    y: 715.0416,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1146.8435,
-                    y: 970.8072,
+                    x: 1837.6711,
+                    y: -141.84076,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1450.7042,
+                    y: 688.3811,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1701.4851,
-                    y: 783.7874,
+                    x: 1946.7957,
+                    y: 640.8325,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 1421.4229,
-                    y: 936.91583,
+                    x: 1012.4523,
+                    y: 736.72424,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 2052.0813,
-                    y: 876.46954,
+                    x: 803.5548,
+                    y: -482.29852,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 864.2993,
-                    y: 998.37115,
+                    x: 1662.6228,
+                    y: -445.5255,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 1964.4158,
+                    y: -33.790283,
                 )),
                 version: 1,
             ),
             (
                 value: Some((
-                    x: 598.736,
-                    y: -551.3071,
+                    x: 1528.6852,
+                    y: 48.867706,
                 )),
                 version: 1,
             ),
@@ -4036,7 +4743,7 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 3,
+                version: 5,
             ),
             (
                 value: Some((
@@ -4071,7 +4778,7 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
@@ -4155,7 +4862,7 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
@@ -4197,7 +4904,7 @@
                     x: 200.0,
                     y: 200.0,
                 )),
-                version: 1,
+                version: 3,
             ),
             (
                 value: Some((
@@ -4227,71 +4934,59 @@
                 )),
                 version: 1,
             ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 3,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
+            (
+                value: Some((
+                    x: 200.0,
+                    y: 200.0,
+                )),
+                version: 1,
+            ),
         ],
         node_finder: None,
         pan_zoom: (
             pan: (
-                x: -311.20184,
-                y: 704.0004,
+                x: -460.8015,
+                y: 420.00024,
             ),
-            zoom: 0.99060655,
+            zoom: 0.77923983,
         ),
         _user_state: (),
     ),
     user_state: (
-        added_parameters: [
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: None,
-                version: 0,
-            ),
-            (
-                value: Some([
-                    "0",
-                    "1",
-                    "2",
-                ]),
-                version: 3,
-            ),
-        ],
         public_outputs: [],
         variables: [
             (
                 name: "radio_vol",
-                typ_and_default_value: PVAL_FLOAT(Some(1.0)),
                 data_type: Scalar,
-                default_value_buffer: "1",
+                stored_value: Scalar(
+                    value: 1.0,
+                ),
             ),
             (
                 name: "current_song",
-                typ_and_default_value: PVAL_SNDEVT_GUID(None),
                 data_type: SndEventHandle,
-                default_value_buffer: "",
+                stored_value: SndEventHandle,
             ),
             (
                 name: "current_song_id",
-                typ_and_default_value: PVAL_INT(Some(0)),
-                data_type: Scalar,
-                default_value_buffer: "0",
+                data_type: Integer,
+                stored_value: Integer(
+                    value: 0,
+                ),
             ),
         ],
         exposed_nodes: [
@@ -4346,5 +5041,8 @@
             PVAL_INT(None),
             PVAL_INT(None),
         ],
+        save_file_path: None,
+        graph_domain: "ServerEntity",
+        graph_subtype: "PVAL_EHANDLE:point_pulse",
     ),
 )

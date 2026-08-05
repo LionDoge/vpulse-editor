@@ -1170,7 +1170,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             //PulseNodeTemplate::IsValidEntity,
             PulseNodeTemplate::CompareOutput,
             PulseNodeTemplate::CompareIf,
-            PulseNodeTemplate::IntSwitch,
+            //PulseNodeTemplate::IntSwitch, // not working currently.
             PulseNodeTemplate::SoundEventStart,
             PulseNodeTemplate::Function,
             PulseNodeTemplate::CallNode,

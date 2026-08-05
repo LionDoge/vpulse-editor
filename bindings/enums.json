@@ -858,7 +858,7 @@
     {
         "id": 20,
         "name": "EGameState",
-        "name_ui": "Game State",
+        "name_ui": "Citadel Game State",
         "variants": [
             {
                 "name": "EGameState_Invalid",

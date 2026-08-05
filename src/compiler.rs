@@ -1105,21 +1105,11 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(register);
         }
         PulseNodeTemplate::GetVar => {
-            let name_id = current_node
-                .get_input("variableName")
-                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
-            // name is a constant value
-            let name = graph
-                .get_input(name_id)
-                .value()
-                .clone()
-                .try_variable_name()
-                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
-            let var_id = get_variable(graph_def, name.as_str());
-            if var_id.is_none() {
-                return Err(CompileError::Node(current_node.id, format!("Variable {name} not found in variables list")));
-            }
-            let var_id = var_id.unwrap();
+            let var_name = get_constant_graph_input_value!(graph, current_node, "variableName", try_variable_name);
+            let Some(var_id) = get_variable(graph_def, var_name.as_str()) else {
+                return Err(CompileError::Node(current_node.id, format!("Variable {var_name} not found in variables list")));
+            };
+
             let typ = graph_def
                 .variables
                 .get(var_id as usize)
@@ -1177,23 +1167,14 @@ fn traverse_nodes_and_populate<'a>(
             return Ok(register);
         }
         PulseNodeTemplate::SetVar => {
-            let name_id = current_node
-                .get_input("variableName")
-                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
-            // name is a constant value
-            let name = graph
-                .get_input(name_id)
-                .value()
-                .clone()
-                .try_variable_name()
-                .map_err(|e| CompileError::Node(current_node.id, e.to_string()))?;
-            let var_id = get_variable(graph_def, name.as_str());
-            if var_id.is_none() {
-                return Err(CompileError::Node(current_node.id, format!("Variable {name} not found in variables list")));
-            }
+            let var_name = get_constant_graph_input_value!(graph, current_node, "variableName", try_variable_name);
+            let Some(var_id) = get_variable(graph_def, var_name.as_str()) else {
+                return Err(CompileError::Node(current_node.id, format!("Variable {var_name} not found in variables list")));
+            };
+            
             let typ = graph_def
                 .variables
-                .get(var_id.unwrap() as usize)
+                .get(var_id as usize)
                 .unwrap()
                 .typ_and_default_value
                 .clone();
@@ -1219,7 +1200,7 @@ fn traverse_nodes_and_populate<'a>(
 
             if let Some(reg_value) = reg_value {
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                chunk.add_instruction(instruction_templates::set_var(reg_value, var_id.unwrap()));
+                chunk.add_instruction(instruction_templates::set_var(reg_value, var_id));
             }
 
             graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);

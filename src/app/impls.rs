@@ -35,6 +35,24 @@ impl PulseGraphState {
         self.variables == other.variables &&
         self.exposed_nodes == other.exposed_nodes
     }
+    pub fn get_variable_id_from_name(&self, name: &str) -> Option<VariableIndex> {
+        self.variables.iter().position(|v| v.name == name).map(VariableIndex)
+    }
+    pub fn get_public_output_id_from_name(&self, name: &str) -> Option<PublicOutputIndex> {
+        self.public_outputs.iter().position(|v| v.name == name).map(PublicOutputIndex)
+    }
+    pub fn get_variable_from_index(&self, index: VariableIndex) -> Option<&PulseVariable> {
+        self.variables.get(index.0)
+    }
+    pub fn get_public_output_from_index(&self, index: PublicOutputIndex) -> Option<&OutputDefinition> {
+        self.public_outputs.get(index.0)
+    }
+    pub fn get_variable_from_name(&self, name: &str) -> Option<&PulseVariable> {
+        self.variables.iter().find(|v| v.name == name)
+    }
+    pub fn get_public_output_from_name(&self, name: &str) -> Option<&OutputDefinition> {
+        self.public_outputs.iter().find(|v| v.name == name)
+    }
 }
 
 impl PulseGraphValueType {
@@ -1327,15 +1345,15 @@ impl WidgetValueTrait for PulseGraphValueType {
                             .width(0.0)
                             .selected_text(value.clone())
                             .show_ui(ui, |ui| {
-                                for outputparam in user_state.public_outputs.iter() {
+                                for (idx, outputparam) in user_state.public_outputs.iter().enumerate() {
                                     if ui.selectable_value(
                                         value,
                                         outputparam.name.clone(),
                                         outputparam.name.clone(),
                                     ).clicked() {
                                         responses.push(PulseGraphResponse::ChangeOutputParamType(
-                                            node_id,
-                                            value.to_string(),
+                                            Some(node_id),
+                                            PublicOutputIndex(idx),
                                         ));
                                     }
                                 }
@@ -1349,11 +1367,11 @@ impl WidgetValueTrait for PulseGraphValueType {
                             .width(0.0)
                             .selected_text(value.clone())
                             .show_ui(ui, |ui| {
-                                for var in user_state.variables.iter() {
+                                for (idx, var) in user_state.variables.iter().enumerate() {
                                     if ui.selectable_value(value, var.name.clone(), var.name.clone()).clicked() {
                                         responses.push(PulseGraphResponse::ChangeVariableParamType(
-                                            node_id,
-                                            value.to_string(),
+                                            Some(node_id),
+                                            VariableIndex(idx),
                                         ));
                                         responses.push(PulseGraphResponse::UpdatePolymorphicTypes(node_id));
                                     }

@@ -7,16 +7,17 @@ mod appwidgets;
 pub mod types;
 
 use delegate::delegate;
+use ron::value;
 use std::collections::VecDeque;
 use std::time::UNIX_EPOCH;
 use std::{path::PathBuf, fs, thread};
 use core::panic;
 use eframe::egui::util::undoer::{Settings, Undoer};
-use eframe::egui::{Button, TextStyle, Vec2};
+use eframe::egui::{Button, Vec2};
 use serde::{Deserialize, Serialize};
 use rfd::{FileDialog, MessageDialog};
 use anyhow::anyhow;
-use eframe::egui::{self, ComboBox, Modal, Id, RichText};
+use eframe::egui::{self, Modal, Id, RichText};
 use egui_node_graph2::*;
 use crate::bindings::*;
 use crate::compiler::{compile_graph, CompileError};
@@ -272,50 +273,61 @@ impl PulseGraphEditor {
             .graph
             .add_output_param(node_id, String::from(output_name), data_typ);
     }
-    pub fn update_node_inputs_outputs_types(
+
+    pub fn update_node_variable_types(
         &mut self,
         node_id: NodeId,
-        name: &String,
-        new_type: Option<PulseValueType>,
+        variable_idx: VariableIndex,
     ) {
-        let node = self.state().graph.nodes.get(node_id).unwrap();
+        let node = self.full_state.state.graph.nodes.get(node_id).unwrap();
+        let Some(variable) = self.full_state.user_state.get_variable_from_index(variable_idx) else {
+            return;
+        };
+
+        let Ok(var_ref_inp) = node.get_input("variableName") else {
+            return;
+        };
+        
+        // Bail if node's variable does not match
+        let var_ref_inp_val = self.full_state.state.graph.get_input(var_ref_inp);
+        if let PulseGraphValueType::InternalVariableName { prevvalue: _, value } = &var_ref_inp_val.value {
+            if *value != variable.name {
+                return;
+            }
+        }
+
         match node.user_data.template {
             PulseNodeTemplate::GetVar => {
                 let param = node.get_output("value");
                 if let Ok(param) = param {
-                    self.state_mut().graph.remove_output_param(param);
+                    self.full_state.state.graph.remove_output_param(param);
                 }
-                let var = self
-                    .user_state()
-                    .variables
-                    .iter()
-                    .find(|var| var.name == *name);
-                if let Some(var) = var {
-                    self.add_node_output_simple(node_id, var.data_type.clone(), "value");
-                }
+                self.add_node_output_simple(node_id, variable.data_type.clone(), "value");
             }
             PulseNodeTemplate::SetVar => {
                 let param = node.get_input("value");
                 if let Ok(param) = param {
-                    self.state_mut().graph.remove_input_param(param);
+                    self.full_state.state.graph.remove_input_param(param);
                 }
-                let var = self
-                    .user_state()
-                    .variables
-                    .iter()
-                    .find(|var| var.name == *name);
-                if let Some(var) = var {
-                    let val_typ = pulse_value_type_to_node_types(&var.typ_and_default_value);
-                    //let val_typ = data_type_to_value_type(&var.data_type);
-                    self.add_node_input_simple(
-                        node_id,
-                        var.data_type.clone(),
-                        val_typ.1,
-                        "value",
-                        InputParamKind::ConnectionOrConstant,
-                    );
-                }
+                self.add_node_input_simple(
+                    node_id,
+                    variable.data_type.clone(),
+                    variable.stored_value.clone(),
+                    "value",
+                    InputParamKind::ConnectionOrConstant,
+                );
             }
+            _ => {}
+        }
+    }
+    pub fn update_node_inputs_outputs_types<'a>(
+        &mut self,
+        node_id: NodeId,
+        name: std::borrow::Cow<'a, str>,
+        new_type: Option<PulseValueType>,
+    ) {
+        let node = self.state().graph.nodes.get(node_id).unwrap();
+        match node.user_data.template {
             PulseNodeTemplate::Operation => {
                 if new_type.is_none() {
                     panic!("update_node_inputs_outputs() ended up on node that requires new value type from response, but it was not provided");
@@ -783,19 +795,16 @@ impl PulseGraphEditor {
                 // we only just provide info to connected nodes from this one
                 let name_id = node_data
                     .get_input("variableName")
-                    .map_err(|e: EguiGraphError| anyhow!(e).context(": Update polymorphic types"))?;
+                    .map_err(|e: EguiGraphError| anyhow!(e).context("Can not get variableName field"))?;
                 let var_name = self.state().graph
                     .get_input(name_id)
                     .value()
                     .clone()
                     .try_variable_name()
-                    .map_err(|e| anyhow!(e).context(": Update polymorphic types"))?;
-                let var = self
-                    .user_state()
-                    .variables
-                    .iter()
-                    .find(|var| var.name == *var_name);
-                var.map(|var| var.typ_and_default_value.clone())
+                    .map_err(|e| anyhow!(e).context("Can not get variableName field"))?;
+                
+                self.user_state().get_variable_from_name(var_name.as_str())
+                    .map(|var| pulsevaluetype_from_valuetype(var.stored_value.clone()))
             }
             _ => None
         };
@@ -1004,80 +1013,6 @@ impl PulseGraphEditor{
             auto_save_interval: 30.0,
         })
     }
-}
-
-// assigns proper default values based on the text buffer, and updates the graph node types (DataTypes)
-// this happens when input buffer changes, or the selected type changes.
-pub fn update_variable_data(var: &mut PulseVariable) {
-    var.typ_and_default_value = match &var.typ_and_default_value {
-        PulseValueType::PVAL_INT(_) => {
-            var.data_type = PulseDataType::Scalar;
-            var.default_value_buffer
-                .parse::<i32>()
-                .map(|x| PulseValueType::PVAL_INT(Some(x)))
-                .unwrap_or(PulseValueType::PVAL_INT(None))
-        }
-        PulseValueType::PVAL_FLOAT(_) => {
-            var.data_type = PulseDataType::Scalar;
-            var.default_value_buffer
-                .parse::<f32>()
-                .map(|x| PulseValueType::PVAL_FLOAT(Some(x)))
-                .unwrap_or(PulseValueType::PVAL_FLOAT(None))
-        }
-        PulseValueType::PVAL_STRING(_) => {
-            var.data_type = PulseDataType::String;
-            PulseValueType::PVAL_STRING(Some(var.default_value_buffer.clone()))
-        }
-        PulseValueType::PVAL_VEC2(_) => {
-            var.data_type = PulseDataType::Vec2;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_VEC3(_) => {
-            var.data_type = PulseDataType::Vec3;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_VEC3_LOCAL(_) => {
-            var.data_type = PulseDataType::Vec3Local;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_VEC4(_) => {
-            var.data_type = PulseDataType::Vec4;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_QANGLE(_) => {
-            var.data_type = PulseDataType::QAngle;
-            var.typ_and_default_value.to_owned()
-        }
-        // horrible stuff, this will likely be refactored.
-        PulseValueType::PVAL_EHANDLE(_) => {
-            var.data_type = PulseDataType::EHandle;
-            PulseValueType::PVAL_EHANDLE(Some(var.default_value_buffer.clone()))
-        }
-        PulseValueType::PVAL_SNDEVT_GUID(_) => {
-            var.data_type = PulseDataType::SndEventHandle;
-            PulseValueType::PVAL_SNDEVT_GUID(None)
-        }
-        PulseValueType::PVAL_BOOL_VALUE(_) => {
-            var.data_type = PulseDataType::Bool;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_COLOR_RGB(_) => {
-            var.data_type = PulseDataType::Color;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::DOMAIN_ENTITY_NAME => {
-            var.data_type = PulseDataType::EntityName;
-            var.typ_and_default_value.to_owned()
-        }
-        PulseValueType::PVAL_TYPESAFE_INT(_, _) => {
-            var.data_type = PulseDataType::TypeSafeInteger;
-            PulseValueType::PVAL_TYPESAFE_INT(Some(var.default_value_buffer.clone()), None)
-        }
-        _ => {
-            var.data_type = pulse_value_type_to_node_types(&var.typ_and_default_value).0;
-            var.typ_and_default_value.to_owned()
-        }
-    };
 }
 
 #[cfg(feature = "persistence")]
@@ -1331,12 +1266,18 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 let variable_type_list = PulseDataType::get_variable_supported_types();
-                variable_scheduled_for_deletion = appwidgets::variable_list_widget(
+                let (var_schedules_for_deletion, updated_var_idx) = appwidgets::variable_list_widget(
                     ui,
                     &mut self.full_state.user_state.variables,
                     variable_type_list,
                     &self.full_state.user_state.bindings
                 );
+                variable_scheduled_for_deletion = var_schedules_for_deletion;
+                if let Some(var_idx) = updated_var_idx {
+                    for node_id in self.full_state.state.graph.nodes.keys().collect::<Vec<_>>() {
+                        self.update_node_variable_types(node_id, var_idx);
+                    }
+                }
             });
         });
         if let Some(output_scheduled_for_deletion) = output_scheduled_for_deletion {
@@ -1462,11 +1403,21 @@ impl eframe::App for PulseGraphEditor {
                         PulseGraphResponse::ChangeOutputParamType(node_id, name) => {
                             //self.update_output_node_param(node_id, &name, "param");
                         }
-                        PulseGraphResponse::ChangeVariableParamType(node_id, name) => {
-                            self.update_node_inputs_outputs_types(node_id, &name, None);
+                        PulseGraphResponse::ChangeVariableParamType(node_id, var_idx) => {
+                            match node_id {
+                                Some(node_id) => { 
+                                    self.update_node_variable_types(node_id, var_idx); 
+                                }
+                                None => {
+                                    // send update to all nodes
+                                    for node_id in self.full_state.state.graph.nodes.keys().collect::<Vec<_>>() {
+                                        self.update_node_variable_types(node_id, var_idx);
+                                    }
+                                }
+                            }
                         }
                         PulseGraphResponse::ChangeParamType(node_id, name, typ) => {
-                            self.update_node_inputs_outputs_types(node_id, &name, Some(typ));
+                            self.update_node_inputs_outputs_types(node_id, name.into(), Some(typ));
                         }
                         PulseGraphResponse::ChangeEventBinding(node_id, bindings) => {
                             //let node = self.state.graph.nodes.get_mut(node_id).unwrap();

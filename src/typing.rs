@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use egui_node_graph2::InputParamKind;
 use crate::compiler::serialization::PulseConstant;
 use crate::pulsetypes::SchemaEnumType;
-use crate::app::types::{PulseDataType, PulseGraphValueType};
+use crate::app::types::PulseGraphValueType;
 use crate::bindings::{BindingEnum, EnumBindings};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -61,6 +61,22 @@ pub struct EnumBindingValueIndex(pub usize);
 impl Display for EnumBindingValueIndex {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "EnumBindingValueIndex({})", self.0)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct VariableIndex(pub usize);
+impl Display for VariableIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "VariableIndex({})", self.0)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct PublicOutputIndex(pub usize);
+impl Display for PublicOutputIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "PublicOutputIndex({})", self.0)
     }
 }
 
@@ -403,6 +419,60 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_BOOL_VALUE(_)
         | PulseValueType::PVAL_SCHEMA_ENUM(_)
         | PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => InputParamKind::ConstantOnly
+    }
+}
+
+// The target is to later get rid of these conversions, for now however it will be easier to do this way, cause so much of UI code still depends on this.
+pub fn pulsevaluetype_from_valuetype(valuetype: PulseGraphValueType) -> PulseValueType {
+    match valuetype {
+        PulseGraphValueType::Integer { value } => PulseValueType::PVAL_INT(Some(value)),
+        PulseGraphValueType::Scalar { value } => PulseValueType::PVAL_FLOAT(Some(value)),
+        PulseGraphValueType::String { value } => PulseValueType::PVAL_STRING(Some(value)),
+        PulseGraphValueType::Bool { value } => PulseValueType::PVAL_BOOL_VALUE(Some(value)),
+        PulseGraphValueType::Vec2 { value } => PulseValueType::PVAL_VEC2(Some(value)),
+        PulseGraphValueType::Vec3 { value } => PulseValueType::PVAL_VEC3(Some(value)),
+        PulseGraphValueType::Vec3Local { value } => PulseValueType::PVAL_VEC3_LOCAL(Some(value)),
+        PulseGraphValueType::Vec4 { value } => PulseValueType::PVAL_VEC4(Some(value)),
+        PulseGraphValueType::QAngle { value } => PulseValueType::PVAL_QANGLE(Some(value)),
+        PulseGraphValueType::Transform => PulseValueType::PVAL_TRANSFORM(None),
+        PulseGraphValueType::TransformWorldspace => PulseValueType::PVAL_TRANSFORM_WORLDSPACE(None),
+        PulseGraphValueType::Color { value } => {
+            PulseValueType::PVAL_COLOR_RGB(Some(Vec3::new(value[0], value[1], value[2])))
+        }
+        PulseGraphValueType::EHandle => PulseValueType::PVAL_EHANDLE(None),
+        PulseGraphValueType::EntityName { .. } => PulseValueType::DOMAIN_ENTITY_NAME,
+        PulseGraphValueType::SoundEventName { value } => PulseValueType::PVAL_SNDEVT_NAME(Some(value)),
+        PulseGraphValueType::SndEventHandle => PulseValueType::PVAL_SNDEVT_GUID(None),
+        PulseGraphValueType::Action => PulseValueType::PVAL_ACT,
+        PulseGraphValueType::Typ { value } => value,
+        PulseGraphValueType::SchemaEnum { enum_type, .. } => {
+            PulseValueType::PVAL_SCHEMA_ENUM(enum_type)
+        }
+        PulseGraphValueType::SchemaEnumChoice { enum_type, .. } => {
+            PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(BindingEnum {
+                id: enum_type,
+                name: enum_type.to_string(),
+                name_ui: enum_type.to_string(),
+                variants: vec![],
+            })
+        }
+        PulseGraphValueType::Resource { resource_type, value } => {
+            PulseValueType::PVAL_RESOURCE(resource_type, Some(value))
+        }
+        PulseGraphValueType::Array { array_type } => {
+            PulseValueType::PVAL_ARRAY(Box::new(pulsevaluetype_from_valuetype(array_type.into())))
+        }
+        PulseGraphValueType::GameTime => PulseValueType::PVAL_GAMETIME(None),
+        PulseGraphValueType::TypeSafeInteger { integer_type } => {
+            PulseValueType::PVAL_TYPESAFE_INT(Some(integer_type), None)
+        }
+        _ => PulseValueType::PVAL_ANY,
+    }
+}
+
+impl From<PulseGraphValueType> for PulseValueType {
+    fn from(value: PulseGraphValueType) -> Self {
+        pulsevaluetype_from_valuetype(value)
     }
 }
 

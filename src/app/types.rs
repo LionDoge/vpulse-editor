@@ -242,8 +242,8 @@ pub enum PulseGraphResponse {
     AddCustomInputParam(NodeId, String, PulseDataType, PulseGraphValueType, InputParamKind, bool),
     RemoveCustomInputParam(NodeId, InputId),
     RemoveOutputParam(NodeId, String),
-    ChangeOutputParamType(NodeId, String),
-    ChangeVariableParamType(NodeId, String),
+    ChangeOutputParamType(Option<NodeId>, PublicOutputIndex),
+    ChangeVariableParamType(Option<NodeId>, VariableIndex),
     ChangeParamType(NodeId, String, PulseValueType),
     ChangeEventBinding(NodeId, EventBinding),
     #[allow(dead_code)]

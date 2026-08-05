@@ -102,10 +102,10 @@ pub fn compile_node(
             };
             println!(
                 "InvokeLibraryBinding - {}: Adding output parameter {} with type {}",
-                binding.displayname, param.name, ret_type
+                binding.displayname, param.name, ret_type.get_enum_string(&graph_state.bindings)
             );
             let reg_out = chunk.add_register(
-                ret_type.to_string(),
+                ret_type.get_enum_string(&graph_state.bindings).to_string(),
                 chunk.get_last_instruction_id() + 1,
             );
 

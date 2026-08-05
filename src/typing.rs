@@ -4,7 +4,7 @@ use egui_node_graph2::InputParamKind;
 use crate::compiler::serialization::PulseConstant;
 use crate::pulsetypes::SchemaEnumType;
 use crate::app::types::PulseGraphValueType;
-use crate::bindings::{BindingEnum, EnumBindings};
+use crate::bindings::{EnumBindings, GraphBindings};
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum PulseTypeError {
@@ -144,7 +144,7 @@ pub enum PulseValueType {
     PVAL_ACT, // only used in the editor, not in the engine
     PVAL_ANY,
     PVAL_SCHEMA_ENUM(SchemaEnumType),
-    PVAL_SCHEMA_ENUM_CHOICE(BindingEnum),
+    PVAL_SCHEMA_ENUM_INDEXED(Option<EnumBindingIndex>, Option<EnumBindingValueIndex>),
     PVAL_VEC2(Option<Vec2>),
     PVAL_VEC4(Option<Vec4>),
     PVAL_QANGLE(Option<Vec3>),
@@ -156,62 +156,62 @@ pub enum PulseValueType {
     PVAL_VOID,
 }
 
-impl fmt::Display for PulseValueType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
-            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => {
-                if let Some(int_type) = int_type {
-                    write!(f, "PVAL_TYPESAFE_INT:{int_type}")
-                } else {
-                    write!(f, "PVAL_TYPESAFE_INT")
-                }
-            }
-            PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
-            PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
-            PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
-            PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
-            PulseValueType::PVAL_EHANDLE(ent_type) => {
-                if let Some(ent_type) = ent_type {
-                    write!(f, "PVAL_EHANDLE:{ent_type}")
-                } else {
-                    write!(f, "PVAL_EHANDLE")
-                }
-            }
-            PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3_WORLDSPACE"),
-            PulseValueType::PVAL_VEC3_LOCAL(_) => write!(f, "PVAL_VEC3"),
-            PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
-            PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
-            PulseValueType::PVAL_BOOL_VALUE(_) => write!(f, "PVAL_BOOL"),
-            PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
-            PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
-            PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
-            PulseValueType::PVAL_ANY => write!(f, "PVAL_VARIANT"),
-            PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
-                write!(f, "PVAL_SCHEMA_ENUM:{}", enum_type.to_str())
-            }
-            PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_binding) => {
-                write!(f, "PVAL_SCHEMA_ENUM:{}", enum_binding.name)
-            }
-            PulseValueType::PVAL_VEC2(_) => write!(f, "PVAL_VEC2"),
-            PulseValueType::PVAL_VEC4(_) => write!(f, "PVAL_VEC4"),
-            PulseValueType::PVAL_QANGLE(_) => write!(f, "PVAL_QANGLE"),
-            PulseValueType::PVAL_TRANSFORM(_) => write!(f, "PVAL_TRANSFORM"),
-            PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => write!(f, "PVAL_TRANSFORM_WORLDSPACE"),
-            PulseValueType::PVAL_RESOURCE(resource_type, _) => {
-                match resource_type.as_deref() {
-                    Some(rt) if !rt.is_empty() => write!(f, "PVAL_RESOURCE:{rt}"),
-                    _ => write!(f, "PVAL_RESOURCE"),
-                }
-            }
-            PulseValueType::PVAL_ARRAY(arr_type) => {
-                write!(f, "PVAL_ARRAY:{arr_type}")
-            }
-            PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
-            PulseValueType::PVAL_VOID => write!(f, "PVAL_VOID"),
-        }
-    }
-}
+// impl fmt::Display for PulseValueType {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         match self {
+//             PulseValueType::PVAL_INT(_) => write!(f, "PVAL_INT"),
+//             PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => {
+//                 if let Some(int_type) = int_type {
+//                     write!(f, "PVAL_TYPESAFE_INT:{int_type}")
+//                 } else {
+//                     write!(f, "PVAL_TYPESAFE_INT")
+//                 }
+//             }
+//             PulseValueType::PVAL_FLOAT(_) => write!(f, "PVAL_FLOAT"),
+//             PulseValueType::PVAL_STRING(_) => write!(f, "PVAL_STRING"),
+//             PulseValueType::PVAL_INVALID => write!(f, "PVAL_INVALID"),
+//             PulseValueType::DOMAIN_ENTITY_NAME => write!(f, "PVAL_ENTITY_NAME"),
+//             PulseValueType::PVAL_EHANDLE(ent_type) => {
+//                 if let Some(ent_type) = ent_type {
+//                     write!(f, "PVAL_EHANDLE:{ent_type}")
+//                 } else {
+//                     write!(f, "PVAL_EHANDLE")
+//                 }
+//             }
+//             PulseValueType::PVAL_VEC3(_) => write!(f, "PVAL_VEC3_WORLDSPACE"),
+//             PulseValueType::PVAL_VEC3_LOCAL(_) => write!(f, "PVAL_VEC3"),
+//             PulseValueType::PVAL_COLOR_RGB(_) => write!(f, "PVAL_COLOR_RGB"),
+//             PulseValueType::PVAL_BOOL => write!(f, "PVAL_BOOL"),
+//             PulseValueType::PVAL_BOOL_VALUE(_) => write!(f, "PVAL_BOOL"),
+//             PulseValueType::PVAL_SNDEVT_GUID(_) => write!(f, "PVAL_SNDEVT_GUID"),
+//             PulseValueType::PVAL_SNDEVT_NAME(_) => write!(f, "PVAL_SNDEVT_NAME"),
+//             PulseValueType::PVAL_ACT => write!(f, "PVAL_ACT"),
+//             PulseValueType::PVAL_ANY => write!(f, "PVAL_VARIANT"),
+//             PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
+//                 write!(f, "PVAL_SCHEMA_ENUM:{}", enum_type.to_str())
+//             }
+//             PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_binding) => {
+//                 write!(f, "PVAL_SCHEMA_ENUM:{}", enum_binding.name)
+//             }
+//             PulseValueType::PVAL_VEC2(_) => write!(f, "PVAL_VEC2"),
+//             PulseValueType::PVAL_VEC4(_) => write!(f, "PVAL_VEC4"),
+//             PulseValueType::PVAL_QANGLE(_) => write!(f, "PVAL_QANGLE"),
+//             PulseValueType::PVAL_TRANSFORM(_) => write!(f, "PVAL_TRANSFORM"),
+//             PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => write!(f, "PVAL_TRANSFORM_WORLDSPACE"),
+//             PulseValueType::PVAL_RESOURCE(resource_type, _) => {
+//                 match resource_type.as_deref() {
+//                     Some(rt) if !rt.is_empty() => write!(f, "PVAL_RESOURCE:{rt}"),
+//                     _ => write!(f, "PVAL_RESOURCE"),
+//                 }
+//             }
+//             PulseValueType::PVAL_ARRAY(arr_type) => {
+//                 write!(f, "PVAL_ARRAY:{arr_type}")
+//             }
+//             PulseValueType::PVAL_GAMETIME(_) => write!(f, "PVAL_GAMETIME"),
+//             PulseValueType::PVAL_VOID => write!(f, "PVAL_VOID"),
+//         }
+//     }
+// }
 
 impl PulseValueType {
     // defines the suffix for the operation name used in instructions eg. EQ_STRING, ADD_INT
@@ -234,6 +234,70 @@ impl PulseValueType {
             _ => "",
         }
     }
+    pub fn get_enum_string(&self, graph_bindings: &GraphBindings) -> Cow<'static, str> {
+        match self {
+            PulseValueType::PVAL_INT(_) => "PVAL_INT".into(),
+            PulseValueType::PVAL_TYPESAFE_INT(int_type, _) => {
+                if let Some(int_type) = int_type {
+                    format!("PVAL_TYPESAFE_INT:{int_type}").into()
+                } else {
+                    "PVAL_TYPESAFE_INT".into()
+                }
+            }
+            PulseValueType::PVAL_FLOAT(_) => "PVAL_FLOAT".into(),
+            PulseValueType::PVAL_STRING(_) => "PVAL_STRING".into(),
+            PulseValueType::PVAL_INVALID => "PVAL_INVALID".into(),
+            PulseValueType::DOMAIN_ENTITY_NAME => "PVAL_ENTITY_NAME".into(),
+            PulseValueType::PVAL_EHANDLE(ent_type) => {
+                if let Some(ent_type) = ent_type {
+                    format!("PVAL_EHANDLE:{ent_type}").into()
+                } else {
+                    "PVAL_EHANDLE".into()
+                }
+            }
+            PulseValueType::PVAL_VEC3(_) => "PVAL_VEC3_WORLDSPACE".into(),
+            PulseValueType::PVAL_VEC3_LOCAL(_) => "PVAL_VEC3".into(),
+            PulseValueType::PVAL_COLOR_RGB(_) => "PVAL_COLOR_RGB".into(),
+            PulseValueType::PVAL_BOOL => "PVAL_BOOL".into(),
+            PulseValueType::PVAL_BOOL_VALUE(_) => "PVAL_BOOL".into(),
+            PulseValueType::PVAL_SNDEVT_GUID(_) => "PVAL_SNDEVT_GUID".into(),
+            PulseValueType::PVAL_SNDEVT_NAME(_) => "PVAL_SNDEVT_NAME".into(),
+            PulseValueType::PVAL_ACT => "PVAL_ACT".into(),
+            PulseValueType::PVAL_ANY => "PVAL_VARIANT".into(),
+            PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => {
+                format!("PVAL_SCHEMA_ENUM:{}", enum_type.to_str()).into()
+            }
+            PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(enum_type, _) => {
+                match enum_type {
+                    Some(enum_type) => {
+                        if let Some(enum_binding) = graph_bindings.find_enum_by_id(*enum_type) {
+                            format!("PVAL_SCHEMA_ENUM:{}", enum_binding.name).into()
+                        } else {
+                            "PVAL_SCHEMA_ENUM".into()
+                        }
+                    }
+                    None => "PVAL_SCHEMA_ENUM".into(),
+                }
+            }
+            PulseValueType::PVAL_VEC2(_) => "PVAL_VEC2".into(),
+            PulseValueType::PVAL_VEC4(_) => "PVAL_VEC4".into(),
+            PulseValueType::PVAL_QANGLE(_) => "PVAL_QANGLE".into(),
+            PulseValueType::PVAL_TRANSFORM(_) => "PVAL_TRANSFORM".into(),
+            PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_) => "PVAL_TRANSFORM_WORLDSPACE".into(),
+            PulseValueType::PVAL_RESOURCE(resource_type, _) => {
+                match resource_type.as_deref() {
+                    Some(rt) if !rt.is_empty() => format!("PVAL_RESOURCE:{rt}").into(),
+                    _ => "PVAL_RESOURCE".into(),
+                }
+            }
+            PulseValueType::PVAL_ARRAY(arr_type) => {
+                let arr_type_str = arr_type.get_enum_string(graph_bindings);
+                format!("PVAL_ARRAY:{arr_type_str}").into()
+            }
+            PulseValueType::PVAL_GAMETIME(_) => "PVAL_GAMETIME".into(),
+            PulseValueType::PVAL_VOID => "PVAL_VOID".into(),
+        }
+    }
     pub fn get_ui_name(&self) -> Cow<'static, str> {
         match self {
             PulseValueType::PVAL_INT(_) => "Integer".into(),
@@ -252,7 +316,7 @@ impl PulseValueType {
             PulseValueType::PVAL_ACT => "Action".into(),
             PulseValueType::PVAL_ANY => "Any Type".into(),
             PulseValueType::PVAL_SCHEMA_ENUM(enum_type) => enum_type.to_str_ui().into(),
-            PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_binding) => Cow::Owned(enum_binding.name_ui.clone()),
+            PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(_, _) => "Schema Enum".into(),
             PulseValueType::PVAL_VEC2(_) => "Vector 2D".into(),
             PulseValueType::PVAL_VEC4(_) => "Vector 4D".into(),
             PulseValueType::PVAL_QANGLE(_) => "QAngle".into(),
@@ -280,6 +344,7 @@ impl PulseValueType {
             PulseValueType::PVAL_ARRAY(Box::new(PulseValueType::PVAL_ANY)),
             PulseValueType::PVAL_QANGLE(None), // it doesn't have it's own suffix, but maybe it works.
             PulseValueType::PVAL_GAMETIME(None),
+            PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(None, None),
         ]
     }
     pub fn get_operatable_types() -> Vec<PulseValueType> {
@@ -366,7 +431,7 @@ pub fn try_string_to_pulsevalue(enums: &EnumBindings, s: &str) -> Result<PulseVa
             } else if s.starts_with("PVAL_SCHEMA_ENUM:") {
                 let enum_type = s.split_at(17).1;
                 if let Some(enum_choice) = enums.iter().find(|e| e.name == enum_type) {
-                    Ok(PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_choice.clone()))
+                    Ok(PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(Some(enum_choice.id), None))
                 } else {
                     Err(PulseTypeError::StringToEnumConversionMissing(enum_type.to_string()))
                 }
@@ -405,7 +470,8 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
         | PulseValueType::PVAL_COLOR_RGB(_)
         | PulseValueType::PVAL_SNDEVT_NAME(_)
         | PulseValueType::PVAL_RESOURCE(_, _)
-        | PulseValueType::PVAL_GAMETIME(_) => InputParamKind::ConnectionOrConstant,
+        | PulseValueType::PVAL_GAMETIME(_)
+        | PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(_, _) => InputParamKind::ConnectionOrConstant,
 
         PulseValueType::PVAL_EHANDLE(_)
         | PulseValueType::PVAL_SNDEVT_GUID(_)
@@ -417,8 +483,7 @@ pub fn get_preffered_inputparamkind_from_type(typ: &PulseValueType) -> InputPara
 
         PulseValueType::PVAL_BOOL
         | PulseValueType::PVAL_BOOL_VALUE(_)
-        | PulseValueType::PVAL_SCHEMA_ENUM(_)
-        | PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => InputParamKind::ConstantOnly
+        | PulseValueType::PVAL_SCHEMA_ENUM(_) => InputParamKind::ConstantOnly
     }
 }
 
@@ -448,13 +513,8 @@ pub fn pulsevaluetype_from_valuetype(valuetype: PulseGraphValueType) -> PulseVal
         PulseGraphValueType::SchemaEnum { enum_type, .. } => {
             PulseValueType::PVAL_SCHEMA_ENUM(enum_type)
         }
-        PulseGraphValueType::SchemaEnumChoice { enum_type, .. } => {
-            PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(BindingEnum {
-                id: enum_type,
-                name: enum_type.to_string(),
-                name_ui: enum_type.to_string(),
-                variants: vec![],
-            })
+        PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } => {
+            PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(Some(enum_type), Some(enum_variant))
         }
         PulseGraphValueType::Resource { resource_type, value } => {
             PulseValueType::PVAL_RESOURCE(resource_type, Some(value))

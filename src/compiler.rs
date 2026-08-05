@@ -11,7 +11,7 @@ use crate::app::types::{
     PulseNodeTemplate,
 };
 use crate::pulsetypes::*;
-use crate::typing::{get_preffered_inputparamkind_from_type, get_pulse_constant_from_graph_value};
+use crate::typing::{get_preffered_inputparamkind_from_type, get_pulse_constant_from_graph_value, pulsevaluetype_from_valuetype};
 use crate::typing::PulseValueType;
 use crate::utils::*;
 use serialization::*;
@@ -259,7 +259,7 @@ fn traverse_event_cell(
                 .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
 
             let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
-            let reg_id = chunk.add_register(param.pulsetype.to_string(), 0);
+            let reg_id = chunk.add_register(param.pulsetype.get_enum_string(&graph_state.bindings).to_string(), 0);
             cell_event.add_outparam(param.name.clone().into(), reg_id);
             graph_def.add_register_mapping(output_id, reg_id);
         }
@@ -520,7 +520,7 @@ pub fn compile_graph(
     if !traverse_inflow_nodes(graph, &mut graph_def, graph_state)? {
         return Err(CompileError::Generic(anyhow!("No inflow nodes found in graph")));
     }
-    let data = kv3::to_string(&graph_def.serialize());
+    let data = kv3::to_string(&graph_def.serialize(&graph_state.bindings));
     let dir = file_dir.parent().ok_or_else(|| {
         CompileError::WriteError(file_dir.clone(), "Failed to get parent directory of this file".into())
     })?;
@@ -696,6 +696,7 @@ fn get_input_register_or_create_constant_from_id(
             )?;
         }
         None => {
+            let value_type_str = value_type.get_enum_string(&graph_state.bindings);
             if !always_reevaluate {
                 // no connection found, create a constant value for the input
                 // but first check if we have already created a constant for this value
@@ -708,14 +709,14 @@ fn get_input_register_or_create_constant_from_id(
                 get_preffered_inputparamkind_from_type(&value_type),
                 InputParamKind::ConnectionOnly
             ) {
-                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type}, input: {:?}", input_id);
+                println!("[INFO] Connection only input type without a connection, no constant will be created. for type: {value_type_str}, input: {:?}", input_id);
                 return Ok(None);
             }
             let new_constant_id = graph_def.get_current_constant_id() + 1;
             let new_domain_val_id = graph_def.get_current_domain_val_id() + 1;
             let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
             target_register =
-                chunk.add_register(value_type.to_string(), chunk.get_last_instruction_id() + 1);
+                chunk.add_register(value_type_str.to_string(), chunk.get_last_instruction_id() + 1);
             let input_param = graph.get_input(input_id);
 
             let instruction: Instruction;
@@ -816,7 +817,7 @@ fn get_input_register_or_create_constant_from_id(
                 PulseValueType::PVAL_SCHEMA_ENUM(_) => {
                     return Err(CompileError::Generic(anyhow!("Legacy schema enum type, we shouldn't be here!")));
                 }
-                PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(_) => {
+                PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(_, _) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
 
@@ -843,7 +844,8 @@ fn get_input_register_or_create_constant_from_id(
                     graph_def.add_constant(PulseConstant::Resource(res.0, res.1));
                 }
                 _ => {
-                    println!("Warning: Unsupported constant value type for input - None will be returned {:?}: {value_type}", input_id);
+                    let type_str = value_type.get_enum_string(&graph_state.bindings);
+                    println!("Warning: Unsupported constant value type for input - None will be returned {:?}: {type_str}", input_id);
                     return Ok(None);
                     // if we don't know the type, we can't create a constant for it.
                 }
@@ -1110,16 +1112,16 @@ fn traverse_nodes_and_populate<'a>(
                 return Err(CompileError::Node(current_node.id, format!("Variable {var_name} not found in variables list")));
             };
 
-            let typ = graph_def
+            let typ = pulsevaluetype_from_valuetype(graph_def
                 .variables
                 .get(var_id as usize)
                 .ok_or(CompileError::Node(current_node.id, format!("Variable id: {var_id} not found in variables list")))?
-                .typ_and_default_value
-                .to_string();
+                .stored_value.clone())
+                .get_enum_string(&graph_state.bindings);
             // add register
             // add instruction to load the variable value
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-            let reg = chunk.add_register(typ, chunk.get_last_instruction_id() + 1);
+            let reg = chunk.add_register(typ.to_string(), chunk.get_last_instruction_id() + 1);
             chunk.add_instruction(instruction_templates::get_var(reg, var_id));
             return Ok(reg);
         }
@@ -1172,12 +1174,13 @@ fn traverse_nodes_and_populate<'a>(
                 return Err(CompileError::Node(current_node.id, format!("Variable {var_name} not found in variables list")));
             };
             
-            let typ = graph_def
+            let typ = pulsevaluetype_from_valuetype(graph_def
                 .variables
                 .get(var_id as usize)
                 .unwrap()
-                .typ_and_default_value
-                .clone();
+                .stored_value
+                .clone());
+
             let reg_value = get_register!("value", typ.clone());
             // try to reinterpret to specific entity type (if we're dealing with entities) before saving
             let reg_value = match typ {
@@ -1227,7 +1230,7 @@ fn traverse_nodes_and_populate<'a>(
             };
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let register_output = chunk.add_register(
-                operation_typ.to_string(),
+                operation_typ.get_enum_string(&graph_state.bindings).to_string(),
                 chunk.get_last_instruction_id() + 1,
             );
             let instr = Instruction {
@@ -1257,7 +1260,7 @@ fn traverse_nodes_and_populate<'a>(
             let instr = chunk.get_last_instruction_id() + 1;
             //? Is non-specific entity handle fine? Since now entity class can be determined at runtime.
             let reg_out =
-                chunk.add_register(PulseValueType::PVAL_EHANDLE(None).to_string(), instr);
+                chunk.add_register(PulseValueType::PVAL_EHANDLE(None).get_enum_string(&graph_state.bindings).to_string(), instr);
             if let Some(out) = output_id {
                 graph_def.add_register_mapping(*out, reg_out);
             }
@@ -1448,7 +1451,7 @@ fn traverse_nodes_and_populate<'a>(
                 let reg_input = get_register!("input", PulseValueType::PVAL_ANY);
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 register =
-                    chunk.add_register(type_to.to_string(), chunk.get_last_instruction_id() + 1);
+                    chunk.add_register(type_to.get_enum_string(&graph_state.bindings).to_string(), chunk.get_last_instruction_id() + 1);
                 if let Some(reg_input) = reg_input {
                     let instruction = instruction_templates::convert_value(register, reg_input);
                     chunk.add_instruction(instruction);
@@ -1834,7 +1837,7 @@ fn traverse_nodes_and_populate<'a>(
             chunk.add_instruction(instruction_templates::library_invoke(new_binding_id));
             let instr = chunk.get_last_instruction_id() + 1;
             let reg_output = chunk.add_register(
-                PulseValueType::PVAL_EHANDLE(Some(classname_static)).to_string(), instr);
+                PulseValueType::PVAL_EHANDLE(Some(classname_static)).get_enum_string(&graph_state.bindings).to_string(), instr);
             reg_map.add_outparam("retval".into(), reg_output);
             let binding = InvokeBinding {
                 register_map: reg_map,
@@ -2079,7 +2082,7 @@ fn traverse_nodes_and_populate<'a>(
             let instr = chunk.get_last_instruction_id() + 1;
 
             let reg_out =
-                chunk.add_register(PulseValueType::PVAL_SNDEVT_GUID(None).to_string(), instr);
+                chunk.add_register(PulseValueType::PVAL_SNDEVT_GUID(None).get_enum_string(&graph_state.bindings).to_string(), instr);
             if let Some(out) = output_id {
                 graph_def.add_register_mapping(*out, reg_out);
             }
@@ -2314,7 +2317,7 @@ fn traverse_nodes_and_populate<'a>(
             let instr = chunk.get_last_instruction_id() + 1;
 
             let reg_out = chunk.add_register(
-                PulseValueType::PVAL_ARRAY(Box::from(arr_type)).to_string(),
+                PulseValueType::PVAL_ARRAY(Box::from(arr_type)).get_enum_string(&graph_state.bindings).to_string(),
                 instr,
             );
             if let Some(out) = output_id {
@@ -2345,7 +2348,7 @@ fn traverse_nodes_and_populate<'a>(
                     let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                     let instr = chunk.get_last_instruction_id() + 1;
                     let reg_out = chunk.add_register(
-                        typ.to_string(),
+                        typ.get_enum_string(&graph_state.bindings).to_string(),
                         instr
                     );
                     if let Some(out) = output_id {
@@ -2391,7 +2394,7 @@ fn traverse_nodes_and_populate<'a>(
 
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let instr = chunk.get_last_instruction_id() + 1;
-            let reg_out = chunk.add_register(typ.to_string(), instr);
+            let reg_out = chunk.add_register(typ.get_enum_string(&graph_state.bindings).to_string(), instr);
             let instr_scale_vector = Instruction {
                 code: if invert {
                     format!("SCALE_INV{}", typ.get_operation_suffix_name())
@@ -2478,7 +2481,7 @@ fn traverse_nodes_and_populate<'a>(
             chunk.add_instruction(instruction_templates::get_const(val_0, reg_idx));
             // output value register
             let reg_value_out = chunk.add_register(
-                typ.to_string(),
+                typ.get_enum_string(&graph_state.bindings).to_string(),
                 chunk.get_last_instruction_id() + 4,
             );
             let reg_cond = chunk.add_register(
@@ -2695,7 +2698,7 @@ fn make_library_call(
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     if let Some(outparams) = &func.outparams {
         for outparam in outparams.iter() {
-            let reg = chunk.add_register(outparam.pulsetype.to_string(), chunk.get_last_instruction_id() + 1);
+            let reg = chunk.add_register(outparam.pulsetype.get_enum_string(&graph_state.bindings).to_string(), chunk.get_last_instruction_id() + 1);
             reg_map.add_outparam(outparam.name.clone().into(), reg);
         }
     }

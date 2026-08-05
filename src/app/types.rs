@@ -509,12 +509,12 @@ pub fn pulse_value_type_to_node_types(
         ),
         PulseValueType::PVAL_ACT => (PulseDataType::Action, PulseGraphValueType::Action),
         PulseValueType::PVAL_ANY => (PulseDataType::Any, PulseGraphValueType::Any),
-        PulseValueType::PVAL_SCHEMA_ENUM_CHOICE(enum_binding) => {
+        PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(enum_type, enum_variant) => {
             (
                 PulseDataType::SchemaEnum,
                 PulseGraphValueType::SchemaEnumChoice { 
-                    enum_type: enum_binding.id,
-                    enum_variant: EnumBindingValueIndex::default()
+                    enum_type: enum_type.unwrap_or_default(),
+                    enum_variant: enum_variant.unwrap_or_default()
                 },
             )
         }

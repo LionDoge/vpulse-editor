@@ -6,12 +6,11 @@ use std::borrow::Cow;
 use egui_node_graph2::{InputId, NodeId, OutputId};
 use slotmap::SecondaryMap;
 use crate::{
-    pulsetypes::*,
-    typing::{PulseValueType, Vec2, Vec3, Vec4},
+    app::types::PulseGraphValueType, bindings::GraphBindings, pulsetypes::*, typing::{PulseValueType, Vec2, Vec3, Vec4, pulsevaluetype_from_valuetype},
 };
 
 pub trait KV3Serialize {
-    fn serialize(&self) -> Value;
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value;
 }
 pub struct PulseRuntimeArgument {
     pub name: String,
@@ -20,7 +19,7 @@ pub struct PulseRuntimeArgument {
 }
 
 impl KV3Serialize for PulseRuntimeArgument {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
@@ -30,17 +29,17 @@ impl KV3Serialize for PulseRuntimeArgument {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_Method {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_Method".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
             (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_MethodName".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
             (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
             (ObjectKey::Identifier("m_ReturnType".into()), Value::String("PVAL_VOID".into())),
-            (ObjectKey::Identifier("m_Args".into()), Value::Array(self.args.iter().map(|arg| arg.serialize()).collect())),
+            (ObjectKey::Identifier("m_Args".into()), Value::Array(self.args.iter().map(|arg| arg.serialize(graph_bindings)).collect())),
         ])
     }
 }
@@ -58,12 +57,12 @@ impl CPulseCell_Inflow_Method {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_EventHandler {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_EventHandler".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
             (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_EventName".into()), Value::String(self.event_name.to_string())),
         ])
     }
@@ -82,7 +81,7 @@ impl CPulseCell_Inflow_EventHandler {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_Wait {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_Wait".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -104,7 +103,7 @@ impl CPulseCell_Inflow_Wait {
 }
 
 impl KV3Serialize for CPulseCell_Step_EntFire {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_EntFire".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -114,7 +113,7 @@ impl KV3Serialize for CPulseCell_Step_EntFire {
 }
 
 impl KV3Serialize for CPulseCell_Step_DebugLog {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_DebugLog".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -123,7 +122,7 @@ impl KV3Serialize for CPulseCell_Step_DebugLog {
 }
 
 impl KV3Serialize for CPulseCell_Step_PublicOutput {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_PublicOutput".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -133,19 +132,19 @@ impl KV3Serialize for CPulseCell_Step_PublicOutput {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_GraphHook {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_GraphHook".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
             (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_HookName".into()), Value::String(self.hook_name.to_string())),
         ])
     }
 }
 
 impl KV3Serialize for Register {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_nReg".into()), Value::Number(self.num.into())),
             (ObjectKey::Identifier("m_Type".into()), Value::String(self.reg_type.clone())),
@@ -178,7 +177,7 @@ impl RegisterMap {
 }
 
 impl KV3Serialize for RegisterMap {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         fn map_params(params: &Vec<(Cow<'_, str>, i32)>) -> Value {
             let param_list = params
                 .iter()
@@ -237,7 +236,7 @@ impl Default for Instruction {
     }
 }
 impl KV3Serialize for Instruction {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_nCode".into()), Value::String(self.code.clone())),
             (ObjectKey::Identifier("m_nVar".into()), Value::Number(self.var.into())),
@@ -262,7 +261,7 @@ pub struct InstructionDebugInfo {
 }
 
 impl KV3Serialize for InstructionDebugInfo {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_nFlowNodeID".into()), Value::Number(self.flowNodeId.into())),
             (ObjectKey::Identifier("m_nValueNodeID".into()), Value::Number(self.valueNodeId.into())),
@@ -309,11 +308,11 @@ impl PulseChunk {
     }
 }
 impl KV3Serialize for PulseChunk {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
-            (ObjectKey::Identifier("m_Instructions".into()), Value::Array(self.instructions.iter().map(|instruction| instruction.serialize()).collect())),
-            (ObjectKey::Identifier("m_Registers".into()), Value::Array(self.registers.iter().map(|register| register.serialize()).collect())),
-            (ObjectKey::Identifier("m_InstructionDebugInfos".into()), Value::Array(self.instruction_debug_infos.iter().map(|info| info.serialize()).collect())),
+            (ObjectKey::Identifier("m_Instructions".into()), Value::Array(self.instructions.iter().map(|instruction| instruction.serialize(graph_bindings)).collect())),
+            (ObjectKey::Identifier("m_Registers".into()), Value::Array(self.registers.iter().map(|register| register.serialize(graph_bindings)).collect())),
+            (ObjectKey::Identifier("m_InstructionDebugInfos".into()), Value::Array(self.instruction_debug_infos.iter().map(|info| info.serialize(graph_bindings)).collect())),
         ])
     }
 }
@@ -327,9 +326,9 @@ pub struct InvokeBinding {
 }
 
 impl KV3Serialize for InvokeBinding {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_FuncName".into()), Value::String(self.func_name.to_string())),
             (ObjectKey::Identifier("m_nCellIndex".into()), Value::Number(self.cell_index.into())),
             (ObjectKey::Identifier("m_nSrcChunk".into()), Value::Number(self.src_chunk.into())),
@@ -346,7 +345,7 @@ pub struct DomainValue {
     pub required_runtime_type: Cow<'static, str>,
 }
 impl KV3Serialize for DomainValue {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_nType".into()), Value::String(self.typ.to_string())),
             (ObjectKey::Identifier("m_Value".into()), Value::String(self.value.to_string())),
@@ -377,7 +376,7 @@ impl OutputConnection {
     }
 }
 impl KV3Serialize for OutputConnection {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_SourceOutput".into()), Value::String(self.source_output.clone())),
             (ObjectKey::Identifier("m_TargetEntity".into()), Value::String(self.target_entity.clone())),
@@ -388,11 +387,11 @@ impl KV3Serialize for OutputConnection {
 }
 
 impl KV3Serialize for OutputDefinition {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
-            (ObjectKey::Identifier("m_ParamType".into()), Value::String(self.typ.to_string())),
+            (ObjectKey::Identifier("m_ParamType".into()), Value::String(self.typ.get_enum_string(graph_bindings).to_string())),
         ])
     }
 }
@@ -459,7 +458,7 @@ impl PulseConstant {
     }
 }
 impl KV3Serialize for PulseConstant {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         let typ_str =  match self {
             PulseConstant::String(_) => "PVAL_STRING".to_string(),
             PulseConstant::SoundEventName(_) => "PVAL_SNDEVT_NAME".to_string(),
@@ -482,7 +481,7 @@ impl KV3Serialize for PulseConstant {
                 }
             }
             PulseConstant::Array(typ, _) => {
-                format!("PVAL_ARRAY:{}", typ)
+                format!("PVAL_ARRAY:{}", typ.get_enum_string(graph_bindings))
             }
         };
         let val = self.serialize_value();
@@ -494,70 +493,65 @@ impl KV3Serialize for PulseConstant {
 }
 
 impl KV3Serialize for PulseVariable {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         // convert default values to KV3 literal string.
-        let default_value = match &self.typ_and_default_value {
-            PulseValueType::PVAL_STRING(value) => {
-                if let Some(value) = value {
-                    Value::String(value.clone())
-                } else {
-                    Value::Null
-                }
+        let default_value = match &self.stored_value {
+            PulseGraphValueType::String {value} => {
+                Value::String(value.clone())
             }
-            PulseValueType::PVAL_RESOURCE(_, value) => {
-                if let Some(value) = value {
+            PulseGraphValueType::Resource {resource_type, value} => {
+                if resource_type.is_some() {
                     Value::Flag("resource".to_string(), Value::String(value.clone()).into())
                 } else {
-                    Value::Null
+                    Value::String(value.clone())
                 }
             }
-            PulseValueType::PVAL_FLOAT(value) 
-            | PulseValueType::PVAL_GAMETIME(value) => Value::Number(value.unwrap_or_default().into()),
-            PulseValueType::PVAL_INT(value) => Value::Number(value.unwrap_or_default().into()),
-            PulseValueType::PVAL_TYPESAFE_INT(_, value) => {
-                Value::Number(value.unwrap_or_default().into())
+            PulseGraphValueType::Scalar {value} => Value::Number(*value as f64),
+            PulseGraphValueType::Integer {value} => Value::Number(*value as f64),
+            PulseGraphValueType::GameTime  => Value::Null,
+            PulseGraphValueType::TypeSafeInteger { .. } => Value::Null,
+            PulseGraphValueType::Vec2 {value} => {
+                Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into())])
             }
-            PulseValueType::PVAL_VEC2(value) => {
-                let val = value.unwrap_or_default();
-                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into())])
+            PulseGraphValueType::Vec3 {value}
+            | PulseGraphValueType::Vec3Local {value}
+            | PulseGraphValueType::QAngle {value} => {
+                Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into())])
             }
-            PulseValueType::PVAL_VEC3(value)
-            | PulseValueType::PVAL_VEC3_LOCAL(value)
-            | PulseValueType::PVAL_QANGLE(value) => {
-                let val = value.unwrap_or_default();
-                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into())])
+            PulseGraphValueType::Vec4 {value} => {
+                Value::Array(vec![Value::Number(value.x.into()), Value::Number(value.y.into()), Value::Number(value.z.into()), Value::Number(value.w.into())])
             }
-            PulseValueType::PVAL_VEC4(value) => {
-                let val = value.unwrap_or_default();
-                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into()), Value::Number(val.w.into())])
+            PulseGraphValueType::Color {value} => {
+                Value::Array(vec![Value::Number(value[0].into()), Value::Number(value[1].into()), Value::Number(value[2].into())])
             }
-            PulseValueType::PVAL_COLOR_RGB(value) => {
-                let val = value.unwrap_or_default();
-                Value::Array(vec![Value::Number(val.x.into()), Value::Number(val.y.into()), Value::Number(val.z.into())])
+            PulseGraphValueType::Bool {value} => Value::Bool(*value),
+            PulseGraphValueType::SoundEventName {value} => Value::Flag("soundevent".into(), Value::String(value.clone()).into()),
+            PulseGraphValueType::SchemaEnum { enum_type: _, value} => {
+                Value::String(value.to_str().to_string())
             }
-            PulseValueType::PVAL_BOOL_VALUE(value) 
-                => Value::Bool(value.unwrap_or_default()),
-            PulseValueType::PVAL_BOOL => Value::Bool(false), // default value for bool is false
-            PulseValueType::PVAL_SNDEVT_NAME(val) 
-                => Value::Flag("soundevent".into(), Value::String(val.clone().unwrap_or_default()).into()),
-            PulseValueType::PVAL_SCHEMA_ENUM(en) 
-                => Value::String(en.to_str().to_string()),
+            PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } => {
+                graph_bindings.find_enum_by_id(*enum_type).map(|enum_type| {
+                    let enum_value = enum_type.get_variant_by_id(*enum_variant).map(|v| v.name.clone()).unwrap_or_else(|| "INVALID".to_string());
+                    Value::String(enum_value)
+                }).unwrap_or(Value::Null)
+            }
 
-            PulseValueType::PVAL_TRANSFORM(_)
-            | PulseValueType::PVAL_TRANSFORM_WORLDSPACE(_)
-            | PulseValueType::PVAL_EHANDLE(_) // can't have a default value for ehandle
-            | PulseValueType::DOMAIN_ENTITY_NAME
-            | PulseValueType::PVAL_INVALID
-            | PulseValueType::PVAL_SNDEVT_GUID(_)
-            | PulseValueType::PVAL_ACT
-            | PulseValueType::PVAL_ANY
-            | PulseValueType::PVAL_ARRAY(_) => Value::Null,
+            PulseGraphValueType::Array { .. } => Value::Array(vec![]),
+            PulseGraphValueType::Transform
+            | PulseGraphValueType::TransformWorldspace
+            | PulseGraphValueType::EHandle
+            | PulseGraphValueType::EntityName { .. }
+            | PulseGraphValueType::SndEventHandle
+            | PulseGraphValueType::Action
+            | PulseGraphValueType::Any => Value::Null,
             _ => Value::Null, // Other types don't have a default value
         };
+
+        let pulsetype = pulsevaluetype_from_valuetype(self.stored_value.clone());
         Value::Object(vec![
             (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
-            (ObjectKey::Identifier("m_Type".into()), Value::String(self.typ_and_default_value.to_string())),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(pulsetype.get_enum_string(graph_bindings).to_string())),
             (ObjectKey::Identifier("m_DefaultValue".into()), default_value),
             (ObjectKey::Identifier("m_nKeysSource".into()), Value::String("PRIVATE".into())),
             (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
@@ -569,32 +563,32 @@ impl KV3Serialize for PulseVariable {
 }
 
 impl KV3Serialize for OutflowConnection {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         let mut params = vec![
             (ObjectKey::Identifier("m_SourceOutflowName".into()), Value::String(self.outflow_name.to_string())),
             (ObjectKey::Identifier("m_nDestChunk".into()), Value::Number(self.dest_chunk.into())),
             (ObjectKey::Identifier("m_nInstruction".into()), Value::Number(self.dest_instruction.into())),
         ];
         if let Some(register_map) = &self.register_map {
-            params.push((ObjectKey::Identifier("m_OutflowRegisterMap".into()), register_map.serialize()));   
+            params.push((ObjectKey::Identifier("m_OutflowRegisterMap".into()), register_map.serialize(graph_bindings)));   
         }
         Value::Object(params)
     }
 }
 
 impl KV3Serialize for CPulseCell_Outflow_IntSwitch {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Outflow_IntSwitch".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
-            (ObjectKey::Identifier("m_DefaultCaseOutflow".into()), self.default_outflow.serialize()),
-            (ObjectKey::Identifier("m_CaseOutflows".into()), Value::Array(self.ouflows.iter().map(|outflow| outflow.serialize()).collect())),
+            (ObjectKey::Identifier("m_DefaultCaseOutflow".into()), self.default_outflow.serialize(graph_bindings)),
+            (ObjectKey::Identifier("m_CaseOutflows".into()), Value::Array(self.ouflows.iter().map(|outflow| outflow.serialize(graph_bindings)).collect())),
         ])
     }
 }
 
 impl KV3Serialize for CPulseCell_SoundEventStart {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_SoundEventStart".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -612,11 +606,11 @@ pub struct CallInfo {
 }
 
 impl KV3Serialize for CallInfo {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_PortName".into()), Value::String(self.port_name.to_string())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_nCallMethodID".into()), Value::Number(self.call_method_id.into())),
             (ObjectKey::Identifier("m_nSrcChunk".into()), Value::Number(self.src_chunk.into())),
             (ObjectKey::Identifier("m_nSrcInstruction".into()), Value::Number(self.src_instruction.into())),
@@ -625,12 +619,12 @@ impl KV3Serialize for CallInfo {
 }
 
 impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Outflow_ListenForEntityOutput".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
-            (ObjectKey::Identifier("m_OnFired".into()), self.outflow_onfired.serialize()),
-            (ObjectKey::Identifier("m_OnCanceled".into()), self.outflow_oncanceled.serialize()),
+            (ObjectKey::Identifier("m_OnFired".into()), self.outflow_onfired.serialize(graph_bindings)),
+            (ObjectKey::Identifier("m_OnCanceled".into()), self.outflow_oncanceled.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_strEntityOutput".into()), Value::String(self.entity_output.clone())),
             (ObjectKey::Identifier("m_strEntityOutputParam".into()), Value::String(self.entity_output_param.clone())),
             (ObjectKey::Identifier("m_bListenUntilCanceled".into()), Value::Bool(self.listen_until_canceled)),
@@ -639,30 +633,30 @@ impl KV3Serialize for CPulseCell_Outflow_ListenForEntityOutput {
 }
 
 impl KV3Serialize for TimelineEvent {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("m_flTimeFromPrevious".into()), Value::Number(self.time_from_previous.into())),
             (ObjectKey::Identifier("m_bPauseForPreviousEvents".into()), Value::Number(self.pause_for_previous_events.into())),
             (ObjectKey::Identifier("m_bCallModeSync".into()), Value::Bool(self.call_mode_sync)),
-            (ObjectKey::Identifier("m_EventOutflow".into()), self.event_outflow.serialize()),
+            (ObjectKey::Identifier("m_EventOutflow".into()), self.event_outflow.serialize(graph_bindings)),
         ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Timeline {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Timeline".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
-            (ObjectKey::Identifier("m_OnFinished".into()), self.outflow_onfinished.serialize()),
+            (ObjectKey::Identifier("m_OnFinished".into()), self.outflow_onfinished.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_bWaitForChildOutflows".into()), Value::Bool(self.wait_for_child_outflows)),
-            (ObjectKey::Identifier("m_TimelineEvents".into()), Value::Array(self.timeline_events.iter().map(|event| event.serialize()).collect())),
+            (ObjectKey::Identifier("m_TimelineEvents".into()), Value::Array(self.timeline_events.iter().map(|event| event.serialize(graph_bindings)).collect())),
         ])
     }
 }
 
 impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Step_SetAnimGraphParam".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -672,7 +666,7 @@ impl KV3Serialize for CPulseCell_Step_SetAnimGraphParam {
 }
 
 impl KV3Serialize for CPulseCell_Value_RandomInt {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Value_RandomInt".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -681,7 +675,7 @@ impl KV3Serialize for CPulseCell_Value_RandomInt {
 }
 
 impl KV3Serialize for CPulseCell_Value_RandomFloat {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, _graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Value_RandomFloat".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
@@ -690,15 +684,15 @@ impl KV3Serialize for CPulseCell_Value_RandomFloat {
 }
 
 impl KV3Serialize for CPulseCell_Inflow_EntOutputHandler {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::Object(vec![
             (ObjectKey::Identifier("_class".into()), Value::String("CPulseCell_Inflow_EntOutputHandler".into())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
             (ObjectKey::Identifier("m_EntryChunk".into()), Value::Number(self.entry_chunk.into())),
-            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize()),
+            (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_SourceEntity".into()), Value::String(self.source_entity.clone())),
             (ObjectKey::Identifier("m_SourceOutput".into()), Value::String(self.source_output.clone())),
-            (ObjectKey::Identifier("m_ExpectedParamType".into()), Value::String(self.expected_param_type.to_string())),
+            (ObjectKey::Identifier("m_ExpectedParamType".into()), Value::String(self.expected_param_type.get_enum_string(graph_bindings).to_string())),
         ])
     }
 }
@@ -842,7 +836,7 @@ impl PulseGraphDef {
 }
 
 impl KV3Serialize for PulseGraphDef {
-    fn serialize(&self) -> Value {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         Value::File(kv3::Header(
             vec![
                 Metadata {
@@ -858,21 +852,21 @@ impl KV3Serialize for PulseGraphDef {
             ],
         ),
             Box::new(Value::Object(vec![
-                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize()).collect())),
+                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
                 (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),
                 (ObjectKey::Identifier("m_ParentMapName".into()), Value::String(self.map_name.to_string())),
                 (ObjectKey::Identifier("m_ParentXmlName".into()), Value::String(self.xml_name.to_string())),
                 (ObjectKey::Identifier("m_vecGameBlackboards".into()), Value::Array(vec![])),
                 (ObjectKey::Identifier("m_BlackboardReferences".into()), Value::Array(vec![])),
-                (ObjectKey::Identifier("m_Chunks".into()), Value::Array(self.chunks.iter().map(|chunk| chunk.serialize()).collect())),
-                (ObjectKey::Identifier("m_DomainValues".into()), Value::Array(self.domain_values.iter().map(|domain_value| domain_value.serialize()).collect())),
-                (ObjectKey::Identifier("m_Vars".into()), Value::Array(self.variables.iter().map(|variable| variable.serialize()).collect())),
-                (ObjectKey::Identifier("m_Constants".into()), Value::Array(self.constants.iter().map(|constant| constant.serialize()).collect())),
-                (ObjectKey::Identifier("m_PublicOutputs".into()), Value::Array(self.public_outputs.iter().map(|variable| variable.serialize()).collect())),
-                (ObjectKey::Identifier("m_OutputConnections".into()), Value::Array(self.output_connections.iter().map(|output_connection| output_connection.serialize()).collect())),
-                (ObjectKey::Identifier("m_InvokeBindings".into()), Value::Array(self.bindings.iter().map(|binding| binding.serialize()).collect())),
-                (ObjectKey::Identifier("m_CallInfos".into()), Value::Array(self.call_infos.iter().map(|callinfo| callinfo.serialize()).collect())),
+                (ObjectKey::Identifier("m_Chunks".into()), Value::Array(self.chunks.iter().map(|chunk| chunk.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_DomainValues".into()), Value::Array(self.domain_values.iter().map(|domain_value| domain_value.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_Vars".into()), Value::Array(self.variables.iter().map(|variable| variable.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_Constants".into()), Value::Array(self.constants.iter().map(|constant| constant.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_PublicOutputs".into()), Value::Array(self.public_outputs.iter().map(|variable| variable.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_OutputConnections".into()), Value::Array(self.output_connections.iter().map(|output_connection| output_connection.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_InvokeBindings".into()), Value::Array(self.bindings.iter().map(|binding| binding.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_CallInfos".into()), Value::Array(self.call_infos.iter().map(|callinfo| callinfo.serialize(graph_bindings)).collect())),
             ]))
         )
     }

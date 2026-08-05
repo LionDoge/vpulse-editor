@@ -1386,16 +1386,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                         ui.label(param_name);
                         let type_list: Vec<PulseValueType> = match &node_data.template {
                             PulseNodeTemplate::CompareOutput => {
-                                let mut types = PulseValueType::get_comparable_types();
-                                types.extend(
-                                    user_state
-                                        .bindings
-                                        .enums
-                                        .iter()
-                                        .cloned()
-                                        .map(PulseValueType::PVAL_SCHEMA_ENUM_CHOICE)
-                                );
-                                types
+                                PulseValueType::get_comparable_types()
                             }
                             PulseNodeTemplate::Operation => PulseValueType::get_operatable_types(),
                             PulseNodeTemplate::ScaleVector => PulseValueType::get_vector_types(),

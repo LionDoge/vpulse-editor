@@ -228,4 +228,11 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
 
         output.typ = PulseValueType::PVAL_INVALID;
     }
+
+    // Update types on node inputs.
+    for (_inp_id, inp_param) in full_state.state.graph.inputs.iter_mut() {
+        if matches!(inp_param.value, PulseGraphValueType::ArrayOld) {
+            inp_param.value = PulseGraphValueType::ArrayVal { array_type: PulseDataType::Any };
+        }
+    }
 }

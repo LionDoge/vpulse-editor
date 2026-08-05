@@ -519,7 +519,7 @@ pub fn pulsevaluetype_from_valuetype(valuetype: PulseGraphValueType) -> PulseVal
         PulseGraphValueType::Resource { resource_type, value } => {
             PulseValueType::PVAL_RESOURCE(resource_type, Some(value))
         }
-        PulseGraphValueType::Array { array_type } => {
+        PulseGraphValueType::ArrayVal { array_type } => {
             PulseValueType::PVAL_ARRAY(Box::new(pulsevaluetype_from_valuetype(array_type.into())))
         }
         PulseGraphValueType::GameTime => PulseValueType::PVAL_GAMETIME(None),

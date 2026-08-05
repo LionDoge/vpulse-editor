@@ -544,7 +544,7 @@ impl KV3Serialize for PulseVariable {
                 }).unwrap_or(Value::Null)
             }
 
-            PulseGraphValueType::Array { .. } => Value::Array(vec![]),
+            PulseGraphValueType::ArrayVal { .. } => Value::Array(vec![]),
             PulseGraphValueType::Transform
             | PulseGraphValueType::TransformWorldspace
             | PulseGraphValueType::EHandle

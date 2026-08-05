@@ -151,7 +151,7 @@ impl PulseGraphValueType {
         if let PulseGraphValueType::Typ { value, .. } = self {
             Ok(value)
         } else {
-            anyhow::bail!("Invalid cast from {:?} to variable name", self)
+            anyhow::bail!("Invalid cast from {:?} to PulseValueType", self)
         }
     }
 
@@ -237,7 +237,7 @@ impl DataTypeTrait<PulseGraphState> for PulseDataType {
     fn data_type_color(&self, _user_state: &mut PulseGraphState) -> egui::Color32 {
         match self {
             PulseDataType::Scalar => egui::Color32::from_rgb(38, 109, 211),
-            PulseDataType::Integer => egui::Color32::from_rgb(38, 109, 211),
+            PulseDataType::Integer => egui::Color32::from_rgb(22, 12, 166),
             PulseDataType::Vec2 => egui::Color32::from_rgb(238, 163, 109),
             PulseDataType::Vec3 => egui::Color32::from_rgb(238, 207, 109),
             PulseDataType::Vec3Local => egui::Color32::from_rgb(168, 144, 91),
@@ -613,7 +613,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 node_id,
                 name.to_string(),
                 PulseDataType::Array,
-                PulseGraphValueType::Array {
+                PulseGraphValueType::ArrayVal {
                     array_type: Default::default(),
                 },
                 InputParamKind::ConnectionOnly,
@@ -1564,7 +1564,7 @@ impl WidgetValueTrait for PulseGraphValueType {
                 PulseGraphValueType::GameTime => {
                     ui.label(format!("Game Time {param_name}"));
                 }
-                PulseGraphValueType::Array { .. } => {
+                PulseGraphValueType::ArrayVal { .. } => {
                     ui.label(format!("Array {param_name}"));
                 }
                 PulseGraphValueType::TypeSafeInteger { integer_type } => {
@@ -1583,6 +1583,9 @@ impl WidgetValueTrait for PulseGraphValueType {
                                 }
                             });
                     });
+                }
+                PulseGraphValueType::ArrayOld => {
+                    ui.label("Old unconverted array type - readd this node");
                 }
             }
         });

@@ -158,7 +158,9 @@ pub enum PulseGraphValueType {
         resource_type: Option<String>, // Used for displaying in the UI only.
         value: String,
     },
-    Array {
+    #[serde(rename = "Array")]
+    ArrayOld, // for compatibility
+    ArrayVal {
         #[serde(default)]
         array_type: PulseDataType
     },
@@ -410,7 +412,7 @@ impl Into<PulseGraphValueType> for PulseDataType {
             PulseDataType::Vec3Local => PulseGraphValueType::Vec3Local { value: Vec3::default() },
             PulseDataType::Vec4 => PulseGraphValueType::Vec4 { value: Vec4::default() },
             PulseDataType::Color => PulseGraphValueType::Color { value: [0.0, 0.0, 0.0, 0.0] },
-            PulseDataType::Array => PulseGraphValueType::Array { array_type: PulseDataType::Any},
+            PulseDataType::Array => PulseGraphValueType::ArrayVal { array_type: PulseDataType::Any},
             PulseDataType::QAngle => PulseGraphValueType::QAngle { value: Vec3::default() },
             PulseDataType::Transform => PulseGraphValueType::Transform,
             PulseDataType::TransformWorldspace => PulseGraphValueType::TransformWorldspace,
@@ -432,9 +434,9 @@ pub fn pulse_value_type_to_node_types(
 ) -> (PulseDataType, PulseGraphValueType) {
     match typ {
         PulseValueType::PVAL_INT(val) => (
-            PulseDataType::Scalar,
-            PulseGraphValueType::Scalar {
-                value: val.map(|v| v as f32).unwrap_or_default(),
+            PulseDataType::Integer,
+            PulseGraphValueType::Integer {
+                value: val.unwrap_or_default(),
             },
         ),
         PulseValueType::PVAL_FLOAT(val) => (
@@ -554,7 +556,7 @@ pub fn pulse_value_type_to_node_types(
         PulseValueType::PVAL_ARRAY(array_type) =>
         (
             PulseDataType::Array,
-            PulseGraphValueType::Array {
+            PulseGraphValueType::ArrayVal {
                 array_type: PulseDataType::from((**array_type).clone()),
             }
         ),

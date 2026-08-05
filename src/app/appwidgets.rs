@@ -56,7 +56,7 @@ pub fn value_picker_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValu
     
             ui.add(egui::TextEdit::singleline(value).hint_text("Resource path"));
         }
-        PulseGraphValueType::Array {array_type} => {
+        PulseGraphValueType::ArrayVal {array_type} => {
             // TODO: make it recursive, so we can have more nested types.
             ComboBox::from_id_salt(format!("array_type_{:?}", combo_idx))
                 .selected_text(array_type.name())
@@ -126,7 +126,7 @@ pub fn value_picker_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValu
 pub fn inner_type_choice_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValueType, bindings: &GraphBindings, combo_idx: Option<usize>) -> bool {
     let mut changed = false;
     match value {
-        PulseGraphValueType::Array { array_type } => {
+        PulseGraphValueType::ArrayVal { array_type } => {
             ComboBox::from_id_salt(format!("array_type_inner_{:?}", combo_idx))
                 .selected_text(array_type.name())
                 .show_ui(ui, |ui| {

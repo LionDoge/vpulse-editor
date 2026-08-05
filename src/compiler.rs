@@ -724,9 +724,9 @@ fn get_input_register_or_create_constant_from_id(
                 PulseValueType::PVAL_INT(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
-                    let input_value = input_param.value().clone().try_to_integer()?;
+                    let input_value = input_param.value().clone().try_to_scalar()?;
                     chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Integer(input_value));
+                    graph_def.add_constant(PulseConstant::Integer(input_value as i32));
                 }
                 PulseValueType::PVAL_FLOAT(_) => {
                     instruction =

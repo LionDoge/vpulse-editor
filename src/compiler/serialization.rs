@@ -392,7 +392,14 @@ impl KV3Serialize for OutputDefinition {
         Value::Object(vec![
             (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
-            (ObjectKey::Identifier("m_ParamType".into()), Value::String(pulsevalue_type.get_enum_string(graph_bindings).to_string())),
+            // TODO: Pulse supports multiple output args now, but we do not have implementation in UI yet.
+            (ObjectKey::Identifier("m_Args".into()), Value::Array(vec![
+                Value::Object(vec![
+                    (ObjectKey::Identifier("m_Name".into()), Value::String("value".into())),
+                    (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
+                    (ObjectKey::Identifier("m_Type".into()), Value::String(pulsevalue_type.get_enum_string(graph_bindings).to_string())),
+                ])
+            ])),
         ])
     }
 }

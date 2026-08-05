@@ -273,6 +273,43 @@ impl PulseGraphEditor {
             .add_output_param(node_id, String::from(output_name), data_typ);
     }
 
+    pub fn update_node_public_output_types(
+        &mut self,
+        node_id: NodeId,
+        output_idx: PublicOutputIndex,
+    ) {
+        let node = self.full_state.state.graph.nodes.get(node_id).unwrap();
+        let Some(output) = self.full_state.user_state.get_public_output_from_index(output_idx) else {
+            return;
+        };
+
+        let Ok(output_ref_inp) = node.get_input("outputName") else {
+            return;
+        };
+        
+        // Bail if node's variable does not match
+        let output_ref_inp_val = self.full_state.state.graph.get_input(output_ref_inp);
+        if let PulseGraphValueType::InternalVariableName { prevvalue: _, value } = &output_ref_inp_val.value {
+            if *value != output.name {
+                return;
+            }
+        }
+
+        if matches!(node.user_data.template, PulseNodeTemplate::FireOutput) {
+            let param = node.get_input("param");
+            if let Ok(param) = param {
+                self.full_state.state.graph.remove_input_param(param);
+            }
+            self.add_node_input_simple(
+                node_id,
+                output.data_type.clone(),
+                output.value_type.clone(),
+                "param",
+                InputParamKind::ConnectionOrConstant,
+            );
+        }
+    }
+
     pub fn update_node_variable_types(
         &mut self,
         node_id: NodeId,
@@ -1250,9 +1287,16 @@ impl eframe::App for PulseGraphEditor {
                         typ_old: PulseValueType::PVAL_INT(None),
                     });
                 }
-                output_scheduled_for_deletion = appwidgets::public_output_list_widget(
+                let (out_scheduled_for_deletion, updated_output_idx) = appwidgets::public_output_list_widget(
                     ui, &mut self.full_state.user_state.public_outputs, &self.full_state.user_state.bindings
                 );
+                output_scheduled_for_deletion = out_scheduled_for_deletion;
+                if let Some(output_idx) = updated_output_idx {
+                    for node_id in self.full_state.state.graph.nodes.keys().collect::<Vec<_>>() {
+                        self.update_node_public_output_types(node_id, output_idx);
+                    }
+                }
+
                 ui.separator();
 
                 ui.label("Variables:");
@@ -1266,13 +1310,13 @@ impl eframe::App for PulseGraphEditor {
                     });
                 }
                 let variable_type_list = PulseDataType::get_variable_supported_types();
-                let (var_schedules_for_deletion, updated_var_idx) = appwidgets::variable_list_widget(
+                let (var_scheduled_for_deletion, updated_var_idx) = appwidgets::variable_list_widget(
                     ui,
                     &mut self.full_state.user_state.variables,
                     variable_type_list,
                     &self.full_state.user_state.bindings
                 );
-                variable_scheduled_for_deletion = var_schedules_for_deletion;
+                variable_scheduled_for_deletion = var_scheduled_for_deletion;
                 if let Some(var_idx) = updated_var_idx {
                     for node_id in self.full_state.state.graph.nodes.keys().collect::<Vec<_>>() {
                         self.update_node_variable_types(node_id, var_idx);
@@ -1400,8 +1444,18 @@ impl eframe::App for PulseGraphEditor {
                                 .unwrap();
                             self.state_mut().graph.remove_output_param(param);
                         }
-                        PulseGraphResponse::ChangeOutputParamType(node_id, name) => {
-                            //self.update_output_node_param(node_id, &name, "param");
+                        PulseGraphResponse::ChangeOutputParamType(node_id, out_idx) => {
+                            match node_id {
+                                Some(node_id) => { 
+                                    self.update_node_public_output_types(node_id, out_idx); 
+                                }
+                                None => {
+                                    // send update to all nodes
+                                    for node_id in self.full_state.state.graph.nodes.keys().collect::<Vec<_>>() {
+                                        self.update_node_public_output_types(node_id, out_idx);
+                                    }
+                                }
+                            }
                         }
                         PulseGraphResponse::ChangeVariableParamType(node_id, var_idx) => {
                             match node_id {

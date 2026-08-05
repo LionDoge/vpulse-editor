@@ -3,7 +3,7 @@ use egui_node_graph2::DataTypeTrait;
 use crate::app::types::{PulseDataType, PulseGraphValueType};
 use crate::pulsetypes::{OutputDefinition, PulseVariable};
 use crate::bindings::GraphBindings;
-use crate::typing::{EnumBindingValueIndex, VariableIndex};
+use crate::typing::{EnumBindingValueIndex, PublicOutputIndex, VariableIndex};
 
 pub fn value_picker_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValueType, bindings: &GraphBindings, combo_idx: Option<usize>)
     -> bool {
@@ -123,7 +123,8 @@ pub fn value_picker_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValu
 }
 
 // Does not let change the default value, but lets change the inner type, for example array type, or resouce type.
-pub fn inner_type_choice_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValueType, bindings: &GraphBindings, combo_idx: Option<usize>) {
+pub fn inner_type_choice_widget_from_datatype(ui: &mut Ui, value: &mut PulseGraphValueType, bindings: &GraphBindings, combo_idx: Option<usize>) -> bool {
+    let mut changed = false;
     match value {
         PulseGraphValueType::Array { array_type } => {
             ComboBox::from_id_salt(format!("array_type_inner_{:?}", combo_idx))
@@ -131,22 +132,29 @@ pub fn inner_type_choice_widget_from_datatype(ui: &mut Ui, value: &mut PulseGrap
                 .show_ui(ui, |ui| {
                     for typ in PulseDataType::get_variable_supported_types() {
                         let name = typ.name();
-                        ui.selectable_value(array_type,
+                        if ui.selectable_value(array_type,
                             typ.clone(),
                             name
-                        );
+                        ).changed() {
+                            changed = true;
+                        }
                     }
                 });
         }
         #[allow(clippy::collapsible_match)]
         PulseGraphValueType::Resource { resource_type, .. } => {
             if ui.add(egui::TextEdit::singleline(resource_type.get_or_insert_with(Default::default))
-                .hint_text("Type")).changed() && resource_type.get_or_insert_with(Default::default).trim().is_empty() {
-                    *resource_type = None;
+                .hint_text("Type")).changed() {
+                    changed = true;
+                    if resource_type.get_or_insert_with(Default::default).trim().is_empty() {
+                        *resource_type = None;
+                    }
                 }
         }
         PulseGraphValueType::TypeSafeInteger { integer_type } => {
-            ui.add(egui::TextEdit::singleline(integer_type).hint_text("Type-safe integer type"));
+            if ui.add(egui::TextEdit::singleline(integer_type).hint_text("Type-safe integer type")).changed() {
+                changed = true;
+            }
         }
         PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } => {
             let binding_enum= bindings.find_enum_by_id(*enum_type);
@@ -160,12 +168,14 @@ pub fn inner_type_choice_widget_from_datatype(ui: &mut Ui, value: &mut PulseGrap
                         ).changed() {
                             // reset variant
                             *enum_variant = EnumBindingValueIndex::default();
+                            changed = true;
                         }
                     }
                 });
         }
         _ => {}
     }
+    changed
 }
 
 pub fn variable_list_widget(ui: &mut Ui, variable_list: &mut [PulseVariable], type_choices: Vec<PulseDataType>, bindings: &GraphBindings)
@@ -207,8 +217,7 @@ pub fn variable_list_widget(ui: &mut Ui, variable_list: &mut [PulseVariable], ty
             });
             ui.horizontal(|ui| {
                 ui.label("Starting value:");
-                let changed = value_picker_widget_from_datatype(ui, &mut var.stored_value, bindings, Some(idx));
-                if changed {
+                if value_picker_widget_from_datatype(ui, &mut var.stored_value, bindings, Some(idx)) {
                     variable_idx_to_update = Some(VariableIndex(idx));
                 }
             });
@@ -217,8 +226,10 @@ pub fn variable_list_widget(ui: &mut Ui, variable_list: &mut [PulseVariable], ty
     (variable_idx_scheduled_for_deletion, variable_idx_to_update)
 }
 
-pub fn public_output_list_widget(ui: &mut Ui, output_list: &mut [OutputDefinition], bindings: &GraphBindings) -> Option<usize> {
+pub fn public_output_list_widget(ui: &mut Ui, output_list: &mut [OutputDefinition], bindings: &GraphBindings)
+-> (Option<usize>, Option<PublicOutputIndex>) {
     let mut output_scheduled_for_deletion: Option<usize> = None;
+    let mut output_idx_to_update: Option<PublicOutputIndex> = None;
     for (idx, outputdef) in output_list.iter_mut().enumerate() {
         ui.add_space(4.0);
         egui::Frame::default()
@@ -246,12 +257,15 @@ pub fn public_output_list_widget(ui: &mut Ui, output_list: &mut [OutputDefinitio
                                 typ.name()
                             ).clicked() {
                                 outputdef.value_type = outputdef.data_type.clone().into();
+                                output_idx_to_update = Some(PublicOutputIndex(idx));
                             }
                         }
                     });
-                inner_type_choice_widget_from_datatype(ui, &mut outputdef.value_type, bindings, Some(idx));
+                if inner_type_choice_widget_from_datatype(ui, &mut outputdef.value_type, bindings, Some(idx)) {
+                    output_idx_to_update = Some(PublicOutputIndex(idx));
+                }
             });
         });
     }
-    output_scheduled_for_deletion
+    (output_scheduled_for_deletion, output_idx_to_update)
 }

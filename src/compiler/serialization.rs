@@ -388,10 +388,11 @@ impl KV3Serialize for OutputConnection {
 
 impl KV3Serialize for OutputDefinition {
     fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
+        let pulsevalue_type = pulsevaluetype_from_valuetype(self.value_type.clone());
         Value::Object(vec![
             (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String("".into())),
-            (ObjectKey::Identifier("m_ParamType".into()), Value::String(self.typ.get_enum_string(graph_bindings).to_string())),
+            (ObjectKey::Identifier("m_ParamType".into()), Value::String(pulsevalue_type.get_enum_string(graph_bindings).to_string())),
         ])
     }
 }

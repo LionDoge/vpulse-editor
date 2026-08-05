@@ -58,10 +58,10 @@ impl PulseGraphState {
 impl PulseGraphValueType {
     /// Tries to downcast this value type to a scalar
     pub fn try_to_scalar(self) -> anyhow::Result<f32> {
-        if let PulseGraphValueType::Scalar { value } = self {
-            Ok(value)
-        } else {
-            anyhow::bail!("Invalid cast from {:?} to scalar", self)
+        match self {
+            PulseGraphValueType::Scalar { value } => Ok(value),
+            PulseGraphValueType::Integer { value } => Ok(value as f32),
+            _ => anyhow::bail!("Invalid cast from {:?} to scalar", self),
         }
     }
 

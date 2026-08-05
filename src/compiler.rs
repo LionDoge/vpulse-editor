@@ -724,9 +724,9 @@ fn get_input_register_or_create_constant_from_id(
                 PulseValueType::PVAL_INT(_) => {
                     instruction =
                         instruction_templates::get_const(new_constant_id, target_register);
-                    let input_value = input_param.value().clone().try_to_scalar()?;
+                    let input_value = input_param.value().clone().try_to_integer()?;
                     chunk.add_instruction(instruction);
-                    graph_def.add_constant(PulseConstant::Integer(input_value as i32));
+                    graph_def.add_constant(PulseConstant::Integer(input_value));
                 }
                 PulseValueType::PVAL_FLOAT(_) => {
                     instruction =
@@ -1374,7 +1374,8 @@ fn traverse_nodes_and_populate<'a>(
                     .public_outputs
                     .get(pub_output)
                     .ok_or(CompileError::Node(current_node.id, "Public output not found".into()))?;
-                let reg_param = get_register!("param", output_info.typ.clone());
+                let pulseval_type = pulsevaluetype_from_valuetype(output_info.value_type.clone());
+                let reg_param = get_register!("param", pulseval_type);
                 graph_def
                 .cells
                 .push(Box::from(CPulseCell_Step_PublicOutput::new(

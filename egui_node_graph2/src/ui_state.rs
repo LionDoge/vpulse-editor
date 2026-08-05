@@ -1,6 +1,7 @@
 use super::*;
 use egui::{Rect, Style, Ui, Vec2};
 use std::marker::PhantomData;
+use std::num::NonZeroU32;
 use std::sync::Arc;
 
 use crate::scale::Scale;
@@ -23,6 +24,58 @@ impl<NodeData, DataType, ValueType> Default for GraphUndoState<NodeData, DataTyp
             graph: Default::default(),
             node_positions: SecondaryMap::default(),
             node_sizes: SecondaryMap::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ClipboardInput<DataType, ValueType> {
+    pub id: InputId,
+    pub name: String,
+    pub typ: DataType,
+    pub value: ValueType,
+    pub kind: InputParamKind,
+    pub max_connections: Option<NonZeroU32>,
+    pub shown_inline: bool,
+}
+
+#[derive(Clone, Debug)]
+pub struct ClipboardOutput<DataType> {
+    pub id: OutputId,
+    pub name: String,
+    pub typ: DataType,
+}
+
+#[derive(Clone, Debug)]
+pub struct ClipboardNode<NodeData, DataType, ValueType> {
+    pub label: String,
+    pub user_data: NodeData,
+    pub position: egui::Pos2,
+    pub size: Vec2,
+    pub inputs: Vec<ClipboardInput<DataType, ValueType>>,
+    pub outputs: Vec<ClipboardOutput<DataType>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ClipboardConnection {
+    pub input: InputId,
+    pub output: OutputId,
+    pub input_hook: usize,
+}
+
+#[derive(Clone, Debug)]
+pub struct GraphClipboard<NodeData, DataType, ValueType> {
+    pub nodes: Vec<ClipboardNode<NodeData, DataType, ValueType>>,
+    pub connections: Vec<ClipboardConnection>,
+    pub bounds: Rect,
+}
+
+impl<NodeData, DataType, ValueType> Default for GraphClipboard<NodeData, DataType, ValueType> {
+    fn default() -> Self {
+        Self {
+            nodes: Vec::default(),
+            connections: Vec::default(),
+            bounds: Rect::NOTHING,
         }
     }
 }
@@ -53,6 +106,9 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub node_sizes: SecondaryMap<NodeId, Vec2>,
     /// The node finder is used to create new nodes.
     pub node_finder: Option<NodeFinder<NodeTemplate>>,
+    /// Local copy/paste buffer for selected nodes and their internal links.
+    #[cfg_attr(feature = "persistence", serde(skip, default))]
+    pub clipboard: Option<GraphClipboard<NodeData, DataType, ValueType>>,
     /// The panning of the graph viewport.
     pub pan_zoom: PanZoom,
     pub _user_state: PhantomData<fn() -> UserState>,
@@ -84,6 +140,7 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
             node_positions: Default::default(),
             node_sizes: Default::default(),
             node_finder: Default::default(),
+            clipboard: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),
         }

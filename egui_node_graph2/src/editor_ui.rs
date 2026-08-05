@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;
 
 use crate::color_hex_utils::*;
@@ -118,20 +118,177 @@ where
         UserState = UserState,
         DataType = DataType,
         ValueType = ValueType,
-    >,
+    > + Clone,
     UserResponse: UserResponseTrait,
     ValueType:
-        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
+        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData> + Clone,
     NodeTemplate: NodeTemplateTrait<
         NodeData = NodeData,
         DataType = DataType,
         ValueType = ValueType,
         UserState = UserState,
         CategoryType = CategoryType,
-    >,
-    DataType: DataTypeTrait<UserState>,
+    > + Clone,
+    DataType: DataTypeTrait<UserState> + Clone,
     CategoryType: CategoryTrait,
 {
+    fn copy_selected_nodes(&mut self) {
+        self.selected_nodes.retain(|node_id| self.graph.contains_node(*node_id));
+
+        let selected: HashSet<NodeId> = self.selected_nodes.iter().copied().collect();
+        if selected.is_empty() {
+            self.clipboard = None;
+            return;
+        }
+
+        let mut bounds: Option<Rect> = None;
+        let mut nodes = Vec::new();
+
+        for node_id in self
+            .node_order
+            .iter()
+            .copied()
+            .filter(|node_id| selected.contains(node_id))
+        {
+            if !self.graph.contains_node(node_id) {
+                continue;
+            }
+
+            let node = &self.graph[node_id];
+            let position = *self.node_positions.get(node_id).unwrap_or(&Pos2::ZERO);
+            let size = *self.node_sizes.get(node_id).unwrap_or(&NODE_INITIAL_SIZE);
+            let node_bounds = Rect::from_min_size(position, size);
+            bounds = Some(bounds.map_or(node_bounds, |existing| existing.union(node_bounds)));
+
+            let inputs = node
+                .inputs
+                .iter()
+                .map(|(name, input_id)| {
+                    let input = self.graph.get_input(*input_id);
+                    ClipboardInput {
+                        id: *input_id,
+                        name: name.clone(),
+                        typ: input.typ.clone(),
+                        value: input.value.clone(),
+                        kind: input.kind,
+                        max_connections: input.max_connections,
+                        shown_inline: input.shown_inline,
+                    }
+                })
+                .collect();
+
+            let outputs = node
+                .outputs
+                .iter()
+                .map(|(name, output_id)| {
+                    let output = self.graph.get_output(*output_id);
+                    ClipboardOutput {
+                        id: *output_id,
+                        name: name.clone(),
+                        typ: output.typ.clone(),
+                    }
+                })
+                .collect();
+
+            nodes.push(ClipboardNode {
+                label: node.label.clone(),
+                user_data: node.user_data.clone(),
+                position,
+                size,
+                inputs,
+                outputs,
+            });
+        }
+
+        let mut connections = Vec::new();
+        for (input_id, outputs) in self.graph.iter_connection_groups() {
+            if !selected.contains(&self.graph.get_input(input_id).node) {
+                continue;
+            }
+
+            for (input_hook, output_id) in outputs.into_iter().enumerate() {
+                if !selected.contains(&self.graph.get_output(output_id).node) {
+                    continue;
+                }
+
+                connections.push(ClipboardConnection {
+                    input: input_id,
+                    output: output_id,
+                    input_hook,
+                });
+            }
+        }
+
+        self.clipboard = Some(GraphClipboard {
+            nodes,
+            connections,
+            bounds: bounds.unwrap_or(Rect::from_min_size(Pos2::ZERO, Vec2::ZERO)),
+        });
+    }
+
+    fn paste_clipboard(&mut self, cursor_pos: Pos2, editor_rect: Rect) {
+        let Some(clipboard) = self.clipboard.clone() else {
+            return;
+        };
+
+        if clipboard.nodes.is_empty() {
+            return;
+        }
+
+        let paste_origin = cursor_pos - self.pan_zoom.pan - editor_rect.min.to_vec2();
+        let paste_offset = paste_origin - clipboard.bounds.center();
+
+        let mut new_input_ids = HashMap::<InputId, InputId>::new();
+        let mut new_output_ids = HashMap::<OutputId, OutputId>::new();
+        let mut pasted_nodes = Vec::new();
+
+        for node in clipboard.nodes.iter() {
+            let new_node = self.graph.add_node(
+                node.label.clone(),
+                node.user_data.clone(),
+                |graph, node_id| {
+                    for input in &node.inputs {
+                        let new_input = graph.add_wide_input_param(
+                            node_id,
+                            input.name.clone(),
+                            input.typ.clone(),
+                            input.value.clone(),
+                            input.kind,
+                            input.max_connections,
+                            input.shown_inline,
+                        );
+                        new_input_ids.insert(input.id, new_input);
+                    }
+
+                    for output in &node.outputs {
+                        let new_output = graph.add_output_param(
+                            node_id,
+                            output.name.clone(),
+                            output.typ.clone(),
+                        );
+                        new_output_ids.insert(output.id, new_output);
+                    }
+                },
+            );
+
+            self.node_positions.insert(new_node, node.position + paste_offset);
+            self.node_sizes.insert(new_node, node.size);
+            self.node_order.push(new_node);
+            pasted_nodes.push(new_node);
+        }
+
+        for connection in clipboard.connections.iter() {
+            if let (Some(&new_input), Some(&new_output)) = (
+                new_input_ids.get(&connection.input),
+                new_output_ids.get(&connection.output),
+            ) {
+                self.graph.add_connection(new_output, new_input, connection.input_hook);
+            }
+        }
+
+        self.selected_nodes = pasted_nodes;
+    }
+
     #[must_use]
     pub fn draw_graph_editor(
         &mut self,
@@ -214,6 +371,29 @@ where
         let cursor_pos = ui
             .ctx()
             .input(|i| i.pointer.hover_pos().unwrap_or(Pos2::ZERO));
+        let (copy_requested, paste_requested) = ui.ctx().input(|input| {
+            let copy_requested = input.events.iter().any(|event| {
+                matches!(
+                    event,
+                    Event::Key {
+                        key: Key::C,
+                        pressed: true,
+                        ..
+                    }
+                )
+            });
+            let paste_requested = input.events.iter().any(|event| {
+                matches!(
+                    event,
+                    Event::Key {
+                        key: Key::V,
+                        pressed: true,
+                        ..
+                    }
+                )
+            });
+            (copy_requested, paste_requested)
+        });
         let mut cursor_in_editor = resp.contains_pointer();
         let mut cursor_in_finder = false;
 
@@ -561,6 +741,15 @@ where
             self.node_finder = None;
         }
 
+        if copy_requested && !self.selected_nodes.is_empty() {
+            self.copy_selected_nodes();
+            println!("Copied {} nodes to clipboard", self.selected_nodes.len());
+        }
+
+        if paste_requested && cursor_in_editor {
+            self.paste_clipboard(cursor_pos, editor_rect);
+        }
+
         if r.dragged()
             && ui
                 .ctx()
@@ -593,6 +782,7 @@ where
         }
     }
 }
+
 
 fn draw_connection(
     pan_zoom: &PanZoom,

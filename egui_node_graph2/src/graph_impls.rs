@@ -83,6 +83,7 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
         self[node].inputs.retain(|(_, id)| *id != param);
         self.inputs.remove(param);
         self.connections.retain(|i, _| i != param);
+        self.connections.remove(param);
     }
 
     pub fn remove_output_param(&mut self, param: OutputId) {
@@ -129,6 +130,7 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
         // we remove them inside the loop.
         for input in self[node_id].input_ids().collect::<SVec<_>>() {
             self.inputs.remove(input);
+            self.connections.remove(input);
         }
         for output in self[node_id].output_ids().collect::<SVec<_>>() {
             self.outputs.remove(output);
@@ -153,6 +155,10 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
 
     pub fn iter_nodes(&self) -> impl Iterator<Item = NodeId> + '_ {
         self.nodes.iter().map(|(id, _)| id)
+    }
+
+    pub fn contains_node(&self, node_id: NodeId) -> bool {
+        self.nodes.contains_key(node_id)
     }
 
     pub fn add_connection(&mut self, output: OutputId, input: InputId, pos: usize) {

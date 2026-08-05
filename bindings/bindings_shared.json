@@ -5304,7 +5304,7 @@
                 },
                 {
                     "name": "entityName",
-                    "type": "PVAL_STRING"
+                    "type": "PVAL_ENTITY_NAME"
                 }
             ],
             "outparams": [

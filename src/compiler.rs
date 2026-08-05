@@ -1710,17 +1710,17 @@ fn traverse_nodes_and_populate<'a>(
                 .unwrap()
                 .get_last_instruction_id()
                 + 1;
-            let reg_condition = get_input_register_or_create_constant(
-                graph,
-                current_node,
-                graph_def,
-                graph_state,
-                target_chunk,
-                "condition",
-                PulseValueType::PVAL_BOOL,
-                true
-            )?.ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
             if !is_dowhile_loop {
+                let reg_condition = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    graph_state,
+                    target_chunk,
+                    "condition",
+                    PulseValueType::PVAL_BOOL,
+                    true
+                )?.ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond = instruction_templates::jump_cond(
                     reg_condition,
@@ -1748,6 +1748,12 @@ fn traverse_nodes_and_populate<'a>(
                     .dest_instruction = chunk.get_last_instruction_id() + 1;
                 chunk.add_instruction(Instruction::default());
             } else {
+                let loop_instr_id = graph_def
+                    .chunks
+                    .get_mut(target_chunk as usize)
+                    .unwrap()
+                    .get_last_instruction_id()
+                    + 1;
                 graph_run_next_actions_no_return!(
                     graph,
                     current_node,
@@ -1757,9 +1763,19 @@ fn traverse_nodes_and_populate<'a>(
                     "loopAction",
                     force_regenerate
                 );
+                let reg_condition = get_input_register_or_create_constant(
+                    graph,
+                    current_node,
+                    graph_def,
+                    graph_state,
+                    target_chunk,
+                    "condition",
+                    PulseValueType::PVAL_BOOL,
+                    true
+                )?.ok_or(CompileError::Node(current_node.id, "Failed to get 'condition' register".into()))?;
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                 let instr_jump_cond =
-                    instruction_templates::jump_cond(reg_condition, cond_instr_id);
+                    instruction_templates::jump_cond(reg_condition, loop_instr_id);
                 chunk.add_instruction(instr_jump_cond);
             }
 

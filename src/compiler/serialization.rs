@@ -12,6 +12,19 @@ use crate::{
 pub trait KV3Serialize {
     fn serialize(&self, graph_bindings: &GraphBindings) -> Value;
 }
+
+/// Gives a serialized cell a unique, non-negative `m_nEditorNodeID`.
+/// Entity output handlers with an ID of -1 are never subscribed by the game.
+fn with_editor_node_id(mut cell: Value, id: i64) -> Value {
+    if let Value::Object(fields) = &mut cell {
+        for (key, value) in fields.iter_mut() {
+            if matches!(key, ObjectKey::Identifier(name) if name == "m_nEditorNodeID") {
+                *value = Value::Number(id as f64);
+            }
+        }
+    }
+    cell
+}
 pub struct PulseRuntimeArgument {
     pub name: String,
     pub description: String,
@@ -309,6 +322,9 @@ impl PulseChunk {
     #[allow(dead_code)]
     pub fn get_last_register_id(&self) -> i32 {
         self.registers.len() as i32 - 1
+    }
+    pub fn get_register_type(&self, reg: i32) -> Option<&str> {
+        self.registers.get(usize::try_from(reg).ok()?).map(|r| r.reg_type.as_str())
     }
 }
 impl KV3Serialize for PulseChunk {
@@ -885,7 +901,7 @@ impl KV3Serialize for PulseGraphDef {
             ],
         ),
             Box::new(Value::Object(vec![
-                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().map(|cell| cell.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().enumerate().map(|(idx, cell)| with_editor_node_id(cell.serialize(graph_bindings), idx as i64 + 1)).collect())),
                 (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
                 (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),
                 (ObjectKey::Identifier("m_ParentMapName".into()), Value::String(self.map_name.to_string())),

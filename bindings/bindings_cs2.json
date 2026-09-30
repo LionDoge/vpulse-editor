@@ -97,6 +97,664 @@
                     "type": "PVAL_BOOL"
                 }
             ]
+        },
+        {
+            "id": 442,
+            "type": "action",
+            "displayname": "Emit Blood (env_blood)",
+            "libname": "CBlood_API::EmitBlood",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:env_blood"
+                }
+            ]
+        },
+        {
+            "id": 443,
+            "type": "action",
+            "displayname": "Bomb Defused (func_bomb_target)",
+            "libname": "CBombTarget_API::BombDefused",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_bomb_target"
+                }
+            ]
+        },
+        {
+            "id": 444,
+            "type": "action",
+            "displayname": "Bomb Explode (func_bomb_target)",
+            "libname": "CBombTarget_API::BombExplode",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_bomb_target"
+                }
+            ]
+        },
+        {
+            "id": 445,
+            "type": "action",
+            "displayname": "Bomb Planted (func_bomb_target)",
+            "libname": "CBombTarget_API::BombPlanted",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_bomb_target"
+                }
+            ]
+        },
+        {
+            "id": 465,
+            "type": "action",
+            "displayname": "Set Team  All Teams (func_buyzone)",
+            "libname": "CBuyZone_API::SetTeam_AllTeams",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_buyzone"
+                }
+            ]
+        },
+        {
+            "id": 466,
+            "type": "action",
+            "displayname": "Set Team  CT Only (func_buyzone)",
+            "libname": "CBuyZone_API::SetTeam_CTOnly",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_buyzone"
+                }
+            ]
+        },
+        {
+            "id": 467,
+            "type": "action",
+            "displayname": "Set Team  None (func_buyzone)",
+            "libname": "CBuyZone_API::SetTeam_None",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_buyzone"
+                }
+            ]
+        },
+        {
+            "id": 468,
+            "type": "action",
+            "displayname": "Set Team  Terrorist Only (func_buyzone)",
+            "libname": "CBuyZone_API::SetTeam_TerroristOnly",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_buyzone"
+                }
+            ]
+        },
+        {
+            "id": 469,
+            "type": "action",
+            "displayname": "team (func_buyzone)",
+            "libname": "CBuyZone_API::team",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_buyzone"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 470,
+            "type": "action",
+            "displayname": "On Rescue Zone Touch (player)",
+            "libname": "CCSPlayerPawn_API::OnRescueZoneTouch",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:player"
+                }
+            ]
+        },
+        {
+            "id": 471,
+            "type": "action",
+            "displayname": "Run Script Input (point_script)",
+            "libname": "CCSPointScriptEntity_API::RunScriptInput",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_script"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 472,
+            "type": "action",
+            "displayname": "Set Ammo Amount (weapon_cs_base)",
+            "libname": "CCSWeaponBase_API::SetAmmoAmount",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:weapon_cs_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 473,
+            "type": "action",
+            "displayname": "Set Reserve Ammo Amount (weapon_cs_base)",
+            "libname": "CCSWeaponBase_API::SetReserveAmmoAmount",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:weapon_cs_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 474,
+            "type": "action",
+            "displayname": "Toggle Can Be Picked Up (weapon_cs_base)",
+            "libname": "CCSWeaponBase_API::ToggleCanBePickedUp",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:weapon_cs_base"
+                }
+            ]
+        },
+        {
+            "id": 552,
+            "type": "action",
+            "displayname": "Hide Hud Hint (env_hudhint)",
+            "libname": "CEnvHudHint_API::HideHudHint",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:env_hudhint"
+                }
+            ]
+        },
+        {
+            "id": 553,
+            "type": "action",
+            "displayname": "Show Hud Hint (env_hudhint)",
+            "libname": "CEnvHudHint_API::ShowHudHint",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:env_hudhint"
+                }
+            ]
+        },
+        {
+            "id": 595,
+            "type": "action",
+            "displayname": "Set Timer (flashbang_projectile)",
+            "libname": "CFlashbangProjectile_API::SetTimer",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:flashbang_projectile"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 622,
+            "type": "action",
+            "displayname": "Set Speed (func_conveyor)",
+            "libname": "CFuncConveyor_API::SetSpeed",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_conveyor"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 623,
+            "type": "action",
+            "displayname": "Set Transition Duration (func_conveyor)",
+            "libname": "CFuncConveyor_API::SetTransitionDuration",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_conveyor"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 624,
+            "type": "action",
+            "displayname": "Toggle Direction (func_conveyor)",
+            "libname": "CFuncConveyor_API::ToggleDirection",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:func_conveyor"
+                }
+            ]
+        },
+        {
+            "id": 762,
+            "type": "action",
+            "displayname": "End Game (game_end)",
+            "libname": "CGameEnd_API::EndGame",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_end"
+                }
+            ]
+        },
+        {
+            "id": 765,
+            "type": "action",
+            "displayname": "Add Money Player (game_money)",
+            "libname": "CGameMoney_API::AddMoneyPlayer",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_money"
+                }
+            ]
+        },
+        {
+            "id": 766,
+            "type": "action",
+            "displayname": "Add Team Money CT (game_money)",
+            "libname": "CGameMoney_API::AddTeamMoneyCT",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_money"
+                }
+            ]
+        },
+        {
+            "id": 767,
+            "type": "action",
+            "displayname": "Add Team Money Terrorist (game_money)",
+            "libname": "CGameMoney_API::AddTeamMoneyTerrorist",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_money"
+                }
+            ]
+        },
+        {
+            "id": 768,
+            "type": "action",
+            "displayname": "Set Money Amount (game_money)",
+            "libname": "CGameMoney_API::SetMoneyAmount",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_money"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 769,
+            "type": "action",
+            "displayname": "Spend Money From Player (game_money)",
+            "libname": "CGameMoney_API::SpendMoneyFromPlayer",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:game_money"
+                }
+            ]
+        },
+        {
+            "id": 808,
+            "type": "action",
+            "displayname": "On Rescue Zone Touch (hostage_entity)",
+            "libname": "CHostage_API::OnRescueZoneTouch",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:hostage_entity"
+                }
+            ]
+        },
+        {
+            "id": 878,
+            "type": "action",
+            "displayname": "Disable (logic_eventlistener)",
+            "libname": "CLogicEventListener_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:logic_eventlistener"
+                }
+            ]
+        },
+        {
+            "id": 879,
+            "type": "action",
+            "displayname": "Enable (logic_eventlistener)",
+            "libname": "CLogicEventListener_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:logic_eventlistener"
+                }
+            ]
+        },
+        {
+            "id": 902,
+            "type": "action",
+            "displayname": "Fire Win Condition (info_map_parameters)",
+            "libname": "CMapInfo_API::FireWinCondition",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_map_parameters"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 1083,
+            "type": "action",
+            "displayname": "Disable (point_gamestats_counter)",
+            "libname": "CPointGamestatsCounter_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_gamestats_counter"
+                }
+            ]
+        },
+        {
+            "id": 1084,
+            "type": "action",
+            "displayname": "Enable (point_gamestats_counter)",
+            "libname": "CPointGamestatsCounter_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_gamestats_counter"
+                }
+            ]
+        },
+        {
+            "id": 1085,
+            "type": "action",
+            "displayname": "Increment (point_gamestats_counter)",
+            "libname": "CPointGamestatsCounter_API::Increment",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_gamestats_counter"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 1086,
+            "type": "action",
+            "displayname": "Set Name (point_gamestats_counter)",
+            "libname": "CPointGamestatsCounter_API::SetName",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_gamestats_counter"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 1087,
+            "type": "action",
+            "displayname": "Give Ammo (point_give_ammo)",
+            "libname": "CPointGiveAmmo_API::GiveAmmo",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:point_give_ammo"
+                }
+            ]
+        },
+        {
+            "id": 1195,
+            "type": "action",
+            "displayname": "Disable (sky_camera_volume)",
+            "libname": "CSkyCameraVolume_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:sky_camera_volume"
+                }
+            ]
+        },
+        {
+            "id": 1196,
+            "type": "action",
+            "displayname": "Enable (sky_camera_volume)",
+            "libname": "CSkyCameraVolume_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:sky_camera_volume"
+                }
+            ]
+        },
+        {
+            "id": 1270,
+            "type": "action",
+            "displayname": "Set Fluid Density (trigger_buoyancy)",
+            "libname": "CTriggerBuoyancy_API::SetFluidDensity",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:trigger_buoyancy"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 1291,
+            "type": "action",
+            "displayname": "Set Disabled (spawnpoint)",
+            "libname": "SpawnPoint_API::SetDisabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:spawnpoint"
+                }
+            ]
+        },
+        {
+            "id": 1292,
+            "type": "action",
+            "displayname": "Set Enabled (spawnpoint)",
+            "libname": "SpawnPoint_API::SetEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:spawnpoint"
+                }
+            ]
+        },
+        {
+            "id": 1293,
+            "type": "action",
+            "displayname": "Toggle Enabled (spawnpoint)",
+            "libname": "SpawnPoint_API::ToggleEnabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:spawnpoint"
+                }
+            ]
+        },
+        {
+            "id": 1294,
+            "type": "action",
+            "displayname": "In Value (logic_case)",
+            "libname": "CLogicCase_API::InValue",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:logic_case"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 1295,
+            "type": "action",
+            "displayname": "Set Breakable (prop_door_rotating)",
+            "libname": "CPropDoorRotatingBreakable_API::SetBreakable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating"
+                }
+            ]
+        },
+        {
+            "id": 1296,
+            "type": "action",
+            "displayname": "Set Unbreakable (prop_door_rotating)",
+            "libname": "CPropDoorRotatingBreakable_API::SetUnbreakable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating"
+                }
+            ]
+        },
+        {
+            "id": 1297,
+            "type": "action",
+            "displayname": "Set Rotation Distance (prop_door_rotating_base)",
+            "libname": "CPropDoorRotating_API::SetRotationDistance",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 1298,
+            "type": "action",
+            "displayname": "Set Speed (prop_door_rotating_base)",
+            "libname": "CPropDoorRotating_API::SetSpeed",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
         }
     ]
 }

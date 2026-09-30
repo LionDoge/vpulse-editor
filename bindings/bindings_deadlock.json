@@ -84,7 +84,7 @@
             "id": 241,
             "type": "value",
             "displayname": "Get Is Spawning Enabled (info_trooper_spawn)",
-            "libname": "CCitadel_InfoTrooperSpawnAPI::GetIsSpawningEnabled",
+            "libname": "CInfoTrooperSpawn_API::GetIsSpawningEnabled",
             "description": "",
             "inparams": [
                 {
@@ -103,8 +103,8 @@
             "id": 242,
             "type": "action",
             "displayname": "Set Spawning Enabled (info_trooper_spawn)",
-            "libname": "CCitadel_InfoTrooperSpawnAPI::SetSpawningEnabled",
-            "description": "",
+            "libname": "CInfoTrooperSpawn_API::SetSpawningEnabled",
+            "description": "Enable or disable spawning from this point.",
             "inparams": [
                 {
                     "name": "_Target",
@@ -121,11 +121,11 @@
             "type": "value",
             "displayname": "Get Hideout Owner Hero Release August2025 Votes Cast Total",
             "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
-            "description": "",
+            "description": "Get the hideout owner's number of total hero release votes cast.",
             "outparams": [
                 {
                     "name": "retval",
-                    "type": "PVAL_BOOL"
+                    "type": "PVAL_INT"
                 }
             ]
         },
@@ -198,7 +198,7 @@
             "id": 217,
             "type": "value",
             "displayname": "Get Hideout Owner Hero Release Votes Cast Total",
-            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseVotesCastTotal",
+            "libname": "CCitadelPointPulseAPI::GetHideoutOwnerHeroReleaseAugust2025VotesCastTotal",
             "description": "Get the hideout owner's number of total hero release votes cast.",
             "outparams": [
                 {
@@ -224,7 +224,7 @@
             "id": 219,
             "type": "action",
             "displayname": "Drop Powerup (citadel_item_powerup_spawner)",
-            "libname": "CCitadel_PickupItemSpawnerAPI::DropPowerup",
+            "libname": "CCitadel_PickupItemSpawner_API::DropPowerup",
             "description": "Drop one of the spawner's configured powerups.",
             "inparams": [
                 {
@@ -237,8 +237,8 @@
             "id": 220,
             "type": "action",
             "displayname": "Set AI LOD",
-            "libname": "CAI_BaseNPCAPI::SetAILOD",
-            "description": "Set the LOD of this NPC. Accepted values are 'eLow', 'eMedium', 'eHigh",
+            "libname": "CAI_BaseNPC_API::SetAILOD",
+            "description": "Set the LOD of this NPC. Accepted values are 'eLow', 'eMedium', 'eHigh'",
             "inparams": [
                 {
                     "name": "_Target",
@@ -254,8 +254,8 @@
             "id": 221,
             "type": "value",
             "displayname": "Get NPC State",
-            "libname": "CAI_BaseNPCAPI::GetNPCState",
-            "description": "Returns the NPC_STATE of the given NPC.",
+            "libname": "CAI_BaseNPC_API::GetNPCState",
+            "description": "Returns the NPC_STATE of the given NPC",
             "inparams": [
                 {
                     "name": "_Target",
@@ -273,7 +273,7 @@
             "id": 222,
             "type": "value",
             "displayname": "Get Sensed Events",
-            "libname": "CAI_VolumetricEventSensorAPI::GetSensedEvents",
+            "libname": "CAI_VolumetricEventSensor_API::GetSensedEvents",
             "description": "Returns all currently sensed events",
             "inparams": [
                 {
@@ -300,7 +300,1241 @@
                     "type": "PVAL_SCHEMA_ENUM:ECitadelGameMode"
                 }
             ]
-
+        },
+        {
+            "id": 262,
+            "type": "action",
+            "displayname": "Break (base_npc)",
+            "libname": "CAI_BaseNPC_API::Break",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                }
+            ]
+        },
+        {
+            "id": 263,
+            "type": "value",
+            "displayname": "Get NPC Movement Velocity (base_npc)",
+            "libname": "CAI_BaseNPC_API::GetNPCMovementVelocity",
+            "description": "Returns movement velocity of the given NPC",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_VEC3"
+                }
+            ]
+        },
+        {
+            "id": 264,
+            "type": "action",
+            "displayname": "Override Health (base_npc)",
+            "libname": "CAI_BaseNPC_API::OverrideHealth",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 265,
+            "type": "action",
+            "displayname": "Set Health (base_npc)",
+            "libname": "CAI_BaseNPC_API::SetHealth",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 266,
+            "type": "action",
+            "displayname": "Set Nav Restriction Volume (base_npc)",
+            "libname": "CAI_BaseNPC_API::SetNavRestrictionVolume",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:base_npc"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 268,
+            "type": "action",
+            "displayname": "Activate (ai_goal_entity)",
+            "libname": "CAI_GoalEntity_API::Activate",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_goal_entity"
+                }
+            ]
+        },
+        {
+            "id": 269,
+            "type": "action",
+            "displayname": "Deactivate (ai_goal_entity)",
+            "libname": "CAI_GoalEntity_API::Deactivate",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_goal_entity"
+                }
+            ]
+        },
+        {
+            "id": 270,
+            "type": "action",
+            "displayname": "Toggle (ai_goal_entity)",
+            "libname": "CAI_GoalEntity_API::Toggle",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_goal_entity"
+                }
+            ]
+        },
+        {
+            "id": 271,
+            "type": "action",
+            "displayname": "Update Actors (ai_goal_entity)",
+            "libname": "CAI_GoalEntity_API::UpdateActors",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_goal_entity"
+                }
+            ]
+        },
+        {
+            "id": 272,
+            "type": "action",
+            "displayname": "Disable Hint (ai_hint)",
+            "libname": "CAI_Hint_API::DisableHint",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_hint"
+                }
+            ]
+        },
+        {
+            "id": 273,
+            "type": "action",
+            "displayname": "Enable Hint (ai_hint)",
+            "libname": "CAI_Hint_API::EnableHint",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_hint"
+                }
+            ]
+        },
+        {
+            "id": 274,
+            "type": "action",
+            "displayname": "Toggle Hint (ai_hint)",
+            "libname": "CAI_Hint_API::ToggleHint",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_hint"
+                }
+            ]
+        },
+        {
+            "id": 275,
+            "type": "action",
+            "displayname": "Apply Relationship (ai_relationship)",
+            "libname": "CAI_Relationship_API::ApplyRelationship",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_relationship"
+                }
+            ]
+        },
+        {
+            "id": 276,
+            "type": "action",
+            "displayname": "Revert Relationship (ai_relationship)",
+            "libname": "CAI_Relationship_API::RevertRelationship",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_relationship"
+                }
+            ]
+        },
+        {
+            "id": 277,
+            "type": "action",
+            "displayname": "Revert To Default Relationship (ai_relationship)",
+            "libname": "CAI_Relationship_API::RevertToDefaultRelationship",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_relationship"
+                }
+            ]
+        },
+        {
+            "id": 278,
+            "type": "action",
+            "displayname": "Disable (ai_script_conditions)",
+            "libname": "CAI_ScriptConditions_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_script_conditions"
+                }
+            ]
+        },
+        {
+            "id": 279,
+            "type": "action",
+            "displayname": "Enable (ai_script_conditions)",
+            "libname": "CAI_ScriptConditions_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_script_conditions"
+                }
+            ]
+        },
+        {
+            "id": 280,
+            "type": "action",
+            "displayname": "Disable (ai_speechfilter)",
+            "libname": "CAI_SpeechFilter_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_speechfilter"
+                }
+            ]
+        },
+        {
+            "id": 281,
+            "type": "action",
+            "displayname": "Enable (ai_speechfilter)",
+            "libname": "CAI_SpeechFilter_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_speechfilter"
+                }
+            ]
+        },
+        {
+            "id": 282,
+            "type": "action",
+            "displayname": "Set Idle Modifier (ai_speechfilter)",
+            "libname": "CAI_SpeechFilter_API::SetIdleModifier",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_speechfilter"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 283,
+            "type": "action",
+            "displayname": "Emit AI Volumetric Event (ai_volumetric_event)",
+            "libname": "CAI_VolumetricEventEntity_API::EmitAIVolumetricEvent",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_volumetric_event"
+                }
+            ]
+        },
+        {
+            "id": 284,
+            "type": "action",
+            "displayname": "Stop AI Volumetric Event (ai_volumetric_event)",
+            "libname": "CAI_VolumetricEventEntity_API::StopAIVolumetricEvent",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_volumetric_event"
+                }
+            ]
+        },
+        {
+            "id": 285,
+            "type": "action",
+            "displayname": "Disable (ai_volumetric_event_sensor)",
+            "libname": "CAI_VolumetricEventSensor_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_volumetric_event_sensor"
+                }
+            ]
+        },
+        {
+            "id": 286,
+            "type": "action",
+            "displayname": "Enable (ai_volumetric_event_sensor)",
+            "libname": "CAI_VolumetricEventSensor_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_volumetric_event_sensor"
+                }
+            ]
+        },
+        {
+            "id": 306,
+            "type": "action",
+            "displayname": "Clear Target Identifier Override (baseanimgraph)",
+            "libname": "CBaseAnimGraph_API::ClearTargetIdentifierOverride",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:baseanimgraph"
+                }
+            ]
+        },
+        {
+            "id": 312,
+            "type": "action",
+            "displayname": "Set Target Identifier Override (baseanimgraph)",
+            "libname": "CBaseAnimGraph_API::SetTargetIdentifierOverride",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:baseanimgraph"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 334,
+            "type": "action",
+            "displayname": "Add Modifier (CBaseEntity)",
+            "libname": "CBaseEntity_API::AddModifier",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 369,
+            "type": "action",
+            "displayname": "Remove Modifier (CBaseEntity)",
+            "libname": "CBaseEntity_API::RemoveModifier",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 397,
+            "type": "action",
+            "displayname": "Add Max Children (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::AddMaxChildren",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 398,
+            "type": "action",
+            "displayname": "Change Destination Group (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::ChangeDestinationGroup",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 399,
+            "type": "action",
+            "displayname": "Disable (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 400,
+            "type": "action",
+            "displayname": "Disable Infinite Spawns (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::DisableInfiniteSpawns",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 401,
+            "type": "action",
+            "displayname": "Enable (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 402,
+            "type": "action",
+            "displayname": "Enable Infinite Spawns (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::EnableInfiniteSpawns",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 403,
+            "type": "action",
+            "displayname": "NPC Maker Spawn Npc (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::NPCMakerSpawnNpc",
+            "description": "Spawns an NPC with an npc_maker or npc_template_maker entity. Returns EHANDLE to spawned entity if successful",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_EHANDLE:base_npc"
+                }
+            ]
+        },
+        {
+            "id": 404,
+            "type": "action",
+            "displayname": "Set Batch Count (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetBatchCount",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 405,
+            "type": "action",
+            "displayname": "Set Max Children (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetMaxChildren",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 406,
+            "type": "action",
+            "displayname": "Set Max Live Children (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetMaxLiveChildren",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 407,
+            "type": "action",
+            "displayname": "Set Minimum Spawn Distance (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetMinimumSpawnDistance",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 408,
+            "type": "action",
+            "displayname": "Set Spawn Entity (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetSpawnEntity",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 409,
+            "type": "action",
+            "displayname": "Set Spawn Frequency (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SetSpawnFrequency",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 410,
+            "type": "action",
+            "displayname": "Spawn (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::Spawn",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 411,
+            "type": "action",
+            "displayname": "Spawn In Line (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SpawnInLine",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 412,
+            "type": "action",
+            "displayname": "Spawn In Radius (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SpawnInRadius",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 413,
+            "type": "action",
+            "displayname": "Spawn Multiple (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::SpawnMultiple",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 414,
+            "type": "action",
+            "displayname": "Toggle (npc_maker_base)",
+            "libname": "CBaseNPCMaker_API::Toggle",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_maker_base"
+                }
+            ]
+        },
+        {
+            "id": 476,
+            "type": "action",
+            "displayname": "Spawn Pickup Trail (trigger_catapult)",
+            "libname": "CCitadelCatapultTrigger_API::SpawnPickupTrail",
+            "description": "Start laying the configured pickups along the launch arc now.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:trigger_catapult"
+                }
+            ]
+        },
+        {
+            "id": 477,
+            "type": "action",
+            "displayname": "Disable (citadel_energy_tower)",
+            "libname": "CCitadelEnergyTower_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_energy_tower"
+                }
+            ]
+        },
+        {
+            "id": 478,
+            "type": "action",
+            "displayname": "Enable (citadel_energy_tower)",
+            "libname": "CCitadelEnergyTower_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_energy_tower"
+                }
+            ]
+        },
+        {
+            "id": 479,
+            "type": "action",
+            "displayname": "Blend To (citadel_gaffer)",
+            "libname": "CCitadelGaffer_API::BlendTo",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_gaffer"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 480,
+            "type": "action",
+            "displayname": "Close (citadel_doorway_portal)",
+            "libname": "CCitadel_DoorwayPortal_API::Close",
+            "description": "Close the door",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_doorway_portal"
+                }
+            ]
+        },
+        {
+            "id": 481,
+            "type": "action",
+            "displayname": "Open (citadel_doorway_portal)",
+            "libname": "CCitadel_DoorwayPortal_API::Open",
+            "description": "Open the door",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_doorway_portal"
+                }
+            ]
+        },
+        {
+            "id": 482,
+            "type": "action",
+            "displayname": "Set Enemy Skin (citadel_prop_dynamic)",
+            "libname": "CCitadel_DynamicProp_API::SetEnemySkin",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_prop_dynamic"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 483,
+            "type": "action",
+            "displayname": "Set Friendly Skin (citadel_prop_dynamic)",
+            "libname": "CCitadel_DynamicProp_API::SetFriendlySkin",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_prop_dynamic"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 484,
+            "type": "action",
+            "displayname": "Spawn Pickup (citadel_pickup_spawner)",
+            "libname": "CCitadel_PickupSpawner_API::SpawnPickup",
+            "description": "Spawn the configured pickup now, restarting the respawn cycle.",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_pickup_spawner"
+                }
+            ]
+        },
+        {
+            "id": 485,
+            "type": "action",
+            "displayname": "Speak (citadel_point_talker_base)",
+            "libname": "CCitadel_PointTalker_Base_API::Speak",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:citadel_point_talker_base"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 809,
+            "type": "action",
+            "displayname": "Toggle Fast Cooldowns (info_citadel_hideout)",
+            "libname": "CInfoCitadelHideout_API::ToggleFastCooldowns",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_citadel_hideout"
+                }
+            ]
+        },
+        {
+            "id": 824,
+            "type": "action",
+            "displayname": "Set Disabled (info_neutral_trooper_camp)",
+            "libname": "CInfoTrooperNeutralCamp_API::SetDisabled",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:info_neutral_trooper_camp"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 932,
+            "type": "action",
+            "displayname": "Disable Attacking (npc_base_defense_sentry)",
+            "libname": "CNPC_BaseDefenseSentry_API::DisableAttacking",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_base_defense_sentry"
+                }
+            ]
+        },
+        {
+            "id": 933,
+            "type": "action",
+            "displayname": "Enable Attacking (npc_base_defense_sentry)",
+            "libname": "CNPC_BaseDefenseSentry_API::EnableAttacking",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:npc_base_defense_sentry"
+                }
+            ]
+        },
+        {
+            "id": 934,
+            "type": "action",
+            "displayname": "Disable (ai_nav_link_area)",
+            "libname": "CNavLinkAreaEntity_API::Disable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_nav_link_area"
+                }
+            ]
+        },
+        {
+            "id": 935,
+            "type": "action",
+            "displayname": "Enable (ai_nav_link_area)",
+            "libname": "CNavLinkAreaEntity_API::Enable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_nav_link_area"
+                }
+            ]
+        },
+        {
+            "id": 936,
+            "type": "action",
+            "displayname": "Update (ai_nav_link_area)",
+            "libname": "CNavLinkAreaEntity_API::Update",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:ai_nav_link_area"
+                }
+            ]
+        },
+        {
+            "id": 956,
+            "type": "action",
+            "displayname": "Kill Template Group (path_mover_entity_spawner)",
+            "libname": "CPathMoverEntitySpawner_API::KillTemplateGroup",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:path_mover_entity_spawner"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 961,
+            "type": "value",
+            "displayname": "Get Path Nodes (path_mover)",
+            "libname": "CPathMover_API::GetPathNodes",
+            "description": "Returns a vector of path nodes",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:path_mover"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_ARRAY:PVAL_EHANDLE:path_node"
+                }
+            ]
+        },
+        {
+            "id": 1117,
+            "type": "action",
+            "displayname": "Next Break Stage (prop_animating_breakable)",
+            "libname": "CPropAnimatingBreakable_API::NextBreakStage",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_animating_breakable"
+                }
+            ]
+        },
+        {
+            "id": 1143,
+            "type": "action",
+            "displayname": "Clear Entity Move Type Override",
+            "libname": "CPulseServerFuncs::ClearEntityMoveTypeOverride",
+            "description": "Clears the move type override for the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 1144,
+            "type": "action",
+            "displayname": "Clear Stance Override",
+            "libname": "CPulseServerFuncs::ClearStanceOverride",
+            "description": "Clears the stance override for the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                }
+            ]
+        },
+        {
+            "id": 1145,
+            "type": "action",
+            "displayname": "Clear Target Identifier Override",
+            "libname": "CPulseServerFuncs::ClearTargetIdentifierOverride",
+            "description": "Clears the target identifier for this entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pIdentifier",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 1152,
+            "type": "action",
+            "displayname": "Set Entity Move Type Override",
+            "libname": "CPulseServerFuncs::SetEntityMoveTypeOverride",
+            "description": "Overrides the move type for the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "nMoveType",
+                    "type": "PVAL_SCHEMA_ENUM:MoveType_t"
+                }
+            ]
+        },
+        {
+            "id": 1155,
+            "type": "action",
+            "displayname": "Set Stance Override",
+            "libname": "CPulseServerFuncs::SetStanceOverride",
+            "description": "Overrides the stance for the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "nStance",
+                    "type": "PVAL_SCHEMA_ENUM:StanceType_t"
+                }
+            ]
+        },
+        {
+            "id": 1156,
+            "type": "action",
+            "displayname": "Set Target Identifier Override",
+            "libname": "CPulseServerFuncs::SetTargetIdentifierOverride",
+            "description": "Overrides the target identifier for the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pIdentifier",
+                    "type": "PVAL_STRING"
+                },
+                {
+                    "name": "hTarget",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pTargetAttachmentName",
+                    "type": "PVAL_STRING",
+                    "description": "Relative to this target's attachment. Leave empty if you will use the world space position instead."
+                },
+                {
+                    "name": "vWorldSpacePosition",
+                    "type": "PVAL_VEC3_WORLDSPACE",
+                    "description": "If no attachment is specified, then will use the given world space position as a relative offset to this entity"
+                }
+            ]
+        },
+        {
+            "id": 1232,
+            "type": "action",
+            "displayname": "Set Mode (snd_opvar_set_precipitation)",
+            "libname": "CSoundOpvarSetPrecipitationEntity_API::SetMode",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:snd_opvar_set_precipitation"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_INT"
+                }
+            ]
+        },
+        {
+            "id": 244,
+            "type": "action",
+            "displayname": "(modifier) Add New Modifier",
+            "libname": "CPulseServerFuncs::AddNewModifier",
+            "description": "Adds a modifier to the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "hCaster",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 245,
+            "type": "action",
+            "displayname": "(modifier) Remove Modifier",
+            "libname": "CPulseServerFuncs::RemoveModifier",
+            "description": "Removes the modifier from the entity",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "hCaster",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ]
+        },
+        {
+            "id": 246,
+            "type": "value",
+            "displayname": "(modifier) Has Modifier",
+            "libname": "CPulseServerFuncs::HasModifier",
+            "description": "Returns true if the entity has the modifier, false otherwise<br><br>This node can appear in Observable contexts.",
+            "inparams": [
+                {
+                    "name": "hEntity",
+                    "type": "PVAL_EHANDLE"
+                },
+                {
+                    "name": "pModifier",
+                    "type": "PVAL_STRING"
+                }
+            ],
+            "outparams": [
+                {
+                    "name": "retval",
+                    "type": "PVAL_BOOL"
+                }
+            ]
+        },
+        {
+            "id": 864,
+            "type": "action",
+            "displayname": "In Value (logic_case)",
+            "libname": "CLogicCase_API::InValue",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:logic_case"
+                },
+                {
+                    "name": "value",
+                    "type": "PVAL_VARIANT"
+                }
+            ]
+        },
+        {
+            "id": 1118,
+            "type": "action",
+            "displayname": "Set Breakable (prop_door_rotating_breakable)",
+            "libname": "CPropDoorRotatingBreakable_API::SetBreakable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating_breakable"
+                }
+            ]
+        },
+        {
+            "id": 1119,
+            "type": "action",
+            "displayname": "Set Unbreakable (prop_door_rotating_breakable)",
+            "libname": "CPropDoorRotatingBreakable_API::SetUnbreakable",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating_breakable"
+                }
+            ]
+        },
+        {
+            "id": 1120,
+            "type": "action",
+            "displayname": "Set Rotation Distance (prop_door_rotating)",
+            "libname": "CPropDoorRotating_API::SetRotationDistance",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
+        },
+        {
+            "id": 1121,
+            "type": "action",
+            "displayname": "Set Speed (prop_door_rotating)",
+            "libname": "CPropDoorRotating_API::SetSpeed",
+            "description": "",
+            "inparams": [
+                {
+                    "name": "_Target",
+                    "type": "PVAL_EHANDLE:prop_door_rotating"
+                },
+                {
+                    "name": "param",
+                    "type": "PVAL_FLOAT"
+                }
+            ]
         }
     ]
 }

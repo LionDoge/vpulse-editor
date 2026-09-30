@@ -78,7 +78,7 @@
             },
             {
                 "name": "DMG_PHYSGUN",
-                "name_ui": "Physgun"
+                "name_ui": "Physgun (removed)"
             },
             {
                 "name": "DMG_DISSOLVE",
@@ -114,7 +114,11 @@
             },
             {
                 "name": "DMG_DANGERZONE",
-                "name_ui": "Danger Zone"
+                "name_ui": "Danger Zone (removed)"
+            },
+            {
+                "name": "DMG_CITADEL_CORRECT_PATH",
+                "name_ui": "Citadel Correct Path"
             }
         ]
     },
@@ -657,7 +661,7 @@
             },
             {
                 "name": "DMG_PHYSGUN",
-                "name_ui": "Physgun"
+                "name_ui": "Physgun (removed)"
             },
             {
                 "name": "DMG_DISSOLVE",
@@ -693,7 +697,11 @@
             },
             {
                 "name": "DMG_DANGERZONE",
-                "name_ui": "Danger Zone"
+                "name_ui": "Danger Zone (removed)"
+            },
+            {
+                "name": "DMG_CITADEL_CORRECT_PATH",
+                "name_ui": "Citadel Correct Path"
             }
         ]
     },
@@ -713,6 +721,10 @@
             {
                 "name": "STANCE_PRONE",
                 "name_ui": "Prone"
+            },
+            {
+                "name": "STANCE_CURRENT",
+                "name_ui": "Current"
             }
         ]
     },
@@ -736,6 +748,10 @@
             {
                 "name": "eVeryFast",
                 "name_ui": "Very Fast"
+            },
+            {
+                "name": "eInvalid",
+                "name_ui": "None"
             }
         ]
     },
@@ -938,6 +954,496 @@
             {
                 "name": "ESBGS_Scoring",
                 "name_ui": "Scoring"
+            }
+        ]
+    },
+    {
+        "id": 22,
+        "name": "GameAnimEventIndex_t",
+        "name_ui": "Game Anim Event Index",
+        "variants": [
+            {
+                "name": "AE_EMPTY",
+                "name_ui": "Empty"
+            },
+            {
+                "name": "AE_STATE_CHANGE_IN_PROGRESS",
+                "name_ui": "State Change In Progress"
+            },
+            {
+                "name": "AE_CL_PLAYSOUND",
+                "name_ui": "Cl Playsound"
+            },
+            {
+                "name": "AE_CL_PLAYSOUND_ATTACHMENT",
+                "name_ui": "Cl Playsound Attachment"
+            },
+            {
+                "name": "AE_CL_PLAYSOUND_POSITION",
+                "name_ui": "Cl Playsound Position"
+            },
+            {
+                "name": "AE_SV_PLAYSOUND",
+                "name_ui": "Sv Playsound"
+            },
+            {
+                "name": "AE_CL_STOPSOUND",
+                "name_ui": "Cl Stopsound"
+            },
+            {
+                "name": "AE_CL_PLAYSOUND_LOOPING",
+                "name_ui": "Cl Playsound Looping"
+            },
+            {
+                "name": "AE_CL_CREATE_PARTICLE_EFFECT",
+                "name_ui": "Cl Create Particle Effect"
+            },
+            {
+                "name": "AE_CL_STOP_PARTICLE_EFFECT",
+                "name_ui": "Cl Stop Particle Effect"
+            },
+            {
+                "name": "AE_CL_CREATE_PARTICLE_EFFECT_CFG",
+                "name_ui": "Cl Create Particle Effect Cfg"
+            },
+            {
+                "name": "AE_SV_CREATE_PARTICLE_EFFECT_CFG",
+                "name_ui": "Sv Create Particle Effect Cfg"
+            },
+            {
+                "name": "AE_SV_STOP_PARTICLE_EFFECT",
+                "name_ui": "Sv Stop Particle Effect"
+            },
+            {
+                "name": "AE_FOOTSTEP",
+                "name_ui": "Footstep"
+            },
+            {
+                "name": "AE_CL_STOP_RAGDOLL_CONTROL",
+                "name_ui": "Cl Stop Ragdoll Control"
+            },
+            {
+                "name": "AE_BODYGROUP_SET_VALUE",
+                "name_ui": "Bodygroup Set Value"
+            },
+            {
+                "name": "AE_WEAPON_PERFORM_ATTACK",
+                "name_ui": "Weapon Perform Attack"
+            },
+            {
+                "name": "AE_FIRE_INPUT",
+                "name_ui": "Fire Input"
+            },
+            {
+                "name": "AE_CL_CLOTH_ATTR",
+                "name_ui": "Cl Cloth Attr"
+            },
+            {
+                "name": "AE_CL_CLOTH_GROUND_OFFSET",
+                "name_ui": "Cl Cloth Ground Offset"
+            },
+            {
+                "name": "AE_CL_CLOTH_STIFFEN",
+                "name_ui": "Cl Cloth Stiffen"
+            },
+            {
+                "name": "AE_CL_CLOTH_EFFECT",
+                "name_ui": "Cl Cloth Effect"
+            },
+            {
+                "name": "AE_CL_CREATE_ANIM_SCOPE_PROP",
+                "name_ui": "Cl Create Anim Scope Prop"
+            },
+            {
+                "name": "AE_SV_IKLOCK",
+                "name_ui": "Sv Iklock"
+            },
+            {
+                "name": "AE_PULSE_GRAPH",
+                "name_ui": "Pulse Graph"
+            },
+            {
+                "name": "AE_DISABLE_PLATFORM",
+                "name_ui": "Disable Platform"
+            },
+            {
+                "name": "AE_ENABLE_PLATFORM_PLAYER_FOLLOWS_YAW",
+                "name_ui": "Enable Platform Player Follows Yaw"
+            },
+            {
+                "name": "AE_ENABLE_PLATFORM_PLAYER_IGNORES_YAW",
+                "name_ui": "Enable Platform Player Ignores Yaw"
+            },
+            {
+                "name": "AE_DESTRUCTIBLE_PART_DESTROY",
+                "name_ui": "Destructible Part Destroy"
+            },
+            {
+                "name": "AE_VEHICLE_ENTER_FINISHED",
+                "name_ui": "Vehicle Enter Finished"
+            },
+            {
+                "name": "AE_VEHICLE_EXIT_FINISHED",
+                "name_ui": "Vehicle Exit Finished"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_01",
+                "name_ui": "Script Fire Event 01"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_02",
+                "name_ui": "Script Fire Event 02"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_03",
+                "name_ui": "Script Fire Event 03"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_04",
+                "name_ui": "Script Fire Event 04"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_05",
+                "name_ui": "Script Fire Event 05"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_06",
+                "name_ui": "Script Fire Event 06"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_07",
+                "name_ui": "Script Fire Event 07"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_08",
+                "name_ui": "Script Fire Event 08"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_09",
+                "name_ui": "Script Fire Event 09"
+            },
+            {
+                "name": "AE_SCRIPT_FIRE_EVENT_10",
+                "name_ui": "Script Fire Event 10"
+            },
+            {
+                "name": "AE_NPC_LEFTFOOT",
+                "name_ui": "Npc Leftfoot"
+            },
+            {
+                "name": "AE_NPC_RIGHTFOOT",
+                "name_ui": "Npc Rightfoot"
+            },
+            {
+                "name": "AE_NPC_SWISHSOUND",
+                "name_ui": "Npc Swishsound"
+            },
+            {
+                "name": "AE_NPC_WEAPON_DROP",
+                "name_ui": "Npc Weapon Drop"
+            },
+            {
+                "name": "AE_NPC_ATTACK_BROADCAST",
+                "name_ui": "Npc Attack Broadcast"
+            },
+            {
+                "name": "AE_CHOREO_BLOCK_PARENT_CHANGE",
+                "name_ui": "Choreo Block Parent Change"
+            },
+            {
+                "name": "AE_CHOREO_PERFORMANCE_COMPLETE",
+                "name_ui": "Choreo Performance Complete"
+            },
+            {
+                "name": "AE_CHOREO_PERFORMANCE_ALMOST_COMPLETE",
+                "name_ui": "Choreo Performance Almost Complete"
+            },
+            {
+                "name": "AE_ENTITY_FACING_MODE_USE_PATH",
+                "name_ui": "Entity Facing Mode Use Path"
+            },
+            {
+                "name": "AE_MOVEMENT_DISABLE_STATE_TIMEOUT",
+                "name_ui": "Movement Disable State Timeout"
+            },
+            {
+                "name": "AE_MOVEMENT_STATEMACHINE_ACTIVE",
+                "name_ui": "Movement Statemachine Active"
+            },
+            {
+                "name": "AE_MOVEMENT_STOPS_ENABLED",
+                "name_ui": "Movement Stops Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_STOP_INSTANT_ENABLED",
+                "name_ui": "Movement Stop Instant Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_STARTS_ENABLED",
+                "name_ui": "Movement Starts Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_STATIONARY_TURNS_ENABLED",
+                "name_ui": "Movement Stationary Turns Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_HOPS_ENABLED",
+                "name_ui": "Movement Hops Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_PLANTED_TURNS_ENABLED",
+                "name_ui": "Movement Planted Turns Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_STRAFE_SUPPORTED",
+                "name_ui": "Movement Strafe Supported"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_ALL",
+                "name_ui": "Movement Transition Block All"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_IDLE",
+                "name_ui": "Movement Transition Block Idle"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_LOOP",
+                "name_ui": "Movement Transition Block Loop"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_IDLE_TURN",
+                "name_ui": "Movement Transition Block Idle Turn"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_START",
+                "name_ui": "Movement Transition Block Start"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_STOP",
+                "name_ui": "Movement Transition Block Stop"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_HOP",
+                "name_ui": "Movement Transition Block Hop"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_BLOCK_PLANTED_TURN",
+                "name_ui": "Movement Transition Block Planted Turn"
+            },
+            {
+                "name": "AE_MOVEMENT_RIGHT_FOOT_DOWN",
+                "name_ui": "Movement Right Foot Down"
+            },
+            {
+                "name": "AE_MOVEMENT_LEFT_FOOT_DOWN",
+                "name_ui": "Movement Left Foot Down"
+            },
+            {
+                "name": "AE_MOVEMENT_STUMBLE_ENABLED",
+                "name_ui": "Movement Stumble Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_BASH_ENABLED",
+                "name_ui": "Movement Bash Enabled"
+            },
+            {
+                "name": "AE_MOVEMENT_ALLOW_OFF_PATH",
+                "name_ui": "Movement Allow Off Path"
+            },
+            {
+                "name": "AE_MOVEMENT_ALLOW_OFF_NAV_MESH",
+                "name_ui": "Movement Allow Off Nav Mesh"
+            },
+            {
+                "name": "AE_MOVEMENT_RESTRICT_TO_NAV_MESH_DURING_CUSTOMMOVE",
+                "name_ui": "Movement Restrict To Nav Mesh During Custommove"
+            },
+            {
+                "name": "AE_MOVEMENT_TRANSITION_DISABLE_FORCE_FACING",
+                "name_ui": "Movement Transition Disable Force Facing"
+            },
+            {
+                "name": "AE_ACTION_HANDSHAKE_ACTIVE",
+                "name_ui": "Action Handshake Active"
+            },
+            {
+                "name": "AE_MOVEMENT_HANDSHAKE_ACTIVE",
+                "name_ui": "Movement Handshake Active"
+            },
+            {
+                "name": "AE_ACTION_HANDSHAKE_FINISHED",
+                "name_ui": "Action Handshake Finished"
+            },
+            {
+                "name": "AE_MOVEMENT_HANDSHAKE_FINISHED",
+                "name_ui": "Movement Handshake Finished"
+            },
+            {
+                "name": "AE_NAVLINK_PERFORM_ACTION",
+                "name_ui": "Navlink Perform Action"
+            },
+            {
+                "name": "AE_PREDICTED_PLAYSOUND",
+                "name_ui": "Predicted Playsound"
+            },
+            {
+                "name": "AE_TAGGED_SOUND",
+                "name_ui": "Tagged Sound"
+            },
+            {
+                "name": "AE_RAGDOLL_WINDOW",
+                "name_ui": "Ragdoll Window"
+            },
+            {
+                "name": "AE_MELEE_ATTACK",
+                "name_ui": "Melee Attack"
+            },
+            {
+                "name": "AE_TAG_EMOTE",
+                "name_ui": "Tag Emote"
+            }
+        ]
+    },
+    {
+        "id": 23,
+        "name": "CFuncMover::Move_t",
+        "name_ui": "Move",
+        "variants": [
+            {
+                "name": "MOVE_LOOP",
+                "name_ui": "Loop"
+            },
+            {
+                "name": "MOVE_OSCILLATE",
+                "name_ui": "Oscillate"
+            },
+            {
+                "name": "MOVE_STOP_AT_END",
+                "name_ui": "Stop at End"
+            }
+        ]
+    },
+    {
+        "id": 24,
+        "name": "PulseCursorWakePriority_t",
+        "name_ui": "Pulse Cursor Wake Priority",
+        "variants": [
+            {
+                "name": "WakeElegantly",
+                "name_ui": "Proceed Elegantly."
+            },
+            {
+                "name": "WakeImmediate",
+                "name_ui": "Proceed Immediately."
+            }
+        ]
+    },
+    {
+        "id": 25,
+        "name": "MoveType_t",
+        "name_ui": "Move Type",
+        "variants": [
+            {
+                "name": "MOVETYPE_NONE",
+                "name_ui": "None"
+            },
+            {
+                "name": "MOVETYPE_OBSOLETE",
+                "name_ui": "Obsolete"
+            },
+            {
+                "name": "MOVETYPE_WALK",
+                "name_ui": "Walk"
+            },
+            {
+                "name": "MOVETYPE_FLY",
+                "name_ui": "Fly"
+            },
+            {
+                "name": "MOVETYPE_FLYGRAVITY",
+                "name_ui": "Flygravity"
+            },
+            {
+                "name": "MOVETYPE_VPHYSICS",
+                "name_ui": "Vphysics"
+            },
+            {
+                "name": "MOVETYPE_PUSH",
+                "name_ui": "Push"
+            },
+            {
+                "name": "MOVETYPE_NOCLIP",
+                "name_ui": "Noclip"
+            },
+            {
+                "name": "MOVETYPE_OBSERVER",
+                "name_ui": "Observer"
+            },
+            {
+                "name": "MOVETYPE_STEP",
+                "name_ui": "Step"
+            },
+            {
+                "name": "MOVETYPE_SYNC",
+                "name_ui": "Sync"
+            },
+            {
+                "name": "MOVETYPE_CUSTOM",
+                "name_ui": "Custom"
+            }
+        ]
+    },
+    {
+        "id": 26,
+        "name": "ChoreoExternalAnimgraphControlState_t",
+        "name_ui": "Choreo External Animgraph Control State",
+        "variants": [
+            {
+                "name": "eNone",
+                "name_ui": "eNone"
+            },
+            {
+                "name": "eExit",
+                "name_ui": "eExit"
+            },
+            {
+                "name": "eFallbackExit",
+                "name_ui": "eFallbackExit"
+            },
+            {
+                "name": "eState01",
+                "name_ui": "eState01"
+            },
+            {
+                "name": "eState02",
+                "name_ui": "eState02"
+            },
+            {
+                "name": "eState03",
+                "name_ui": "eState03"
+            },
+            {
+                "name": "eState04",
+                "name_ui": "eState04"
+            },
+            {
+                "name": "eState05",
+                "name_ui": "eState05"
+            },
+            {
+                "name": "eLooping",
+                "name_ui": "eLooping"
+            }
+        ]
+    },
+    {
+        "id": 27,
+        "name": "PulseDurationStringFormat_t",
+        "name_ui": "Pulse Duration String Format",
+        "variants": [
+            {
+                "name": "MM_SS_LEADING_ZERO",
+                "name_ui": "MM:SS with leading zeros"
             }
         ]
     }

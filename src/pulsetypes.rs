@@ -25,6 +25,19 @@ pub struct PulseVariable {
     pub default_value_buffer: String,
 }
 
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct TempVarInfo {
+    pub name: String,
+    pub data_type: PulseValueType,
+    pub observable: bool,
+}
+
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct TempVarBank {
+    pub temp_vars: Vec<TempVarInfo>,
+}
+
+
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct OutputDefinition {
     pub name: String,

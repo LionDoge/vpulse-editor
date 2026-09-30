@@ -38,7 +38,7 @@ impl KV3Serialize for CPulseCell_Inflow_Method {
             (ObjectKey::Identifier("m_MethodName".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
             (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
-            (ObjectKey::Identifier("m_ReturnType".into()), Value::String("PVAL_VOID".into())),
+            (ObjectKey::Identifier("m_ReturnValues".into()), Value::Array(self.return_values.iter().map(|arg| arg.serialize(graph_bindings)).collect())),
             (ObjectKey::Identifier("m_Args".into()), Value::Array(self.args.iter().map(|arg| arg.serialize(graph_bindings)).collect())),
         ])
     }
@@ -216,6 +216,7 @@ pub struct Instruction {
     pub const_idx: i32,
     pub domain_value_idx: i32,
     pub blackboard_reference_idx: i32,
+    pub temp_var_idx: i32,
 }
 impl Default for Instruction {
     fn default() -> Instruction {
@@ -232,6 +233,7 @@ impl Default for Instruction {
             const_idx: -1,
             domain_value_idx: -1,
             blackboard_reference_idx: -1,
+            temp_var_idx: -1,
         }
     }
 }
@@ -250,6 +252,7 @@ impl KV3Serialize for Instruction {
             (ObjectKey::Identifier("m_nConstIdx".into()), Value::Number(self.const_idx.into())),
             (ObjectKey::Identifier("m_nDomainValueIdx".into()), Value::Number(self.domain_value_idx.into())),
             (ObjectKey::Identifier("m_nBlackboardReferenceIdx".into()), Value::Number(self.blackboard_reference_idx.into())),
+            (ObjectKey::Identifier("m_nTempVarIdx".into()), Value::Number(self.temp_var_idx.into())),
         ])
     }
 }
@@ -275,6 +278,7 @@ pub struct PulseChunk {
     instructions: Vec<Instruction>,
     registers: Vec<Register>,
     instruction_debug_infos: Vec<InstructionDebugInfo>,
+    temp_var_bank: i32
 }
 impl PulseChunk {
     pub fn add_register(&mut self, reg_type: String, written_by_instruction: i32) -> i32 {
@@ -313,6 +317,7 @@ impl KV3Serialize for PulseChunk {
             (ObjectKey::Identifier("m_Instructions".into()), Value::Array(self.instructions.iter().map(|instruction| instruction.serialize(graph_bindings)).collect())),
             (ObjectKey::Identifier("m_Registers".into()), Value::Array(self.registers.iter().map(|register| register.serialize(graph_bindings)).collect())),
             (ObjectKey::Identifier("m_InstructionDebugInfos".into()), Value::Array(self.instruction_debug_infos.iter().map(|info| info.serialize(graph_bindings)).collect())),
+            (ObjectKey::Identifier("m_nTempVarBank".into()), Value::Number(self.temp_var_bank.into())),
         ])
     }
 }
@@ -570,6 +575,25 @@ impl KV3Serialize for PulseVariable {
     }
 }
 
+impl KV3Serialize for TempVarBank {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_TempVars".into()), Value::Array(self.temp_vars.iter().map(|temp_var| temp_var.serialize(graph_bindings)).collect())),
+        ])
+    }
+}
+
+impl KV3Serialize for TempVarInfo {
+    fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
+        Value::Object(vec![
+            (ObjectKey::Identifier("m_Name".into()), Value::String(self.name.clone())),
+            (ObjectKey::Identifier("m_Type".into()), Value::String(self.data_type.get_enum_string(graph_bindings).to_string())),
+            (ObjectKey::Identifier("m_bIsObservable".into()), Value::Bool(self.observable)),
+            (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64))
+        ])
+    }
+}
+
 impl KV3Serialize for OutflowConnection {
     fn serialize(&self, graph_bindings: &GraphBindings) -> Value {
         let mut params = vec![
@@ -719,6 +743,7 @@ pub struct PulseGraphDef {
     pub domain_values: Vec<DomainValue>,
     pub public_outputs: Vec<OutputDefinition>,
     pub variables: Vec<PulseVariable>,
+    pub tempVarBanks: Vec<TempVarBank>,
     pub call_infos: Vec<CallInfo>,
     pub map_name: String,
     pub xml_name: String,
@@ -870,6 +895,7 @@ impl KV3Serialize for PulseGraphDef {
                 (ObjectKey::Identifier("m_Chunks".into()), Value::Array(self.chunks.iter().map(|chunk| chunk.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_DomainValues".into()), Value::Array(self.domain_values.iter().map(|domain_value| domain_value.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_Vars".into()), Value::Array(self.variables.iter().map(|variable| variable.serialize(graph_bindings)).collect())),
+                (ObjectKey::Identifier("m_TempVarBanks".into()), Value::Array(self.tempVarBanks.iter().map(|bank| bank.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_Constants".into()), Value::Array(self.constants.iter().map(|constant| constant.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_PublicOutputs".into()), Value::Array(self.public_outputs.iter().map(|variable| variable.serialize(graph_bindings)).collect())),
                 (ObjectKey::Identifier("m_OutputConnections".into()), Value::Array(self.output_connections.iter().map(|output_connection| output_connection.serialize(graph_bindings)).collect())),

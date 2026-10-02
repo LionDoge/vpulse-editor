@@ -524,7 +524,7 @@ where
                 selection_rect,
                 2.0,
                 bg_color,
-                Stroke::new(3.0, stroke_color),
+                Stroke::new(3.0_f32, stroke_color),
                 StrokeKind::Middle
             );
 

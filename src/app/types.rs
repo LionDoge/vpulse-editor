@@ -231,6 +231,7 @@ pub enum PulseNodeTemplate {
     RandomInt,
     RandomFloat,
     EntOutputHandler,
+    LoopBreak,
 }
 
 /// The response type is used to encode side-effects produced when drawing a

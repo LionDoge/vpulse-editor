@@ -2702,6 +2702,13 @@ fn traverse_nodes_and_populate<'a>(
             );
             return Ok(reg_out);
         }
+        PulseNodeTemplate::LoopBreak => {
+            let instr = Instruction {
+                code: "LOOP_BREAK".into(),
+                ..Default::default()
+            };
+            graph_def.add_chunk_instruction(target_chunk as usize, instr);
+        }
         _ => todo!(
             "Implement node template: {:?}",
             current_node.user_data.template

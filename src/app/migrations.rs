@@ -71,23 +71,40 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
                     if binding.inparams.is_none() {
                         continue;
                     }
+                    let graph_inputs = &mut full_state.state.graph.inputs;
                     let mut inputs = node.inputs.iter_mut().filter(|input| {
                         let nam_lowercase = input.0.to_lowercase();
                         !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
                     }).collect::<Vec<_>>();
-
-                    for (idx, param) in binding.inparams.as_ref().unwrap().iter().enumerate() {
-                        if idx < inputs.len() {
-                            // Safety: we checked the length above
+                    let params = binding.inparams.as_ref().unwrap();
+                    // Inputs are matched by name first; a leftover input is only renamed to a new
+                    // parameter of the same data type, so inserted or removed parameters don't shift wires.
+                    let mut unmatched: Vec<usize> = (0..inputs.len())
+                        .filter(|&idx| !params.iter().any(|p| p.name == inputs[idx].0))
+                        .collect();
+                    for param in params.iter() {
+                        let types = pulse_value_type_to_node_types(&param.pulsetype);
+                        let existing = inputs.iter().position(|input| input.0 == param.name).or_else(|| {
+                            let pos = unmatched.iter().position(|&idx| graph_inputs[inputs[idx].1].typ == types.0)?;
+                            let idx = unmatched.remove(pos);
                             inputs[idx].0 = param.name.clone();
-                        } else {
-                            // quque up missing parameters to be added after the loop to avoid borrow checker issues
-                            queued_add_params.push(QueuedAddParams { 
+                            Some(idx)
+                        });
+                        match existing {
+                            Some(idx) => {
+                                let input = &mut graph_inputs[inputs[idx].1];
+                                if input.typ != types.0 {
+                                    input.typ = types.0;
+                                    input.value = types.1;
+                                }
+                            }
+                            // queue up missing parameters to be added after the loop to avoid borrow checker issues
+                            None => queued_add_params.push(QueuedAddParams {
                                 node_id,
                                 param_name: param.name.clone(),
-                                types: pulse_value_type_to_node_types(&param.pulsetype),
-                                connection_type: get_preffered_inputparamkind_from_type(&param.pulsetype) 
-                            });
+                                types,
+                                connection_type: get_preffered_inputparamkind_from_type(&param.pulsetype)
+                            }),
                         }
                     }
                 }

@@ -28,7 +28,7 @@ pub struct CPulseCell_Inflow_Method {
     pub(crate) entry_chunk: i32,
     pub(crate) name: String,
     pub(crate) description: String,
-    pub(crate) return_type: String,
+    pub(crate) return_values: Vec<PulseRuntimeArgument>,
     pub(crate) args: Vec<PulseRuntimeArgument>,
 }
 impl PulseCell for CPulseCell_Inflow_Method {

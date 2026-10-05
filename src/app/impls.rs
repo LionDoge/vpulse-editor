@@ -380,6 +380,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::RandomFloat => "Random float".into(),
             PulseNodeTemplate::RandomInt => "Random int".into(),
             PulseNodeTemplate::EntOutputHandler => "Entity Output Handler".into(),
+            PulseNodeTemplate::LoopBreak => "Break".into(),
         }
     }
 
@@ -429,7 +430,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ForLoop 
             | PulseNodeTemplate::WhileLoop
-            | PulseNodeTemplate::ForEach => vec!["Loops"],
+            | PulseNodeTemplate::ForEach
+            | PulseNodeTemplate::LoopBreak => vec!["Loops"],
             PulseNodeTemplate::SoundEventStart => vec!["Sound"],
             PulseNodeTemplate::Comment => vec!["Editor"],
             PulseNodeTemplate::SetAnimGraphParam => vec!["Animation"],
@@ -1132,6 +1134,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 //input_typ(graph, "expectedType", PulseValueType::PVAL_ANY);
                 output_action(graph, "outAction");
             }
+            PulseNodeTemplate::LoopBreak => {
+                input_action(graph);
+                output_action(graph, "outAction");
+            }
         }
     }
 }
@@ -1194,6 +1200,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::RandomInt,
             PulseNodeTemplate::RandomFloat,
             PulseNodeTemplate::EntOutputHandler,
+            PulseNodeTemplate::LoopBreak,
         ];
         templates.extend(
                 (0..self.game_function_count).map(|i| PulseNodeTemplate::LibraryBindingAssigned {
@@ -1715,7 +1722,8 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::WhileLoop
             | PulseNodeTemplate::And
             | PulseNodeTemplate::Not
-            | PulseNodeTemplate::Or => Some(Color32::from_rgb(166, 99, 41)),
+            | PulseNodeTemplate::Or
+            | PulseNodeTemplate::LoopBreak => Some(Color32::from_rgb(166, 99, 41)),
             PulseNodeTemplate::CallNode | PulseNodeTemplate::Function => {
                 Some(Color32::from_rgb(28, 67, 150))
             }

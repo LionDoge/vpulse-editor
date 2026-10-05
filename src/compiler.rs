@@ -411,7 +411,9 @@ fn traverse_method_cell(
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
     cell_method.entry_chunk = chunk_id;
-    cell_method.return_type = String::from("PVAL_VOID");
+
+    // TODO: Reverse and figure out return values
+    cell_method.return_values = vec![];
 
     let chunk = graph_def.chunks.get_mut(chunk_id as usize).unwrap();
     // create argument1 (TODO only if connection exists)
@@ -1425,7 +1427,7 @@ fn traverse_nodes_and_populate<'a>(
             let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
             let binding = InvokeBinding {
                 register_map,
-                func_name: "CPulseServerFuncs::SetNextThink".into(),
+                func_name: "CPulseGraphInstance_ServerEntity::SetNextThink".into(),
                 cell_index: -1,
                 src_chunk: -1,
                 src_instruction: -1,
@@ -1451,11 +1453,19 @@ fn traverse_nodes_and_populate<'a>(
                 }
                 let reg_input = get_register!("input", PulseValueType::PVAL_ANY);
                 let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
-                register =
-                    chunk.add_register(type_to.get_enum_string(&graph_state.bindings).to_string(), chunk.get_last_instruction_id() + 1);
-                if let Some(reg_input) = reg_input {
-                    let instruction = instruction_templates::convert_value(register, reg_input);
-                    chunk.add_instruction(instruction);
+                let type_to_str = type_to.get_enum_string(&graph_state.bindings);
+                // The game turns a CONVERT_VALUE between identical types into an empty value.
+                match reg_input {
+                    Some(reg_input) if chunk.get_register_type(reg_input) == Some(type_to_str.as_ref()) => {
+                        register = reg_input;
+                    }
+                    reg_input => {
+                        register = chunk.add_register(type_to_str.to_string(), chunk.get_last_instruction_id() + 1);
+                        if let Some(reg_input) = reg_input {
+                            let instruction = instruction_templates::convert_value(register, reg_input);
+                            chunk.add_instruction(instruction);
+                        }
+                    }
                 }
                 graph_def.add_register_mapping(output_id.unwrap(), register);
             }
@@ -2691,6 +2701,13 @@ fn traverse_nodes_and_populate<'a>(
                 "CPulseCell_Value_RandomFloat::Eval".into()
             );
             return Ok(reg_out);
+        }
+        PulseNodeTemplate::LoopBreak => {
+            let instr = Instruction {
+                code: "LOOP_BREAK".into(),
+                ..Default::default()
+            };
+            graph_def.add_chunk_instruction(target_chunk as usize, instr);
         }
         _ => todo!(
             "Implement node template: {:?}",

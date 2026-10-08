@@ -761,11 +761,13 @@ impl PulseGraphEditor {
                         self.state_mut().graph.get_output_mut(out_id).typ = pulse_value_type_to_node_types(inner).0;
                         Some((**inner).clone())
                     } else {
-                        let source_type_str = source_type.get_enum_string(&self.user_state().bindings);
-                        self.write_console_line(
-                            format!("[UI] Expected array type from source node, but got {source_type_str}. The node setup might not work correctly in this state."),
-                            ConsoleMessageType::Warning
-                        );
+                        if source_input_name == Some("array") {
+                            let source_type_str = source_type.get_enum_string(&self.user_state().bindings);
+                            self.write_console_line(
+                                format!("[UI] Expected array type from source node, but got {source_type_str}. The node setup might not work correctly in this state."),
+                                ConsoleMessageType::Warning
+                            );
+                        }
                         None
                     }
                 } else {

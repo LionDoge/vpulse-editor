@@ -506,6 +506,17 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                     true,
                 );
             };
+        let input_integer =
+            |graph: &mut PulseGraph, name: &str, kind: InputParamKind, default: i32| {
+                graph.add_input_param(
+                    node_id,
+                    name.to_string(),
+                    PulseDataType::Integer,
+                    PulseGraphValueType::Integer { value: default },
+                    kind,
+                    true,
+                );
+            };
         let input_bool = |graph: &mut PulseGraph, name: &str, kind: InputParamKind| {
             graph.add_input_param(
                 node_id,
@@ -652,6 +663,9 @@ impl NodeTemplateTrait for PulseNodeTemplate {
         let output_scalar = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::Scalar);
         };
+        let output_integer = |graph: &mut PulseGraph, name: &str| {
+            graph.add_output_param(node_id, name.to_string(), PulseDataType::Integer);
+        };
         let output_string = |graph: &mut PulseGraph, name: &str| {
             graph.add_output_param(node_id, name.to_string(), PulseDataType::String);
         };
@@ -763,15 +777,15 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 output_action(graph, "outAction");
             }
             PulseNodeTemplate::IntToString => {
-                input_scalar(graph, "value", InputParamKind::ConnectionOrConstant, 0.0);
+                input_integer(graph, "value", InputParamKind::ConnectionOrConstant, 0);
                 output_string(graph, "out");
             }
             PulseNodeTemplate::Operation => {
                 input_typ(graph, "type", PulseValueType::PVAL_INT(None));
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
-                input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
-                input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
-                output_scalar(graph, "out");
+                input_integer(graph, "A", InputParamKind::ConnectionOrConstant, 0);
+                input_integer(graph, "B", InputParamKind::ConnectionOrConstant, 0);
+                output_integer(graph, "out");
             }
             PulseNodeTemplate::FindEntByName => {
                 input_entityname(graph, "entName");
@@ -782,11 +796,11 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_action(graph);
                 input_string(graph, "pMessage", InputParamKind::ConnectionOrConstant);
                 input_ehandle(graph, "hEntity");
-                input_scalar(
+                input_integer(
                     graph,
                     "nTextOffset",
                     InputParamKind::ConnectionOrConstant,
-                    0.0,
+                    0,
                 );
                 input_scalar(
                     graph,
@@ -855,10 +869,10 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ForLoop => {
                 input_action(graph);
-                input_scalar(graph, "start", InputParamKind::ConnectionOrConstant, 0.0);
-                input_scalar(graph, "end", InputParamKind::ConnectionOrConstant, 5.0);
-                input_scalar(graph, "step", InputParamKind::ConnectionOrConstant, 1.0);
-                output_scalar(graph, "index");
+                input_integer(graph, "start", InputParamKind::ConnectionOrConstant, 0);
+                input_integer(graph, "end", InputParamKind::ConnectionOrConstant, 5);
+                input_integer(graph, "step", InputParamKind::ConnectionOrConstant, 1);
+                output_integer(graph, "index");
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
             }
@@ -899,8 +913,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::CompareOutput => {
                 input_typ(graph, "type", PulseValueType::PVAL_INT(None));
                 input_string(graph, "operation", InputParamKind::ConstantOnly);
-                input_scalar(graph, "A", InputParamKind::ConnectionOrConstant, 0.0);
-                input_scalar(graph, "B", InputParamKind::ConnectionOrConstant, 0.0);
+                input_integer(graph, "A", InputParamKind::ConnectionOrConstant, 0);
+                input_integer(graph, "B", InputParamKind::ConnectionOrConstant, 0);
                 output_bool(graph, "out");
             }
             PulseNodeTemplate::WhileLoop => {
@@ -919,7 +933,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::IntSwitch => {
                 input_action(graph);
-                input_scalar(graph, "value", InputParamKind::ConnectionOrConstant, 0.0);
+                input_integer(graph, "value", InputParamKind::ConnectionOrConstant, 0);
                 // cases will be added dynamically by user
                 // this field will be a buffer that will be used to create the cases
                 // once the button to add it is pressed - which is defined in bottom_ui func.
@@ -1054,13 +1068,13 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             }
             PulseNodeTemplate::ConstantFloat 
             | PulseNodeTemplate::ConstantInt => {
-                input_scalar(
+                input_integer(
                     graph,
                     "value",
                     InputParamKind::ConstantOnly,
-                    0.0,
+                    0,
                 );
-                output_scalar(graph, "out");
+                output_integer(graph, "out");
             }
             PulseNodeTemplate::ConstantString => {
                 input_string(graph, "value", InputParamKind::ConstantOnly);
@@ -1089,8 +1103,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::GetArrayElement => {
                 //input_typ(graph, "expectedType");
                 input_array(graph, "array");
-                input_scalar(graph, "index", InputParamKind::ConnectionOrConstant, 0.0);
-                output_scalar(graph, "out");
+                input_integer(graph, "index", InputParamKind::ConnectionOrConstant, 0);
+                output_scalar(graph, "out"); // updated by code based on the connected array type
             }
             PulseNodeTemplate::ScaleVector => {
                 input_typ(graph, "type", PulseValueType::PVAL_VEC3(None));
@@ -1106,8 +1120,8 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ForEach => {
                 input_action(graph);
                 input_array(graph, "array");
-                output_scalar(graph, "index");
-                output_scalar(graph, "out"); // actual type will be set depending on the connected array.
+                output_integer(graph, "index");
+                output_integer(graph, "out"); // actual type will be set depending on the connected array.
                 output_action(graph, "loopAction");
                 output_action(graph, "endAction");
             }
@@ -1121,11 +1135,15 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 input_bool(graph, "in", InputParamKind::ConnectionOrConstant);
                 output_bool(graph, "out");
             }
-            PulseNodeTemplate::RandomFloat
-            | PulseNodeTemplate::RandomInt => {
+            PulseNodeTemplate::RandomFloat => {
                 input_scalar(graph, "min", InputParamKind::ConnectionOrConstant, 0.0);
                 input_scalar(graph, "max", InputParamKind::ConnectionOrConstant, 10.0);
                 output_scalar(graph, "out");
+            }
+            PulseNodeTemplate::RandomInt => {
+                input_integer(graph, "min", InputParamKind::ConnectionOrConstant, 0);
+                input_integer(graph, "max", InputParamKind::ConnectionOrConstant, 10);
+                output_integer(graph, "out");
             }
             PulseNodeTemplate::EntOutputHandler => {
                 input_string(graph, "entityName", InputParamKind::ConstantOnly);

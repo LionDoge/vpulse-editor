@@ -698,6 +698,15 @@ fn get_input_register_or_create_constant_from_id(
             )?;
         }
         None => {
+            // Generic enum operands (such as Compare's A/B) carry their actual
+            // category in the constant value, not in the broad type selector.
+            let value_type = match (&value_type, &graph.get_input(input_id).value) {
+                (PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(_, _),
+                 PulseGraphValueType::SchemaEnumChoice { enum_type, .. }) => {
+                    PulseValueType::PVAL_SCHEMA_ENUM_INDEXED(Some(*enum_type), None)
+                }
+                _ => value_type,
+            };
             let value_type_str = value_type.get_enum_string(&graph_state.bindings);
             if !always_reevaluate {
                 // no connection found, create a constant value for the input
@@ -2747,3 +2756,6 @@ fn make_library_call(
     graph_def.add_invoke_binding(invoke_binding);
     Ok(reg_map)
 }
+
+#[cfg(test)]
+mod enum_constant_tests;

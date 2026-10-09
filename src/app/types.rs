@@ -23,6 +23,9 @@ pub struct PulseNodeData {
     pub input_hint_text: Option<Cow<'static, str>>,
     // used for polymorphic output types
     pub custom_output_type: Option<PulseValueType>,
+    /// Category inferred from Compare operands; stored with the graph for undo/load.
+    #[serde(default)]
+    pub inferred_enum_category: Option<EnumBindingIndex>,
     #[serde(default)]
     pub added_inputs: Vec<InputId>,
 }

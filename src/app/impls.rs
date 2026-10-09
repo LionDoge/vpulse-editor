@@ -467,6 +467,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             added_parameters: Default::default(),
             input_hint_text: None,
             custom_output_type: None,
+            inferred_enum_category: None,
             added_inputs: Vec::new(),
         }
     }
@@ -1539,6 +1540,24 @@ impl WidgetValueTrait for PulseGraphValueType {
                     });
                 }
                 PulseGraphValueType::SchemaEnumChoice { enum_type, enum_variant } => {
+                    if matches!(node_data.template, PulseNodeTemplate::Compare | PulseNodeTemplate::CompareOutput) {
+                        ui.horizontal(|ui| {
+                            ui.label(format!("{param_name} enum"));
+                            let inferred = node_data.inferred_enum_category.is_some();
+                            ui.add_enabled_ui(!inferred, |ui| {
+                                ComboBox::from_id_salt((node_id, param_name, "enum_category"))
+                                    .selected_text(user_state.bindings.find_enum_by_id(*enum_type)
+                                        .map_or("<Unrecognized>", |binding| binding.name()))
+                                    .show_ui(ui, |ui| {
+                                        for binding in user_state.bindings.list_enums() {
+                                            if ui.selectable_value(enum_type, binding.id, binding.name()).changed() {
+                                                *enum_variant = EnumBindingValueIndex::default();
+                                            }
+                                        }
+                                    });
+                            }).response.on_hover_text("Enum category is inferred when an operand is connected.");
+                        });
+                    }
                     ui.horizontal(|ui| {
                         ui.label(param_name);
                         if let Some(binding_enum) = user_state.bindings.find_enum_by_id(*enum_type) {

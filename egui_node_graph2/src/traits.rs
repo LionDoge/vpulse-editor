@@ -109,6 +109,14 @@ where
     /// Must be set to the custom user `ValueType` type
     type ValueType;
 
+    /// Optional externally stored node names. The editor snapshots these on copy
+    /// and assigns unused names on paste (for example, `Function_copy_2`).
+    /// Return the complete namespace so pasted names cannot collide with nodes
+    /// outside the selection. Unnamed nodes need no entry.
+    fn node_names(_user_state: &mut Self::UserState) -> Option<&mut SecondaryMap<NodeId, String>> {
+        None
+    }
+
     /// Additional UI elements to draw in the nodes, after the parameters.
     fn bottom_ui(
         &self,

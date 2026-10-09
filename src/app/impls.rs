@@ -1626,6 +1626,10 @@ impl NodeDataTrait for PulseNodeData {
     type DataType = PulseDataType;
     type ValueType = PulseGraphValueType;
 
+    fn node_names(user_state: &mut Self::UserState) -> Option<&mut slotmap::SecondaryMap<NodeId, String>> {
+        Some(&mut user_state.exposed_nodes)
+    }
+
     fn top_bar_ui(
         &self,
         _ui: &mut egui::Ui,

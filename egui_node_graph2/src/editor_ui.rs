@@ -43,6 +43,7 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
         input_hook: usize,
     },
     CreatedNode(NodeId),
+    PastedNodes(Vec<NodeId>),
     SelectNode(NodeId),
     ChangeSelectionColor(NodeId, Option<egui::Color32>),
     /// As a user of this library, prefer listening for `DeleteNodeFull` which
@@ -132,12 +133,13 @@ where
     DataType: DataTypeTrait<UserState> + Clone,
     CategoryType: CategoryTrait,
 {
-    fn copy_selected_nodes(&mut self) {
+    /// Snapshot the selected nodes and only connections within that selection.
+    /// An empty selection leaves the previous clipboard intact.
+    pub fn copy_selected_nodes(&mut self, user_state: &mut UserState) {
         self.selected_nodes.retain(|node_id| self.graph.contains_node(*node_id));
 
         let selected: HashSet<NodeId> = self.selected_nodes.iter().copied().collect();
         if selected.is_empty() {
-            self.clipboard = None;
             return;
         }
 
@@ -192,6 +194,7 @@ where
 
             nodes.push(ClipboardNode {
                 label: node.label.clone(),
+                name: NodeData::node_names(user_state).and_then(|names| names.get(node_id).cloned()),
                 user_data: node.user_data.clone(),
                 position,
                 size,
@@ -206,11 +209,12 @@ where
                 continue;
             }
 
-            for (input_hook, output_id) in outputs.into_iter().enumerate() {
-                if !selected.contains(&self.graph.get_output(output_id).node) {
-                    continue;
-                }
-
+            // Compact hook indices after dropping links to unselected nodes.
+            for (input_hook, output_id) in outputs
+                .into_iter()
+                .filter(|output| selected.contains(&self.graph.get_output(*output).node))
+                .enumerate()
+            {
                 connections.push(ClipboardConnection {
                     input: input_id,
                     output: output_id,
@@ -223,20 +227,29 @@ where
             nodes,
             connections,
             bounds: bounds.unwrap_or(Rect::from_min_size(Pos2::ZERO, Vec2::ZERO)),
+            zoom: self.pan_zoom.zoom,
         });
     }
 
-    fn paste_clipboard(&mut self, cursor_pos: Pos2, editor_rect: Rect) {
+    /// Paste with the selection's top-left corner at a screen-space cursor
+    /// position inside `editor_rect`, preserving layout at the current zoom.
+    /// Returns the newly selected nodes, with fresh node and parameter IDs.
+    pub fn paste_clipboard(
+        &mut self,
+        cursor_pos: Pos2,
+        editor_rect: Rect,
+        user_state: &mut UserState,
+    ) -> Vec<NodeId> {
         let Some(clipboard) = self.clipboard.clone() else {
-            return;
+            return Vec::new();
         };
 
         if clipboard.nodes.is_empty() {
-            return;
+            return Vec::new();
         }
 
         let paste_origin = cursor_pos - self.pan_zoom.pan - editor_rect.min.to_vec2();
-        let paste_offset = paste_origin - clipboard.bounds.center();
+        let zoom_ratio = self.pan_zoom.zoom / clipboard.zoom;
 
         let mut new_input_ids = HashMap::<InputId, InputId>::new();
         let mut new_output_ids = HashMap::<OutputId, OutputId>::new();
@@ -271,7 +284,20 @@ where
                 },
             );
 
-            self.node_positions.insert(new_node, node.position + paste_offset);
+            if let (Some(name), Some(names)) = (&node.name, NodeData::node_names(user_state)) {
+                let base = if name.is_empty() { &node.label } else { name };
+                let mut candidate = format!("{base}_copy");
+                let mut suffix = 2;
+                while names.values().any(|existing| existing == &candidate) {
+                    candidate = format!("{base}_copy_{suffix}");
+                    suffix += 1;
+                }
+                names.insert(new_node, candidate);
+            }
+            self.node_positions.insert(
+                new_node,
+                paste_origin + (node.position - clipboard.bounds.min) * zoom_ratio,
+            );
             self.node_sizes.insert(new_node, node.size);
             self.node_order.push(new_node);
             pasted_nodes.push(new_node);
@@ -286,7 +312,10 @@ where
             }
         }
 
-        self.selected_nodes = pasted_nodes;
+        self.selected_nodes = pasted_nodes.clone();
+        self.connection_in_progress = None;
+        self.ongoing_box_selection = None;
+        pasted_nodes
     }
 
     #[must_use]
@@ -371,29 +400,6 @@ where
         let cursor_pos = ui
             .ctx()
             .input(|i| i.pointer.hover_pos().unwrap_or(Pos2::ZERO));
-        let (copy_requested, paste_requested) = ui.ctx().input(|input| {
-            let copy_requested = input.events.iter().any(|event| {
-                matches!(
-                    event,
-                    Event::Key {
-                        key: Key::C,
-                        pressed: true,
-                        ..
-                    }
-                )
-            });
-            let paste_requested = input.events.iter().any(|event| {
-                matches!(
-                    event,
-                    Event::Key {
-                        key: Key::V,
-                        pressed: true,
-                        ..
-                    }
-                )
-            });
-            (copy_requested, paste_requested)
-        });
         let mut cursor_in_editor = resp.contains_pointer();
         let mut cursor_in_finder = false;
 
@@ -616,7 +622,7 @@ where
                     input,
                     input_hook,
                 } => self.graph.add_connection(*output, *input, *input_hook),
-                NodeResponse::CreatedNode(_) => {
+                NodeResponse::CreatedNode(_) | NodeResponse::PastedNodes(_) => {
                     //Convenience NodeResponse for users
                 }
                 NodeResponse::ChangeSelectionColor(node_id, color ) => {
@@ -741,13 +747,34 @@ where
             self.node_finder = None;
         }
 
-        if copy_requested && !self.selected_nodes.is_empty() {
-            self.copy_selected_nodes();
-            println!("Copied {} nodes to clipboard", self.selected_nodes.len());
-        }
-
-        if paste_requested && cursor_in_editor {
-            self.paste_clipboard(cursor_pos, editor_rect);
+        // Let text fields and the node finder own their clipboard shortcuts.
+        if cursor_in_editor && self.node_finder.is_none() && !ui.ctx().wants_keyboard_input() {
+            let (copy_requested, paste_requested) = ui.input_mut(|input| {
+                let mut copy = false;
+                let mut paste = false;
+                input.events.retain(|event| {
+                    let (is_copy, is_paste) = clipboard_shortcut(event);
+                    copy |= is_copy;
+                    paste |= is_paste;
+                    !(is_copy || is_paste)
+                });
+                (copy, paste)
+            });
+            if copy_requested {
+                self.copy_selected_nodes(user_state);
+                if self.clipboard.as_ref().is_some_and(|clipboard| !clipboard.nodes.is_empty()) {
+                    // egui-winit only emits Paste when the OS clipboard has text.
+                    // The actual typed node data stays in the editor's clipboard.
+                    ui.ctx().copy_text("<copied nodes>".into());
+                }
+            }
+            if paste_requested {
+                let nodes = self.paste_clipboard(cursor_pos, editor_rect, user_state);
+                if !nodes.is_empty() {
+                    delayed_responses.push(NodeResponse::PastedNodes(nodes));
+                    ui.ctx().request_repaint();
+                }
+            }
         }
 
         if r.dragged()
@@ -1481,3 +1508,23 @@ where
         resp
     }
 }
+
+// Backends may send native clipboard events, key events, or both.
+fn clipboard_shortcut(event: &Event) -> (bool, bool) {
+    match event {
+        Event::Copy => (true, false),
+        Event::Paste(_) => (false, true),
+        Event::Key {
+            key,
+            pressed: true,
+            repeat: false,
+            modifiers,
+            ..
+        } if modifiers.command_only() => (*key == Key::C, *key == Key::V),
+        _ => (false, false),
+    }
+}
+
+#[cfg(test)]
+#[path = "clipboard_tests.rs"]
+mod clipboard_tests;

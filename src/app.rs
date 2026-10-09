@@ -1499,6 +1499,7 @@ impl eframe::App for PulseGraphEditor {
                 NodeResponse::DeleteNodeFull { node_id, .. } => {
                     self.user_state_mut().exposed_nodes.remove(node_id);
                 }
+                NodeResponse::PastedNodes(_) => self.feed_undo_state(),
                 NodeResponse::CreatedNode(node_id) => {
                     // This stuff is actually insane btw.
                     // if the node is a library binding, then update the parameters

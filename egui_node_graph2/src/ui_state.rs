@@ -49,6 +49,7 @@ pub struct ClipboardOutput<DataType> {
 #[derive(Clone, Debug)]
 pub struct ClipboardNode<NodeData, DataType, ValueType> {
     pub label: String,
+    pub name: Option<String>,
     pub user_data: NodeData,
     pub position: egui::Pos2,
     pub size: Vec2,
@@ -68,6 +69,7 @@ pub struct GraphClipboard<NodeData, DataType, ValueType> {
     pub nodes: Vec<ClipboardNode<NodeData, DataType, ValueType>>,
     pub connections: Vec<ClipboardConnection>,
     pub bounds: Rect,
+    pub zoom: f32,
 }
 
 impl<NodeData, DataType, ValueType> Default for GraphClipboard<NodeData, DataType, ValueType> {
@@ -76,6 +78,7 @@ impl<NodeData, DataType, ValueType> Default for GraphClipboard<NodeData, DataTyp
             nodes: Vec::default(),
             connections: Vec::default(),
             bounds: Rect::NOTHING,
+            zoom: 1.0,
         }
     }
 }

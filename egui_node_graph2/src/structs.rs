@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#[cfg(feature = "persistence")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug)]

@@ -122,13 +122,6 @@ fn traverse_inflow_nodes(
     graph_state: &PulseGraphState,
 ) -> Result<bool, CompileError> {
     let mut processed: bool = false;
-    // add a empty method at the start, otherwise async calls don't work
-    // don't know how that's related, but that seems to be the case weirdly enough
-    let cell_method = CPulseCell_Inflow_Method {
-        entry_chunk: -1,
-        ..Default::default()
-    };
-    graph_def.add_cell(Box::from(cell_method));
     // iterate nodes
     for node in graph.iter_nodes() {
         let data: &Node<PulseNodeData> = graph.nodes.get(node).unwrap();
@@ -214,13 +207,17 @@ fn add_library_invoking(
     graph_def.add_invoke_binding(invoke_binding);
 }
 
-fn add_call_reference(graph_def: &mut PulseGraphDef, src_chunk: i32, src_instruction: i32) -> i32 {
-    // add call info, return the index
-    // PULSE_CALL_SYNC instruction is required later to call it
+fn add_call_reference(
+    graph_def: &mut PulseGraphDef,
+    src_chunk: i32,
+    src_instruction: i32,
+    call_method_id: i32,
+) -> i32 {
+    // Both sync and async calls reference the target method's serialized editor ID.
     let call_info = CallInfo {
         port_name: "Call".into(),
         register_map: RegisterMap::default(), // no parameter support yet
-        call_method_id: -1,
+        call_method_id,
         src_chunk,
         src_instruction,
     };
@@ -319,13 +316,13 @@ fn traverse_graphhook_cell(
 }
 
 // traverse a function node that can be referenced to call remotely.
-// currently will either return a chunk id or a cell id to run depending on the context.
+// Cache both the code destination and method identity before traversing recursive calls.
 fn traverse_function_entry(
     graph: &PulseGraph,
     node: &Node<PulseNodeData>,
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
-) -> Result<i32, CompileError> {
+) -> Result<CompiledEntrypoint, CompileError> {
     let existing_entrypoint = graph_def
         .traversed_entrypoints
         .iter()
@@ -373,10 +370,20 @@ fn traverse_function_entry(
                     ),
                 };
                 graph_def.cells.push(Box::from(cell_listen));
-                ret_value = graph_def.cells.len() as i32 - 1;
+                ret_value = CompiledEntrypoint::EntityOutputListener {
+                    cell_index: graph_def.cells.len() as i32 - 1,
+                };
             }
             PulseNodeTemplate::Function => {
-                ret_value = chunk_id;
+                let cell_index = graph_def.add_cell(Box::new(CPulseCell_Inflow_Method {
+                    entry_chunk: chunk_id,
+                    name: graph_state.exposed_nodes.get(node.id).cloned().unwrap_or_default(),
+                    ..Default::default()
+                }));
+                ret_value = CompiledEntrypoint::Function {
+                    chunk: chunk_id,
+                    method_id: PulseGraphDef::cell_editor_node_id(cell_index),
+                };
             }
             _ => {
                 return Err(CompileError::Node(node.id, format!("Unsupported node type for function entry: {:?}", node.user_data.template)));
@@ -396,7 +403,7 @@ fn traverse_function_entry(
         chunk.add_instruction(instruction_templates::return_void());
         Ok(ret_value)
     } else {
-        // we already traversed this entrypoint, so we can just return the chunk id
+        // Reuse the same destination and method identity for every caller.
         Ok(existing_entrypoint.unwrap().1)
     }
 }
@@ -408,6 +415,7 @@ fn traverse_method_cell(
     graph_state: &PulseGraphState,
 ) -> Result<(), CompileError> {
     let mut cell_method = CPulseCell_Inflow_Method::default();
+    cell_method.is_public = true;
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
     cell_method.entry_chunk = chunk_id;
@@ -2151,14 +2159,14 @@ fn traverse_nodes_and_populate<'a>(
                 get_constant_graph_input_value!(graph, current_node, "nodeId", try_node_id);
             if let Some(node) = graph.nodes.get(node_id) {
                 let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
-                let remote_chunk_or_cell =
+                let entrypoint =
                     traverse_function_entry(graph, node, graph_def, graph_state)?;
 
-                match node.user_data.template {
-                    PulseNodeTemplate::Function => {
+                match entrypoint {
+                    CompiledEntrypoint::Function { chunk, method_id } => {
                         let mut instr = instruction_templates::call_sync(
-                            add_call_reference(graph_def, target_chunk, call_instr_id),
-                            remote_chunk_or_cell,
+                            add_call_reference(graph_def, target_chunk, call_instr_id, method_id),
+                            chunk,
                             0,
                         );
                         let is_async = get_constant_graph_input_value!(
@@ -2173,7 +2181,7 @@ fn traverse_nodes_and_populate<'a>(
                         let chunk = graph_def.chunks.get_mut(target_chunk as usize).unwrap();
                         chunk.add_instruction(instr);
                     }
-                    PulseNodeTemplate::ListenForEntityOutput => {
+                    CompiledEntrypoint::EntityOutputListener { cell_index } => {
                         let reg_entity = get_register!("hEntity", PulseValueType::PVAL_EHANDLE(None));
                         let register_map = reg_map_setup_inputs!("hEntity", reg_entity);
                         let binding_id = graph_def.get_current_binding_id() + 1;
@@ -2183,17 +2191,11 @@ fn traverse_nodes_and_populate<'a>(
                         let binding = InvokeBinding {
                             register_map,
                             func_name: format!("CPulseCell_Outflow_ListenForEntityOutput::{}", source_input_name.as_ref().unwrap()).into(),
-                            cell_index: remote_chunk_or_cell,
+                            cell_index,
                             src_chunk: target_chunk,
                             src_instruction: instr,
                         };
                         graph_def.add_invoke_binding(binding);
-                    }
-                    _ => {
-                        println!(
-                            "CallNode: Node template remote {:?} is not supported for CallNode.",
-                            node.user_data.template
-                        );
                     }
                 }
             } else {
@@ -2212,7 +2214,7 @@ fn traverse_nodes_and_populate<'a>(
             let outflow_onfinished = OutflowConnection::new("".into(), -1, -1, None);
 
             let mut timeline_cell = CPulseCell_Timeline::new(outflow_onfinished, true);
-            let cell_id = graph_def.get_last_cell_id() + 1;
+            let cell_id = graph_def.cells.len();
             let binding_id = add_cell_invoke_binding(
                 graph_def,
                 RegisterMap::default(),
@@ -2254,7 +2256,7 @@ fn traverse_nodes_and_populate<'a>(
                     timeline_cell.add_event(delay_param, 0.0, true, outflow);
                 }
             }
-            let cell_id = graph_def.get_last_cell_id() + 1;
+            let cell_id = graph_def.cells.len();
             graph_def.add_cell(Box::new(timeline_cell));
             // fixup the cell invoke binding
             let binding = graph_def.get_invoke_binding_mut(binding_id);
@@ -2759,3 +2761,6 @@ fn make_library_call(
 
 #[cfg(test)]
 mod enum_constant_tests;
+
+#[cfg(test)]
+mod function_call_tests;

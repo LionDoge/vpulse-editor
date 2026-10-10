@@ -50,7 +50,7 @@ impl KV3Serialize for CPulseCell_Inflow_Method {
             (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
             (ObjectKey::Identifier("m_MethodName".into()), Value::String(self.name.clone())),
             (ObjectKey::Identifier("m_Description".into()), Value::String(self.description.clone())),
-            (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(true)),
+            (ObjectKey::Identifier("m_bIsPublic".into()), Value::Bool(self.is_public)),
             (ObjectKey::Identifier("m_ReturnValues".into()), Value::Array(self.return_values.iter().map(|arg| arg.serialize(graph_bindings)).collect())),
             (ObjectKey::Identifier("m_Args".into()), Value::Array(self.args.iter().map(|arg| arg.serialize(graph_bindings)).collect())),
         ])
@@ -648,7 +648,7 @@ impl KV3Serialize for CPulseCell_SoundEventStart {
 pub struct CallInfo {
     pub port_name: Cow<'static, str>,
     pub register_map: RegisterMap,
-    pub call_method_id: i32, // also used for debugging only?
+    pub call_method_id: i32, // Target method cell's serialized m_nEditorNodeID.
     pub src_chunk: i32,
     pub src_instruction: i32,
 }
@@ -659,7 +659,7 @@ impl KV3Serialize for CallInfo {
             (ObjectKey::Identifier("m_PortName".into()), Value::String(self.port_name.to_string())),
             (ObjectKey::Identifier("m_nEditorNodeID".into()), Value::Number(-1f64)),
             (ObjectKey::Identifier("m_RegisterMap".into()), self.register_map.serialize(graph_bindings)),
-            (ObjectKey::Identifier("m_nCallMethodID".into()), Value::Number(self.call_method_id.into())),
+            (ObjectKey::Identifier("m_CallMethodID".into()), Value::Number(self.call_method_id.into())),
             (ObjectKey::Identifier("m_nSrcChunk".into()), Value::Number(self.src_chunk.into())),
             (ObjectKey::Identifier("m_nSrcInstruction".into()), Value::Number(self.src_instruction.into())),
         ])
@@ -745,12 +745,18 @@ impl KV3Serialize for CPulseCell_Inflow_EntOutputHandler {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CompiledEntrypoint {
+    Function { chunk: i32, method_id: i32 },
+    EntityOutputListener { cell_index: i32 },
+}
+
 #[derive(Default)]
 pub struct PulseGraphDef {
     mapped_registers_outputs: SecondaryMap<OutputId, i32>,
     mapped_registers_inputs: SecondaryMap<InputId, i32>,
     mapped_registers_node_outputs: SecondaryMap<NodeId, SecondaryMap<OutputId, i32>>,
-    pub traversed_entrypoints: Vec<(NodeId, i32)>, // used to track which entrypoints have been traversed
+    pub traversed_entrypoints: Vec<(NodeId, CompiledEntrypoint)>,
     pub cells: Vec<Box<dyn PulseCellTrait>>,
     pub constants: Vec<PulseConstant>,
     pub bindings: Vec<InvokeBinding>,
@@ -767,6 +773,11 @@ pub struct PulseGraphDef {
     pub graph_subtype: String,
 }
 impl PulseGraphDef {
+    /// Cells are append-only during compilation. Share this mapping with call references.
+    pub fn cell_editor_node_id(cell_index: usize) -> i32 {
+        i32::try_from(cell_index + 1).expect("too many Pulse cells")
+    }
+
     pub fn create_chunk(&mut self) -> i32 {
         let chunk = PulseChunk::default();
         self.chunks.push(chunk);
@@ -901,7 +912,7 @@ impl KV3Serialize for PulseGraphDef {
             ],
         ),
             Box::new(Value::Object(vec![
-                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().enumerate().map(|(idx, cell)| with_editor_node_id(cell.serialize(graph_bindings), idx as i64 + 1)).collect())),
+                (ObjectKey::Identifier("m_Cells".into()), Value::Array(self.cells.iter().enumerate().map(|(idx, cell)| with_editor_node_id(cell.serialize(graph_bindings), Self::cell_editor_node_id(idx).into())).collect())),
                 (ObjectKey::Identifier("m_DomainIdentifier".into()), Value::String(self.graph_domain.to_string())),
                 (ObjectKey::Identifier("m_DomainSubType".into()), Value::String(self.graph_subtype.to_string())),
                 (ObjectKey::Identifier("m_ParentMapName".into()), Value::String(self.map_name.to_string())),

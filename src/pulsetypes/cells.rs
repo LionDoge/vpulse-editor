@@ -24,6 +24,7 @@ impl<T> PulseCellTrait for T where T: PulseCell + KV3Serialize {}
 #[derive(Default)]
 #[allow(non_camel_case_types)]
 pub struct CPulseCell_Inflow_Method {
+    pub(crate) is_public: bool,
     pub(crate) register_map: RegisterMap,
     pub(crate) entry_chunk: i32,
     pub(crate) name: String,

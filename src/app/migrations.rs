@@ -57,6 +57,7 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
         connection_type: InputParamKind,
     }
     let mut queued_add_params: Vec<QueuedAddParams> = vec![];
+    let mut queued_add_outputs = vec![];
     for node_id in full_state.state.graph.iter_nodes().collect::<Vec<_>>() {
         let node = match full_state.state.graph.nodes.get_mut(node_id) {
             Some(node) => node,
@@ -68,15 +69,12 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
             // NOTE: this does not remove any parameters from the node, they would be just ignored.
             PulseNodeTemplate::LibraryBindingAssigned { binding } => {
                 if let Some(binding) = full_state.user_state.bindings.find_function_by_id(binding) {
-                    if binding.inparams.is_none() {
-                        continue;
-                    }
                     let graph_inputs = &mut full_state.state.graph.inputs;
                     let mut inputs = node.inputs.iter_mut().filter(|input| {
                         let nam_lowercase = input.0.to_lowercase();
                         !nam_lowercase.contains("action") && !nam_lowercase.contains("binding")
                     }).collect::<Vec<_>>();
-                    let params = binding.inparams.as_ref().unwrap();
+                    let params = binding.inparams.as_deref().unwrap_or_default();
                     // Inputs are matched by name first; a leftover input is only renamed to a new
                     // parameter of the same data type, so inserted or removed parameters don't shift wires.
                     let mut unmatched: Vec<usize> = (0..inputs.len())
@@ -95,7 +93,16 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
                                 let input = &mut graph_inputs[inputs[idx].1];
                                 if input.typ != types.0 {
                                     input.typ = types.0;
-                                    input.value = types.1;
+                                    input.value = match (&input.value, types.1) {
+                                        (PulseGraphValueType::Scalar { value }, PulseGraphValueType::Integer { .. }) => {
+                                            // Rust truncates toward zero and saturates out-of-range values.
+                                            PulseGraphValueType::Integer { value: *value as i32 }
+                                        }
+                                        (PulseGraphValueType::Integer { value }, PulseGraphValueType::Scalar { .. }) => {
+                                            PulseGraphValueType::Scalar { value: *value as f32 }
+                                        }
+                                        (_, default_value) => default_value,
+                                    };
                                 }
                             }
                             // queue up missing parameters to be added after the loop to avoid borrow checker issues
@@ -105,6 +112,41 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
                                 types,
                                 connection_type: get_preffered_inputparamkind_from_type(&param.pulsetype)
                             }),
+                        }
+                    }
+
+                    // A fixed return type must not retain an old polymorphic override:
+                    // the compiler prefers custom_output_type over the binding's retval type.
+                    if binding.polymorphic_return.is_none() {
+                        node.user_data.custom_output_type = None;
+                    }
+                    let graph_outputs = &mut full_state.state.graph.outputs;
+                    let mut outputs = node.outputs.iter_mut()
+                        .filter(|output| graph_outputs[output.1].typ != PulseDataType::Action)
+                        .collect::<Vec<_>>();
+                    let params = binding.outparams.as_deref().unwrap_or_default();
+                    let mut unmatched: Vec<usize> = (0..outputs.len())
+                        .filter(|&idx| !params.iter().any(|p| p.name == outputs[idx].0))
+                        .collect();
+                    for param in params {
+                        let output_type = if param.name == "retval" {
+                            node.user_data.custom_output_type.as_ref().unwrap_or(&param.pulsetype)
+                        } else {
+                            &param.pulsetype
+                        };
+                        let typ = pulse_value_type_to_node_types(output_type).0;
+                        // Match names before considering same-type renames, as for inputs.
+                        // Updating in place preserves output IDs and their connections.
+                        let existing = outputs.iter().position(|output| output.0 == param.name).or_else(|| {
+                            let pos = unmatched.iter().position(|&idx| graph_outputs[outputs[idx].1].typ == typ)?;
+                            let idx = unmatched.remove(pos);
+                            outputs[idx].0 = param.name.clone();
+                            Some(idx)
+                        });
+                        if let Some(idx) = existing {
+                            graph_outputs[outputs[idx].1].typ = typ;
+                        } else {
+                            queued_add_outputs.push((node_id, param.name.clone(), typ));
                         }
                     }
                 }
@@ -213,6 +255,9 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
             true,
         );
     }
+    for (node_id, name, typ) in queued_add_outputs {
+        full_state.state.graph.add_output_param(node_id, name, typ);
+    }
 
     // this fills out the default domain and subdomain if they're not set at launch time
     if full_state.user_state.graph_domain.is_empty() {
@@ -253,3 +298,6 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

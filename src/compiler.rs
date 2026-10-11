@@ -428,8 +428,10 @@ fn traverse_method_cell(
     graph_def: &mut PulseGraphDef,
     graph_state: &PulseGraphState,
 ) -> Result<(), CompileError> {
-    let mut cell_method = CPulseCell_Inflow_Method::default();
-    cell_method.is_public = true;
+    let mut cell_method = CPulseCell_Inflow_Method {
+        is_public: true,
+        ..Default::default()
+    };
     let chunk_id = graph_def.create_chunk();
     cell_method.name = get_constant_graph_input_value!(graph, node, "name", try_to_string);
     cell_method.entry_chunk = chunk_id;

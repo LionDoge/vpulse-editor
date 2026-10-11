@@ -212,11 +212,12 @@ fn add_call_reference(
     src_chunk: i32,
     src_instruction: i32,
     call_method_id: i32,
+    register_map: RegisterMap,
 ) -> i32 {
     // Both sync and async calls reference the target method's serialized editor ID.
     let call_info = CallInfo {
         port_name: "Call".into(),
-        register_map: RegisterMap::default(), // no parameter support yet
+        register_map,
         call_method_id,
         src_chunk,
         src_instruction,
@@ -375,11 +376,24 @@ fn traverse_function_entry(
                 };
             }
             PulseNodeTemplate::Function => {
-                let cell_index = graph_def.add_cell(Box::new(CPulseCell_Inflow_Method {
+                let mut method = CPulseCell_Inflow_Method {
                     entry_chunk: chunk_id,
                     name: graph_state.exposed_nodes.get(node.id).cloned().unwrap_or_default(),
                     ..Default::default()
-                }));
+                };
+                let mut names = std::collections::HashSet::new();
+                for arg in &node.user_data.function_arguments {
+                    if !crate::app::types::FunctionArgument::valid_name(&arg.name) || !names.insert(&arg.name) {
+                        return Err(CompileError::Node(node.id, "Function parameters must have unique identifiers that do not conflict with control ports".into()));
+                    }
+                    let output = node.get_output(&arg.name)
+                        .map_err(|e| CompileError::Node(node.id, e.to_string()))?;
+                    let typ = arg.typ.get_enum_string(&graph_state.bindings).to_string();
+                    let reg = graph_def.chunks[chunk_id as usize].add_register(typ.clone(), 0);
+                    graph_def.add_register_mapping(output, reg);
+                    method.add_arg(arg.name.clone(), String::new(), typ, reg);
+                }
+                let cell_index = graph_def.add_cell(Box::new(method));
                 ret_value = CompiledEntrypoint::Function {
                     chunk: chunk_id,
                     method_id: PulseGraphDef::cell_editor_node_id(cell_index),
@@ -943,10 +957,15 @@ fn traverse_nodes_and_populate<'a>(
         && !matches!(
             current_node.user_data.template,
             PulseNodeTemplate::CellPublicMethod
+                | PulseNodeTemplate::Function
                 | PulseNodeTemplate::EventHandler
                 | PulseNodeTemplate::ListenForEntityOutput
         );
     match current_node.user_data.template {
+        PulseNodeTemplate::Function => {
+            return try_find_output_mapping(graph_def, output_id)
+                .ok_or_else(|| CompileError::Node(current_node.id, "Function argument used outside its compiled function".into()));
+        }
         PulseNodeTemplate::CellPublicMethod => {
             // here we resolve connections to the argument outputs
             return Ok(try_find_output_mapping(graph_def, output_id).unwrap_or(-1));
@@ -2158,14 +2177,33 @@ fn traverse_nodes_and_populate<'a>(
             let node_id =
                 get_constant_graph_input_value!(graph, current_node, "nodeId", try_node_id);
             if let Some(node) = graph.nodes.get(node_id) {
-                let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
                 let entrypoint =
                     traverse_function_entry(graph, node, graph_def, graph_state)?;
 
                 match entrypoint {
                     CompiledEntrypoint::Function { chunk, method_id } => {
+                        let mut register_map = RegisterMap::default();
+                        for arg in &node.user_data.function_arguments {
+                            if let Some(mut reg) = get_input_register_or_create_constant(
+                                graph, current_node, graph_def, graph_state, target_chunk,
+                                &arg.name, arg.typ.clone(), false,
+                            )? {
+                                if matches!(arg.typ, PulseValueType::PVAL_EHANDLE(Some(_))) {
+                                    let caller = &mut graph_def.chunks[target_chunk as usize];
+                                    let typed_reg = caller.add_register(
+                                        arg.typ.get_enum_string(&graph_state.bindings).to_string(),
+                                        caller.get_last_instruction_id() + 1,
+                                    );
+                                    caller.add_instruction(instruction_templates::reinterpret_instance(typed_reg, reg));
+                                    reg = typed_reg;
+                                }
+                                register_map.add_inparam(arg.name.clone().into(), reg);
+                            }
+                        }
+                        // Argument evaluation may emit instructions before the call.
+                        let call_instr_id = graph_def.get_chunk_last_instruction_id(target_chunk) + 1;
                         let mut instr = instruction_templates::call_sync(
-                            add_call_reference(graph_def, target_chunk, call_instr_id, method_id),
+                            add_call_reference(graph_def, target_chunk, call_instr_id, method_id, register_map),
                             chunk,
                             0,
                         );

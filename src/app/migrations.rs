@@ -297,6 +297,12 @@ pub fn verify_compat(full_state: &mut FullGraphState) {
             inp_param.value = PulseGraphValueType::ArrayVal { array_type: PulseDataType::Any };
         }
     }
+    let functions: Vec<_> = full_state.state.graph.nodes.iter()
+        .filter(|(_, node)| node.user_data.template == PulseNodeTemplate::Function)
+        .map(|(id, _)| id).collect();
+    for function in functions {
+        super::function_arguments::sync_function(&mut full_state.state.graph, function);
+    }
 }
 
 #[cfg(test)]

@@ -2,6 +2,7 @@ mod impls;
 // contains help text
 mod help;
 mod migrations;
+mod function_arguments;
 mod appwidgets;
 mod compare_enums;
 
@@ -592,6 +593,11 @@ impl PulseGraphEditor {
 
     // Update inputs on "Call Node" depending on the type of referenced node.
     fn update_remote_node_params(&mut self, node_id: &NodeId, node_id_refrence: &NodeId) {
+        if self.state().graph.nodes.get(*node_id_refrence)
+            .is_some_and(|node| node.user_data.template == PulseNodeTemplate::Function) {
+            function_arguments::sync_call(&mut self.full_state.state.graph, *node_id, *node_id_refrence);
+            return;
+        }
         let node = self.state_mut().graph.nodes.get_mut(*node_id).unwrap();
         // remove all inputs
         let input_ids: Vec<_> = node.input_ids().collect();
@@ -1413,6 +1419,15 @@ impl eframe::App for PulseGraphEditor {
                     // destinations whose source ports no longer exist.
                     compare_types_changed = true;
                     match user_event {
+                        PulseGraphResponse::AddFunctionArgument(node_id) => {
+                            function_arguments::add_argument(&mut self.full_state.state.graph, node_id);
+                        }
+                        PulseGraphResponse::EditFunctionArgument(node_id, index, argument) => {
+                            function_arguments::edit_argument(&mut self.full_state.state.graph, node_id, index, Some(argument));
+                        }
+                        PulseGraphResponse::RemoveFunctionArgument(node_id, index) => {
+                            function_arguments::edit_argument(&mut self.full_state.state.graph, node_id, index, None);
+                        }
                         // node that supports adding parameters is trying to add one
                         PulseGraphResponse::AddOutputParam(node_id, name, datatype) => {
                             self.state_mut().graph.add_output_param(

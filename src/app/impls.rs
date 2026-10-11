@@ -469,6 +469,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             custom_output_type: None,
             inferred_enum_category: None,
             added_inputs: Vec::new(),
+            function_arguments: Vec::new(),
         }
     }
 
@@ -1694,6 +1695,41 @@ impl NodeDataTrait for PulseNodeData {
         // add param to event handler node.
         let node = graph.nodes.get(node_id).unwrap();
         match node.user_data.template {
+            PulseNodeTemplate::Function => {
+                for (index, argument) in node.user_data.function_arguments.iter().enumerate() {
+                    let mut edited = argument.clone();
+                    let mut remove = false;
+                    ui.push_id((node_id, "argument", index), |ui| {
+                        ui.horizontal(|ui| {
+                            ui.add(egui::TextEdit::singleline(&mut edited.name).desired_width(100.0));
+                            type_selection_widget(ui, "type", &mut edited.typ,
+                                PulseValueType::get_variable_supported_types(), |_| {});
+                            remove = ui.small_button("×").on_hover_text("Remove parameter").clicked();
+                        });
+                        if let PulseValueType::PVAL_EHANDLE(subtype) = &mut edited.typ {
+                            let mut name = subtype.clone().unwrap_or_default();
+                            if ui.add(egui::TextEdit::singleline(&mut name)
+                                .hint_text("Entity class (optional)").desired_width(180.0)).changed() {
+                                *subtype = if name.is_empty() { None } else { Some(name) };
+                            }
+                        }
+                    });
+                    if remove {
+                        responses.push(NodeResponse::User(PulseGraphResponse::RemoveFunctionArgument(node_id, index)));
+                    } else if edited != *argument {
+                        if FunctionArgument::valid_name(&edited.name)
+                            && !node.user_data.function_arguments.iter().enumerate()
+                                .any(|(i, arg)| i != index && arg.name == edited.name) {
+                            responses.push(NodeResponse::User(PulseGraphResponse::EditFunctionArgument(node_id, index, edited)));
+                        } else {
+                            ui.colored_label(egui::Color32::LIGHT_RED, "Use a unique identifier, not a control port name.");
+                        }
+                    }
+                }
+                if ui.button("Add parameter").clicked() {
+                    responses.push(NodeResponse::User(PulseGraphResponse::AddFunctionArgument(node_id)));
+                }
+            }
             PulseNodeTemplate::IntSwitch => {
                 let param = node.get_input("caselabel").expect(
                     "caselabel is not defined for IntSwitch node, this is a programming error!",

@@ -41,7 +41,7 @@ In the future this may be automated by this node.".into(),
             Use the 'caselabel' input to select the integer value, and click 'Add parameter' to add a output.".into(),
         PulseNodeTemplate::SoundEventStart => "Starts a sound event, coming from an entity, or from the world. Output needs to be connected somewhere. \
             Tip: There's a library function for adjusting such sound events, called 'Sound Event Set Param Float'.".into(),
-        PulseNodeTemplate::Function => "A remote node that can be called from multiple places. Put a name into the textbox, to reference it later by CallNode.".into(),
+        PulseNodeTemplate::Function => "A remote node that can be called from multiple places. Give it a name to reference it from a Call Node. Use Add parameter below to create named, typed arguments; wire their outputs into the function body. Call Nodes expose matching argument inputs.".into(),
         PulseNodeTemplate::CallNode => "Allows to call remote nodes from anywhere. For example a 'Function'.".into(),
         PulseNodeTemplate::ListenForEntityOutput => "Listens to an output from the provided entity in the current map, causing an action if it gets triggered. Also provides the activator entity handle.".into(),
         PulseNodeTemplate::Timeline => "Runs actions in a sequential order with a delay between each action.".into(),

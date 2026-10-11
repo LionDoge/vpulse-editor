@@ -28,6 +28,23 @@ pub struct PulseNodeData {
     pub inferred_enum_category: Option<EnumBindingIndex>,
     #[serde(default)]
     pub added_inputs: Vec<InputId>,
+    #[serde(default)]
+    pub function_arguments: Vec<FunctionArgument>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct FunctionArgument {
+    pub name: String,
+    pub typ: PulseValueType,
+}
+
+impl FunctionArgument {
+    pub fn valid_name(name: &str) -> bool {
+        let mut chars = name.chars();
+        chars.next().is_some_and(|c| c.is_ascii_alphabetic() || c == '_')
+            && chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+            && !["nodeId", "Async", "ActionIn", "outAction", "binding"].contains(&name)
+    }
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -243,6 +260,9 @@ pub enum PulseNodeTemplate {
 /// mechanism allows creating additional side effects from user code.
 #[derive(Clone, Debug)]
 pub enum PulseGraphResponse {
+    AddFunctionArgument(NodeId),
+    EditFunctionArgument(NodeId, usize, FunctionArgument),
+    RemoveFunctionArgument(NodeId, usize),
     AddOutputParam(NodeId, String, PulseDataType),
     // autoindex (bool) will automatically append the last element index + 1 to the provided name
     AddCustomInputParam(NodeId, String, PulseDataType, PulseGraphValueType, InputParamKind, bool),

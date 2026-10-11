@@ -1279,7 +1279,13 @@ impl eframe::App for PulseGraphEditor {
                             }
                         });
                     }
-                    ui.label(env!("CARGO_PKG_VERSION"));
+                    let version = env!("CARGO_PKG_VERSION");
+                    let git_hash = env!("GIT_HASH");
+                    ui.label(if git_hash.is_empty() {
+                        version.to_owned()
+                    } else {
+                        format!("{version}+{git_hash}")
+                    });
                 });
             });
         });

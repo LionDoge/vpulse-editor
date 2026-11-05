@@ -1,14 +1,19 @@
 # An unofficial Pulse graph editor
-"Pulse" is an in-development system for visual scripting in newer Source 2 engine games that is. Dota 2, CS2, and Deadlock.
-There's no official tooling for creating these files, so this tool is supposed to serve as a temporary solution, it doesn't implement every feature. It's supposed to just "work" not necessairly to "work well"
 
-This tool has only been tested on Windows 10 and 11 currently, support for Linux might come in the future.
+"Pulse" is an in-development system for visual scripting in modern Source 2 engine games - Deadlock, CS2, and Dota 2.
+There's no official tooling for creating these files, so this tool is supposed to serve as a temporary solution, it doesn't implement every feature.
 
-> [!NOTE]
-> The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Source 2 games, not everything is very well documented, as things are likely to change often. The tool is not perfect, and game updates may, **and probably will** break existing compiled graphs, which will be required to be compiled by a newer version of this software once available. You have been warned, do not be surprised if things can break randomly after updates.
+It's advised to run this tool on newest Windows 11. Linux support might come in the future.
 
 > [!IMPORTANT]
-> When developing for Deadlock, and using CSDK, some things may work differently than in the official game. This is because the game engine version is usually out of date, and Pulse definitions, and structure can update very often, so there may be some discrepancies!
+> As of 04.11.2026 Pulse has been blocked from loading in Counter-Strike 2 workshop addons, unless `pulse/pulse_enabled_for_untrusted_addons` is specified in gameinfo.gi.
+> Prefer using cs_script for CS2 instead if you want to publish your work to the workshop.
+
+> [!IMPORTANT]
+> When developing for Deadlock and using CSDK, some things may work differently than in the official game. This is because the game engine version in tools is out of sync from the actual version. Pulse system changes very often, so to make sure everything work properly test in a normal game environment.
+
+> [!NOTE]
+> The tool and the documentation provided below assumes decent understanding of creating maps and/or modding Source 2 games, not everything is very well documented, as things are likely to change often. The tool is not perfect, and game updates may, **and probably will** break existing compiled graphs, which will be required to be compiled by a newer version of this software once available. Additonally some Pulse features might be changed or removed by game developers, requiring additional changes. You have been warned, do not be surprised if things can break randomly after updates.
 
 [Development release](https://nightly.link/LionDoge/vpulse-editor/workflows/build/main/release-windows.zip) - Untested, and new features will appear here first. Using this version may not guarantee save-file compatiblity. Take backups before using!
 

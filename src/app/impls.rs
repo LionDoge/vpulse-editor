@@ -357,6 +357,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             PulseNodeTemplate::ListenForEntityOutput => "Listen for entity output".into(),
             PulseNodeTemplate::Timeline => "Timeline".into(),
             PulseNodeTemplate::Comment => "Comment".into(),
+            PulseNodeTemplate::NoOp => "No-op".into(),
             PulseNodeTemplate::SetAnimGraphParam => "Set AnimGraph param".into(),
             PulseNodeTemplate::ConstantBool => "Constant Bool".into(),
             PulseNodeTemplate::ConstantFloat => "Constant Float".into(),
@@ -403,6 +404,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
             | PulseNodeTemplate::CallNode
             | PulseNodeTemplate::Function 
             | PulseNodeTemplate::ReturnValue
+            | PulseNodeTemplate::NoOp
             | PulseNodeTemplate::And
             | PulseNodeTemplate::Or
             | PulseNodeTemplate::Not => vec!["Logic"],
@@ -1154,7 +1156,7 @@ impl NodeTemplateTrait for PulseNodeTemplate {
                 //input_typ(graph, "expectedType", PulseValueType::PVAL_ANY);
                 output_action(graph, "outAction");
             }
-            PulseNodeTemplate::LoopBreak => {
+            PulseNodeTemplate::LoopBreak | PulseNodeTemplate::NoOp => {
                 input_action(graph);
                 output_action(graph, "outAction");
             }
@@ -1203,6 +1205,7 @@ impl NodeTemplateIter for AllMyNodeTemplates {
             PulseNodeTemplate::ListenForEntityOutput,
             PulseNodeTemplate::Timeline,
             PulseNodeTemplate::Comment,
+            PulseNodeTemplate::NoOp,
             PulseNodeTemplate::SetAnimGraphParam,
             PulseNodeTemplate::ConstantBool,
             PulseNodeTemplate::ConstantFloat,
@@ -1831,6 +1834,7 @@ impl NodeDataTrait for PulseNodeData {
             | PulseNodeTemplate::NewArray => Some(Color32::from_rgb(77, 100, 105)),
             PulseNodeTemplate::ConcatString
             | PulseNodeTemplate::Comment
+            | PulseNodeTemplate::NoOp
             | PulseNodeTemplate::SetAnimGraphParam
             | PulseNodeTemplate::ReturnValue
             | PulseNodeTemplate::ScaleVector

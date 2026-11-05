@@ -964,6 +964,13 @@ fn traverse_nodes_and_populate<'a>(
                 | PulseNodeTemplate::ListenForEntityOutput
         );
     match current_node.user_data.template {
+        PulseNodeTemplate::NoOp => {
+            graph_def.add_chunk_instruction(target_chunk as usize, Instruction {
+                code: "NOP".into(),
+                ..Default::default()
+            });
+            graph_next_action!(graph, current_node, graph_def, graph_state, target_chunk, force_regenerate);
+        }
         PulseNodeTemplate::Function => {
             return try_find_output_mapping(graph_def, output_id)
                 .ok_or_else(|| CompileError::Node(current_node.id, "Function argument used outside its compiled function".into()));

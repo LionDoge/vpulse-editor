@@ -4,6 +4,7 @@ use super::types::PulseNodeTemplate;
 
 pub fn help_hover_text<'a>(template: PulseNodeTemplate, user_state: &'a PulseGraphState) -> Cow<'a, str> {
     match template {
+        PulseNodeTemplate::NoOp => "Passes execution from the action input to the action output without doing anything.".into(),
         PulseNodeTemplate::CellPublicMethod => "(Entry point) Exposes a public method to the game as an entity input in case of a ServerPointEntity domain. \
             The input will be named after the method name. an argument can be passed in which is accessible from the argument port.".into(),
         PulseNodeTemplate::EntFire => "Fires an output on an entity either by name, or by handle.".into(),
